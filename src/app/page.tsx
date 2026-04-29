@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Navbar } from "@/shared/components/Navbar";
-import { SkinGrid } from "@/features/skins/ui/SkinGrid";
+import { Button } from "@/shared/components/Button";
 import { CartProvider } from "@/features/cart/context/CartContext";
 import { CartSidebar } from "@/features/cart/ui/CartSidebar";
 
@@ -12,46 +13,42 @@ export default function Home() {
 
   return (
     <CartProvider>
-      <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="min-h-screen bg-[#13121d]">
         <Navbar onOpenCart={() => setIsCartOpen(true)} />
         <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         
         <main className="mx-auto max-w-7xl px-6 pt-24 pb-20">
-          <section className="mb-20 flex flex-col items-center text-center">
-            <div className="relative mb-8 h-40 w-full max-w-lg">
+          <section className="min-h-[70vh] flex flex-col items-center justify-center text-center animate-fade-in">
+            <div className="relative mb-10 h-64 w-full max-w-2xl">
               <Image 
                 src="/skin.webp" 
                 alt="Featured Skin" 
                 fill 
-                className="object-contain drop-shadow-[0_0_50px_rgba(255,75,75,0.3)]"
+                className="object-contain drop-shadow-[0_0_80px_rgba(255,75,75,0.2)]"
                 priority
               />
             </div>
-            <h1 className="mb-4 text-4xl font-black tracking-tight text-white md:text-6xl uppercase">
-              Trade your <span className="text-[#ff4b4b]">CS2 Skins</span>
+            <h1 className="mb-6 text-5xl font-black tracking-tight text-white md:text-8xl uppercase leading-none">
+              The Future of <br/> <span className="text-[#ff4b4b]">Skin Trading</span>
             </h1>
-            <p className="mx-auto max-w-xl text-base text-[#84849b]">
-              The most trusted and secure marketplace to buy, sell and swap Counter-Strike items instantly.
+            <p className="mx-auto mb-10 max-w-2xl text-lg text-[#84849b]">
+              Experience the fastest, most secure way to trade your Counter-Strike 2 items. 
+              Join thousands of players who trust JabbuStore for their instant swaps.
             </p>
-          </section>
-
-          <section>
-            <div className="mb-8 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Featured Collection</h2>
-              <div className="flex gap-2">
-                <span className="glass px-3 py-1 text-xs font-medium text-white/60">All Weapons</span>
-                <span className="glass px-3 py-1 text-xs font-medium text-white/60">Knives</span>
-                <span className="glass px-3 py-1 text-xs font-medium text-white/60">Gloves</span>
-              </div>
+            <div className="flex gap-4">
+              <Link href="/buy">
+                <Button size="lg" className="px-10 h-14">Start Trading</Button>
+              </Link>
+              <Link href="/inventory">
+                <Button variant="secondary" size="lg" className="px-10 h-14">View Inventory</Button>
+              </Link>
             </div>
-            
-            <SkinGrid />
           </section>
         </main>
 
         <footer className="border-t border-white/5 py-10">
           <div className="mx-auto max-w-7xl px-6 text-center text-sm text-white/40">
-            © 2026 CS SkinMarket. Not affiliated with Valve Corporation.
+            © 2026 JabbuStore. Not affiliated with Valve Corporation.
           </div>
         </footer>
       </div>

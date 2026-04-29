@@ -1,0 +1,50 @@
+"use client";
+
+import { useState } from "react";
+import { Navbar } from "@/shared/components/Navbar";
+import { SkinGrid } from "@/features/skins/ui/SkinGrid";
+import { CartProvider } from "@/features/cart/context/CartContext";
+import { CartSidebar } from "@/features/cart/ui/CartSidebar";
+import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
+
+export default function BuyPage() {
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  return (
+    <CartProvider>
+      <div className="min-h-screen bg-[#13121d]">
+        <Navbar onOpenCart={() => setIsCartOpen(true)} />
+        <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+        
+        <main className="mx-auto max-w-7xl px-6 pt-24 pb-20">
+          <header className="mb-12">
+            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Marketplace</h1>
+            <p className="text-[#84849b]">Browse and buy the best CS2 skins available.</p>
+          </header>
+
+          <div className="flex flex-col gap-10 lg:flex-row">
+            {/* Lateral Filters */}
+            <FilterSidebar />
+
+            {/* Main Content */}
+            <section className="flex-1">
+              <div className="mb-6 flex items-center justify-between">
+                <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Showing 5 results</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white/40 uppercase">Sort by:</span>
+                  <select className="bg-[#1b1a26] border border-white/5 px-3 py-1.5 text-xs font-bold text-white outline-none rounded-[4px]">
+                    <option>Price: High to Low</option>
+                    <option>Price: Low to High</option>
+                    <option>Newest</option>
+                  </select>
+                </div>
+              </div>
+              
+              <SkinGrid />
+            </section>
+          </div>
+        </main>
+      </div>
+    </CartProvider>
+  );
+}

@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #13121d;
+  --color-foreground: #ffffff;
+  --color-accent: #ff4b4b;
+  --color-card: #1b1a26;
+  --color-muted: #84849b;
+  
+  --color-rarity-common: #b0c3d9;
+  --color-rarity-uncommon: #5e98d9;
+  --color-rarity-rare: #4b69ff;
+  --color-rarity-mythical: #8847ff;
+  --color-rarity-legendary: #d32ce6;
+  --color-rarity-ancient: #eb4b4b;
+  --color-rarity-immortal: #e4ae39;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #13121d;
+  --foreground: #ffffff;
+  --accent: #ff4b4b;
+  --card: #1b1a26;
+  --muted: #84849b;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Skinswap-like Components */
+.skin-card {
+  background: var(--card);
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.skin-card:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #13121d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a293b;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a394b;
 }

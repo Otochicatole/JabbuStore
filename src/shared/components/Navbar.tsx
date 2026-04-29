@@ -12,14 +12,14 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
   return (
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-[#13121d]/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <div className="flex items-center gap-2 text-white no-underline">
-          <div className="h-8 w-8 rounded-[4px] bg-[#ff4b4b] flex items-center justify-center font-black text-white text-xs">
+        <Link href="/" className="flex items-center gap-2 text-white no-underline cursor-pointer group">
+          <div className="h-8 w-8 rounded-[4px] bg-[#ff4b4b] flex items-center justify-center font-black text-white text-xs transition-transform group-hover:scale-110">
             JS
           </div>
           <span className="text-lg font-black tracking-tight uppercase">
             Jabbu<span className="text-[#ff4b4b]">Store</span>
           </span>
-        </div>
+        </Link>
         
         <div className="hidden items-center gap-8 md:flex">
           <Link href="/" className="text-sm font-bold text-white/70 hover:text-white transition-colors uppercase tracking-widest text-[10px]">Home</Link>

@@ -12,7 +12,7 @@ export const Button = ({
   className = '', 
   ...props 
 }: ButtonProps) => {
-  const baseStyles = "inline-flex items-center justify-center rounded-[4px] font-bold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider text-xs";
+  const baseStyles = "inline-flex items-center justify-center rounded-[4px] font-bold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider text-xs cursor-pointer";
   
   const variants = {
     primary: "bg-[#ff4b4b] text-white hover:bg-[#ff6161] shadow-lg shadow-red-500/10",

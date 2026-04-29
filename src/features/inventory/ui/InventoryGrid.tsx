@@ -80,7 +80,7 @@ export const InventoryGrid = () => {
               </div>
             </div>
 
-            <button className="w-full mt-8 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-bold py-3 uppercase tracking-widest transition-colors">
+            <button className="w-full mt-8 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-bold py-3 uppercase tracking-widest transition-colors cursor-pointer">
               Sell on Marketplace
             </button>
           </div>

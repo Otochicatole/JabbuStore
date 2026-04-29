@@ -12,7 +12,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity cursor-pointer"
           onClick={onClose}
         />
       )}
@@ -22,7 +22,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
         <div className="flex h-full flex-col">
           <div className="mb-8 flex items-center justify-between">
             <h2 className="text-2xl font-black text-white">Your <span className="text-[#ff9d00]">Cart</span></h2>
-            <button onClick={onClose} className="text-white/40 hover:text-white">✕</button>
+            <button onClick={onClose} className="text-white/40 hover:text-white cursor-pointer transition-colors">✕</button>
           </div>
 
           <div className="flex-1 overflow-y-auto pr-2">
@@ -46,7 +46,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                       <p className="text-sm font-bold text-[#ff9d00]">${(item.skin.price * item.quantity).toLocaleString()}</p>
                       <button 
                         onClick={() => removeFromCart(item.skin.id)}
-                        className="text-[10px] text-red-500 hover:underline"
+                        className="text-[10px] text-red-500 hover:underline cursor-pointer"
                       >
                         Remove
                       </button>

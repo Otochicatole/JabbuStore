@@ -14,7 +14,7 @@ const WEAPON_CATEGORIES = {
 };
 
 export const FilterSidebar = () => {
-  const [openCategories, setOpenCategories] = useState<string[]>(['Pistols', 'Rifles']);
+  const [openCategories, setOpenCategories] = useState<string[]>([]);
 
   const toggleCategory = (cat: string) => {
     setOpenCategories(prev => 

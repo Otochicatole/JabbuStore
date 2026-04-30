@@ -94,15 +94,15 @@ export const FilterSidebar = () => {
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
             placeholder="Min" 
-            className="w-full bg-background border border-white/5 p-2 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]" 
+            className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
           />
-          <span className="text-muted">-</span>
+          <span className="text-white/20 text-xs font-bold">—</span>
           <input 
             type="number" 
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
             placeholder="Max" 
-            className="w-full bg-background border border-white/5 p-2 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]" 
+            className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
           />
         </div>
       </div>

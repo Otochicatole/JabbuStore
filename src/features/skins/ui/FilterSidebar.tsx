@@ -119,9 +119,12 @@ export const FilterSidebar = () => {
         {isConditionOpen && (
           <div className="space-y-2 animate-fade-in py-1">
             {CONDITIONS.map((cond) => (
-              <label key={cond} className="flex items-center gap-3 cursor-pointer group">
+              <label 
+                key={cond} 
+                onClick={() => toggleCondition(cond)}
+                className="flex items-center gap-3 cursor-pointer group"
+              >
                 <div 
-                  onClick={() => toggleCondition(cond)}
                   className={`
                     relative flex items-center justify-center h-4 w-4 rounded-[2px] border transition-all duration-200
                     ${selectedConditions.includes(cond) 

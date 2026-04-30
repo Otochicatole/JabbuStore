@@ -34,7 +34,13 @@ export const SkinCard = ({ skin }: SkinCardProps) => {
   const isInCart = !!cartItem;
 
   return (
-    <div className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 transition-all duration-300 hover:border-white/10 hover:-translate-y-1">
+    <div className={`
+      group relative flex flex-col bg-card rounded-2xl p-4 border transition-all duration-500 hover:-translate-y-1
+      ${isInCart 
+        ? 'border-accent shadow-[0_0_25px_rgba(217,70,239,0.2)]' 
+        : 'border-white/5 hover:border-white/10'
+      }
+    `}>
       {/* Header Info */}
       <div className="flex flex-col gap-0.5 mb-2">
         <div className="flex items-center gap-1">

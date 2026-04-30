@@ -51,14 +51,14 @@ export const FilterSidebar = () => {
     <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto pr-4 custom-scrollbar overscroll-contain lg:fixed lg:top-24 lg:left-6 pb-10">
       {/* Search */}
       <div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20" />
+        <div className="relative group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-accent transition-colors z-10" />
           <input 
             type="text" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar items..." 
-            className="w-full bg-background brightness-90 border border-white/5 pl-9 pr-3 py-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]"
+            className="w-full bg-transparent border border-white/5 pl-10 pr-3 py-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-all rounded-lg"
           />
         </div>
       </div>

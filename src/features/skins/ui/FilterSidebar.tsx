@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search, ChevronRight, RotateCcw } from "lucide-react";
 
 const CATEGORIES = [
@@ -116,38 +116,48 @@ export const FilterSidebar = () => {
           <ChevronRight className={`h-3.5 w-3.5 text-muted transition-transform duration-200 ${isConditionOpen ? 'rotate-90 text-accent' : ''}`} />
         </button>
         
-        {isConditionOpen && (
-          <div className="space-y-2 animate-fade-in py-1">
-            {CONDITIONS.map((cond) => (
-              <label 
-                key={cond} 
-                onClick={() => toggleCondition(cond)}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <div 
-                  className={`
-                    relative flex items-center justify-center h-4 w-4 rounded-[2px] border transition-all duration-200
-                    ${selectedConditions.includes(cond) 
-                      ? 'border-accent bg-accent/10' 
-                      : 'border-white/10 bg-background group-hover:border-white/20'
-                    }
-                  `}
-                >
-                  <div className={`
-                    h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-200
-                    ${selectedConditions.includes(cond) ? 'opacity-100' : 'opacity-0'}
-                  `} />
-                </div>
-                <span className={`
-                  text-[11px] font-bold transition-colors duration-200
-                  ${selectedConditions.includes(cond) ? 'text-white' : 'text-[#84849b] group-hover:text-white/70'}
-                `}>
-                  {cond}
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
+        <AnimatePresence>
+          {isConditionOpen && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-2 py-3">
+                {CONDITIONS.map((cond) => (
+                  <label 
+                    key={cond} 
+                    onClick={() => toggleCondition(cond)}
+                    className="flex items-center gap-3 cursor-pointer group"
+                  >
+                    <div 
+                      className={`
+                        relative flex items-center justify-center h-4 w-4 rounded-[2px] border transition-all duration-200
+                        ${selectedConditions.includes(cond) 
+                          ? 'border-accent bg-accent/10' 
+                          : 'border-white/10 bg-background group-hover:border-white/20'
+                        }
+                      `}
+                    >
+                      <div className={`
+                        h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-200
+                        ${selectedConditions.includes(cond) ? 'opacity-100' : 'opacity-0'}
+                      `} />
+                    </div>
+                    <span className={`
+                      text-[11px] font-bold transition-colors duration-200
+                      ${selectedConditions.includes(cond) ? 'text-white' : 'text-[#84849b] group-hover:text-white/70'}
+                    `}>
+                      {cond}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Categorías Grid */}

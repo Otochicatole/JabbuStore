@@ -5,7 +5,7 @@ import { Button } from "./Button";
 import Link from "next/link";
 import { ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { LayoutGroup, motion } from "framer-motion";
 
 const NAV_LINKS = [
   { name: 'Inicio', path: '/' },
@@ -14,10 +14,28 @@ const NAV_LINKS = [
   { name: 'Inventario', path: '/inventory' }
 ];
 
+import { useState, useRef, useEffect } from "react";
+
+// ... inside Navbar component
 export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
   const pathname = usePathname();
   const { items } = useCart();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const navRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+
+  useEffect(() => {
+    const activeIndex = NAV_LINKS.findIndex(link => link.path === pathname);
+    if (activeIndex !== -1 && navRefs.current[activeIndex]) {
+      const el = navRefs.current[activeIndex];
+      setPillStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+        opacity: 1
+      });
+    }
+  }, [pathname]);
 
   return (
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
@@ -31,26 +49,30 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           </span>
         </Link>
         
-        <div className="hidden items-center gap-2 md:flex">
-          {NAV_LINKS.map((link) => {
+        <div className="hidden relative items-center md:flex">
+          {/* Persistent Sliding Pill using CSS Transitions for maximum stability */}
+          <div
+            style={{
+              left: `${pillStyle.left}px`,
+              width: `${pillStyle.width}px`,
+              opacity: pillStyle.opacity,
+            }}
+            className="absolute h-8 bg-accent rounded-full shadow-[0_0_20px_rgba(217,70,239,0.3)] z-0 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)"
+          />
+
+          {NAV_LINKS.map((link, index) => {
             const isActive = pathname === link.path;
             return (
               <Link 
                 key={link.path}
+                ref={el => { navRefs.current[index] = el; }}
                 href={link.path} 
                 className={`
-                  relative px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-300 cursor-pointer
+                  relative px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-300 cursor-pointer z-10
                   ${isActive ? 'text-white' : 'text-white/40 hover:text-white'}
                 `}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="nav-pill"
-                    className="absolute inset-0 bg-accent rounded-full shadow-[0_0_20px_rgba(217,70,239,0.3)]"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10">{link.name}</span>
+                {link.name}
               </Link>
             );
           })}

@@ -1,22 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Navbar } from "@/shared/components/Navbar";
 import { SkinGrid } from "@/features/skins/ui/SkinGrid";
-import { CartProvider } from "@/features/cart/context/CartContext";
-import { CartSidebar } from "@/features/cart/ui/CartSidebar";
 import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
 
 export default function BuyPage() {
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
   return (
-    <CartProvider>
-      <div>
-        <Navbar onOpenCart={() => setIsCartOpen(true)} />
-        <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-        
-        <main className="mx-auto max-w-full px-6 pt-24 pb-20">
+    <main className="mx-auto max-w-full px-6 pt-24 pb-20">
             <div className="flex flex-col gap-10 lg:flex-row items-start">
               {/* Sidebar Placeholder */}
               <div className="hidden lg:block w-64 flex-shrink-0" />
@@ -46,7 +35,5 @@ export default function BuyPage() {
               </section>
             </div>
         </main>
-      </div>
-    </CartProvider>
   );
 }

@@ -108,13 +108,13 @@ export const FilterSidebar = () => {
       </div>
 
       {/* Estado (Condition) */}
-      <div className="border-b border-white/5 pb-2">
+      <div className="border-b border-t border-white/5 pt-5 pb-3">
         <button 
           onClick={() => setIsConditionOpen(!isConditionOpen)}
           className="w-full flex items-center justify-between mb-2 group text-left cursor-pointer"
         >
           <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest group-hover:text-white/50 transition-colors">Estado</h3>
-          <ChevronRight className={`h-3 w-3 text-muted transition-transform duration-200 ${isConditionOpen ? 'rotate-90 text-accent' : ''}`} />
+          <ChevronRight className={`h-3.5 w-3.5 text-muted transition-transform duration-200 ${isConditionOpen ? 'rotate-90 text-accent' : ''}`} />
         </button>
         
         {isConditionOpen && (

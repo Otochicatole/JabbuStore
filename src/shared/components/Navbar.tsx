@@ -89,9 +89,9 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           </div>
           <Button variant="ghost" size="sm" className="gap-2">
             <User className="h-4 w-4" />
-            Login
+            Iniciar Sesión
           </Button>
-          <Button variant="primary" size="sm">Sign Up</Button>
+          <Button variant="primary" size="sm">Registrarse</Button>
         </div>
       </div>
     </nav>

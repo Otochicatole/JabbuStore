@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { Search, ChevronRight, RotateCcw } from "lucide-react";
 
 const CATEGORIES = [
-  "Cuchillo", "Guantes", "Pistola", "SMG", 
-  "Rifle De Asalto", "Rifle Francotirador", "Escopeta", "Ametralladora", 
-  "Agente", "Contenedor", "Kit De Música", "Parche", "Pegatina"
+  "Knives", "Gloves", "Pistols", "SMGs", 
+  "Assault Rifles", "Sniper Rifles", "Shotguns", "Machineguns", 
+  "Agents", "Containers", "Music Kits", "Patches", "Stickers"
 ];
 
 const CONDITIONS = [
@@ -57,7 +57,7 @@ export const FilterSidebar = () => {
             type="text" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search items..." 
+            placeholder="Buscar items..." 
             className="w-full bg-background brightness-90 border border-white/5 pl-9 pr-3 py-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]"
           />
         </div>
@@ -86,13 +86,13 @@ export const FilterSidebar = () => {
 
       {/* Price Range */}
       <div>
-        <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Price Range</h3>
+        <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Rango de Precio</h3>
         <div className="flex items-center gap-2">
           <input 
             type="number" 
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
-            placeholder="Min" 
+            placeholder="Mín" 
             className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
           />
           <span className="text-white/20 text-xs font-bold">—</span>
@@ -100,7 +100,7 @@ export const FilterSidebar = () => {
             type="number" 
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
-            placeholder="Max" 
+            placeholder="Máx" 
             className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
           />
         </div>
@@ -134,7 +134,7 @@ export const FilterSidebar = () => {
                   `}
                 >
                   <div className={`
-                    h-1.5 w-1.5 rounded-full bg-[#ff4b4b] transition-opacity duration-200
+                    h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-200
                     ${selectedConditions.includes(cond) ? 'opacity-100' : 'opacity-0'}
                   `} />
                 </div>
@@ -150,9 +150,9 @@ export const FilterSidebar = () => {
         )}
       </div>
 
-      {/* Categories Grid */}
+      {/* Categorías Grid */}
       <div>
-        <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">Categories</h3>
+        <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">Categorías</h3>
         <div className="grid grid-cols-2 gap-2">
           {CATEGORIES.map((cat) => {
             const isSelected = selectedCategories.includes(cat);
@@ -169,7 +169,7 @@ export const FilterSidebar = () => {
                 `}
               >
                 {isSelected && (
-                  <div className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#ff4b4b] animate-pulse" />
+                  <div className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#ff4b4b] animate-pulse shadow-[0_0_8px_rgba(255,75,75,0.8)]" />
                 )}
                 <span className={`
                   text-[9px] font-black uppercase text-center leading-tight tracking-tight

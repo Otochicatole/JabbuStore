@@ -17,7 +17,7 @@ export default function Home() {
         <Navbar onOpenCart={() => setIsCartOpen(true)} />
         <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         
-        <main className="mx-auto max-w-7xl px-6 pt-24 pb-20">
+        <main className="mx-auto max-w-full px-6 pt-24 pb-20">
           <section className="min-h-[70vh] flex flex-col items-center justify-center text-center animate-fade-in">
             <div className="relative mb-10 h-64 w-full max-w-2xl">
               <Image 
@@ -47,7 +47,7 @@ export default function Home() {
         </main>
 
         <footer className="border-t border-white/5 py-10">
-          <div className="mx-auto max-w-7xl px-6 text-center text-sm text-white/40">
+          <div className="mx-auto max-w-full px-6 text-center text-sm text-white/40">
             © 2026 JabbuStore. Not affiliated with Valve Corporation.
           </div>
         </footer>

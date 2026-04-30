@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/shared/components/Button";
-import { Search, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Search, ChevronRight, RotateCcw } from "lucide-react";
 
 const CATEGORIES = [
   "Cuchillo", "Guantes", "Pistola", "SMG", 
@@ -20,6 +20,9 @@ const CONDITIONS = [
 
 
 export const FilterSidebar = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [isConditionOpen, setIsConditionOpen] = useState(false);
@@ -36,8 +39,16 @@ export const FilterSidebar = () => {
     );
   };
 
+  const clearFilters = () => {
+    setSearchQuery("");
+    setMinPrice("");
+    setMaxPrice("");
+    setSelectedCategories([]);
+    setSelectedConditions([]);
+  };
+
   return (
-    <aside className="w-64 flex-shrink-0 space-y-6">
+    <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto pr-4 custom-scrollbar overscroll-contain lg:fixed lg:top-24 lg:left-6 pb-10">
       {/* Search */}
       <div>
         <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">Search</h3>
@@ -45,19 +56,54 @@ export const FilterSidebar = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20" />
           <input 
             type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search items..." 
             className="w-full bg-background brightness-90 border border-white/5 pl-9 pr-3 py-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]"
           />
         </div>
       </div>
 
+      {/* Ultra-compact Cyber-Glow Clear Filters Button */}
+      <div className="relative group w-full">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={clearFilters}
+          className="w-full relative flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-white/[0.03] border border-white/5 text-white/40 hover:text-white hover:border-accent/40 transition-all duration-300 cursor-pointer overflow-hidden group"
+        >
+          {/* Neon Reveal Background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-accent/20 via-accent/5 to-transparent -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+          
+          {/* Content with Glow */}
+          <div className="relative z-10 flex items-center justify-center gap-1.5 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]">
+            <RotateCcw className="h-3 w-3 group-hover:rotate-[-180deg] transition-transform duration-500" />
+            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Limpiar Filtros</span>
+          </div>
+
+          {/* Border Pulse Effect */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 border border-accent/20 rounded-lg" />
+        </motion.button>
+      </div>
+
       {/* Price Range */}
       <div>
         <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Price Range</h3>
         <div className="flex items-center gap-2">
-          <input type="number" placeholder="Min" className="w-full bg-background border border-white/5 p-2 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]" />
+          <input 
+            type="number" 
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            placeholder="Min" 
+            className="w-full bg-background border border-white/5 p-2 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]" 
+          />
           <span className="text-muted">-</span>
-          <input type="number" placeholder="Max" className="w-full bg-background border border-white/5 p-2 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]" />
+          <input 
+            type="number" 
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            placeholder="Max" 
+            className="w-full bg-background border border-white/5 p-2 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-[4px]" 
+          />
         </div>
       </div>
 
@@ -134,12 +180,6 @@ export const FilterSidebar = () => {
           })}
         </div>
       </div>
-
-
-
-
-
-      <Button variant="secondary" className="w-full !text-[10px] !h-10">Clear Filters</Button>
     </aside>
   );
 };

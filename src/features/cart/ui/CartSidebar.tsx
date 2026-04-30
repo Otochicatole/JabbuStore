@@ -3,10 +3,10 @@
 import { useCart } from "../context/CartContext";
 import { Button } from "@/shared/components/Button";
 import Image from "next/image";
-import { X, ShoppingBag, Trash2 } from "lucide-react";
+import { X, ShoppingBag, Trash2, Minus, Plus } from "lucide-react";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  const { items, total, removeFromCart } = useCart();
+  const { items, total, removeFromCart, updateQuantity } = useCart();
 
   return (
     <>
@@ -47,17 +47,38 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                     <div className="relative h-20 w-20 flex-shrink-0 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center p-2">
                       <Image src={item.skin.imageUrl} alt={item.skin.name} fill className="object-contain p-2" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-black text-white truncate leading-tight">{item.skin.weapon} | {item.skin.name}</h4>
-                      <p className="text-[10px] font-bold text-muted uppercase tracking-wider mt-1">{item.quantity} Unidad(es)</p>
-                      <p className="text-sm font-black text-accent mt-2">${(item.skin.price * item.quantity).toLocaleString()} <span className="text-[10px] text-muted ml-0.5">USDT</span></p>
+                    <div className="flex flex-1 items-center justify-between">
+                      <div>
+                        <h4 className="text-[11px] font-black uppercase text-white leading-tight">{item.skin.name}</h4>
+                        <p className="text-[9px] font-bold text-[#84849b] uppercase">{item.skin.weapon} • {item.skin.rarity}</p>
+                        
+                        {/* Quantity Selector */}
+                        <div className="mt-2 flex items-center gap-2">
+                          <button 
+                            onClick={() => updateQuantity(item.skin.id, -1)}
+                            className="h-5 w-5 flex items-center justify-center rounded-md bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer text-white/60 hover:text-white"
+                          >
+                            <Minus className="h-2.5 w-2.5" />
+                          </button>
+                          <span className="text-[10px] font-black text-white w-4 text-center">{item.quantity}</span>
+                          <button 
+                            onClick={() => updateQuantity(item.skin.id, 1)}
+                            className="h-5 w-5 flex items-center justify-center rounded-md bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer text-white/60 hover:text-white"
+                          >
+                            <Plus className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black text-white tracking-tighter">${(item.skin.price * item.quantity).toLocaleString()}</p>
+                        <button 
+                          onClick={() => removeFromCart(item.skin.id)}
+                          className="mt-1 text-[10px] font-bold text-red-400/50 hover:text-red-400 transition-colors cursor-pointer"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </div>
-                    <button 
-                      onClick={() => removeFromCart(item.skin.id)}
-                      className="p-2 text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
                 ))}
               </div>

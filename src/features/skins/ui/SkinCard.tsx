@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { Skin } from '../domain/skin';
 import { useCart } from '../../cart/context/CartContext';
-import { ShoppingCart, Star, Zap, Plus } from 'lucide-react';
+import { ShoppingCart, Star, Zap, Plus, Minus } from 'lucide-react';
 
 interface SkinCardProps {
   skin: Skin;
@@ -27,8 +27,11 @@ const getConditionLabel = (float?: number) => {
 };
 
 export const SkinCard = ({ skin }: SkinCardProps) => {
-  const { addToCart } = useCart();
+  const { addToCart, items, updateQuantity } = useCart();
   const conditionLabel = getConditionLabel(skin.float);
+
+  const cartItem = items.find(item => item.skin.id === skin.id);
+  const isInCart = !!cartItem;
 
   return (
     <div className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 transition-all duration-300 hover:border-white/10 hover:-translate-y-1">
@@ -84,19 +87,38 @@ export const SkinCard = ({ skin }: SkinCardProps) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 h-10">
         <button 
-          className="flex-1 h-10 flex items-center justify-center gap-2 bg-accent rounded-lg text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-2 bg-accent rounded-lg text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer"
         >
           <ShoppingCart className="w-3.5 h-3.5" />
           Comprar
         </button>
-        <button 
-          onClick={() => addToCart(skin)}
-          className="w-10 h-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+
+        {!isInCart ? (
+          <button 
+            onClick={() => addToCart(skin)}
+            className="w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        ) : (
+          <div className="flex items-center bg-secondary rounded-lg border border-white/10 overflow-hidden">
+            <button 
+              onClick={() => updateQuantity(skin.id, -1)}
+              className="w-8 h-full flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer text-white/50 hover:text-white"
+            >
+              <Minus className="w-3 h-3" />
+            </button>
+            <span className="w-8 text-center text-[11px] font-black text-white">{cartItem.quantity}</span>
+            <button 
+              onClick={() => updateQuantity(skin.id, 1)}
+              className="w-8 h-full flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer text-white/50 hover:text-white"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

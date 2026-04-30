@@ -51,7 +51,6 @@ export const FilterSidebar = () => {
     <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto pr-4 custom-scrollbar overscroll-contain lg:fixed lg:top-24 lg:left-6 pb-10">
       {/* Search */}
       <div>
-        <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">Search</h3>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20" />
           <input 

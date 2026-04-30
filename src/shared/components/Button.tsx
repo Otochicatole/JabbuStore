@@ -15,8 +15,8 @@ export const Button = ({
   const baseStyles = "inline-flex items-center justify-center rounded-[4px] font-bold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider text-xs cursor-pointer";
   
   const variants = {
-    primary: "bg-[#ff4b4b] text-white hover:bg-[#ff6161] shadow-lg shadow-red-500/10",
-    secondary: "bg-[#2a293b] text-white hover:bg-[#3a394b]",
+    primary: "bg-accent text-white hover:brightness-110 shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:shadow-[0_0_30px_rgba(217,70,239,0.5)] transition-all",
+    secondary: "bg-secondary text-white hover:brightness-110",
     outline: "border border-white/10 text-white hover:bg-white/5",
     ghost: "text-white/60 hover:text-white hover:bg-white/5"
   };

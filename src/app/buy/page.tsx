@@ -12,7 +12,7 @@ export default function BuyPage() {
 
   return (
     <CartProvider>
-      <div className="min-h-screen bg-[#13121d]">
+      <div>
         <Navbar onOpenCart={() => setIsCartOpen(true)} />
         <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         

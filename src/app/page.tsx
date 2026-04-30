@@ -13,7 +13,7 @@ export default function Home() {
 
   return (
     <CartProvider>
-      <div className="min-h-screen bg-[#13121d]">
+      <div className="min-h-screen">
         <Navbar onOpenCart={() => setIsCartOpen(true)} />
         <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         
@@ -29,9 +29,9 @@ export default function Home() {
               />
             </div>
             <h1 className="mb-6 text-5xl font-black tracking-tight text-white md:text-8xl uppercase leading-none">
-              The Future of <br/> <span className="text-[#ff4b4b]">Skin Trading</span>
+              The Future of <br/> <span className="text-accent">Skin Trading</span>
             </h1>
-            <p className="mx-auto mb-10 max-w-2xl text-lg text-[#84849b]">
+            <p className="mx-auto mb-10 max-w-2xl text-lg text-muted">
               Experience the fastest, most secure way to trade your Counter-Strike 2 items. 
               Join thousands of players who trust JabbuStore for their instant swaps.
             </p>

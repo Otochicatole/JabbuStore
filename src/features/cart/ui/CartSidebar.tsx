@@ -3,6 +3,7 @@
 import { useCart } from "../context/CartContext";
 import { Button } from "@/shared/components/Button";
 import Image from "next/image";
+import { X, ShoppingBag, Trash2 } from "lucide-react";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { items, total, removeFromCart } = useCart();
@@ -12,59 +13,71 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity cursor-pointer"
+          className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm transition-opacity cursor-pointer"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`fixed right-0 top-0 z-[70] h-full w-full max-w-md border-l border-white/5 bg-[#0d0d0d] p-8 transition-transform duration-500 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed right-0 top-0 z-[70] h-full w-full max-w-md border-l border-white/5 bg-card p-8 transition-transform duration-500 ease-out shadow-2xl ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex h-full flex-col">
-          <div className="mb-8 flex items-center justify-between">
-            <h2 className="text-2xl font-black text-white">Your <span className="text-[#ff9d00]">Cart</span></h2>
-            <button onClick={onClose} className="text-white/40 hover:text-white cursor-pointer transition-colors">✕</button>
+          <div className="mb-10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="w-6 h-6 text-accent" />
+              <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Tu <span className="text-accent">Carrito</span></h2>
+            </div>
+            <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/40 hover:text-white cursor-pointer transition-all">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2">
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {items.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-white/30">
-                <p className="text-lg">Your cart is empty</p>
-                <Button variant="ghost" onClick={onClose} className="mt-4">Continue Shopping</Button>
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                  <ShoppingBag className="w-10 h-10 text-white/10" />
+                </div>
+                <p className="text-muted font-bold">Tu carrito está vacío</p>
+                <button onClick={onClose} className="mt-4 text-xs font-black uppercase tracking-widest text-accent hover:underline underline-offset-4">Explorar Skins</button>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
                 {items.map((item) => (
-                  <div key={item.skin.id} className="glass flex items-center gap-4 p-3">
-                    <div className="relative h-16 w-16 flex-shrink-0 bg-black/20 rounded-md">
-                      <Image src={item.skin.imageUrl} alt={item.skin.name} fill className="object-contain" />
+                  <div key={item.skin.id} className="group relative flex items-center gap-4 p-4 rounded-xl bg-background/50 border border-white/5 hover:border-white/10 transition-all">
+                    <div className="relative h-20 w-20 flex-shrink-0 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center p-2">
+                      <Image src={item.skin.imageUrl} alt={item.skin.name} fill className="object-contain p-2" />
                     </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-white">{item.skin.name}</h4>
-                      <p className="text-xs text-white/40">{item.skin.weapon} × {item.quantity}</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-black text-white truncate leading-tight">{item.skin.weapon} | {item.skin.name}</h4>
+                      <p className="text-[10px] font-bold text-muted uppercase tracking-wider mt-1">{item.quantity} Unidad(es)</p>
+                      <p className="text-sm font-black text-accent mt-2">${(item.skin.price * item.quantity).toLocaleString()} <span className="text-[10px] text-muted ml-0.5">USDT</span></p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-[#ff9d00]">${(item.skin.price * item.quantity).toLocaleString()}</p>
-                      <button 
-                        onClick={() => removeFromCart(item.skin.id)}
-                        className="text-[10px] text-red-500 hover:underline cursor-pointer"
-                      >
-                        Remove
-                      </button>
-                    </div>
+                    <button 
+                      onClick={() => removeFromCart(item.skin.id)}
+                      className="p-2 text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="mt-8 border-t border-white/5 pt-8">
+          <div className="mt-8 pt-8 border-t border-white/5">
             <div className="mb-6 flex items-center justify-between">
-              <span className="text-white/60">Total</span>
-              <span className="text-3xl font-black text-white">${total.toLocaleString()}</span>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-muted uppercase tracking-widest">Total Estimado</span>
+                <span className="text-3xl font-black text-white tracking-tighter">${total.toLocaleString()} <span className="text-sm text-muted">USDT</span></span>
+              </div>
             </div>
-            <Button className="w-full" size="lg" disabled={items.length === 0}>
-              Checkout Now
-            </Button>
+            <button 
+              className="w-full h-14 bg-accent text-white font-black uppercase tracking-[0.2em] text-xs rounded-xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:grayscale active:scale-95 cursor-pointer"
+              disabled={items.length === 0}
+            >
+              Finalizar Compra
+            </button>
+            <p className="text-[9px] text-center text-muted mt-4 font-bold uppercase tracking-widest">Pago seguro garantizado</p>
           </div>
         </div>
       </div>

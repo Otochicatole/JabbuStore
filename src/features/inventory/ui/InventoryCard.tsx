@@ -1,10 +1,12 @@
+import React from 'react';
 import Image from 'next/image';
-import { Skin } from '../domain/skin';
-import { useCart } from '../../cart/context/CartContext';
-import { ShoppingCart, Star, Zap, Plus } from 'lucide-react';
+import { Skin } from '../../skins/domain/skin';
+import { useInventory } from '../context/InventoryContext';
+import { Star, Zap, Plus, Check } from 'lucide-react';
 
-interface SkinCardProps {
+interface InventoryCardProps {
   skin: Skin;
+  variant?: 'simple' | 'sell';
 }
 
 const rarityColors: Record<string, string> = {
@@ -26,12 +28,29 @@ const getConditionLabel = (float?: number) => {
   return 'De batalla';
 };
 
-export const SkinCard = ({ skin }: SkinCardProps) => {
-  const { addToCart } = useCart();
+export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) => {
+  const { addToSellList, removeFromSellList, selectedItems } = useInventory();
+  const isSelected = selectedItems.find(item => item.id === skin.id);
   const conditionLabel = getConditionLabel(skin.float);
 
+  const toggleSelection = () => {
+    if (variant === 'simple') return;
+    if (isSelected) {
+      removeFromSellList(skin.id);
+    } else {
+      addToSellList(skin);
+    }
+  };
+
   return (
-    <div className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 transition-all duration-300 hover:border-white/10 hover:-translate-y-1">
+    <div 
+      onClick={toggleSelection}
+      className={`
+        group relative flex flex-col bg-card rounded-2xl p-4 border transition-all duration-300 hover:-translate-y-1
+        ${variant === 'sell' ? 'cursor-pointer' : ''}
+        ${isSelected && variant === 'sell' ? 'border-accent shadow-[0_0_20px_rgba(217,70,239,0.2)]' : 'border-white/5 hover:border-white/10'}
+      `}
+    >
       {/* Header Info */}
       <div className="flex flex-col gap-0.5 mb-2">
         <div className="flex items-center gap-1">
@@ -50,7 +69,6 @@ export const SkinCard = ({ skin }: SkinCardProps) => {
 
       {/* Image Container */}
       <div className="relative aspect-[4/3] w-full flex items-center justify-center my-2">
-        {/* Subtle rarity glow */}
         <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 blur-[40px] transition-opacity duration-500 ${rarityColors[skin.rarity] || 'bg-white'}`} />
         
         <Image
@@ -62,42 +80,37 @@ export const SkinCard = ({ skin }: SkinCardProps) => {
         />
       </div>
 
-      {/* Badges */}
-      <div className="mb-3">
-        <div className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#22c55e]/10 border border-[#22c55e]/20 text-[#22c55e] text-[9px] font-black uppercase tracking-wider">
-          <Zap className="w-2.5 h-2.5 fill-[#22c55e]" />
-          Trade Inmediato
-        </div>
-      </div>
-
       {/* Rarity Divider */}
       <div className={`h-[2px] w-full mb-3 rounded-full ${rarityColors[skin.rarity] || 'bg-white/10'} shadow-[0_0_10px_rgba(255,255,255,0.1)]`} />
 
       {/* Price Section */}
-      <div className="flex flex-col gap-0.5 mb-4">
-        <div className="text-lg font-black text-white tracking-tight leading-none">
-          ${skin.price.toLocaleString()} <span className="text-[10px] text-muted ml-0.5">USDT</span>
+      {variant === 'sell' && (
+        <div className="flex flex-col gap-0.5 mb-4">
+          <div className="text-lg font-black text-white tracking-tight leading-none">
+            ${skin.price.toLocaleString()} <span className="text-[10px] text-muted ml-0.5">USDT</span>
+          </div>
+          <div className="text-[9px] font-bold text-muted/60">
+            ≈ {(skin.price * 1).toLocaleString()} USD
+          </div>
         </div>
-        <div className="text-[9px] font-bold text-muted/60">
-          ≈ {(skin.price * 1).toLocaleString()} USD
-        </div>
-      </div>
+      )}
 
-      {/* Action Buttons */}
-      <div className="flex gap-2">
-        <button 
-          className="flex-1 h-10 flex items-center justify-center gap-2 bg-accent rounded-lg text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer"
-        >
-          <ShoppingCart className="w-3.5 h-3.5" />
-          Comprar
-        </button>
-        <button 
-          onClick={() => addToCart(skin)}
-          className="w-10 h-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      </div>
+      {/* Action Area */}
+      {variant === 'sell' && (
+        <div className="flex justify-end mt-auto pt-2">
+          <div className={`
+            w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 border
+            ${isSelected 
+              ? 'bg-accent text-white border-accent shadow-[0_0_15px_rgba(217,70,239,0.3)]' 
+              : 'bg-secondary text-white border-white/5 hover:bg-secondary/80'
+            }
+          `}>
+            {isSelected ? <Check className="w-4 h-4 stroke-[3px]" /> : <Plus className="w-4 h-4" />}
+          </div>
+        </div>
+      )}
+
+      {variant === 'simple' && <div className="h-4" />}
     </div>
   );
 };

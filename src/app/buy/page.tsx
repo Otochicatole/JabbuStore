@@ -6,7 +6,7 @@ import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
 import { SortDropdown } from "@/features/skins/ui/SortDropdown";
 
 export default function BuyPage() {
-  const { skins, loading } = useSkins();
+  const { skins, loading, error, refetch } = useSkins();
 
   return (
     <main className="mx-auto max-w-full px-6 pt-24 pb-20">
@@ -30,7 +30,7 @@ export default function BuyPage() {
             <SortDropdown />
           </div>
           
-          <SkinGrid skins={skins} loading={loading} />
+          <SkinGrid skins={skins} loading={loading} error={error} onRetry={refetch} />
         </section>
       </div>
     </main>

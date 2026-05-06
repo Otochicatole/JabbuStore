@@ -6,22 +6,87 @@ import { SkinCard } from './SkinCard';
 interface SkinGridProps {
   skins: Skin[];
   loading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
-export const SkinGrid = ({ skins, loading }: SkinGridProps) => {
+export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         {[...Array(10)].map((_, i) => (
-          <div key={i} className="bg-card rounded-2xl h-[310px] animate-pulse border border-white/5 flex flex-col p-4 justify-between">
-            <div className="w-12 h-4 bg-white/5 rounded-full" />
-            <div className="w-full aspect-square bg-white/5 rounded-xl my-4" />
-            <div className="space-y-2">
-              <div className="w-2/3 h-3 bg-white/5 rounded" />
-              <div className="w-1/2 h-4 bg-white/5 rounded" />
+          <div key={i} className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 animate-pulse">
+            
+            {/* Header Info Skeleton */}
+            <div className="flex flex-col gap-1.5 mb-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-8 h-2.5 bg-white/5 rounded-full" />
+                <div className="w-24 h-3.5 bg-white/5 rounded-full" />
+              </div>
+              <div className="w-20 h-2.5 bg-white/5 rounded-full" />
             </div>
+
+            {/* Image Container Skeleton */}
+            <div className="relative aspect-[4/3] w-full flex items-center justify-center my-2 bg-white/[0.01] rounded-xl border border-white/5">
+              <div className="w-28 h-14 bg-white/5 rounded-lg" />
+            </div>
+
+            {/* Badges Skeleton */}
+            <div className="mb-3 mt-1">
+              <div className="w-28 h-5 bg-white/5 rounded" />
+            </div>
+
+            {/* Rarity Divider Skeleton */}
+            <div className="h-[2px] w-full mb-3 bg-white/5 rounded-full" />
+
+            {/* Price Section Skeleton */}
+            <div className="flex flex-col gap-1.5 mb-4">
+              <div className="w-20 h-5 bg-white/5 rounded" />
+              <div className="w-14 h-3 bg-white/5 rounded" />
+            </div>
+
+            {/* Action Buttons Skeleton */}
+            <div className="flex gap-2 h-10 mt-auto">
+              <div className="flex-1 bg-white/5 rounded-lg" />
+              <div className="w-10 bg-white/5 rounded-lg" />
+            </div>
+            
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-16 text-center bg-card rounded-2xl border border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.03)] relative overflow-hidden group">
+        {/* Glow Effects */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-red-500/5 blur-[60px] rounded-full transition-opacity duration-500" />
+        
+        <div className="w-20 h-20 rounded-2xl bg-red-500/5 border border-red-500/20 flex items-center justify-center mb-6 relative z-10 shadow-inner">
+          <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        
+        <div className="relative z-10 max-w-md flex flex-col items-center">
+          <p className="text-lg font-black text-white uppercase tracking-wider mb-2">Error de Sincronización</p>
+          <p className="text-xs text-[#84849b] leading-relaxed mb-8 text-center font-medium">
+            No pudimos conectar con los servidores de JabbuStore para obtener el catálogo de skins: "{error}". Asegúrate de que el servidor de back-end esté en ejecución.
+          </p>
+          
+          {onRetry && (
+            <button 
+              onClick={onRetry}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent hover:bg-accent/90 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-all duration-300 active:scale-95 cursor-pointer border-none outline-none"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.89M9 11l3-3 3 3" />
+              </svg>
+              Reintentar Conexión
+            </button>
+          )}
+        </div>
       </div>
     );
   }

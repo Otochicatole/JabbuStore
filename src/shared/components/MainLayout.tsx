@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Navbar } from "@/shared/components/Navbar";
 import { CartProvider } from "@/features/cart/context/CartContext";
+import { InventoryProvider } from "@/features/inventory/context/InventoryContext";
 import { CartSidebar } from "@/features/cart/ui/CartSidebar";
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
@@ -10,11 +11,13 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <CartProvider>
-      <div className="min-h-screen">
-        <Navbar onOpenCart={() => setIsCartOpen(true)} />
-        <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-        {children}
-      </div>
+      <InventoryProvider>
+        <div className="min-h-screen">
+          <Navbar onOpenCart={() => setIsCartOpen(true)} />
+          <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+          {children}
+        </div>
+      </InventoryProvider>
     </CartProvider>
   );
 };

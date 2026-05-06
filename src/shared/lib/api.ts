@@ -9,6 +9,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
   const headers = {
     'Content-Type': 'application/json',
+    'X-Tunnel-Skip-AntiPhishing-Page': 'true',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers,
   };

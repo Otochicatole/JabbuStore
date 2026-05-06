@@ -1,7 +1,7 @@
 "use client";
 
 import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
-import { InventoryProvider, useInventory } from "@/features/inventory/context/InventoryContext";
+import { useInventory } from "@/features/inventory/context/InventoryContext";
 import { InventoryGrid } from "@/features/inventory/ui/InventoryGrid";
 import { SellBasket } from "@/features/inventory/ui/SellBasket";
 
@@ -42,9 +42,5 @@ function SellPageContent() {
 }
 
 export default function SellPage() {
-  return (
-    <InventoryProvider>
-      <SellPageContent />
-    </InventoryProvider>
-  );
+  return <SellPageContent />;
 }

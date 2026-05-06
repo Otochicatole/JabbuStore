@@ -1,7 +1,7 @@
 "use client";
 
 import { InventoryGrid } from "@/features/inventory/ui/InventoryGrid";
-import { InventoryProvider, useInventory } from "@/features/inventory/context/InventoryContext";
+import { useInventory } from "@/features/inventory/context/InventoryContext";
 
 function InventoryPageContent() {
   const { inventoryItems, loading } = useInventory();
@@ -44,9 +44,5 @@ function InventoryPageContent() {
 }
 
 export default function InventoryPage() {
-  return (
-    <InventoryProvider>
-      <InventoryPageContent />
-    </InventoryProvider>
-  );
+  return <InventoryPageContent />;
 }

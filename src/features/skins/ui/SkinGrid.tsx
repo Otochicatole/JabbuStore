@@ -1,7 +1,10 @@
 "use client";
 
+import { useMemo } from 'react';
 import { Skin } from '../domain/skin';
 import { SkinCard } from './SkinCard';
+import { useFilters } from '@/features/filters/context/FilterContext';
+import { applyFilters } from '@/features/filters/utils/applyFilters';
 
 interface SkinGridProps {
   skins: Skin[];
@@ -11,6 +14,8 @@ interface SkinGridProps {
 }
 
 export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
+  const filters = useFilters();
+  const filteredSkins = useMemo(() => applyFilters(skins, filters), [skins, filters]);
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
@@ -91,7 +96,9 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
     );
   }
 
-  if (skins.length === 0) {
+  const hasActiveFilters = !!(filters.searchQuery || filters.minPrice || filters.maxPrice || filters.selectedCategories.length || filters.selectedConditions.length);
+
+  if (filteredSkins.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-16 text-center bg-card rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden group">
         {/* Glow Effects */}
@@ -102,15 +109,24 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
         </div>
-        <p className="text-sm font-black text-white uppercase tracking-wider mb-2 relative z-10">No hay nada a la venta</p>
-        <p className="text-xs text-[#84849b] max-w-sm font-medium relative z-10">Actualmente no hay artículos disponibles en el mercado. Vuelve a consultar más tarde.</p>
+        {hasActiveFilters ? (
+          <>
+            <p className="text-sm font-black text-white uppercase tracking-wider mb-2 relative z-10">Sin resultados</p>
+            <p className="text-xs text-[#84849b] max-w-sm font-medium relative z-10">Ninguna skin coincide con los filtros activos. Prueba ajustando los criterios de búsqueda.</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-black text-white uppercase tracking-wider mb-2 relative z-10">No hay nada a la venta</p>
+            <p className="text-xs text-[#84849b] max-w-sm font-medium relative z-10">Actualmente no hay artículos disponibles en el mercado. Vuelve a consultar más tarde.</p>
+          </>
+        )}
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-      {skins.map((skin) => (
+      {filteredSkins.map((skin) => (
         <SkinCard key={skin.id} skin={skin} />
       ))}
     </div>

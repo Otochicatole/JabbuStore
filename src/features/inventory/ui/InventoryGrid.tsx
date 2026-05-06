@@ -1,9 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { InventoryCard } from './InventoryCard';
 import { SteamLoginButton } from '@/shared/components/SteamLoginButton';
+import { useFilters } from '@/features/filters/context/FilterContext';
+import { applyFilters } from '@/features/filters/utils/applyFilters';
 
 interface InventoryGridProps {
   variant?: 'simple' | 'sell';
@@ -11,6 +13,8 @@ interface InventoryGridProps {
 
 export const InventoryGrid = ({ variant = 'sell' }: InventoryGridProps) => {
   const { inventoryItems, loading, error, refetchInventory } = useInventory();
+  const filters = useFilters();
+  const filteredItems = useMemo(() => applyFilters(inventoryItems, filters), [inventoryItems, filters]);
 
   const gridCols = variant === 'sell'
     ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
@@ -96,7 +100,9 @@ export const InventoryGrid = ({ variant = 'sell' }: InventoryGridProps) => {
     );
   }
 
-  if (inventoryItems.length === 0) {
+  const hasActiveFilters = !!(filters.searchQuery || filters.minPrice || filters.maxPrice || filters.selectedCategories.length || filters.selectedConditions.length);
+
+  if (filteredItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-16 text-center bg-card rounded-2xl border border-white/5 shadow-2xl">
         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
@@ -104,15 +110,24 @@ export const InventoryGrid = ({ variant = 'sell' }: InventoryGridProps) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
         </div>
-        <p className="text-sm font-black text-white uppercase tracking-wider mb-2">Tu inventario de Steam está vacío</p>
-        <p className="text-xs text-[#84849b] max-w-sm font-medium">Asegúrate de que tus skins de Counter-Strike 2 sean públicas y se encuentren visibles en tu cuenta de Steam.</p>
+        {hasActiveFilters ? (
+          <>
+            <p className="text-sm font-black text-white uppercase tracking-wider mb-2">Sin resultados</p>
+            <p className="text-xs text-[#84849b] max-w-sm font-medium">Ninguna skin de tu inventario coincide con los filtros activos. Prueba ajustando los criterios.</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-black text-white uppercase tracking-wider mb-2">Tu inventario de Steam está vacío</p>
+            <p className="text-xs text-[#84849b] max-w-sm font-medium">Asegúrate de que tus skins de Counter-Strike 2 sean públicas y se encuentren visibles en tu cuenta de Steam.</p>
+          </>
+        )}
       </div>
     );
   }
 
   return (
     <div className={`grid gap-6 ${gridCols}`}>
-      {inventoryItems.map((skin) => (
+      {filteredItems.map((skin) => (
         <InventoryCard key={skin.id} skin={skin} variant={variant} />
       ))}
     </div>

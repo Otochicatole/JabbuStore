@@ -1,12 +1,17 @@
 "use client";
 
+import { useMemo } from "react";
 import { useSkins } from "@/features/skins/ui/useSkins";
 import { SkinGrid } from "@/features/skins/ui/SkinGrid";
 import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
 import { SortDropdown } from "@/features/skins/ui/SortDropdown";
+import { useFilters } from "@/features/filters/context/FilterContext";
+import { applyFilters } from "@/features/filters/utils/applyFilters";
 
 export default function BuyPage() {
   const { skins, loading, error, refetch } = useSkins();
+  const filters = useFilters();
+  const filteredCount = useMemo(() => applyFilters(skins, filters).length, [skins, filters]);
 
   return (
     <main className="mx-auto max-w-full px-6 pt-24 pb-20">
@@ -25,7 +30,7 @@ export default function BuyPage() {
 
           <div className="mb-6 flex items-center justify-between">
             <span className="text-xs font-bold text-white/40 uppercase tracking-widest">
-              {loading ? "Cargando catálogo..." : `Mostrando ${skins.length} resultados`}
+              {loading ? "Cargando catálogo..." : `Mostrando ${filteredCount} resultados`}
             </span>
             <SortDropdown />
           </div>

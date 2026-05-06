@@ -3,30 +3,30 @@
 import { Skin } from "@/features/skins/domain/skin";
 import { FilterState } from "@/features/filters/context/FilterContext";
 
-// Maps sidebar condition labels → float ranges (same as card labels)
+// Maps sidebar condition labels → float ranges
 const CONDITION_FLOAT_MAP: Record<string, [number, number]> = {
-  "De Fábrica":       [0,    0.07],
-  "Desgaste Mínimo":  [0.07, 0.15],
-  "Probado En Campo": [0.15, 0.38],
-  "Bastante Usado":   [0.38, 0.45],
-  "Muy Desgastado":   [0.45, 1.01],
+  "Recién fabricado":    [0,    0.07],
+  "Casi nuevo":           [0.07, 0.15],
+  "Algo desgastado":      [0.15, 0.38],
+  "Bastante desgastado":  [0.38, 0.45],
+  "Deplorable":           [0.45, 1.01],
 };
 
 // Category keywords matched against skin.weapon
 const CATEGORY_WEAPON_MAP: Record<string, string[]> = {
-  "Knives":         ["Karambit","Bayonet","Knife","Navaja","Stiletto","Ursus","Talon","Huntsman","Falchion","Shadow","Gut","M9","Flip","Butterfly","Skeleton","Classic"],
-  "Gloves":         ["Gloves","Wraps","Glove"],
-  "Pistols":        ["USP","Glock","P250","P2000","Desert Eagle","Five-SeveN","CZ75","Tec-9","Dual Berettas","R8","Deagle"],
-  "SMGs":           ["MP5","MP7","MP9","MAC-10","PP-Bizon","P90","UMP-45"],
-  "Assault Rifles": ["AK-47","M4A4","M4A1-S","FAMAS","Galil","AUG","SG 553"],
-  "Sniper Rifles":  ["AWP","SSG 08","SCAR-20","G3SG1"],
-  "Shotguns":       ["Nova","XM1014","MAG-7","Sawed-Off"],
-  "Machineguns":    ["M249","Negev"],
-  "Agents":         ["Agent","Commander","Officer","Operator","Master"],
-  "Containers":     ["Case","Package","Capsule","Patch Pack","Graffiti Box","Souvenir"],
-  "Music Kits":     ["Music Kit"],
-  "Patches":        ["Patch"],
-  "Stickers":       ["Sticker"],
+  "Cuchillos":              ["Karambit","Bayonet","Knife","Navaja","Stiletto","Ursus","Talon","Huntsman","Falchion","Shadow","Gut","M9","Flip","Butterfly","Skeleton","Classic"],
+  "Guantes":                ["Gloves","Wraps","Glove"],
+  "Pistolas":               ["USP","Glock","P250","P2000","Desert Eagle","Five-SeveN","CZ75","Tec-9","Dual Berettas","R8","Deagle"],
+  "Subfusiles":             ["MP5","MP7","MP9","MAC-10","PP-Bizon","P90","UMP-45"],
+  "Rifles de asalto":      ["AK-47","M4A4","M4A1-S","FAMAS","Galil","AUG","SG 553"],
+  "Rifles de francotirador":["AWP","SSG 08","SCAR-20","G3SG1"],
+  "Escopetas":              ["Nova","XM1014","MAG-7","Sawed-Off"],
+  "Ametralladoras":         ["M249","Negev"],
+  "Agentes":                ["Agent","Commander","Officer","Operator","Master"],
+  "Contenedores":           ["Case","Package","Capsule","Patch Pack","Graffiti Box","Souvenir"],
+  "Kits musicales":         ["Music Kit"],
+  "Parches":                ["Patch"],
+  "Pegatinas":              ["Sticker"],
 };
 
 export function applyFilters(skins: Skin[], filters: FilterState): Skin[] {

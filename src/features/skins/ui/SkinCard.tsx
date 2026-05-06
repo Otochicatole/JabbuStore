@@ -20,10 +20,10 @@ const rarityColors: Record<string, string> = {
 const getConditionLabel = (float?: number) => {
   if (float === undefined) return 'Recién fabricado';
   if (float < 0.07) return 'Recién fabricado';
-  if (float < 0.15) return 'Desgaste mínimo';
-  if (float < 0.38) return 'Probado en el campo';
-  if (float < 0.45) return 'Bien desgastado';
-  return 'De batalla';
+  if (float < 0.15) return 'Casi nuevo';
+  if (float < 0.38) return 'Algo desgastado';
+  if (float < 0.45) return 'Bastante desgastado';
+  return 'Deplorable';
 };
 
 export const SkinCard = ({ skin }: SkinCardProps) => {

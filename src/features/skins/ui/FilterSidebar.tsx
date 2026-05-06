@@ -5,17 +5,17 @@ import { Search, ChevronRight, RotateCcw } from "lucide-react";
 import { useFilters } from "@/features/filters/context/FilterContext";
 
 const CATEGORIES = [
-  "Knives", "Gloves", "Pistols", "SMGs",
-  "Assault Rifles", "Sniper Rifles", "Shotguns", "Machineguns",
-  "Agents", "Containers", "Music Kits", "Patches", "Stickers"
+  "Cuchillos", "Guantes", "Pistolas", "Subfusiles",
+  "Rifles de asalto", "Rifles de francotirador", "Escopetas", "Ametralladoras",
+  "Agentes", "Contenedores", "Kits musicales", "Parches", "Pegatinas"
 ];
 
 const CONDITIONS = [
-  "De Fábrica",
-  "Desgaste Mínimo",
-  "Probado En Campo",
-  "Bastante Usado",
-  "Muy Desgastado"
+  "Recién fabricado",
+  "Casi nuevo",
+  "Algo desgastado",
+  "Bastante desgastado",
+  "Deplorable"
 ];
 
 import { useState } from "react";

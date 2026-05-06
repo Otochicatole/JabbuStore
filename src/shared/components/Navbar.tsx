@@ -2,6 +2,7 @@
 
 import { useCart } from "@/features/cart/context/CartContext";
 import { Button } from "./Button";
+import { SteamLoginButton } from "./SteamLoginButton";
 import Link from "next/link";
 import { ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -36,6 +37,18 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
       });
     }
   }, [pathname]);
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem('auth_token'));
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    setIsLoggedIn(false);
+    window.location.reload();
+  };
 
   return (
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
@@ -87,11 +100,20 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
               </span>
             )}
           </div>
-          <Button variant="ghost" size="sm" className="gap-2">
-            <User className="h-4 w-4" />
-            Iniciar Sesión
-          </Button>
-          <Button variant="primary" size="sm">Registrarse</Button>
+
+          {/* Auth Button */}
+          {isLoggedIn ? (
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center">
+                <User className="h-4 w-4 text-accent" />
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                Salir
+              </Button>
+            </div>
+          ) : (
+            <SteamLoginButton />
+          )}
         </div>
       </div>
     </nav>

@@ -1,4 +1,5 @@
-import { Skin } from "../skins/domain/skin";
+import { Skin } from "../../skins/domain/skin";
+
 
 export const MOCK_INVENTORY: Skin[] = [
   {

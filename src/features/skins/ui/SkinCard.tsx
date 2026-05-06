@@ -44,12 +44,8 @@ export const SkinCard = ({ skin }: SkinCardProps) => {
       {/* Header Info */}
       <div className="flex flex-col gap-0.5 mb-2">
         <div className="flex items-center gap-1">
-          <div className="flex gap-0.5">
-            <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
-            <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
-          </div>
           <h2 className="text-[11px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
-            {skin.weapon} | {skin.name}
+            {skin.weapon} | <span className="text-[#aaaaff]">{skin.name}</span>
           </h2>
         </div>
         <span className="text-[10px] font-bold text-muted uppercase tracking-tight">

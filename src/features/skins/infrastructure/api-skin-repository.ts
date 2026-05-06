@@ -11,6 +11,7 @@ export interface StoreItem {
   tradable: boolean;
   marketable: boolean;
   botSteamId: string;
+  price?: number;
 }
 
 // Helper function to create deterministic hash codes from strings
@@ -80,7 +81,9 @@ function mapStoreItemToSkin(item: StoreItem): Skin {
   else if (rarity === 'uncommon') basePrice = 12;
 
   const variance = (Math.abs(hashCode(item.assetId)) % 100) / 100; // 0.0 to 1.0
-  const finalPrice = Math.round(basePrice * (0.8 + variance * 0.4) * 100) / 100; // variance of +/-20%
+  const finalPrice = item.price && item.price > 0
+    ? item.price
+    : Math.round(basePrice * (0.8 + variance * 0.4) * 100) / 100; // variance of +/-20% as fallback
 
   // Generate deterministic float value based on name wear tags
   let floatVal = 0.15; // default field tested

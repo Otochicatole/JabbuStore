@@ -14,7 +14,6 @@ const NAV_LINKS = [
   { name: 'Inicio', path: '/' },
   { name: 'Comprar', path: '/buy' },
   { name: 'Vender', path: '/sell' },
-  { name: 'Inventario', path: '/inventory' }
 ];
 
 interface UserProfile {

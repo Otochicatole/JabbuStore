@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { BACKEND_URL } from '@/shared/lib/api';
 
 export const SteamLoginButton = () => {
   const handleLogin = () => {
-    window.location.href = 'https://9q88kt3s-3001.brs.devtunnels.ms/api/auth/steam';
+    window.location.href = `${BACKEND_URL}/auth/steam`;
   };
 
   return (

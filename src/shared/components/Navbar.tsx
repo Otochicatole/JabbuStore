@@ -8,7 +8,7 @@ import { ShoppingCart, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
-import { fetchWithAuth } from "@/shared/lib/api";
+import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 
 const NAV_LINKS = [
   { name: 'Inicio', path: '/' },
@@ -55,7 +55,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
     setIsLoggedIn(!!token);
 
     if (token) {
-      fetchWithAuth('https://9q88kt3s-3001.brs.devtunnels.ms/api/users/me')
+      fetchWithAuth(`${BACKEND_URL}/users/me`)
         .then(async (res) => {
           if (res.ok) {
             const data = await res.json();

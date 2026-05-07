@@ -3,6 +3,8 @@
  * guardado en localStorage.
  */
 
+export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   // Obtener el token de localStorage
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
@@ -33,7 +35,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
 // Ejemplo de uso:
 /*
 const getUserProfile = async () => {
-  const res = await fetchWithAuth('https://9q88kt3s-3001.brs.devtunnels.ms/api/users/profile');
+  const res = await fetchWithAuth(`${BACKEND_URL}/users/profile`);
   const data = await res.json();
   return data;
 }

@@ -2,9 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Skin, SkinRarity } from '../../skins/domain/skin';
-import { fetchWithAuth } from '@/shared/lib/api';
-
-const BACKEND_URL = 'https://9q88kt3s-3001.brs.devtunnels.ms/api';
+import { fetchWithAuth, BACKEND_URL } from '@/shared/lib/api';
 
 export interface SteamInventoryItem {
   assetId: string;

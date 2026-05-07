@@ -1,6 +1,5 @@
 import { Skin, SkinRepository, SkinRarity } from "../domain/skin";
-
-const BACKEND_URL = 'https://9q88kt3s-3001.brs.devtunnels.ms/api';
+import { BACKEND_URL } from "@/shared/lib/api";
 
 export interface StoreItem {
   assetId: string;

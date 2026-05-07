@@ -12,7 +12,7 @@ interface InventoryGridProps {
 }
 
 export const InventoryGrid = ({ variant = 'sell' }: InventoryGridProps) => {
-  const { inventoryItems, loading, error, refetchInventory } = useInventory();
+  const { inventoryItems, loading, error, syncing, refetchInventory } = useInventory();
   const filters = useFilters();
   const filteredItems = useMemo(() => applyFilters(inventoryItems, filters), [inventoryItems, filters]);
 
@@ -87,13 +87,14 @@ export const InventoryGrid = ({ variant = 'sell' }: InventoryGridProps) => {
           </p>
           
           <button 
-            onClick={() => refetchInventory()}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent hover:bg-accent/90 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-all duration-300 active:scale-95 cursor-pointer border-none outline-none"
+            onClick={() => refetchInventory(true)}
+            disabled={syncing}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-accent hover:bg-accent/90 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-all duration-300 active:scale-95 cursor-pointer border-none outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.89M9 11l3-3 3 3" />
             </svg>
-            Reintentar Sincronización
+            {syncing ? "Sincronizando..." : "Reintentar Sincronización"}
           </button>
         </div>
       </div>

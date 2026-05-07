@@ -12,18 +12,20 @@ export interface SteamInventoryItem {
   iconUrl: string;
   tradable: boolean;
   marketable: boolean;
+  price?: number;
 }
 
 interface InventoryContextType {
   inventoryItems: Skin[];
   loading: boolean;
+  syncing: boolean;
   error: string | null;
   selectedItems: Skin[];
   addToSellList: (skin: Skin) => void;
   removeFromSellList: (id: string) => void;
   clearSellList: () => void;
   totalValue: number;
-  refetchInventory: () => void;
+  refetchInventory: (forceSync?: boolean) => Promise<void>;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -95,7 +97,9 @@ function mapSteamItemToSkin(item: SteamInventoryItem): Skin {
   else if (rarity === 'uncommon') basePrice = 12;
 
   const variance = (Math.abs(hashCode(item.assetId)) % 100) / 100; // 0.0 to 1.0
-  const finalPrice = Math.round(basePrice * (0.8 + variance * 0.4) * 100) / 100; // variance of +/-20%
+  const finalPrice = item.price && item.price > 0
+    ? item.price
+    : Math.round(basePrice * (0.8 + variance * 0.4) * 100) / 100; // variance of +/-20% as fallback
 
   // Generate deterministic float value based on name wear tags
   let floatVal = 0.15; // default field tested
@@ -130,11 +134,16 @@ function mapSteamItemToSkin(item: SteamInventoryItem): Skin {
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const [inventoryItems, setInventoryItems] = useState<Skin[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [syncing, setSyncing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Skin[]>([]);
 
-  const fetchInventory = useCallback(async () => {
-    setLoading(true);
+  const fetchInventory = useCallback(async (forceSync: boolean = false) => {
+    if (forceSync) {
+      setSyncing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
@@ -142,11 +151,16 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       setError("Inicia sesión para ver tu inventario");
       setInventoryItems([]);
       setLoading(false);
+      setSyncing(false);
       return;
     }
 
     try {
-      const response = await fetchWithAuth(`${BACKEND_URL}/users/me/inventory`);
+      const url = forceSync 
+        ? `${BACKEND_URL}/users/me/inventory?forceSync=true`
+        : `${BACKEND_URL}/users/me/inventory`;
+        
+      const response = await fetchWithAuth(url);
       
       if (!response.ok) {
         if (response.status === 401) {
@@ -172,6 +186,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       setInventoryItems([]);
     } finally {
       setLoading(false);
+      setSyncing(false);
     }
   }, []);
 
@@ -197,6 +212,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     <InventoryContext.Provider value={{ 
       inventoryItems,
       loading,
+      syncing,
       error,
       selectedItems, 
       addToSellList, 

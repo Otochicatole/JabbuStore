@@ -6,7 +6,7 @@ import { InventoryGrid } from "@/features/inventory/ui/InventoryGrid";
 import { SellBasket } from "@/features/inventory/ui/SellBasket";
 
 function SellPageContent() {
-  const { inventoryItems, loading } = useInventory();
+  const { inventoryItems, loading, syncing, refetchInventory } = useInventory();
 
   const totalValue = inventoryItems.reduce((sum, item) => sum + item.price, 0);
 
@@ -45,10 +45,28 @@ function SellPageContent() {
             </div>
           </header>
 
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between gap-4">
             <span className="text-xs font-bold text-white/40 uppercase tracking-widest">
               {loading ? "Cargando tu inventario..." : `Tu Inventario (${inventoryItems.length} items)`}
             </span>
+            {!loading && (
+              <button
+                onClick={() => refetchInventory(true)}
+                disabled={syncing}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-accent/30 text-[10px] font-black uppercase tracking-wider text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+              >
+                <svg
+                  className={`w-3.5 h-3.5 text-accent group-hover:text-white transition-colors ${syncing ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.89M9 11l3-3 3 3" />
+                </svg>
+                {syncing ? 'Sincronizando...' : 'Actualizar Inventario'}
+              </button>
+            )}
           </div>
           
           <InventoryGrid />

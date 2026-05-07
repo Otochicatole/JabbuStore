@@ -8,8 +8,9 @@ import { useFilters, SortOption } from "@/features/filters/context/FilterContext
 const SORT_OPTIONS: SortOption[] = [
   "Precio: Mayor a Menor",
   "Precio: Menor a Mayor",
-  "Más recientes",
-  "Populares"
+  "Float: Menor a Mayor",
+  "Float: Mayor a Menor",
+  "Más recientes"
 ];
 
 export const SortDropdown = () => {

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from "react";
 
-export type SortOption = "Precio: Mayor a Menor" | "Precio: Menor a Mayor" | "Más recientes" | "Populares";
+export type SortOption = "Precio: Mayor a Menor" | "Precio: Menor a Mayor" | "Float: Menor a Mayor" | "Float: Mayor a Menor" | "Más recientes";
 
 export interface FilterState {
   searchQuery: string;

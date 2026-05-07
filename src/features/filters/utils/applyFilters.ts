@@ -79,16 +79,15 @@ export function applyFilters(skins: Skin[], filters: FilterState): Skin[] {
     case "Precio: Menor a Mayor":
       result.sort((a, b) => a.price - b.price);
       break;
+    case "Float: Menor a Mayor":
+      result.sort((a, b) => (a.float ?? 0) - (b.float ?? 0));
+      break;
+    case "Float: Mayor a Menor":
+      result.sort((a, b) => (b.float ?? 0) - (a.float ?? 0));
+      break;
     case "Más recientes":
       // id is assetId; higher numeric id = newer item
       result.sort((a, b) => (b.id > a.id ? 1 : -1));
-      break;
-    case "Populares":
-      // Use rarity as a popularity proxy: ancient > legendary > ...
-      const rarityOrder: Record<string, number> = {
-        ancient: 6, immortal: 5, legendary: 4, mythical: 3, rare: 2, uncommon: 1, common: 0,
-      };
-      result.sort((a, b) => (rarityOrder[b.rarity] ?? 0) - (rarityOrder[a.rarity] ?? 0));
       break;
   }
 

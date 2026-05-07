@@ -9,6 +9,10 @@ export interface Skin {
   imageUrl: string;
   float?: number;
   pattern?: number;
+  exterior?: string | null;
+  category?: string;
+  isStatTrak?: boolean;
+  isSouvenir?: boolean;
 }
 
 export interface SkinRepository {

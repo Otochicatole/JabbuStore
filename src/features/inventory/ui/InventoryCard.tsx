@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Skin } from '../../skins/domain/skin';
 import { useInventory } from '../context/InventoryContext';
-import { Star, Zap, Plus, Check } from 'lucide-react';
+import { Zap, Plus, Check } from 'lucide-react';
 
 interface InventoryCardProps {
   skin: Skin;
@@ -31,7 +31,7 @@ const getConditionLabel = (float?: number) => {
 export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) => {
   const { addToSellList, removeFromSellList, selectedItems } = useInventory();
   const isSelected = selectedItems.find(item => item.id === skin.id);
-  const conditionLabel = getConditionLabel(skin.float);
+  const conditionLabel = skin.exterior || getConditionLabel(skin.float);
 
   const toggleSelection = () => {
     if (variant === 'simple') return;
@@ -51,20 +51,50 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
         ${isSelected && variant === 'sell' ? 'border-accent shadow-[0_0_20px_rgba(217,70,239,0.2)]' : 'border-white/5 hover:border-white/10'}
       `}
     >
-      {/* Header Info */}
-      <div className="flex flex-col gap-0.5 mb-2">
-        <div className="flex items-center gap-1">
-          <div className="flex gap-0.5">
-            <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
-            <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
-          </div>
-          <h2 className="text-[11px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
-            {skin.weapon} | {skin.name}
-          </h2>
+      {/* 1. Item Name at the very top */}
+      <div className="mb-2">
+        <h2 className="text-[11px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
+          {skin.isStatTrak && <span className="text-[#cf6a32] font-black mr-1 border border-[#cf6a32]/30 px-1 py-0.2 rounded-[3px] bg-[#cf6a32]/10 text-[9px]">ST™</span>}
+          {skin.isSouvenir && <span className="text-[#e4ae39] font-black mr-1 border border-[#e4ae39]/30 px-1 py-0.2 rounded-[3px] bg-[#e4ae39]/10 text-[9px]">SV</span>}
+          {skin.weapon} | <span className="text-[#aaaaff]">{skin.name}</span>
+        </h2>
+      </div>
+
+      {/* 2. Compact Info Panel below the name */}
+      <div className="flex flex-col gap-1.5 bg-[#000000]/25 p-2 rounded-[8px] border border-white/[0.02] mb-3">
+        <div className="flex items-center justify-between text-[9px] text-[#84849b] font-mono">
+          {skin.float !== undefined ? (
+            <span className="flex items-center gap-1.5">
+              <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">{conditionLabel}</span>
+              <span className="text-white/40">({skin.float.toFixed(4)})</span>
+            </span>
+          ) : (
+            <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">{conditionLabel}</span>
+          )}
+          
+          {/* Seed / Pattern */}
+          {skin.pattern !== undefined && (
+            <span className="flex items-center gap-1">
+              <span className="font-sans font-black text-white/30 uppercase text-[8px] tracking-wider">Seed</span>
+              <span className="text-white/80 font-bold">{skin.pattern}</span>
+            </span>
+          )}
         </div>
-        <span className="text-[10px] font-bold text-muted uppercase tracking-tight">
-          {conditionLabel}
-        </span>
+
+        {/* Visual Float progress bar */}
+        {skin.float !== undefined && (
+          <div className="h-0.5 w-full bg-white/5 rounded-full overflow-hidden relative">
+            <div 
+              style={{ width: `${(1 - skin.float) * 100}%` }}
+              className={`h-full rounded-full ${
+                skin.float < 0.07 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' :
+                skin.float < 0.15 ? 'bg-emerald-400' :
+                skin.float < 0.38 ? 'bg-yellow-500' :
+                skin.float < 0.45 ? 'bg-orange-500' : 'bg-red-500'
+              }`}
+            />
+          </div>
+        )}
       </div>
 
       {/* Image Container */}
@@ -87,10 +117,7 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
       {variant === 'sell' && (
         <div className="flex flex-col gap-0.5 mb-4">
           <div className="text-lg font-black text-white tracking-tight leading-none">
-            ${skin.price.toLocaleString()} <span className="text-[10px] text-muted ml-0.5">USDT</span>
-          </div>
-          <div className="text-[9px] font-bold text-muted/60">
-            ≈ {(skin.price * 1).toLocaleString()} USD
+            ${skin.price.toLocaleString()} <span className="text-[10px] text-muted ml-0.5">USD</span>
           </div>
         </div>
       )}

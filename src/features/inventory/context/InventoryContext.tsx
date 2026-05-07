@@ -13,6 +13,11 @@ export interface SteamInventoryItem {
   tradable: boolean;
   marketable: boolean;
   price?: number;
+  rarity?: string;
+  exterior?: string | null;
+  category?: string;
+  isStatTrak?: boolean;
+  isSouvenir?: boolean;
 }
 
 interface InventoryContextType {
@@ -58,34 +63,41 @@ function mapSteamItemToSkin(item: SteamInventoryItem): Skin {
     cleanSkinName = skinName.split(" (")[0];
   }
 
-  // Determine Rarity based on description 'type' or fallback to deterministic hash index
+  // Determine Rarity based on description 'type' or fallback to database field
   let rarity: SkinRarity = 'common';
-  const typeLower = item.type.toLowerCase();
-  if (
-    typeLower.includes("encubierto") || 
-    typeLower.includes("covert") || 
-    typeLower.includes("cuchillo") || 
-    typeLower.includes("knife") || 
-    typeLower.includes("guantes") || 
-    typeLower.includes("gloves") || 
-    typeLower.includes("extraordinario") || 
-    typeLower.includes("contrabando")
-  ) {
-    rarity = 'ancient';
-  } else if (typeLower.includes("clasificado") || typeLower.includes("classified")) {
-    rarity = 'legendary';
-  } else if (typeLower.includes("restringido") || typeLower.includes("restricted")) {
-    rarity = 'mythical';
-  } else if (typeLower.includes("militar") || typeLower.includes("mil-spec")) {
-    rarity = 'rare';
-  } else if (typeLower.includes("industrial")) {
-    rarity = 'uncommon';
-  } else if (typeLower.includes("consumo") || typeLower.includes("consumer")) {
-    rarity = 'common';
+  if (item.rarity) {
+    const normalized = item.rarity.toLowerCase();
+    if (['common', 'uncommon', 'rare', 'mythical', 'legendary', 'ancient', 'immortal'].includes(normalized)) {
+      rarity = normalized as SkinRarity;
+    }
   } else {
-    const rarities: SkinRarity[] = ['common', 'uncommon', 'rare', 'mythical', 'legendary', 'ancient'];
-    const index = Math.abs(hashCode(item.classId)) % rarities.length;
-    rarity = rarities[index];
+    const typeLower = item.type.toLowerCase();
+    if (
+      typeLower.includes("encubierto") || 
+      typeLower.includes("covert") || 
+      typeLower.includes("cuchillo") || 
+      typeLower.includes("knife") || 
+      typeLower.includes("guantes") || 
+      typeLower.includes("gloves") || 
+      typeLower.includes("extraordinario") || 
+      typeLower.includes("contrabando")
+    ) {
+      rarity = 'ancient';
+    } else if (typeLower.includes("clasificado") || typeLower.includes("classified")) {
+      rarity = 'legendary';
+    } else if (typeLower.includes("restringido") || typeLower.includes("restricted")) {
+      rarity = 'mythical';
+    } else if (typeLower.includes("militar") || typeLower.includes("mil-spec")) {
+      rarity = 'rare';
+    } else if (typeLower.includes("industrial")) {
+      rarity = 'uncommon';
+    } else if (typeLower.includes("consumo") || typeLower.includes("consumer")) {
+      rarity = 'common';
+    } else {
+      const rarities: SkinRarity[] = ['common', 'uncommon', 'rare', 'mythical', 'legendary', 'ancient'];
+      const index = Math.abs(hashCode(item.classId)) % rarities.length;
+      rarity = rarities[index];
+    }
   }
 
   // Generate deterministic price based on rarity tier and a percentage variance based on assetId
@@ -127,7 +139,11 @@ function mapSteamItemToSkin(item: SteamInventoryItem): Skin {
     price: finalPrice,
     imageUrl: item.iconUrl || '/skin.webp',
     float: floatVal,
-    pattern: Math.abs(hashCode(item.assetId)) % 1000
+    pattern: Math.abs(hashCode(item.assetId)) % 1000,
+    exterior: item.exterior || null,
+    category: item.category || 'other',
+    isStatTrak: item.isStatTrak || false,
+    isSouvenir: item.isSouvenir || false
   };
 }
 

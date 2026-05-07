@@ -24,8 +24,44 @@ export const InventoryGrid = ({ variant = 'sell' }: InventoryGridProps) => {
     return (
       <div className={`grid gap-6 ${gridCols}`}>
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-card rounded-2xl h-[300px] animate-pulse border border-white/5 flex items-center justify-center">
-            <span className="text-[10px] text-white/20 font-black uppercase tracking-widest">Cargando...</span>
+          <div key={i} className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 animate-pulse h-[305px]">
+            
+            {/* 1. Item Name Skeleton at the very top */}
+            <div className="mb-2.5">
+              <div className="w-32 h-3.5 bg-white/5 rounded-full" />
+            </div>
+
+            {/* 2. Compact Info Panel Skeleton below the name */}
+            <div className="flex flex-col gap-1.5 p-2 rounded-[8px] mb-3 bg-white/[0.01] border border-white/5">
+              <div className="flex items-center justify-between">
+                <div className="w-16 h-2.5 bg-white/5 rounded-full" />
+                <div className="w-10 h-2.5 bg-white/5 rounded-full" />
+              </div>
+              <div className="h-0.5 w-full bg-white/5 rounded-full mt-0.5" />
+            </div>
+
+            {/* 3. Image Container Skeleton */}
+            <div className="relative aspect-[4/3] w-full flex items-center justify-center my-2 bg-white/[0.01] rounded-xl border border-white/5">
+              <div className="w-24 h-12 bg-white/5 rounded-lg" />
+            </div>
+
+            {/* 4. Rarity Divider Skeleton */}
+            <div className="h-[2px] w-full mb-3 bg-white/5 rounded-full" />
+
+            {/* 5. Price Section Skeleton */}
+            {variant === 'sell' && (
+              <div className="flex flex-col mb-4">
+                <div className="w-16 h-5 bg-white/5 rounded" />
+              </div>
+            )}
+
+            {/* 6. Action Area Skeleton */}
+            {variant === 'sell' && (
+              <div className="flex justify-end mt-auto pt-2">
+                <div className="w-10 h-10 bg-white/5 rounded-lg" />
+              </div>
+            )}
+            
           </div>
         ))}
       </div>

@@ -22,35 +22,34 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
         {[...Array(10)].map((_, i) => (
           <div key={i} className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 animate-pulse">
             
-            {/* Header Info Skeleton */}
-            <div className="flex flex-col gap-1.5 mb-3">
-              <div className="flex items-center gap-1.5">
-                <div className="w-8 h-2.5 bg-white/5 rounded-full" />
-                <div className="w-24 h-3.5 bg-white/5 rounded-full" />
+            {/* 1. Item Name Skeleton at the very top */}
+            <div className="mb-2.5">
+              <div className="w-32 h-3.5 bg-white/5 rounded-full" />
+            </div>
+
+            {/* 2. Compact Info Panel Skeleton below the name */}
+            <div className="flex flex-col gap-1.5 p-2 rounded-[8px] mb-3 bg-white/[0.01] border border-white/5">
+              <div className="flex items-center justify-between">
+                <div className="w-16 h-2.5 bg-white/5 rounded-full" />
+                <div className="w-10 h-2.5 bg-white/5 rounded-full" />
               </div>
-              <div className="w-20 h-2.5 bg-white/5 rounded-full" />
+              <div className="h-0.5 w-full bg-white/5 rounded-full mt-0.5" />
             </div>
 
-            {/* Image Container Skeleton */}
+            {/* 3. Image Container Skeleton */}
             <div className="relative aspect-[4/3] w-full flex items-center justify-center my-2 bg-white/[0.01] rounded-xl border border-white/5">
-              <div className="w-28 h-14 bg-white/5 rounded-lg" />
+              <div className="w-24 h-12 bg-white/5 rounded-lg" />
             </div>
 
-            {/* Badges Skeleton */}
-            <div className="mb-3 mt-1">
-              <div className="w-28 h-5 bg-white/5 rounded" />
-            </div>
-
-            {/* Rarity Divider Skeleton */}
+            {/* 4. Rarity Divider Skeleton */}
             <div className="h-[2px] w-full mb-3 bg-white/5 rounded-full" />
 
-            {/* Price Section Skeleton */}
-            <div className="flex flex-col gap-1.5 mb-4">
-              <div className="w-20 h-5 bg-white/5 rounded" />
-              <div className="w-14 h-3 bg-white/5 rounded" />
+            {/* 5. Price Section Skeleton */}
+            <div className="flex flex-col mb-4">
+              <div className="w-16 h-5 bg-white/5 rounded" />
             </div>
 
-            {/* Action Buttons Skeleton */}
+            {/* 6. Action Buttons Skeleton */}
             <div className="flex gap-2 h-10 mt-auto">
               <div className="flex-1 bg-white/5 rounded-lg" />
               <div className="w-10 bg-white/5 rounded-lg" />

@@ -76,7 +76,7 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
         <div className="relative z-10 max-w-md flex flex-col items-center">
           <p className="text-lg font-black text-white uppercase tracking-wider mb-2">Error de Sincronización</p>
           <p className="text-xs text-[#84849b] leading-relaxed mb-8 text-center font-medium">
-            No pudimos conectar con los servidores de JabbuStore para obtener el catálogo de skins: "{error}". Asegúrate de que el servidor de back-end esté en ejecución.
+            No pudimos conectar con los servidores de JabbuStore para obtener el catálogo de skins: &quot;{error}&quot;. Asegúrate de que el servidor de back-end esté en ejecución.
           </p>
           
           {onRetry && (

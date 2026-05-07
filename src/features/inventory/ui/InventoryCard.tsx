@@ -61,7 +61,7 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
       </div>
 
       {/* 2. Compact Info Panel below the name */}
-      <div className="flex flex-col gap-1.5 bg-[#000000]/25 p-2 rounded-[8px] border border-white/[0.02] mb-3">
+      <div className="flex flex-col gap-1.5 p-2 rounded-[8px] mb-3">
         <div className="flex items-center justify-between text-[9px] text-[#84849b] font-mono">
           {skin.float !== undefined ? (
             <span className="flex items-center gap-1.5">

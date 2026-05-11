@@ -18,6 +18,8 @@ export interface SteamInventoryItem {
   category?: string;
   isStatTrak?: boolean;
   isSouvenir?: boolean;
+  float?: number | null;
+  pattern?: number | null;
 }
 
 interface InventoryContextType {
@@ -131,6 +133,9 @@ function mapSteamItemToSkin(item: SteamInventoryItem): Skin {
     floatVal = Math.round(((Math.abs(hashCode(item.assetId)) % 1000) / 1000) * 1000) / 1000;
   }
 
+  const finalFloat = item.float !== undefined && item.float !== null ? item.float : floatVal;
+  const finalPattern = item.pattern !== undefined && item.pattern !== null ? item.pattern : Math.abs(hashCode(item.assetId)) % 1000;
+
   return {
     id: item.assetId,
     name: cleanSkinName,
@@ -138,8 +143,8 @@ function mapSteamItemToSkin(item: SteamInventoryItem): Skin {
     rarity,
     price: finalPrice,
     imageUrl: item.iconUrl || '/skin.webp',
-    float: floatVal,
-    pattern: Math.abs(hashCode(item.assetId)) % 1000,
+    float: finalFloat,
+    pattern: finalPattern,
     exterior: item.exterior || null,
     category: item.category || 'other',
     isStatTrak: item.isStatTrak || false,

@@ -16,6 +16,8 @@ export interface StoreItem {
   category?: string;
   isStatTrak?: boolean;
   isSouvenir?: boolean;
+  float?: number | null;
+  pattern?: number | null;
 }
 
 // Helper function to create deterministic hash codes from strings
@@ -96,24 +98,6 @@ function mapStoreItemToSkin(item: StoreItem): Skin {
     ? item.price
     : Math.round(basePrice * (0.8 + variance * 0.4) * 100) / 100; // variance of +/-20% as fallback
 
-  // Generate deterministic float value based on name wear tags
-  let floatVal = 0.15; // default field tested
-  const lowerName = item.name.toLowerCase();
-  if (lowerName.includes("recién fabricado") || lowerName.includes("factory new") || lowerName.includes("fn")) {
-    floatVal = 0.01 + (Math.abs(hashCode(item.assetId)) % 500) / 10000; // 0.01 - 0.06
-  } else if (lowerName.includes("desgaste mínimo") || lowerName.includes("minimal wear") || lowerName.includes("mw")) {
-    floatVal = 0.07 + (Math.abs(hashCode(item.assetId)) % 700) / 10000; // 0.07 - 0.14
-  } else if (lowerName.includes("probado en el campo") || lowerName.includes("field-tested") || lowerName.includes("ft")) {
-    floatVal = 0.15 + (Math.abs(hashCode(item.assetId)) % 2200) / 10000; // 0.15 - 0.37
-  } else if (lowerName.includes("bien desgastado") || lowerName.includes("well-worn") || lowerName.includes("ww")) {
-    floatVal = 0.38 + (Math.abs(hashCode(item.assetId)) % 600) / 10000; // 0.38 - 0.44
-  } else if (lowerName.includes("de batalla") || lowerName.includes("battle-scarred") || lowerName.includes("bs")) {
-    floatVal = 0.45 + (Math.abs(hashCode(item.assetId)) % 5400) / 10000; // 0.45 - 0.99
-  } else {
-    // Deterministic random float
-    floatVal = Math.round(((Math.abs(hashCode(item.assetId)) % 1000) / 1000) * 1000) / 1000;
-  }
-
   return {
     id: item.assetId,
     name: cleanSkinName,
@@ -121,8 +105,8 @@ function mapStoreItemToSkin(item: StoreItem): Skin {
     rarity,
     price: finalPrice,
     imageUrl: item.iconUrl || '/skin.webp',
-    float: floatVal,
-    pattern: Math.abs(hashCode(item.assetId)) % 1000,
+    float: undefined,
+    pattern: undefined,
     exterior: item.exterior || null,
     category: item.category || 'other',
     isStatTrak: item.isStatTrak || false,

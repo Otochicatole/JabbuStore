@@ -53,38 +53,8 @@ export const SkinCard = ({ skin }: SkinCardProps) => {
       {/* 2. Compact Info Panel below the name */}
       <div className="flex flex-col gap-1.5 p-2 rounded-[8px] mb-3">
         <div className="flex items-center justify-between text-[9px] text-[#84849b] font-mono">
-          {skin.float !== undefined ? (
-            <span className="flex items-center gap-1.5">
-              <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">{conditionLabel}</span>
-              <span className="text-white/40">({skin.float.toFixed(4)})</span>
-            </span>
-          ) : (
-            <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">{conditionLabel}</span>
-          )}
-          
-          {/* Seed / Pattern */}
-          {skin.pattern !== undefined && (
-            <span className="flex items-center gap-1">
-              <span className="font-sans font-black text-white/30 uppercase text-[8px] tracking-wider">Seed</span>
-              <span className="text-white/80 font-bold">{skin.pattern}</span>
-            </span>
-          )}
+          <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">{conditionLabel}</span>
         </div>
-
-        {/* Visual Float progress bar */}
-        {skin.float !== undefined && (
-          <div className="h-0.5 w-full bg-white/5 rounded-full overflow-hidden relative">
-            <div 
-              style={{ width: `${(1 - skin.float) * 100}%` }}
-              className={`h-full rounded-full ${
-                skin.float < 0.07 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' :
-                skin.float < 0.15 ? 'bg-emerald-400' :
-                skin.float < 0.38 ? 'bg-yellow-500' :
-                skin.float < 0.45 ? 'bg-orange-500' : 'bg-red-500'
-              }`}
-            />
-          </div>
-        )}
       </div>
 
       {/* Image Container */}

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+
+
 @theme {
   --color-background: #191527;
   --color-card: #211c33;
@@ -27,6 +29,7 @@
   --border: rgba(255, 255, 255, 0.05);
   --foreground: #ffffff;
 }
+
 
 body {
   background: var(--background);

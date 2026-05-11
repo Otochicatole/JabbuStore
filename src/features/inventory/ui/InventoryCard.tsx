@@ -61,10 +61,40 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
       </div>
 
       {/* 2. Compact Info Panel below the name */}
-      <div className="flex flex-col gap-1.5 p-2 rounded-[8px] mb-3">
-        <div className="flex items-center justify-between text-[9px] text-[#84849b] font-mono">
-          <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">{conditionLabel}</span>
+      <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-white/[0.02] border border-white/5 font-mono text-[9px]">
+        <div className="flex items-center justify-between">
+          <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">
+            {conditionLabel}
+          </span>
+          {skin.pattern !== undefined && (
+            <span className="text-[#84849b] text-[8px]">
+              Semilla: <span className="text-white font-bold">{skin.pattern}</span>
+            </span>
+          )}
         </div>
+        
+        {skin.float !== undefined && (
+          <div className="flex flex-col gap-1 mt-1">
+            <div className="flex items-center justify-between text-[#84849b] text-[8px]">
+              <span>Float</span>
+              <span className="text-white font-bold">{skin.float.toFixed(6)}</span>
+            </div>
+            {/* Tiny precise float wear progress bar with wear markers */}
+            <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden relative">
+              {/* Markers for wear brackets */}
+              <div className="absolute top-0 bottom-0 left-[7%] w-[1px] bg-white/20" /> {/* FN/MW */}
+              <div className="absolute top-0 bottom-0 left-[15%] w-[1px] bg-white/20" /> {/* MW/FT */}
+              <div className="absolute top-0 bottom-0 left-[38%] w-[1px] bg-white/20" /> {/* FT/WW */}
+              <div className="absolute top-0 bottom-0 left-[45%] w-[1px] bg-white/20" /> {/* WW/BS */}
+              
+              {/* Wear position indicator */}
+              <div 
+                className="h-full bg-accent rounded-full transition-all duration-500" 
+                style={{ width: `${Math.min(100, skin.float * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Image Container */}

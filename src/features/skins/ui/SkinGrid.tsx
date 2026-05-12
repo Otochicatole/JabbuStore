@@ -123,11 +123,51 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
     );
   }
 
+  const getNormalizedCondition = (skin: Skin) => {
+    if (skin.exterior) {
+      const ext = skin.exterior.toLowerCase().trim();
+      if (ext.includes('recién') || ext.includes('factory') || ext.includes('fn')) return 'fn';
+      if (ext.includes('casi') || ext.includes('minimal') || ext.includes('mw')) return 'mw';
+      if (ext.includes('algo') || ext.includes('field') || ext.includes('ft')) return 'ft';
+      if (ext.includes('bastante') || ext.includes('well') || ext.includes('ww')) return 'ww';
+      if (ext.includes('deplorable') || ext.includes('battle') || ext.includes('bs')) return 'bs';
+      return ext;
+    }
+    if (skin.float === undefined) return 'fn';
+    if (skin.float < 0.07) return 'fn';
+    if (skin.float < 0.15) return 'mw';
+    if (skin.float < 0.38) return 'ft';
+    if (skin.float < 0.45) return 'ww';
+    return 'bs';
+  };
+
+  const getSkinGroupKey = (skin: Skin) => {
+    const cond = getNormalizedCondition(skin);
+    return `${skin.weapon}|${skin.name}|${cond}|${skin.isStatTrak ? 'st' : ''}|${skin.isSouvenir ? 'sv' : ''}|${skin.phase || ''}|${skin.price}`;
+  };
+
+  const groupedSkins = useMemo(() => {
+    const groups: Skin[][] = [];
+    const seenKeys = new Set<string>();
+    
+    for (const skin of filteredSkins) {
+      const key = getSkinGroupKey(skin);
+      if (seenKeys.has(key)) continue;
+      
+      const matchingSkins = filteredSkins.filter(s => getSkinGroupKey(s) === key);
+      groups.push(matchingSkins);
+      seenKeys.add(key);
+    }
+    
+    return groups;
+  }, [filteredSkins]);
+
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-      {filteredSkins.map((skin) => (
-        <SkinCard key={skin.id} skin={skin} />
+      {groupedSkins.map((group) => (
+        <SkinCard key={group[0].id} skinsInGroup={group} />
       ))}
     </div>
   );
 };
+

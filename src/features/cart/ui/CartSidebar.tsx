@@ -49,25 +49,18 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                     </div>
                     <div className="flex flex-1 items-center justify-between">
                       <div>
-                        <h4 className="text-[11px] font-black uppercase text-white leading-tight">{item.skin.name}</h4>
-                        <p className="text-[9px] font-bold text-[#84849b] uppercase">{item.skin.weapon} • {item.skin.rarity}</p>
+                        <h4 className="text-[11px] font-black uppercase text-white leading-tight">
+                          {item.skin.weapon} | <span className="text-[#aaaaff]">{item.skin.name}</span>
+                        </h4>
+                        <p className="text-[9px] font-bold text-[#84849b] uppercase">
+                          {item.skin.exterior || 'Recién fabricado'}
+                          {item.skin.float !== undefined && ` • Float: ${item.skin.float.toFixed(5)}`}
+                        </p>
                         
-                        {/* Quantity Selector */}
-                        <div className="mt-2 flex items-center gap-2">
-                          <button 
-                            onClick={() => updateQuantity(item.skin.id, -1)}
-                            className="h-5 w-5 flex items-center justify-center rounded-md bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer text-white/60 hover:text-white"
-                          >
-                            <Minus className="h-2.5 w-2.5" />
-                          </button>
-                          <span className="text-[10px] font-black text-white w-4 text-center">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.skin.id, 1)}
-                            className="h-5 w-5 flex items-center justify-center rounded-md bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer text-white/60 hover:text-white"
-                          >
-                            <Plus className="h-2.5 w-2.5" />
-                          </button>
-                        </div>
+                        {/* Quantity (fixed to 1 since it is a unique item) */}
+                        <p className="mt-2 text-[9px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block">
+                          Único en Stock
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-black text-white tracking-tighter">${(item.skin.price * item.quantity).toLocaleString()}</p>

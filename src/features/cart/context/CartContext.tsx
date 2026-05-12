@@ -21,23 +21,17 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const addToCart = (skin: Skin) => {
     setItems(prev => {
       const existing = prev.find(item => item.skin.id === skin.id);
-      if (existing) {
-        return prev.map(item => 
-          item.skin.id === skin.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
+      if (existing) return prev; // Strictly cap at 1 of this unique physical asset
       return [...prev, { skin, quantity: 1 }];
     });
   };
 
   const updateQuantity = (skinId: string, delta: number) => {
-    setItems(prev => prev.map(item => {
-      if (item.skin.id === skinId) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
+    // Each unique asset is limited to quantity 1, so updateQuantity is not needed to increase
+    // But we keep it as a no-op or simple removal helper to avoid breaking any other callers
+    if (delta < 0) {
+      removeFromCart(skinId);
+    }
   };
 
   const removeFromCart = (skinId: string) => {

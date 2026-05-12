@@ -13,6 +13,7 @@ export interface Skin {
   category?: string;
   isStatTrak?: boolean;
   isSouvenir?: boolean;
+  phase?: string;
 }
 
 export interface SkinRepository {

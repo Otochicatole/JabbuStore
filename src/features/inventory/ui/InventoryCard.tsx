@@ -53,10 +53,11 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
     >
       {/* 1. Item Name at the very top */}
       <div className="mb-2">
-        <h2 className="text-[11px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
+        <h2 className="text-[9.5px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
           {skin.isStatTrak && <span className="text-[#cf6a32] font-black mr-1 border border-[#cf6a32]/30 px-1 py-0.2 rounded-[3px] bg-[#cf6a32]/10 text-[9px]">ST™</span>}
           {skin.isSouvenir && <span className="text-[#e4ae39] font-black mr-1 border border-[#e4ae39]/30 px-1 py-0.2 rounded-[3px] bg-[#e4ae39]/10 text-[9px]">SV</span>}
           {skin.weapon} | <span className="text-[#aaaaff]">{skin.name}</span>
+          {skin.phase && <span className="text-[#d946ef] font-black ml-1">| {skin.phase}</span>}
         </h2>
       </div>
 
@@ -114,8 +115,9 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
       <div className={`h-[2px] w-full mb-3 rounded-full ${rarityColors[skin.rarity] || 'bg-white/10'} shadow-[0_0_10px_rgba(255,255,255,0.1)]`} />
 
       {/* Price Section */}
+      {/* Price Section */}
       {variant === 'sell' && (
-        <div className="flex flex-col gap-0.5 mb-4">
+        <div className="flex flex-col gap-0.5 mb-3 mt-auto pt-3 border-t border-white/5">
           <div className="text-lg font-black text-white tracking-tight leading-none">
             ${skin.price.toLocaleString()} <span className="text-[10px] text-muted ml-0.5">USD</span>
           </div>
@@ -123,10 +125,10 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
       )}
 
       {/* Action Area */}
-      {variant === 'sell' && (
-        <div className="flex justify-end mt-auto pt-2">
+      {variant === 'sell' ? (
+        <div className="flex justify-end w-full">
           <div className={`
-            w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 border
+            w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 border cursor-pointer
             ${isSelected 
               ? 'bg-accent text-white border-accent shadow-[0_0_15px_rgba(217,70,239,0.3)]' 
               : 'bg-secondary text-white border-white/5 hover:bg-secondary/80'
@@ -135,9 +137,9 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
             {isSelected ? <Check className="w-4 h-4 stroke-[3px]" /> : <Plus className="w-4 h-4" />}
           </div>
         </div>
+      ) : (
+        variant === 'simple' && <div className="h-4" />
       )}
-
-      {variant === 'simple' && <div className="h-4" />}
     </div>
   );
 };

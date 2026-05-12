@@ -43,10 +43,11 @@ export const SkinCard = ({ skin }: SkinCardProps) => {
     `}>
       {/* 1. Item Name at the very top */}
       <div className="mb-2">
-        <h2 className="text-[11px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
+        <h2 className="text-[9.5px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
           {skin.isStatTrak && <span className="text-[#cf6a32] font-black mr-1 border border-[#cf6a32]/30 px-1 py-0.2 rounded-[3px] bg-[#cf6a32]/10 text-[9px]">ST™</span>}
           {skin.isSouvenir && <span className="text-[#e4ae39] font-black mr-1 border border-[#e4ae39]/30 px-1 py-0.2 rounded-[3px] bg-[#e4ae39]/10 text-[9px]">SV</span>}
           {skin.weapon} | <span className="text-[#aaaaff]">{skin.name}</span>
+          {skin.phase && <span className="text-[#d946ef] font-black ml-1">| {skin.phase}</span>}
         </h2>
       </div>
 
@@ -105,14 +106,14 @@ export const SkinCard = ({ skin }: SkinCardProps) => {
       <div className={`h-[2px] w-full mb-3 rounded-full ${rarityColors[skin.rarity] || 'bg-white/10'} shadow-[0_0_10px_rgba(255,255,255,0.1)]`} />
 
       {/* Price Section */}
-      <div className="flex flex-col gap-0.5 mb-4">
+      <div className="flex flex-col gap-0.5 mb-3 mt-auto pt-3 border-t border-white/5">
         <div className="text-lg font-black text-white tracking-tight leading-none">
           ${skin.price.toLocaleString()} <span className="text-[10px] text-muted ml-0.5">USD</span>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 h-10">
+      <div className="flex gap-2 h-10 w-full">
         <button 
           className="flex-1 flex items-center justify-center gap-2 bg-accent rounded-lg text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer"
         >

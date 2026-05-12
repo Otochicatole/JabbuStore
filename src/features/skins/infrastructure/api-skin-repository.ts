@@ -35,17 +35,21 @@ function hashCode(str: string): number {
 function mapStoreItemToSkin(item: StoreItem): Skin {
   let weapon = "Item";
   let skinName = item.name;
+  let phase: string | undefined = undefined;
   
   if (item.name.includes(" | ")) {
     const parts = item.name.split(" | ");
-    weapon = parts[0];
-    skinName = parts[1];
+    weapon = parts[0] || "Item";
+    skinName = parts[1] || "";
+    if (parts.length > 2) {
+      phase = parts[2];
+    }
   }
   
   // Clean up skinName wear suffix (e.g. "Redline (Field-Tested)" -> "Redline")
   let cleanSkinName = skinName;
   if (skinName.includes(" (")) {
-    cleanSkinName = skinName.split(" (")[0];
+    cleanSkinName = skinName.split(" (")[0] || skinName;
   }
 
   // Determine Rarity based on description 'type' or fallback to database field
@@ -110,7 +114,8 @@ function mapStoreItemToSkin(item: StoreItem): Skin {
     exterior: item.exterior || null,
     category: item.category || 'other',
     isStatTrak: item.isStatTrak || false,
-    isSouvenir: item.isSouvenir || false
+    isSouvenir: item.isSouvenir || false,
+    phase
   };
 }
 

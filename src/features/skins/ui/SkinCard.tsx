@@ -21,6 +21,16 @@ const rarityColors: Record<string, string> = {
   immortal: 'bg-[#e4ae39]',
 };
 
+const rarityHexColors: Record<string, string> = {
+  common: '#b0c3d9',
+  uncommon: '#5e98d9',
+  rare: '#4b69ff',
+  mythical: '#8847ff',
+  legendary: '#d32ce6',
+  ancient: '#eb4b4b',
+  immortal: '#e4ae39',
+};
+
 const getConditionLabel = (float?: number) => {
   if (float === undefined) return 'Recién fabricado';
   if (float < 0.07) return 'Recién fabricado';
@@ -175,9 +185,15 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
         </div>
       )}
 
-      {/* Image Container (transparent & borderless) */}
-      <div className="relative aspect-[4/3] w-full flex items-center justify-center my-2 bg-transparent overflow-hidden">
-        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 blur-[40px] transition-opacity duration-500 ${rarityColors[skin.rarity] || 'bg-white'}`} />
+      {/* Image Container (transparent & borderless - stuck to rarity divider) */}
+      <div className="relative aspect-[4/3] w-full flex items-center justify-center mt-2 mb-0 bg-transparent overflow-hidden">
+        {/* Spotlight beam coming from below (from the rarity bar upwards - perfectly scaled) */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 mx-auto w-full h-[100%] opacity-0 translate-y-6 group-hover:opacity-35 group-hover:translate-y-0 transition-all duration-700 ease-out pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse at bottom, ${rarityHexColors[skin.rarity] || '#ffffff'} 0%, transparent 70%)`,
+          }}
+        />
         
         <Image
           src={skin.imageUrl}
@@ -195,7 +211,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
         )}
       </div>
 
-      {/* Rarity Divider */}
+      {/* Rarity Divider (stuck perfectly to the bottom of the image container) */}
       <div className={`h-[2px] w-full mb-3 rounded-full ${rarityColors[skin.rarity] || 'bg-white/10'} shadow-[0_0_10px_rgba(255,255,255,0.1)]`} />
 
       {/* Price Section */}

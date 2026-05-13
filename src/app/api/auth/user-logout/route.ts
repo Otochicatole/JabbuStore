@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST() {
-  const res = NextResponse.json({ success: true });
-
-  // Borrar la cookie del frontend domain
-  res.cookies.set('auth_token', '', {
+  const cookieStore = await cookies();
+  
+  cookieStore.set('auth_token', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'none',
     expires: new Date(0),
     path: '/',
   });
 
-  return res;
+  return NextResponse.json({ success: true });
 }

@@ -1,18 +1,26 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   try {
-    const { token } = await request.json();
+    const originalUrl = new URL(request.url);
+    const token = originalUrl.searchParams.get('token');
+
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    
+    // Forzar la limpieza del puerto 3000 si estamos en un devtunnel
+    const cleanHost = host.includes('devtunnels.ms') ? host.replace(':3000', '') : host;
+    const baseUrl = `${protocol}://${cleanHost}/`;
 
     if (!token) {
-      return NextResponse.json({ error: 'Token requerido' }, { status: 400 });
+      return NextResponse.redirect(baseUrl);
     }
 
-    const res = NextResponse.json({ success: true });
+    // Redirigir al inicio después de setear la cookie
+    const res = NextResponse.redirect(baseUrl);
 
-    const cookieStore = await cookies();
-    cookieStore.set('auth_token', token, {
+    res.cookies.set('auth_token', token, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
@@ -20,12 +28,15 @@ export async function POST(request: Request) {
       path: '/',
     });
 
-    return NextResponse.json({ success: true });
+    return res;
   } catch (err: any) {
     console.error('BFF Session error:', err);
-    return NextResponse.json(
-      { error: 'Error interno al guardar sesión' },
-      { status: 500 }
-    );
+    
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const cleanHost = host.includes('devtunnels.ms') ? host.replace(':3000', '') : host;
+    const fallbackUrl = `${protocol}://${cleanHost}/`;
+    
+    return NextResponse.redirect(fallbackUrl);
   }
 }

@@ -126,7 +126,8 @@ export class ApiSkinRepository implements SkinRepository {
         headers: {
           'X-Tunnel-Skip-AntiPhishing-Page': 'true',
           'Accept': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
       if (!response.ok) {
         throw new Error(`Failed to fetch skins: ${response.statusText}`);

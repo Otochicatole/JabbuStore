@@ -3,29 +3,24 @@
  * guardado en localStorage.
  */
 
-export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+export const BACKEND_URL = typeof window !== 'undefined' ? '/api/proxy' : process.env.NEXT_PUBLIC_API_URL || 'https://9q88kt3s-3001.brs.devtunnels.ms/api';
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  // Obtener el token de localStorage
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-
   const headers = {
     'Content-Type': 'application/json',
     'X-Tunnel-Skip-AntiPhishing-Page': 'true',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
   const response = await fetch(url, {
     ...options,
     headers,
+    credentials: 'include', // Transmite de forma automática la cookie HTTP-Only al proxy
   });
 
   if (response.status === 401) {
-    // Manejar token expirado o inválido
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
-      window.location.href = '/'; // O redirigir a login
+      fetch('/api/auth/user-logout', { method: 'POST' }).catch(() => {});
     }
   }
 

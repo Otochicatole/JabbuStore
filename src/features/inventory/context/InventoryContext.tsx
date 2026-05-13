@@ -170,17 +170,6 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setLoading(true);
     }
-    setError(null);
-
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    if (!token) {
-      setError("Inicia sesión para ver tu inventario");
-      setInventoryItems([]);
-      setLoading(false);
-      setSyncing(false);
-      return;
-    }
-
     try {
       const url = forceSync 
         ? `${BACKEND_URL}/users/me/inventory?forceSync=true`

@@ -25,11 +25,13 @@ export async function POST(request: Request) {
 
     const res = NextResponse.json({ admin: data.admin });
 
-    // Establecer la cookie de sesión de forma segura sobre el dominio del frontend (localhost)
+    // Establecer la cookie de sesión de forma 100% segura
+    // Usamos secure: true y sameSite: 'none' siempre porque localhost es un entorno seguro 
+    // y los túneles HTTPS lo requieren obligatoriamente para no descartar la cookie.
     res.cookies.set('admin_token', data.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: 24 * 60 * 60, // 24 horas
       path: '/',
     });

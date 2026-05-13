@@ -51,25 +51,21 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    setIsLoggedIn(!!token);
-
-    if (token) {
-      fetchWithAuth(`${BACKEND_URL}/users/me`)
-        .then(async (res) => {
-          if (res.ok) {
-            const data = await res.json();
-            setProfile(data);
-          } else {
-            // Token expired or invalid
-            localStorage.removeItem('auth_token');
-            setIsLoggedIn(false);
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching user profile:", err);
-        });
-    }
+    // Verificar sesión directamente contra el backend usando la cookie HTTP-Only a través del proxy
+    fetchWithAuth(`${BACKEND_URL}/users/me`)
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching user profile:", err);
+        setIsLoggedIn(false);
+      });
   }, []);
 
   // Close dropdown on click outside
@@ -85,8 +81,12 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/user-logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     setIsLoggedIn(false);
     setProfile(null);
     setIsDropdownOpen(false);

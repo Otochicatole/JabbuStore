@@ -11,18 +11,23 @@ function CallbackHandler() {
     const token = searchParams.get('token');
 
     if (token) {
-      // Guardar el token en localStorage
-      localStorage.setItem('auth_token', token);
-      
-      // Opcional: También podrías guardarlo en una cookie si lo necesitas para SSR
-      // document.cookie = `auth_token=${token}; path=/; max-age=3600; SameSite=Lax`;
-
-      // Redirigir al dashboard o al home
-      router.replace('/'); 
+      // Guardar el token en la cookie HTTP-Only a través del BFF local
+      fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      }).then(() => {
+        window.location.href = '/';
+      }).catch((err) => {
+        console.error('Error saving session:', err);
+        window.location.href = '/';
+      });
     } else {
       // Si no hay token, redirigir al login o mostrar error
       console.error('No token found in callback');
-      router.replace('/');
+      window.location.href = '/';
     }
   }, [searchParams, router]);
 

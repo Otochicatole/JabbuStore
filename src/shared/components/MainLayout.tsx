@@ -6,9 +6,26 @@ import { CartProvider } from "@/features/cart/context/CartContext";
 import { InventoryProvider } from "@/features/inventory/context/InventoryContext";
 import { FilterProvider } from "@/features/filters/context/FilterContext";
 import { CartSidebar } from "@/features/cart/ui/CartSidebar";
+import { usePathname } from "next/navigation";
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith("/admin");
+
+  if (isAdminRoute) {
+    return (
+      <CartProvider>
+        <FilterProvider>
+          <InventoryProvider>
+            <div className="min-h-screen bg-background">
+              {children}
+            </div>
+          </InventoryProvider>
+        </FilterProvider>
+      </CartProvider>
+    );
+  }
 
   return (
     <CartProvider>

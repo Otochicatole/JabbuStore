@@ -3,10 +3,47 @@
 import { useCart } from "../context/CartContext";
 import { Button } from "@/shared/components/Button";
 import Image from "next/image";
-import { X, ShoppingBag, Trash2, Minus, Plus } from "lucide-react";
+import { X, ShoppingBag, Trash2, Minus, Plus, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  const { items, total, removeFromCart, updateQuantity } = useCart();
+  const { items, total, removeFromCart, clearCart } = useCart();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleCheckout = async () => {
+    try {
+      setIsCheckingOut(true);
+      setError(null);
+      
+      const itemIds = items.map(item => item.skin.id);
+      
+      const response = await fetchWithAuth(`${BACKEND_URL}/orders`, {
+        method: 'POST',
+        body: JSON.stringify({ itemIds })
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Error al procesar la compra');
+      }
+
+      const order = await response.json();
+      
+      // Limpiar carrito y cerrar sidebar
+      clearCart();
+      onClose();
+      
+      alert(`¡Orden creada exitosamente! ID: ${order.id}. En producción, aquí serás redirigido al pago.`);
+      
+    } catch (err: any) {
+      console.error("Error creating order:", err);
+      setError(err.message || 'Ocurrió un error inesperado');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
 
   return (
     <>
@@ -85,11 +122,26 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                 <span className="text-3xl font-black text-white tracking-tighter">${total.toLocaleString()} <span className="text-sm text-muted">USDT</span></span>
               </div>
             </div>
+
+            {error && (
+              <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold text-center">
+                {error}
+              </div>
+            )}
+
             <button 
-              className="w-full h-14 bg-accent text-white font-black uppercase tracking-[0.2em] text-xs rounded-xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:grayscale active:scale-95 cursor-pointer"
-              disabled={items.length === 0}
+              onClick={handleCheckout}
+              className="w-full h-14 bg-accent text-white font-black uppercase tracking-[0.2em] text-xs rounded-xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:grayscale active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              disabled={items.length === 0 || isCheckingOut}
             >
-              Finalizar Compra
+              {isCheckingOut ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                'Finalizar Compra'
+              )}
             </button>
             <p className="text-[9px] text-center text-muted mt-4 font-bold uppercase tracking-widest">Pago seguro garantizado</p>
           </div>

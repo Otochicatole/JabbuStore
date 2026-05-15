@@ -3,10 +3,40 @@
 import React from 'react';
 import { useInventory } from '../context/InventoryContext';
 import Image from 'next/image';
-import { Trash2, TrendingUp, DollarSign } from 'lucide-react';
+import { Trash2, TrendingUp, DollarSign, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 export const SellBasket = () => {
   const { selectedItems, removeFromSellList, totalValue, clearSellList } = useInventory();
+  const [selling, setSelling] = useState(false);
+
+  const handleSell = async () => {
+    setSelling(true);
+    try {
+      for (const item of selectedItems) {
+        // Here we could prompt for a requested price, for now we use the item's current evaluated price
+        const requestedPrice = item.price;
+        
+        await fetch("http://localhost:3001/api/marketplace/listings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({
+            skinId: item.id,
+            requestedPrice
+          })
+        });
+      }
+      alert("Items listados exitosamente en el Marketplace.");
+      clearSellList();
+    } catch (e: any) {
+      alert("Error al listar los items: " + e.message);
+    } finally {
+      setSelling(false);
+    }
+  };
 
   return (
     <div className="bg-card rounded-2xl p-6 border border-white/5 sticky top-24">
@@ -61,10 +91,12 @@ export const SellBasket = () => {
         </div>
 
         <button 
-          disabled={selectedItems.length === 0}
-          className="w-full h-12 bg-accent text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:grayscale active:scale-95 cursor-pointer"
+          onClick={handleSell}
+          disabled={selectedItems.length === 0 || selling}
+          className="w-full h-12 bg-accent text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:grayscale active:scale-95 cursor-pointer flex items-center justify-center gap-2"
         >
-          Vender ahora
+          {selling ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          {selling ? 'Procesando...' : 'Vender ahora'}
         </button>
         
         <p className="text-[8px] text-center text-muted mt-4 font-bold uppercase tracking-widest leading-relaxed">

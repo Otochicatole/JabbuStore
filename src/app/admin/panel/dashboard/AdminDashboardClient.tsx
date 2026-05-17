@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
+import { AdminBotsPanel } from '@/features/marketplace/ui/AdminBotsPanel';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { BACKEND_URL } from '@/shared/lib/api';
@@ -812,10 +813,7 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
 
         {currentTab === 'bots' && (
           <div className="bg-[#110f1e]/40 border border-white/5 rounded-2xl p-8">
-            <h2 className="text-xl font-black tracking-tight text-white mb-6">Gestión de Bots</h2>
-            <div className="w-full h-[600px] border border-white/10 rounded overflow-hidden flex items-center justify-center">
-              <p className="text-white/50 text-sm">Integra aquí el panel de Bots /admin/panel/bots</p>
-            </div>
+            <AdminBotsPanel />
           </div>
         )}
 

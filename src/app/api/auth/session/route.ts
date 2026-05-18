@@ -20,10 +20,12 @@ export async function GET(request: Request) {
     // Redirigir al inicio después de setear la cookie
     const res = NextResponse.redirect(baseUrl);
 
+    const isHttps = protocol === 'https';
+
     res.cookies.set('auth_token', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: isHttps,
+      sameSite: isHttps ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 días
       path: '/',
     });

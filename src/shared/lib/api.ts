@@ -3,7 +3,7 @@
  * guardado en localStorage.
  */
 
-export const BACKEND_URL = typeof window !== 'undefined' ? '/api/proxy' : process.env.NEXT_PUBLIC_API_URL || 'https://9q88kt3s-3001.brs.devtunnels.ms/api';
+export const BACKEND_URL = typeof window !== 'undefined' ? '/api/proxy' : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const headers = {
@@ -20,7 +20,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
   if (response.status === 401) {
     if (typeof window !== 'undefined') {
-      fetch('/api/auth/user-logout', { method: 'POST' }).catch(() => {});
+      fetch('/api/auth/user-logout', { method: 'POST' }).catch(() => { });
     }
   }
 

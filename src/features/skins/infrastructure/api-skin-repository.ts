@@ -11,6 +11,7 @@ export interface StoreItem {
   marketable: boolean;
   botSteamId: string;
   price?: number;
+  displayPrice?: number; // Price with admin modifier applied (returned by backend)
   rarity?: string;
   exterior?: string | null;
   category?: string;
@@ -98,8 +99,12 @@ function mapStoreItemToSkin(item: StoreItem): Skin {
   else if (rarity === 'uncommon') basePrice = 12;
 
   const variance = (Math.abs(hashCode(item.assetId)) % 100) / 100; // 0.0 to 1.0
-  const finalPrice = item.price && item.price > 0
-    ? item.price
+  const effectivePrice = (item.displayPrice !== undefined && item.displayPrice > 0)
+    ? item.displayPrice
+    : item.price;
+
+  const finalPrice = effectivePrice && effectivePrice > 0
+    ? effectivePrice
     : Math.round(basePrice * (0.8 + variance * 0.4) * 100) / 100; // variance of +/-20% as fallback
 
   return {

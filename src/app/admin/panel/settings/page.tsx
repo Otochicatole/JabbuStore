@@ -44,45 +44,54 @@ export default function AdminSettingsPage() {
     e.preventDefault();
     setSavingPricing(true);
     try {
-      await fetch(`${BACKEND_URL}/admin/marketplace/settings/pricing`, {
+      const payload = {
+        globalPriceModifierType: settings.globalPriceModifierType,
+        globalPriceModifierValue: Number(settings.globalPriceModifierValue),
+        globalPriceModifierEnabled: settings.globalPriceModifierEnabled,
+      };
+      console.log('[Settings] Saving pricing settings:', payload);
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/pricing`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
         },
-        body: JSON.stringify({
-          globalPriceModifierType: settings.globalPriceModifierType,
-          globalPriceModifierValue: Number(settings.globalPriceModifierValue),
-          globalPriceModifierEnabled: settings.globalPriceModifierEnabled,
-        }),
+        body: JSON.stringify(payload),
       });
+      const data = await res.json();
+      console.log('[Settings] Save response:', data);
+      if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
       setSavedPricing(true);
       setTimeout(() => setSavedPricing(false), 2000);
     } catch (e) {
-      console.error(e);
+      console.error('[Settings] Error saving pricing:', e);
     } finally {
       setSavingPricing(false);
     }
   };
 
   const handleMinSellSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     setSavingMinSell(true);
     try {
-      await fetch(`${BACKEND_URL}/admin/marketplace/settings/minimum-sell-price`, {
+      const payload = { minimumUserSellPrice: Number(settings.minimumUserSellPrice) };
+      console.log('[Settings] Saving min sell price:', payload);
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/minimum-sell-price`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
         },
-        body: JSON.stringify({
-          minimumUserSellPrice: Number(settings.minimumUserSellPrice),
-        }),
+        body: JSON.stringify(payload),
       });
+      const data = await res.json();
+      console.log('[Settings] Min sell price response:', data);
+      if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
       setSavedMinSell(true);
       setTimeout(() => setSavedMinSell(false), 2000);
     } catch (e) {
-      console.error(e);
+      console.error('[Settings] Error saving min sell price:', e);
     } finally {
       setSavingMinSell(false);
     }

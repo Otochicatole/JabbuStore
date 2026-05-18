@@ -48,8 +48,8 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
     setError(null);
     try {
       const url = bot
-        ? `${BACKEND_URL}/api/admin/marketplace/bots/${bot.id}`
-        : `${BACKEND_URL}/api/admin/marketplace/bots`;
+        ? `${BACKEND_URL}/admin/marketplace/bots/${bot.id}`
+        : `${BACKEND_URL}/admin/marketplace/bots`;
       const method = bot ? "PATCH" : "POST";
 
       const res = await fetch(url, {
@@ -172,19 +172,65 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
   );
 }
 
+interface DeleteConfirmModalProps {
+  bot: Bot;
+  onClose: () => void;
+  onConfirm: () => void;
+  loading: boolean;
+}
+
+function DeleteConfirmModal({ bot, onClose, onConfirm, loading }: DeleteConfirmModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div
+        className="relative z-10 w-full max-w-md bg-[#0f0d1e] border border-white/10 rounded-2xl p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3 mb-4 text-red-400">
+          <AlertTriangle className="w-6 h-6" />
+          <h2 className="text-base font-black uppercase tracking-wider">¿Eliminar Bot?</h2>
+        </div>
+        
+        <p className="text-sm text-[#84849b] mb-6">
+          ¿Estás seguro de que deseas eliminar permanentemente el bot <span className="text-white font-bold">{bot.name}</span>? Esta acción no se puede deshacer.
+        </p>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 h-11 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-white transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 h-11 bg-red-500 hover:bg-red-600 rounded-xl text-sm font-black text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            {loading ? "Eliminando..." : "Eliminar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminBotsPanel() {
   const [bots, setBots] = useState<Bot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingBot, setEditingBot] = useState<Bot | null>(null);
+  const [botToDelete, setBotToDelete] = useState<Bot | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchBots = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/marketplace/bots`, {
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/bots`, {
         credentials: "include",
         headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
       });
@@ -206,7 +252,7 @@ export function AdminBotsPanel() {
     setActionLoading(bot.id);
     try {
       const action = bot.isActive ? "deactivate" : "activate";
-      const res = await fetch(`${BACKEND_URL}/api/admin/marketplace/bots/${bot.id}/${action}`, {
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/bots/${bot.id}/${action}`, {
         method: "PATCH",
         credentials: "include",
       });
@@ -220,15 +266,15 @@ export function AdminBotsPanel() {
   };
 
   const handleDelete = async (bot: Bot) => {
-    if (!confirm(`¿Eliminar permanentemente el bot "${bot.name}"? Esta acción no se puede deshacer.`)) return;
     setActionLoading(bot.id);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/marketplace/bots/${bot.id}`, {
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/bots/${bot.id}`, {
         method: "DELETE",
         credentials: "include",
       });
       if (!res.ok) throw new Error("Error al eliminar el bot");
       fetchBots();
+      setBotToDelete(null);
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -264,7 +310,7 @@ export function AdminBotsPanel() {
       </div>
 
       {/* Stats Strip */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-[#110f1e]/40 border border-white/5 rounded-xl p-4 flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
             <BotIcon className="w-4 h-4 text-accent" />
@@ -281,15 +327,6 @@ export function AdminBotsPanel() {
           <div>
             <p className="text-[10px] font-black uppercase text-[#84849b] tracking-wider">Activos</p>
             <p className="text-xl font-black text-emerald-400">{activeBots}</p>
-          </div>
-        </div>
-        <div className="bg-[#110f1e]/40 border border-white/5 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
-            <Cpu className="w-4 h-4 text-blue-400" />
-          </div>
-          <div>
-            <p className="text-[10px] font-black uppercase text-[#84849b] tracking-wider">Items Totales</p>
-            <p className="text-xl font-black text-blue-400">{totalItems.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -322,146 +359,141 @@ export function AdminBotsPanel() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {bots.map((bot) => {
-            const statusCfg = statusConfig[bot.status] || statusConfig.inactive;
-            const capacity = bot.maxItems > 0 ? (bot.currentItems / bot.maxItems) * 100 : 0;
-            const isActioning = actionLoading === bot.id;
+        <div className="overflow-x-auto bg-[#110f1e]/20 border border-white/5 rounded-2xl">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white/5 text-[10px] font-black uppercase text-[#84849b] tracking-wider">
+                <th className="px-5 py-4">Bot</th>
+                <th className="px-5 py-4">SteamID</th>
+                <th className="px-5 py-4">Estado</th>
+                <th className="px-5 py-4">Capacidad</th>
+                <th className="px-5 py-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bots.map((bot) => {
+                const statusCfg = statusConfig[bot.status] || statusConfig.inactive;
+                const capacity = bot.maxItems > 0 ? (bot.currentItems / bot.maxItems) * 100 : 0;
+                const isActioning = actionLoading === bot.id;
 
-            return (
-              <div
-                key={bot.id}
-                className={`relative bg-[#110f1e]/40 border rounded-2xl p-5 transition-all ${
-                  bot.isActive ? "border-white/8 hover:border-white/15" : "border-white/4 opacity-60"
-                }`}
-              >
-                {/* Active indicator glow */}
-                {bot.isActive && bot.status === "active" && (
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-2xl rounded-full pointer-events-none" />
-                )}
-
-                <div className="relative">
-                  {/* Top row */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm border ${statusCfg.bg}`}>
-                        <BotIcon className={`w-5 h-5 ${statusCfg.color}`} />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-black text-white">{bot.name}</h3>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${bot.isActive && bot.status === 'active' ? 'animate-pulse' : ''}`} />
-                          <span className={`text-[10px] font-bold uppercase tracking-wider ${statusCfg.color}`}>
-                            {statusCfg.label}
-                          </span>
+                return (
+                  <tr key={bot.id} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs border ${statusCfg.bg}`}>
+                          <BotIcon className={`w-4 h-4 ${statusCfg.color}`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">{bot.name}</p>
+                          {bot.tradeUrl && (
+                            <a 
+                              href={bot.tradeUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-[10px] text-accent hover:text-accent/80 flex items-center gap-1 mt-0.5 font-mono truncate max-w-[200px]"
+                              title={bot.tradeUrl}
+                            >
+                              <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" /> {bot.tradeUrl.slice(0, 30)}...
+                            </a>
+                          )}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1.5">
-                      <a
-                        href={`https://steamcommunity.com/profiles/${bot.steamId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] hover:bg-white/[0.07] border border-white/8 text-[#84849b] hover:text-white transition-colors"
-                        title="Ver perfil de Steam"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                      <button
-                        onClick={() => openEdit(bot)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] hover:bg-white/[0.07] border border-white/8 text-[#84849b] hover:text-blue-400 transition-colors"
-                        title="Editar bot"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleToggle(bot)}
-                        disabled={isActioning}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-colors disabled:opacity-40 ${
-                          bot.isActive
-                            ? "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20 text-orange-400"
-                            : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400"
-                        }`}
-                        title={bot.isActive ? "Desactivar bot" : "Activar bot"}
-                      >
-                        {isActioning ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : bot.isActive ? (
-                          <PowerOff className="w-3.5 h-3.5" />
-                        ) : (
-                          <Power className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(bot)}
-                        disabled={isActioning}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-40"
-                        title="Eliminar bot"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Steam ID */}
-                  <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-white/[0.02] border border-white/5">
-                    <Shield className="w-3 h-3 text-[#84849b]" />
-                    <span className="text-[10px] font-mono text-[#84849b]">SteamID64:</span>
-                    <span className="text-[10px] font-mono text-white/80 flex-1">{bot.steamId}</span>
-                  </div>
-
-                  {/* Capacity bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase text-[#84849b] tracking-wider">Capacidad</span>
-                      <span className="text-[10px] font-mono text-white">
-                        {bot.currentItems.toLocaleString()} / {bot.maxItems.toLocaleString()} items
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          capacity > 90 ? "bg-red-500" : capacity > 70 ? "bg-orange-400" : "bg-accent"
-                        }`}
-                        style={{ width: `${Math.min(100, capacity)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[9px] text-[#84849b] font-mono">
-                        {capacity.toFixed(1)}% usado
-                      </span>
-                      {bot.lastSyncAt && (
-                        <span className="text-[9px] text-[#84849b] font-mono">
-                          Sync: {new Date(bot.lastSyncAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <Shield className="w-3 h-3 text-[#84849b]" />
+                        <span className="text-[11px] font-mono text-white/80">{bot.steamId}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${bot.isActive && bot.status === 'active' ? 'animate-pulse' : ''}`} />
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${statusCfg.color}`}>
+                          {statusCfg.label}
                         </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Trade URL */}
-                  {bot.tradeUrl && (
-                    <a
-                      href={bot.tradeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 mt-3 text-[10px] text-accent hover:text-accent/80 transition-colors font-mono truncate"
-                    >
-                      <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
-                      {bot.tradeUrl.slice(0, 60)}...
-                    </a>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="w-32">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] text-[#84849b] font-mono">{capacity.toFixed(1)}%</span>
+                          <span className="text-[9px] text-[#84849b] font-mono">{bot.currentItems}/{bot.maxItems}</span>
+                        </div>
+                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              capacity > 90 ? "bg-red-500" : capacity > 70 ? "bg-orange-400" : "bg-accent"
+                            }`}
+                            style={{ width: `${Math.min(100, capacity)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <a
+                          href={`https://steamcommunity.com/profiles/${bot.steamId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] hover:bg-white/[0.07] border border-white/8 text-[#84849b] hover:text-white transition-colors"
+                          title="Ver perfil de Steam"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                        <button
+                          onClick={() => openEdit(bot)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.03] hover:bg-white/[0.07] border border-white/8 text-[#84849b] hover:text-blue-400 transition-colors"
+                          title="Editar bot"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleToggle(bot)}
+                          disabled={isActioning}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-colors disabled:opacity-40 ${
+                            bot.isActive
+                              ? "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20 text-orange-400"
+                              : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400"
+                          }`}
+                          title={bot.isActive ? "Desactivar bot" : "Activar bot"}
+                        >
+                          {isActioning ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : bot.isActive ? (
+                            <PowerOff className="w-3.5 h-3.5" />
+                          ) : (
+                            <Power className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setBotToDelete(bot)}
+                          disabled={isActioning}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-40"
+                          title="Eliminar bot"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
         <BotModal bot={editingBot} onClose={closeModal} onSaved={onSaved} />
+      )}
+
+      {botToDelete && (
+        <DeleteConfirmModal
+          bot={botToDelete}
+          onClose={() => setBotToDelete(null)}
+          onConfirm={() => handleDelete(botToDelete)}
+          loading={actionLoading === botToDelete.id}
+        />
       )}
     </div>
   );

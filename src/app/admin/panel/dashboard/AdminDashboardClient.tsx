@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AdminBotsPanel } from '@/features/marketplace/ui/AdminBotsPanel';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { BACKEND_URL } from '@/shared/lib/api';
 import { 
@@ -17,7 +17,8 @@ import {
   ShieldAlert,
   Loader2,
   CalendarDays,
-  Tags
+  Tags,
+  ChevronDown
 } from 'lucide-react';
 
 interface StoreItem {
@@ -88,7 +89,16 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
   const [error, setError] = useState<string | null>(null);
 
   // Tabs
-  const [currentTab, setCurrentTab] = useState<'inventory' | 'purchases' | 'bots' | 'settings'>('inventory');
+  const searchParams = useSearchParams();
+  const currentTab = (searchParams.get('tab') as 'inventory' | 'purchases' | 'bots' | 'settings') || 'inventory';
+
+  useEffect(() => {
+    if (currentTab === 'purchases') {
+      fetchOrders();
+    } else if (currentTab === 'inventory') {
+      fetchStoreItems();
+    }
+  }, [currentTab]);
 
   // Orders State
   const [orders, setOrders] = useState<Order[]>([]);
@@ -182,14 +192,7 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
     }
   };
 
-  const handleTabChange = (tab: 'inventory' | 'orders') => {
-    setCurrentTab(tab);
-    if (tab === 'orders') {
-      fetchOrders();
-    } else {
-      fetchStoreItems();
-    }
-  };
+
   const triggerSync = async () => {
     setSyncing(true);
     // Simular un trigger manual para regenerar y sincronizar data
@@ -234,93 +237,12 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
 
   return (
     <div className="min-h-screen bg-[#070510] text-white">
-      {/* Top Header */}
-      <header className="border-b border-white/5 bg-[#0b0818]/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/[0.02] border border-white/10 flex items-center justify-center font-sans font-black text-xs text-accent">
-              JS
-            </div>
-            <div>
-              <span className="text-sm font-black tracking-tight block uppercase">
-                Jabbu<span className="text-accent">Store</span> Admin
-              </span>
-              <span className="text-[9px] font-black font-mono text-[#84849b] uppercase tracking-wider block">
-                Sesión Validada por JWT (HttpOnly Cookie)
-              </span>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <span className="text-xs font-black text-white block">@{adminUser?.username || 'admin_master'}</span>
-              <span className="text-[9px] font-bold text-accent font-mono uppercase tracking-wider block">
-                {adminUser?.role || 'SUPER_ADMIN'}
-              </span>
-            </div>
-            
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 text-red-400 transition-colors cursor-pointer"
-              title="Cerrar Sesión"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </header>
 
-      {/* Navigation Tabs */}
-      <div className="border-b border-white/5 bg-[#0b0818]/60 sticky top-16 z-30">
-        <div className="max-w-7xl mx-auto px-6 flex items-center gap-6">
-          <button 
-            onClick={() => handleTabChange('inventory')}
-            className={`py-4 text-[11px] font-black uppercase tracking-widest border-b-2 transition-all ${
-              currentTab === 'inventory' 
-                ? 'border-accent text-white' 
-                : 'border-transparent text-[#84849b] hover:text-white'
-            }`}
-          >
-            Inventario Tienda
-          </button>
-          <button 
-            onClick={() => handleTabChange('purchases')}
-            className={`py-4 text-[11px] font-black uppercase tracking-widest border-b-2 transition-all flex items-center gap-2 ${
-              currentTab === 'purchases' 
-                ? 'border-accent text-white' 
-                : 'border-transparent text-[#84849b] hover:text-white'
-            }`}
-          >
-            Órdenes y Compras
-            {orders.length > 0 && currentTab === 'purchases' && (
-              <span className="bg-accent/20 text-accent px-1.5 py-0.5 rounded text-[9px]">{orders.length}</span>
-            )}
-          </button>
-          <button 
-            onClick={() => setCurrentTab('bots')}
-            className={`py-4 text-[11px] font-black uppercase tracking-widest border-b-2 transition-all flex items-center gap-2 ${
-              currentTab === 'bots' 
-                ? 'border-accent text-white' 
-                : 'border-transparent text-[#84849b] hover:text-white'
-            }`}
-          >
-            Gestión de Bots
-          </button>
-          <button 
-            onClick={() => setCurrentTab('settings')}
-            className={`py-4 text-[11px] font-black uppercase tracking-widest border-b-2 transition-all flex items-center gap-2 ${
-              currentTab === 'settings' 
-                ? 'border-accent text-white' 
-                : 'border-transparent text-[#84849b] hover:text-white'
-            }`}
-          >
-            Configuración Global
-          </button>
-        </div>
-      </div>
+
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <main className="w-full px-6 py-8 space-y-8">
         {currentTab === 'inventory' && (
           <>
         {/* Statistics Grid */}
@@ -687,8 +609,8 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
         )}
 
         {currentTab === 'purchases' && (
-          <div className="bg-[#110f1e]/40 border border-white/5 rounded-2xl p-8 relative overflow-hidden">
-            <div className="mb-6 flex items-center justify-between">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-3">
                   Órdenes de Compra
@@ -706,17 +628,17 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
             </div>
 
             {loadingOrders ? (
-              <div className="flex justify-center py-20">
+              <div className="flex justify-center py-20 bg-[#110f1e]/40 border border-white/5 rounded-2xl">
                 <Loader2 className="w-8 h-8 animate-spin text-accent" />
               </div>
             ) : orders.length === 0 ? (
-              <div className="text-center py-20 bg-white/[0.02] rounded-xl border border-white/5">
+              <div className="text-center py-20 bg-[#110f1e]/40 rounded-2xl border border-white/5">
                 <p className="text-[#84849b] font-bold">No hay órdenes creadas todavía.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {orders.map(order => (
-                  <div key={order.id} className="bg-background/50 border border-white/5 rounded-xl p-6">
+                  <div key={order.id} className="bg-[#110f1e]/40 border border-white/5 rounded-xl p-6">
                     <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
                       <div>
                         <span className="text-[10px] text-[#84849b] font-mono block">Order ID</span>
@@ -734,7 +656,7 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
                       </div>
                       <div>
                         <span className="text-[10px] text-[#84849b] font-mono block">Total</span>
-                        <span className="text-emerald-400 font-black text-lg">${order.totalPrice.toLocaleString()} USDT</span>
+                        <span className="text-emerald-400 font-black text-lg">${order.totalPrice.toLocaleString()} USD</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-[#84849b] font-mono block">Estado</span>
@@ -779,22 +701,25 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <span className="text-[10px] text-[#84849b] font-black uppercase tracking-widest">Ítems de la orden ({order.items.length})</span>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <details className="group">
+                      <summary className="text-[10px] text-[#84849b] font-black uppercase tracking-widest cursor-pointer hover:text-white transition-colors flex items-center justify-between">
+                        <span>Ítems de la orden ({order.items.length})</span>
+                        <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="space-y-2 mt-3">
                         {order.items.map(item => (
-                          <div key={item.id} className="flex items-center gap-3 bg-[#110f1e] p-2 rounded-lg border border-white/5">
+                          <div key={item.id} className="flex items-center gap-3 bg-[#110f1e] p-3 rounded-lg border border-white/5">
                             {item.iconUrl && (
                               <img src={item.iconUrl} className="w-10 h-10 object-contain drop-shadow-md" alt={item.name} />
                             )}
-                            <div>
-                              <span className="text-[11px] font-bold block truncate">{item.name}</span>
-                              <span className="text-[10px] text-accent font-black">${item.price}</span>
+                            <div className="flex-1 flex items-center justify-between">
+                              <span className="text-sm font-bold text-white">{item.name}</span>
+                              <span className="text-sm text-accent font-black">${item.price.toLocaleString()}</span>
                             </div>
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </details>
                   </div>
                 ))}
               </div>

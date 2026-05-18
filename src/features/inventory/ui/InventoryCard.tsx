@@ -19,6 +19,16 @@ const rarityColors: Record<string, string> = {
   immortal: 'bg-[#e4ae39]',
 };
 
+const rarityHexColors: Record<string, string> = {
+  common: '#b0c3d9',
+  uncommon: '#5e98d9',
+  rare: '#4b69ff',
+  mythical: '#8847ff',
+  legendary: '#d32ce6',
+  ancient: '#eb4b4b',
+  immortal: '#e4ae39',
+};
+
 const getConditionLabel = (float?: number) => {
   if (float === undefined) return 'Recién fabricado';
   if (float < 0.07) return 'Recién fabricado';
@@ -27,6 +37,16 @@ const getConditionLabel = (float?: number) => {
   if (float < 0.45) return 'Bastante desgastado';
   return 'Deplorable';
 };
+
+const getFloatColorClass = (float?: number) => {
+  if (float === undefined) return 'bg-[#10b981]'; // Green
+  if (float < 0.07) return 'bg-[#10b981]'; // Factory New (Green)
+  if (float < 0.15) return 'bg-[#84cc16]'; // Minimal Wear (Lime)
+  if (float < 0.38) return 'bg-[#eab308]'; // Field-Tested (Yellow)
+  if (float < 0.45) return 'bg-[#f97316]'; // Well-Worn (Orange)
+  return 'bg-[#ef4444]'; // Battle-Scarred (Red)
+};
+
 
 export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) => {
   const { addToSellList, removeFromSellList, selectedItems } = useInventory();
@@ -62,7 +82,7 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
       </div>
 
       {/* 2. Compact Info Panel below the name */}
-      <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-white/[0.02] border border-white/5 font-mono text-[9px]">
+      <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px]">
         <div className="flex items-center justify-between">
           <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">
             {conditionLabel}
@@ -90,7 +110,7 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
               
               {/* Wear position indicator */}
               <div 
-                className="h-full bg-accent rounded-full transition-all duration-500" 
+                className={`h-full ${getFloatColorClass(skin.float)} rounded-full transition-all duration-500`} 
                 style={{ width: `${Math.min(100, skin.float * 100)}%` }}
               />
             </div>
@@ -99,8 +119,14 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
       </div>
 
       {/* Image Container */}
-      <div className="relative aspect-[4/3] w-full flex items-center justify-center my-2">
-        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 blur-[40px] transition-opacity duration-500 ${rarityColors[skin.rarity] || 'bg-white'}`} />
+      <div className="relative aspect-[4/3] w-full flex items-center justify-center mt-2 mb-0 bg-transparent overflow-hidden">
+        {/* Spotlight beam coming from below */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 mx-auto w-full h-[100%] opacity-0 translate-y-6 group-hover:opacity-35 group-hover:translate-y-0 transition-all duration-700 ease-out pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse at bottom, ${rarityHexColors[skin.rarity] || '#ffffff'} 0%, transparent 70%)`,
+          }}
+        />
         
         <Image
           src={skin.imageUrl}

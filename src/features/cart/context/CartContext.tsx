@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { Skin } from '../../skins/domain/skin';
 import { CartItem } from '../domain/cart';
 
@@ -17,18 +17,40 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Cargar carrito de localStorage en el montaje
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('jabbu_cart');
+      if (stored) {
+        setItems(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error('Error al cargar el carrito de localStorage:', e);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Guardar carrito en localStorage cuando cambie
+  useEffect(() => {
+    if (!isLoaded) return;
+    try {
+      localStorage.setItem('jabbu_cart', JSON.stringify(items));
+    } catch (e) {
+      console.error('Error al guardar el carrito en localStorage:', e);
+    }
+  }, [items, isLoaded]);
 
   const addToCart = (skin: Skin) => {
     setItems(prev => {
       const existing = prev.find(item => item.skin.id === skin.id);
-      if (existing) return prev; // Strictly cap at 1 of this unique physical asset
+      if (existing) return prev; // Estrictamente capado a 1
       return [...prev, { skin, quantity: 1 }];
     });
   };
 
   const updateQuantity = (skinId: string, delta: number) => {
-    // Each unique asset is limited to quantity 1, so updateQuantity is not needed to increase
-    // But we keep it as a no-op or simple removal helper to avoid breaking any other callers
     if (delta < 0) {
       removeFromCart(skinId);
     }

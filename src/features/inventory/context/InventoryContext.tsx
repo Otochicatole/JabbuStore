@@ -28,6 +28,7 @@ interface InventoryContextType {
   syncing: boolean;
   error: string | null;
   selectedItems: Skin[];
+  minSellPrice: number;
   addToSellList: (skin: Skin) => void;
   removeFromSellList: (id: string) => void;
   clearSellList: () => void;
@@ -163,6 +164,21 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const [syncing, setSyncing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Skin[]>([]);
+  const [minSellPrice, setMinSellPrice] = useState<number>(1.0);
+
+  // Fetch global minimum sell price once on mount
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/marketplace/settings/public`, {
+      headers: { 'X-Tunnel-Skip-AntiPhishing-Page': 'true' },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.minimumUserSellPrice !== undefined) {
+          setMinSellPrice(data.minimumUserSellPrice);
+        }
+      })
+      .catch(() => {}); // Silently fall back — backend is the source of truth
+  }, []);
 
   const fetchInventory = useCallback(async (forceSync: boolean = false) => {
     if (forceSync) {
@@ -229,7 +245,8 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       loading,
       syncing,
       error,
-      selectedItems, 
+      selectedItems,
+      minSellPrice,
       addToSellList, 
       removeFromSellList, 
       clearSellList, 

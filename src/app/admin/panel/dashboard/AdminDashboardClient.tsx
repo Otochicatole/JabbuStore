@@ -18,7 +18,11 @@ import {
   Loader2,
   CalendarDays,
   Tags,
-  ChevronDown
+  ChevronDown,
+  Tag,
+  XCircle,
+  Clock,
+  CheckCircle2
 } from 'lucide-react';
 
 interface StoreItem {
@@ -59,6 +63,20 @@ interface Order {
   createdAt: string;
 }
 
+interface Listing {
+  id: string;
+  userId: string | null;
+  user: { id: string; name: string | null; avatar: string | null; steamId: string | null } | null;
+  skinId: string;
+  itemName: string | null;
+  itemIconUrl: string | null;
+  basePrice: number;
+  finalPrice: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface AdminUser {
   id: string;
   username: string;
@@ -90,19 +108,26 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
 
   // Tabs
   const searchParams = useSearchParams();
-  const currentTab = (searchParams.get('tab') as 'inventory' | 'purchases' | 'bots' | 'settings') || 'inventory';
+  const currentTab = (searchParams.get('tab') as 'inventory' | 'purchases' | 'listings' | 'bots' | 'settings') || 'inventory';
 
   useEffect(() => {
     if (currentTab === 'purchases') {
       fetchOrders();
     } else if (currentTab === 'inventory') {
       fetchStoreItems();
+    } else if (currentTab === 'listings') {
+      fetchListings();
     }
   }, [currentTab]);
 
   // Orders State
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Listings State
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loadingListings, setLoadingListings] = useState(false);
+  const [cancellingListing, setCancellingListing] = useState<string | null>(null);
 
   // Filter States
   const [search, setSearch] = useState('');
@@ -173,6 +198,43 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
       setLoadingOrders(false);
     }
   };
+
+  const fetchListings = async () => {
+    setLoadingListings(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/listings`, {
+        headers: { 'X-Tunnel-Skip-AntiPhishing-Page': 'true' },
+        credentials: 'include',
+      });
+      if (response.status === 401) { router.push('/admin/login'); return; }
+      if (!response.ok) throw new Error('Error al cargar los listings.');
+      const data = await response.json();
+      setListings(data);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setLoadingListings(false);
+    }
+  };
+
+  const handleCancelListing = async (listingId: string) => {
+    setCancellingListing(listingId);
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/listings/${listingId}/cancel`, {
+        method: 'PATCH',
+        headers: { 'X-Tunnel-Skip-AntiPhishing-Page': 'true' },
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Error al cancelar el listing.');
+      // Refresh listings
+      setListings((prev) => prev.map((l) => l.id === listingId ? { ...l, status: 'cancelled' } : l));
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setCancellingListing(null);
+    }
+  };
+
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -722,6 +784,142 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
                     </details>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {currentTab === 'listings' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-black uppercase tracking-wider text-white flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-accent" />
+                  Solicitudes de Venta de Usuarios
+                </h2>
+                <p className="text-xs text-[#84849b] mt-0.5">Items que los usuarios han listado para vender en el marketplace.</p>
+              </div>
+              <button
+                onClick={fetchListings}
+                disabled={loadingListings}
+                className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/8 rounded-xl text-xs font-bold hover:bg-white/[0.06] transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingListings ? 'animate-spin' : ''}`} />
+                Actualizar
+              </button>
+            </div>
+
+            {loadingListings ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-7 h-7 animate-spin text-accent" />
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center bg-[#110f1e]/20 border border-white/5 rounded-2xl">
+                <Tag className="w-10 h-10 text-white/10 mb-3" />
+                <p className="text-sm font-black text-white/40 uppercase tracking-wider">Sin solicitudes de venta</p>
+                <p className="text-xs text-[#84849b] mt-1">Los listings de usuarios aparecerán aquí.</p>
+              </div>
+            ) : (
+              <div className="bg-[#110f1e]/20 border border-white/5 rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-white/5 bg-white/[0.02]">
+                        <th className="px-4 py-3 text-[10px] font-black text-[#84849b] uppercase tracking-widest">Usuario</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-[#84849b] uppercase tracking-widest">Artículo</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-[#84849b] uppercase tracking-widest">Precio Base</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-[#84849b] uppercase tracking-widest">Precio Final</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-[#84849b] uppercase tracking-widest">Estado</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-[#84849b] uppercase tracking-widest">Fecha</th>
+                        <th className="px-4 py-3 text-[10px] font-black text-[#84849b] uppercase tracking-widest">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {listings.map((listing) => {
+                        const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+                          active: { label: 'Activo', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icon: <CheckCircle2 className="w-3 h-3" /> },
+                          reserved: { label: 'Reservado', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', icon: <Clock className="w-3 h-3" /> },
+                          sold: { label: 'Vendido', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', icon: <CheckCircle2 className="w-3 h-3" /> },
+                          cancelled: { label: 'Cancelado', color: 'text-red-400 bg-red-500/10 border-red-500/20', icon: <XCircle className="w-3 h-3" /> },
+                          expired: { label: 'Expirado', color: 'text-[#84849b] bg-white/5 border-white/10', icon: <XCircle className="w-3 h-3" /> },
+                        };
+                        const status = statusConfig[listing.status] || statusConfig['expired'];
+                        return (
+                          <tr key={listing.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2.5">
+                                {listing.user?.avatar ? (
+                                  <img src={listing.user.avatar} className="w-7 h-7 rounded-lg object-cover" alt="" />
+                                ) : (
+                                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-[9px] font-black text-accent">
+                                    {listing.user?.name?.[0]?.toUpperCase() || '?'}
+                                  </div>
+                                )}
+                                <div>
+                                  <span className="text-xs font-black text-white block">{listing.user?.name || 'Anónimo'}</span>
+                                  {listing.user?.steamId && (
+                                    <span className="text-[9px] text-[#84849b] font-mono">{listing.user.steamId}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2.5">
+                                {listing.itemIconUrl ? (
+                                  <div className="w-10 h-10 flex-shrink-0 bg-white/5 rounded-lg flex items-center justify-center p-1 overflow-hidden">
+                                    <img
+                                      src={listing.itemIconUrl}
+                                      alt={listing.itemName || listing.skinId}
+                                      className="w-full h-full object-contain"
+                                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 flex-shrink-0 bg-white/5 rounded-lg flex items-center justify-center">
+                                    <Tag className="w-4 h-4 text-white/20" />
+                                  </div>
+                                )}
+                                <div>
+                                  <span className="text-xs font-black text-white block">{listing.itemName || 'Desconocido'}</span>
+                                  <span className="text-[9px] text-[#84849b] font-mono">{listing.skinId}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-xs font-black text-white">${listing.basePrice.toFixed(2)}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-xs font-black text-accent">${listing.finalPrice.toFixed(2)}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold border ${status.color}`}>
+                                {status.icon}
+                                {status.label}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-[10px] text-[#84849b]">
+                                {new Date(listing.createdAt).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              {listing.status === 'active' && (
+                                <button
+                                  onClick={() => handleCancelListing(listing.id)}
+                                  disabled={cancellingListing === listing.id}
+                                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-lg text-[10px] font-bold text-red-400 transition-colors disabled:opacity-50"
+                                >
+                                  {cancellingListing === listing.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                                  Cancelar
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>

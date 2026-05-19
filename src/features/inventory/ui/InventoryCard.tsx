@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Skin } from '../../skins/domain/skin';
 import { useInventory } from '../context/InventoryContext';
-import { Zap, Plus, Check } from 'lucide-react';
+import { Zap, Plus, Check, Lock } from 'lucide-react';
 
 interface InventoryCardProps {
   skin: Skin;
@@ -49,12 +49,14 @@ const getFloatColorClass = (float?: number) => {
 
 
 export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) => {
-  const { addToSellList, removeFromSellList, selectedItems } = useInventory();
+  const { addToSellList, removeFromSellList, selectedItems, minSellPrice } = useInventory();
   const isSelected = selectedItems.find(item => item.id === skin.id);
   const conditionLabel = skin.exterior || getConditionLabel(skin.float);
+  const isBelowMinimum = variant === 'sell' && skin.price < minSellPrice;
 
   const toggleSelection = () => {
     if (variant === 'simple') return;
+    if (isBelowMinimum) return; // Block selection
     if (isSelected) {
       removeFromSellList(skin.id);
     } else {
@@ -66,11 +68,20 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
     <div 
       onClick={toggleSelection}
       className={`
-        group relative flex flex-col bg-card rounded-2xl p-4 border transition-all duration-300 hover:-translate-y-1
-        ${variant === 'sell' ? 'cursor-pointer' : ''}
-        ${isSelected && variant === 'sell' ? 'border-accent shadow-[0_0_20px_rgba(217,70,239,0.2)]' : 'border-white/5 hover:border-white/10'}
+        group relative flex flex-col bg-card rounded-2xl p-4 border transition-all duration-300
+        ${isBelowMinimum ? 'cursor-not-allowed opacity-60' : variant === 'sell' ? 'cursor-pointer hover:-translate-y-1' : ''}
+        ${isSelected && variant === 'sell' ? 'border-accent shadow-[0_0_20px_rgba(217,70,239,0.2)]' : isBelowMinimum ? 'border-white/5' : 'border-white/5 hover:border-white/10'}
       `}
     >
+      {/* Blur overlay for items below minimum */}
+      {isBelowMinimum && (
+        <div className="absolute inset-0 z-10 rounded-2xl backdrop-blur-[2px] bg-black/30 flex flex-col items-center justify-center gap-1.5 pointer-events-none">
+          <Lock className="w-5 h-5 text-white/60" />
+          <p className="text-[9px] font-black text-white/60 uppercase tracking-widest text-center px-3">
+            Mín. ${minSellPrice.toFixed(2)}
+          </p>
+        </div>
+      )}
       {/* 1. Item Name at the very top */}
       <div className="mb-2">
         <h2 className="text-[9.5px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
@@ -154,13 +165,15 @@ export const InventoryCard = ({ skin, variant = 'sell' }: InventoryCardProps) =>
       {variant === 'sell' ? (
         <div className="flex justify-end w-full">
           <div className={`
-            w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 border cursor-pointer
-            ${isSelected 
-              ? 'bg-accent text-white border-accent shadow-[0_0_15px_rgba(217,70,239,0.3)]' 
-              : 'bg-secondary text-white border-white/5 hover:bg-secondary/80'
+            w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 border
+            ${isBelowMinimum
+              ? 'bg-white/5 text-white/20 border-white/5 cursor-not-allowed'
+              : isSelected
+                ? 'bg-accent text-white border-accent shadow-[0_0_15px_rgba(217,70,239,0.3)] cursor-pointer'
+                : 'bg-secondary text-white border-white/5 hover:bg-secondary/80 cursor-pointer'
             }
           `}>
-            {isSelected ? <Check className="w-4 h-4 stroke-[3px]" /> : <Plus className="w-4 h-4" />}
+            {isBelowMinimum ? <Lock className="w-3.5 h-3.5" /> : isSelected ? <Check className="w-4 h-4 stroke-[3px]" /> : <Plus className="w-4 h-4" />}
           </div>
         </div>
       ) : (

@@ -32,17 +32,32 @@ export default function AdminSettingsPage() {
   const [isSellDropdownOpen, setIsSellDropdownOpen] = useState(false);
 
   useEffect(() => {
+    console.log('[Settings] Fetching settings from backend...');
     fetch(`${BACKEND_URL}/admin/marketplace/settings`, {
+      credentials: "include",
+      cache: "no-store",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         "X-Tunnel-Skip-AntiPhishing-Page": "true",
       },
     })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && !data.error) setSettings(data);
+      .then((res) => {
+        console.log('[Settings] Response status:', res.status);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
       })
-      .catch(console.error)
+      .then((data) => {
+        console.log('[Settings] Received settings data:', data);
+        if (data && !data.error) {
+          setSettings(data);
+        } else if (data?.error) {
+          console.error('[Settings] Error in response data:', data.error);
+        }
+      })
+      .catch((err) => {
+        console.error('[Settings] Error fetching settings:', err);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -58,9 +73,9 @@ export default function AdminSettingsPage() {
       console.log('[Settings] Saving pricing settings:', payload);
       const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/pricing`, {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
           "X-Tunnel-Skip-AntiPhishing-Page": "true",
         },
         body: JSON.stringify(payload),
@@ -88,9 +103,9 @@ export default function AdminSettingsPage() {
       };
       const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/user-sell`, {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
           "X-Tunnel-Skip-AntiPhishing-Page": "true",
         },
         body: JSON.stringify(payload),
@@ -113,9 +128,9 @@ export default function AdminSettingsPage() {
       console.log('[Settings] Saving min sell price:', payload);
       const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/minimum-sell-price`, {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
           "X-Tunnel-Skip-AntiPhishing-Page": "true",
         },
         body: JSON.stringify(payload),

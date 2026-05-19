@@ -64,7 +64,13 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
   }
 
   try {
+    console.log(`[Proxy] Forwarding ${req.method} request for: ${path}`);
+    console.log(`[Proxy] Target URL: ${targetUrl}`);
+    console.log(`[Proxy] Cookies present in proxy: admin_token=${!!adminToken}, auth_token=${!!authToken}`);
+
     const response = await fetch(targetUrl, fetchOptions);
+
+    console.log(`[Proxy] Response status from backend: ${response.status}`);
 
     // Manejo inteligente de redirects
     if (response.status >= 300 && response.status < 400) {
@@ -100,13 +106,31 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
     // Leer el cuerpo completo para evitar errores de streaming
     const body = await response.arrayBuffer();
 
+    // Log a un archivo local
+    try {
+      const fs = require('fs');
+      const pathModule = require('path');
+      const logFilePath = pathModule.join(process.cwd(), 'proxy-log.txt');
+      const logMsg = `[${new Date().toISOString()}] ${req.method} /api/proxy/${path} -> ${response.status} (Target: ${targetUrl})\n`;
+      fs.appendFileSync(logFilePath, logMsg);
+    } catch (fsErr) {
+      // Ignorar errores al escribir archivo de logs
+    }
+
     return new NextResponse(body, {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Proxy Error:', error);
+    try {
+      const fs = require('fs');
+      const pathModule = require('path');
+      const logFilePath = pathModule.join(process.cwd(), 'proxy-log.txt');
+      const logMsg = `[${new Date().toISOString()}] ERROR ${req.method} /api/proxy/${path} -> ${error.message || error}\n`;
+      fs.appendFileSync(logFilePath, logMsg);
+    } catch (fsErr) {}
     return NextResponse.json(
       { error: 'No se pudo conectar con el backend. Asegúrate de que está corriendo en ' + BACKEND_INTERNAL_URL },
       { status: 502 }

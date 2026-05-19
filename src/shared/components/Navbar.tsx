@@ -210,6 +210,17 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                       </svg>
                       Mi Inventario
                     </Link>
+
+                    <Link 
+                      href="/purchases" 
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] text-xs font-semibold text-white/60 hover:text-white transition-all duration-300"
+                    >
+                      <svg className="w-4 h-4 text-accent/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                      Mis Pedidos
+                    </Link>
                     
                     <Link 
                       href="/sell" 

@@ -22,7 +22,12 @@ import {
   Tag,
   XCircle,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  X,
+  Pencil,
+  ToggleLeft,
+  ToggleRight,
+  DollarSign
 } from 'lucide-react';
 
 interface StoreItem {
@@ -35,6 +40,7 @@ interface StoreItem {
   marketable: boolean;
   botSteamId: string;
   price: number;
+  isPriceManual?: boolean;
   rarity: string;
   exterior: string | null;
   category: string;
@@ -133,6 +139,25 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
   const [selectedRarity, setSelectedRarity] = useState('all');
   const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'float_asc' | 'float_desc'>('price_desc');
 
+  // Price modal states
+  const [priceModalItem, setPriceModalItem] = useState<StoreItem | null>(null);
+  const [modalManualEnabled, setModalManualEnabled] = useState(false);
+  const [modalPriceValue, setModalPriceValue] = useState('');
+  const [modalSaving, setModalSaving] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  const openPriceModal = (item: StoreItem) => {
+    setPriceModalItem(item);
+    setModalManualEnabled(item.isPriceManual ?? false);
+    setModalPriceValue(item.price.toString());
+    setModalError(null);
+  };
+
+  const closePriceModal = () => {
+    setPriceModalItem(null);
+    setModalError(null);
+  };
+
   const fetchStoreItems = async () => {
     setLoading(true);
     setError(null);
@@ -158,6 +183,47 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
       setError(err.message || 'Error de conexión.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSavePrice = async () => {
+    if (!priceModalItem) return;
+    const parsedPrice = parseFloat(modalPriceValue);
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      setModalError('Ingresá un precio numérico válido mayor o igual a 0.');
+      return;
+    }
+
+    setModalSaving(true);
+    setModalError(null);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/store/items/${priceModalItem.assetId}/price`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tunnel-Skip-AntiPhishing-Page': 'true',
+        },
+        body: JSON.stringify({ price: parsedPrice, isPriceManual: modalManualEnabled }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar el precio del artículo.');
+      }
+
+      setItems(prev => prev.map(item => {
+        if (item.assetId === priceModalItem.assetId) {
+          return { ...item, price: parsedPrice, isPriceManual: modalManualEnabled };
+        }
+        return item;
+      }));
+
+      closePriceModal();
+    } catch (err: any) {
+      setModalError(err.message || 'Error de conexión al actualizar el precio.');
+    } finally {
+      setModalSaving(false);
     }
   };
 
@@ -584,9 +650,25 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
                       </td>
 
                       {/* Price tag */}
-                      <td className="py-3 text-right pr-4">
-                        <span className="text-xs font-black text-white font-sans">${item.price.toLocaleString()}</span>
-                        <span className="text-[9px] text-[#84849b] block font-semibold">USD</span>
+                      <td className="py-4 text-right pr-6">
+                        <div
+                          onClick={() => openPriceModal(item)}
+                          className="cursor-pointer group/price flex items-center justify-end gap-2.5 hover:text-accent select-none p-1.5 rounded-lg hover:bg-white/[0.02] transition-all inline-flex"
+                          title="Clic para editar el precio"
+                        >
+                          <div className="text-right">
+                            <div className="flex items-center justify-end">
+                              <span className="text-sm sm:text-base font-extrabold text-white font-sans tracking-tight">${item.price.toLocaleString()}</span>
+                              {item.isPriceManual && (
+                                <span className="text-[8px] font-black uppercase bg-yellow-500/20 border border-yellow-500/35 text-yellow-400 px-2 py-0.5 rounded-md tracking-wider ml-2 font-mono">
+                                  Manual
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-[#84849b] block font-bold mt-0.5">USD</span>
+                          </div>
+                          <Pencil className="w-3.5 h-3.5 opacity-0 group-hover/price:opacity-100 transition-opacity text-accent" />
+                        </div>
                       </td>
 
                     </tr>
@@ -914,6 +996,124 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
         )}
 
       </main>
+
+      {/* ─── Price Edit Modal ─── */}
+      {priceModalItem && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={closePriceModal}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+          {/* Panel */}
+          <div
+            className="relative z-10 w-full max-w-md bg-[#110f1e] border border-white/10 rounded-2xl shadow-[0_0_60px_rgba(217,70,239,0.15)] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
+              <div className="flex items-center gap-3">
+                {priceModalItem.iconUrl ? (
+                  <img src={priceModalItem.iconUrl} alt={priceModalItem.name} className="w-10 h-8 object-contain" />
+                ) : (
+                  <div className="w-10 h-8 bg-white/5 rounded-lg" />
+                )}
+                <div>
+                  <p className="text-xs font-black text-white line-clamp-1">{priceModalItem.name}</p>
+                  <p className="text-[10px] text-[#84849b] font-mono mt-0.5">{priceModalItem.exterior ?? priceModalItem.type}</p>
+                </div>
+              </div>
+              <button
+                onClick={closePriceModal}
+                className="p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-6 space-y-6">
+
+              {/* Switch de precio manual */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div>
+                  <p className="text-sm font-bold text-white">Precio Manual</p>
+                  <p className="text-[11px] text-[#84849b] mt-0.5 leading-snug">
+                    {modalManualEnabled
+                      ? 'Activo — la sincronización automática no sobreescribirá este precio.'
+                      : 'Desactivado — el precio se actualiza automáticamente con el mercado.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setModalManualEnabled(v => !v)}
+                  className="ml-4 flex-shrink-0 cursor-pointer transition-all"
+                  aria-label="Toggle precio manual"
+                >
+                  {modalManualEnabled ? (
+                    <ToggleRight className="w-12 h-12 text-accent drop-shadow-[0_0_8px_rgba(217,70,239,0.6)]" />
+                  ) : (
+                    <ToggleLeft className="w-12 h-12 text-white/20" />
+                  )}
+                </button>
+              </div>
+
+              {/* Input de precio */}
+              <div className={`space-y-2 transition-opacity duration-200 ${modalManualEnabled ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+                <label className="text-xs font-black uppercase tracking-widest text-[#84849b] font-mono">
+                  Precio en USD
+                </label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={modalPriceValue}
+                    onChange={(e) => setModalPriceValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSavePrice(); }}
+                    disabled={!modalManualEnabled}
+                    className="w-full pl-10 pr-4 py-3.5 bg-[#0d0b1a] border-2 border-accent/30 focus:border-accent rounded-xl text-white text-base font-bold font-mono focus:outline-none focus:shadow-[0_0_20px_rgba(217,70,239,0.15)] transition-all placeholder-white/20"
+                    placeholder="0.00"
+                  />
+                </div>
+                <p className="text-[10px] text-[#84849b] font-mono">
+                  Precio actual del mercado: <span className="text-white font-bold">${priceModalItem.price.toLocaleString()}</span>
+                </p>
+              </div>
+
+              {/* Error */}
+              {modalError && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
+                  <XCircle className="w-4 h-4 flex-shrink-0" />
+                  {modalError}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={closePriceModal}
+                className="flex-1 py-3 rounded-xl border border-white/10 text-white/60 text-sm font-bold hover:bg-white/5 transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSavePrice}
+                disabled={modalSaving}
+                className="flex-1 py-3 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-black transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(217,70,239,0.3)] disabled:opacity-50"
+              >
+                {modalSaving ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4" /> Guardar Precio</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

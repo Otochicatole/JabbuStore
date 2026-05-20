@@ -301,3 +301,4 @@
 [2026-05-20T20:03:59.572Z] GET /api/proxy/users/me/inventory -> 200 (Target: http://localhost:3001/api/users/me/inventory)
 [2026-05-20T20:04:01.217Z] GET /api/proxy/store/items -> 200 (Target: http://localhost:3001/api/store/items)
 [2026-05-20T20:04:23.976Z] PATCH /api/proxy/admin/marketplace/settings/user-sell -> 200 (Target: http://localhost:3001/api/admin/marketplace/settings/user-sell)
+[2026-05-20T20:07:10.037Z] GET /api/proxy/admin/marketplace/settings -> 200 (Target: http://localhost:3001/api/admin/marketplace/settings)

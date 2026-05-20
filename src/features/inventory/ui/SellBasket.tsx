@@ -3,9 +3,11 @@ import { useInventory } from '../context/InventoryContext';
 import Image from 'next/image';
 import { Trash2, TrendingUp, DollarSign, Loader2, AlertTriangle, Info } from 'lucide-react';
 import { BACKEND_URL, fetchWithAuth } from '@/shared/lib/api';
+import { useRouter } from 'next/navigation';
 
 export const SellBasket = () => {
   const { selectedItems, removeFromSellList, totalValue, clearSellList, minSellPrice } = useInventory();
+  const router = useRouter();
   const [selling, setSelling] = useState(false);
   const [sellError, setSellError] = useState<string | null>(null);
   const [sellSuccess, setSellSuccess] = useState(false);
@@ -22,31 +24,10 @@ export const SellBasket = () => {
     setSellSuccess(false);
 
     try {
-      const payload = {
-        items: validItems.map(item => ({
-          assetId: item.id,
-          requestedPrice: item.price,
-        })),
-      };
-
-      const res = await fetchWithAuth(`${BACKEND_URL}/orders/sell`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setSellError(data?.error || `Error ${res.status}`);
-        return;
-      }
-
-      setSellSuccess(true);
-      clearSellList();
-      setTimeout(() => setSellSuccess(false), 3000);
+      // Redirigir a la página de checkout de venta
+      router.push("/checkout?type=sell");
     } catch (e: any) {
-      setSellError(e.message || 'Error desconocido al procesar la venta.');
+      setSellError(e.message || 'Error desconocido al iniciar el checkout de venta.');
     } finally {
       setSelling(false);
     }

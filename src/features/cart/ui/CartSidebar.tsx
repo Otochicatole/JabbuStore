@@ -6,9 +6,11 @@ import Image from "next/image";
 import { X, ShoppingBag, Trash2, Minus, Plus, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
+import { useRouter } from "next/navigation";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { items, total, removeFromCart, clearCart } = useCart();
+  const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -48,35 +50,12 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
         return;
       }
       
-      const itemIds = items.map(item => item.skin.id);
-      
-      const response = await fetchWithAuth(`${BACKEND_URL}/orders`, {
-        method: 'POST',
-        body: JSON.stringify({ itemIds })
-      });
-
-      if (response.status === 401) {
-        setIsLoggedIn(false);
-        setError('Debes iniciar sesión con Steam para finalizar tu compra.');
-        return;
-      }
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        setError(data.error || 'Error al procesar la compra');
-        return;
-      }
-
-      const order = await response.json();
-      
-      // Limpiar carrito y cerrar sidebar
-      clearCart();
+      // Cerrar sidebar y navegar a la página de checkout
       onClose();
-      
-      alert(`¡Orden creada exitosamente! ID: ${order.id}. En producción, aquí serás redirigido al pago.`);
+      router.push("/checkout?type=buy");
       
     } catch (err: any) {
-      console.error("Error creating order:", err);
+      console.error("Error initiating checkout:", err);
       setError(err.message || 'Ocurrió un error inesperado');
     } finally {
       setIsCheckingOut(false);

@@ -20,14 +20,17 @@ export default function AdminSettingsPage() {
     userSellModifierValue: 0,
     userSellModifierEnabled: false,
     minimumUserSellPrice: 1.0,
+    webhookUrl: "",
   });
   const [loading, setLoading] = useState(true);
   const [savingPricing, setSavingPricing] = useState(false);
   const [savingUserSell, setSavingUserSell] = useState(false);
   const [savingMinSell, setSavingMinSell] = useState(false);
+  const [savingWebhook, setSavingWebhook] = useState(false);
   const [savedPricing, setSavedPricing] = useState(false);
   const [savedUserSell, setSavedUserSell] = useState(false);
   const [savedMinSell, setSavedMinSell] = useState(false);
+  const [savedWebhook, setSavedWebhook] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSellDropdownOpen, setIsSellDropdownOpen] = useState(false);
 
@@ -144,6 +147,33 @@ export default function AdminSettingsPage() {
       console.error('[Settings] Error saving min sell price:', e);
     } finally {
       setSavingMinSell(false);
+    }
+  };
+
+  const handleWebhookSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingWebhook(true);
+    try {
+      const payload = { webhookUrl: settings.webhookUrl || null };
+      console.log('[Settings] Saving webhook URL:', payload);
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/webhook-url`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      console.log('[Settings] Webhook URL response:', data);
+      if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
+      setSavedWebhook(true);
+      setTimeout(() => setSavedWebhook(false), 2000);
+    } catch (e) {
+      console.error('[Settings] Error saving webhook URL:', e);
+    } finally {
+      setSavingWebhook(false);
     }
   };
 
@@ -368,6 +398,35 @@ export default function AdminSettingsPage() {
             >
               {savingMinSell ? <Loader2 className="w-4 h-4 animate-spin" /> : savedMinSell ? <Check className="w-4 h-4" /> : null}
               {savingMinSell ? "Guardando..." : savedMinSell ? "Guardado" : "Guardar Precio Mínimo"}
+            </button>
+          </form>
+        </div>
+
+        {/* Setting 3: Webhooks */}
+        <div className="p-6 space-y-4">
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-wider text-white">Notificaciones vía Webhook</h2>
+            <p className="text-xs text-[#84849b] mt-0.5">Configura una URL para recibir notificaciones en tiempo real sobre compras y ventas.</p>
+          </div>
+
+          <form onSubmit={handleWebhookSubmit} className="space-y-4 max-w-md">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">Webhook URL</label>
+              <input
+                type="url"
+                placeholder="https://tu-servidor.com/webhook"
+                value={settings.webhookUrl || ""}
+                onChange={(e) => setSettings({ ...settings, webhookUrl: e.target.value })}
+                className="w-full px-3.5 py-2.5 bg-white/[0.03] border border-white/8 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 transition-colors font-mono"
+              />
+            </div>
+
+            <button 
+              type="submit"
+              className="px-4 py-2.5 bg-accent hover:bg-accent/90 rounded-xl text-xs font-black uppercase tracking-wider text-white transition-colors flex items-center justify-center gap-2"
+            >
+              {savingWebhook ? <Loader2 className="w-4 h-4 animate-spin" /> : savedWebhook ? <Check className="w-4 h-4" /> : null}
+              {savingWebhook ? "Guardando..." : savedWebhook ? "Guardado" : "Guardar Webhook"}
             </button>
           </form>
         </div>

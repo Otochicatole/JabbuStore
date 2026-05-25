@@ -254,8 +254,9 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
         return;
       }
       if (!response.ok) throw new Error('Error al cargar las órdenes.');
-      const data = await response.json();
-      setOrders(data);
+      const data: Order[] = await response.json();
+      // Only show BUY orders (purchases)
+      setOrders(data.filter(o => o.type === 'BUY'));
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Error al cargar órdenes.');
@@ -739,7 +740,7 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-3">
-                  Órdenes de Compra
+                  Solicitudes de Compra
                 </h2>
                 <p className="text-xs text-[#84849b] mt-1 font-medium">Revisa las compras generadas por los usuarios y aprueba sus trades.</p>
               </div>

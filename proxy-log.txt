@@ -784,3 +784,8 @@
 [2026-05-25T20:48:14.857Z] GET /api/proxy/admin/marketplace/bots -> 200 (Target: http://localhost:3001/api/admin/marketplace/bots)
 [2026-05-25T20:48:21.738Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)
 [2026-05-25T20:48:22.234Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)
+[2026-05-25T20:50:12.343Z] GET /api/proxy/admins/me -> 200 (Target: http://localhost:3001/api/admins/me)
+[2026-05-25T20:50:12.500Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: http://localhost:3001/api/marketplace/settings/public)
+[2026-05-25T20:50:12.685Z] GET /api/proxy/users/me/inventory -> 401 (Target: http://localhost:3001/api/users/me/inventory)
+[2026-05-25T20:50:14.100Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)
+[2026-05-25T20:50:16.934Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)

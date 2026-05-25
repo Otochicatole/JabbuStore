@@ -52,7 +52,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { name: "Inventario Tienda", href: "/admin/panel/dashboard?tab=inventory", icon: Database },
-    { name: "Órdenes y Compras", href: "/admin/panel/dashboard?tab=purchases", icon: ShoppingBag },
+    { name: "Solicitudes de Compra", href: "/admin/panel/dashboard?tab=purchases", icon: ShoppingBag },
     { name: "Solicitudes de Venta", href: "/admin/panel/dashboard?tab=listings", icon: Tag },
     { name: "Gestión de Bots", href: "/admin/panel/bots", icon: Bot },
     { name: "Configuración Global", href: "/admin/panel/settings", icon: Settings },
@@ -99,13 +99,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   href={item.href}
                   onClick={() => setIsSidebarOpen(false)}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors
+                    flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors
                     ${isActive 
                       ? "bg-accent text-white shadow-[0_0_20px_rgba(217,70,239,0.15)]" 
                       : "text-[#84849b] hover:text-white hover:bg-white/[0.02]"}
                   `}
                 >
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className="w-3.5 h-3.5" />
                   {item.name}
                 </Link>
               );

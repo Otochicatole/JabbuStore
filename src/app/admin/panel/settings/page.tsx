@@ -272,7 +272,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl space-y-8">
+    <div className="p-4 md:p-8 w-full space-y-8">
 
       {/* Page header */}
       <div>
@@ -319,7 +319,7 @@ export default function AdminSettingsPage() {
             title="Reglas Globales de Precios"
             desc="Define cómo se modifican automáticamente los precios de todos los artículos en la tienda."
           />
-          <form onSubmit={handlePricingSubmit} className="space-y-5">
+          <form onSubmit={handlePricingSubmit} className="space-y-5 max-w-xl">
             <ToggleSwitch
               checked={settings.globalPriceModifierEnabled}
               onChange={(v) => setSettings({ ...settings, globalPriceModifierEnabled: v })}
@@ -356,7 +356,7 @@ export default function AdminSettingsPage() {
             title="Reglas de Venta de Usuarios"
             desc="Define cómo se modifican los precios cuando un usuario te vende items desde su inventario."
           />
-          <form onSubmit={handleUserSellSubmit} className="space-y-5">
+          <form onSubmit={handleUserSellSubmit} className="space-y-5 max-w-xl">
             <ToggleSwitch
               checked={settings.userSellModifierEnabled}
               onChange={(v) => setSettings({ ...settings, userSellModifierEnabled: v })}
@@ -393,7 +393,7 @@ export default function AdminSettingsPage() {
             title="Reglas de Reventa cs2.sh"
             desc="Define cómo se modifican los precios para las skins bajo pedido traídas de Buff y Youpin."
           />
-          <form onSubmit={handleResellSubmit} className="space-y-5">
+          <form onSubmit={handleResellSubmit} className="space-y-5 max-w-xl">
             <ToggleSwitch
               checked={settings.resellModifierEnabled}
               onChange={(v) => setSettings({ ...settings, resellModifierEnabled: v })}
@@ -430,7 +430,7 @@ export default function AdminSettingsPage() {
             title="Límites de Venta"
             desc="Establecé restricciones mínimas para las ventas que los usuarios pueden realizar en la plataforma."
           />
-          <form onSubmit={handleMinSellSubmit} className="space-y-5">
+          <form onSubmit={handleMinSellSubmit} className="space-y-5 max-w-xl">
             <div className="space-y-1.5">
               <FieldLabel>Precio Mínimo de Venta (USD)</FieldLabel>
               <div className="relative">
@@ -457,7 +457,7 @@ export default function AdminSettingsPage() {
             title="Notificaciones vía Webhook"
             desc="Configurá una URL externa para recibir notificaciones HTTP en tiempo real cada vez que ocurra una compra o venta."
           />
-          <form onSubmit={handleWebhookSubmit} className="space-y-5">
+          <form onSubmit={handleWebhookSubmit} className="space-y-5 max-w-xl">
             <div className="space-y-1.5">
               <FieldLabel>Webhook URL</FieldLabel>
               <StyledInput

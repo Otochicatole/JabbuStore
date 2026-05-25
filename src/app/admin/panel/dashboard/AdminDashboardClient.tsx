@@ -981,11 +981,8 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
         )}
 
         {currentTab === 'settings' && (
-          <div className="bg-[#110f1e]/40 border border-white/5 rounded-2xl p-8">
-            <h2 className="text-xl font-black tracking-tight text-white mb-6">Configuración del Marketplace</h2>
-            <div className="w-full h-[600px] border border-white/10 rounded overflow-hidden">
-              <iframe src="/admin/panel/settings" className="w-full h-full bg-transparent" />
-            </div>
+          <div className="w-full min-h-[calc(100vh-180px)] rounded-2xl overflow-hidden bg-[#110f1e]/20 border border-white/5">
+            <iframe src="/admin/panel/settings" className="w-full h-full min-h-[calc(100vh-180px)] bg-transparent" />
           </div>
         )}
 

@@ -789,3 +789,7 @@
 [2026-05-25T20:50:12.685Z] GET /api/proxy/users/me/inventory -> 401 (Target: http://localhost:3001/api/users/me/inventory)
 [2026-05-25T20:50:14.100Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)
 [2026-05-25T20:50:16.934Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)
+[2026-05-25T20:52:12.972Z] GET /api/proxy/store/items -> 200 (Target: http://localhost:3001/api/store/items)
+[2026-05-25T20:52:20.432Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)
+[2026-05-25T20:52:25.692Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)
+[2026-05-25T20:52:30.481Z] GET /api/proxy/orders/all -> 200 (Target: http://localhost:3001/api/orders/all)

@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
         hostname: 'community.cloudflare.steamstatic.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'community.akamai.steamstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+        pathname: '/**',
+      },
     ],
   },
 };

@@ -14,6 +14,7 @@ export interface Skin {
   isStatTrak?: boolean;
   isSouvenir?: boolean;
   phase?: string;
+  isImmediate?: boolean;
 }
 
 export interface SkinRepository {

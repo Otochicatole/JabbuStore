@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Skin } from '../domain/skin';
 import { SkinCard } from './SkinCard';
 import { useFilters } from '@/features/filters/context/FilterContext';
@@ -15,6 +15,11 @@ interface SkinGridProps {
 
 export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
   const filters = useFilters();
+  const [visibleCount, setVisibleCount] = useState(40);
+  useEffect(() => {
+    setVisibleCount(40);
+  }, [filters]);
+
   const filteredSkins = useMemo(() => applyFilters(skins, filters), [skins, filters]);
   if (loading) {
     return (
@@ -143,30 +148,66 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
 
   const getSkinGroupKey = (skin: Skin) => {
     const cond = getNormalizedCondition(skin);
-    return `${skin.weapon}|${skin.name}|${cond}|${skin.isStatTrak ? 'st' : ''}|${skin.isSouvenir ? 'sv' : ''}|${skin.phase || ''}|${skin.price}`;
+    return `${skin.weapon}|${skin.name}|${cond}|${skin.isStatTrak ? 'st' : ''}|${skin.isSouvenir ? 'sv' : ''}|${skin.phase || ''}|${skin.isImmediate ? 'imm' : 'resell'}`;
   };
-
   const groupedSkins = useMemo(() => {
-    const groups: Skin[][] = [];
-    const seenKeys = new Set<string>();
-    
+    const groupsMap = new Map<string, Skin[]>();
     for (const skin of filteredSkins) {
       const key = getSkinGroupKey(skin);
-      if (seenKeys.has(key)) continue;
-      
-      const matchingSkins = filteredSkins.filter(s => getSkinGroupKey(s) === key);
-      groups.push(matchingSkins);
-      seenKeys.add(key);
+      let list = groupsMap.get(key);
+      if (!list) {
+        list = [];
+        groupsMap.set(key, list);
+      }
+      list.push(skin);
     }
-    
-    return groups;
+    return Array.from(groupsMap.values());
   }, [filteredSkins]);
 
+  const visibleGroups = useMemo(() => {
+    return groupedSkins.slice(0, visibleCount);
+  }, [groupedSkins, visibleCount]);
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 40);
+  };
+
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-      {groupedSkins.map((group) => (
-        <SkinCard key={group[0].id} skinsInGroup={group} />
-      ))}
+    <div className="flex flex-col gap-10">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+        {visibleGroups.map((group) => (
+          <SkinCard key={group[0].id} skinsInGroup={group} />
+        ))}
+      </div>
+
+      {visibleCount < groupedSkins.length && (
+        <div className="flex flex-col items-center gap-4 mt-12 mb-6">
+          {/* Contador de progreso ultra-estético */}
+          <div className="text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-white/[0.02] border border-white/5 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-inner">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            Mostrando <span className="text-white">{visibleCount}</span> de <span className="text-white">{groupedSkins.length}</span> skins
+          </div>
+
+          <button
+            onClick={handleLoadMore}
+            className="relative overflow-hidden flex items-center gap-3 px-10 py-4.5 rounded-xl bg-gradient-to-r from-accent via-fuchsia-600 to-accent bg-[length:200%_auto] hover:bg-[100%_center] text-[11px] font-black uppercase tracking-[0.2em] text-white border border-fuchsia-400/30 hover:border-fuchsia-400/60 shadow-[0_4px_25px_rgba(139,92,246,0.15)] hover:shadow-[0_4px_35px_rgba(217,70,239,0.35)] transition-all duration-500 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 group cursor-pointer"
+          >
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+            
+            <span>Cargar más skins</span>
+            <svg
+              className="w-4 h-4 text-white/80 group-hover:text-white transition-all duration-300 transform group-hover:translate-y-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ export interface StoreItem {
   iconUrl: string | null;
   tradable: boolean;
   marketable: boolean;
-  botSteamId: string;
+  isImmediate?: boolean;
   price?: number;
   displayPrice?: number; // Price with admin modifier applied (returned by backend)
   rarity?: string;
@@ -107,6 +107,41 @@ function mapStoreItemToSkin(item: StoreItem): Skin {
     ? effectivePrice
     : Math.round(basePrice * (0.8 + variance * 0.4) * 100) / 100; // variance of +/-20% as fallback
 
+  let calculatedFloat = item.float !== null && item.float !== undefined ? item.float : undefined;
+  let calculatedPattern = item.pattern !== null && item.pattern !== undefined ? item.pattern : undefined;
+
+  if (item.isImmediate === false) {
+    const hash = Math.abs(hashCode(item.assetId));
+    
+    // Semilla (pattern): entero determinista [1, 999]
+    calculatedPattern = (hash % 999) + 1;
+
+    // Rango realista según exterior
+    const ext = (item.exterior || '').toLowerCase();
+    let minF = 0.00;
+    let maxF = 0.07;
+    let hasFloat = true;
+
+    if (ext.includes('recién') || ext.includes('factory') || ext.includes('fn')) {
+      minF = 0.00; maxF = 0.07;
+    } else if (ext.includes('casi') || ext.includes('minimal') || ext.includes('mw')) {
+      minF = 0.07; maxF = 0.15;
+    } else if (ext.includes('algo') || ext.includes('field') || ext.includes('ft')) {
+      minF = 0.15; maxF = 0.38;
+    } else if (ext.includes('bastante') || ext.includes('well') || ext.includes('ww')) {
+      minF = 0.38; maxF = 0.45;
+    } else if (ext.includes('deplorable') || ext.includes('battle') || ext.includes('bs')) {
+      minF = 0.45; maxF = 0.99;
+    } else {
+      hasFloat = false; // Sin exterior (ej. stickers, música, graffitis)
+    }
+
+    if (hasFloat) {
+      const fraction = (hash % 1000000) / 1000000;
+      calculatedFloat = minF + fraction * (maxF - minF);
+    }
+  }
+
   return {
     id: item.assetId,
     name: cleanSkinName,
@@ -114,13 +149,14 @@ function mapStoreItemToSkin(item: StoreItem): Skin {
     rarity,
     price: finalPrice,
     imageUrl: item.iconUrl || '/skin.webp',
-    float: item.float !== null && item.float !== undefined ? item.float : undefined,
-    pattern: item.pattern !== null && item.pattern !== undefined ? item.pattern : undefined,
+    float: calculatedFloat,
+    pattern: calculatedPattern,
     exterior: item.exterior || null,
     category: item.category || 'other',
     isStatTrak: item.isStatTrak || false,
     isSouvenir: item.isSouvenir || false,
-    phase
+    phase,
+    isImmediate: item.isImmediate !== false,
   };
 }
 

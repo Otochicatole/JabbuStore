@@ -187,6 +187,19 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
 
       {/* Image Container (transparent & borderless - stuck to rarity divider) */}
       <div className="relative aspect-[4/3] w-full flex items-center justify-center mt-2 mb-0 bg-transparent overflow-hidden">
+        {/* Immediate Trade or Resell Status Badge */}
+        {skin.isImmediate !== false ? (
+          <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full px-2 py-0.5 text-[8px] font-black uppercase text-emerald-400 tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.15)] flex items-center gap-1 z-10 select-none">
+            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+            ⚡ Trade Inmediato
+          </div>
+        ) : (
+          <div className="absolute top-2 left-2 bg-indigo-500/20 border border-indigo-500/40 rounded-full px-2 py-0.5 text-[8px] font-black uppercase text-indigo-400 tracking-wider flex items-center gap-1 z-10 select-none">
+            <span className="w-1 h-1 rounded-full bg-indigo-400"></span>
+            ⏳ Bajo Pedido
+          </div>
+        )}
+
         {/* Spotlight beam coming from below (from the rarity bar upwards - perfectly scaled) */}
         <div 
           className="absolute bottom-0 left-0 right-0 mx-auto w-full h-[100%] opacity-0 translate-y-6 group-hover:opacity-35 group-hover:translate-y-0 transition-all duration-700 ease-out pointer-events-none"
@@ -326,9 +339,16 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 <h3 className="text-base font-black text-white uppercase tracking-tight leading-tight mt-0.5">
                   {skin.name} {skin.phase && <span className="text-accent">| {skin.phase}</span>}
                 </h3>
-                <p className="text-[#84849b] text-[9px] uppercase font-bold mt-1 tracking-wider">
-                  Hay {skinsInGroup.length} variantes con distintos Floats y Seeds
-                </p>
+                <div className="flex items-center gap-2 mt-1.5">
+                  {skin.isImmediate !== false ? (
+                    <span className="bg-emerald-500/20 border border-emerald-500/35 text-emerald-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">⚡ Trade Inmediato</span>
+                  ) : (
+                    <span className="bg-indigo-500/20 border border-indigo-500/35 text-indigo-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">⏳ Bajo Pedido</span>
+                  )}
+                  <span className="text-[#84849b] text-[8px] uppercase font-bold tracking-wider">
+                    {skinsInGroup.length} variantes
+                  </span>
+                </div>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}

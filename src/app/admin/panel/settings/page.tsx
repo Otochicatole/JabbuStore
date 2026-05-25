@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Check, ChevronDown, TrendingUp, Users, ShieldCheck, Webhook } from "lucide-react";
+import { Loader2, Check, ChevronDown, TrendingUp, Users, ShieldCheck, Webhook, Coins } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 
 const MODIFIER_OPTIONS = [
@@ -11,11 +11,12 @@ const MODIFIER_OPTIONS = [
   { value: "fixed_decrease", label: "Descuento Fijo (-USD)" },
 ];
 
-type Tab = "precios" | "venta" | "limites" | "webhook";
+type Tab = "precios" | "venta" | "reventa" | "limites" | "webhook";
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }>; desc: string }[] = [
   { id: "precios",  label: "Precios Globales", icon: TrendingUp,  desc: "Modificadores automáticos de precio" },
   { id: "venta",   label: "Reglas de Venta",  icon: Users,       desc: "Comisiones sobre ventas de usuarios" },
+  { id: "reventa", label: "Reglas de Reventa", icon: Coins,       desc: "Modificadores para ítems de Youpin/Buff (reventas)" },
   { id: "limites", label: "Límites",          icon: ShieldCheck, desc: "Restricciones mínimas de venta" },
   { id: "webhook", label: "Webhook",          icon: Webhook,     desc: "Notificaciones en tiempo real" },
 ];
@@ -149,6 +150,9 @@ export default function AdminSettingsPage() {
     userSellModifierType: "percentage_decrease",
     userSellModifierValue: 0,
     userSellModifierEnabled: false,
+    resellModifierType: "percentage_increase",
+    resellModifierValue: 0,
+    resellModifierEnabled: false,
     minimumUserSellPrice: 1.0,
     webhookUrl: "",
   });
@@ -157,15 +161,18 @@ export default function AdminSettingsPage() {
 
   const [savingPricing,  setSavingPricing]  = useState(false);
   const [savingUserSell, setSavingUserSell] = useState(false);
+  const [savingResell,   setSavingResell]   = useState(false);
   const [savingMinSell,  setSavingMinSell]  = useState(false);
   const [savingWebhook,  setSavingWebhook]  = useState(false);
   const [savedPricing,   setSavedPricing]   = useState(false);
   const [savedUserSell,  setSavedUserSell]  = useState(false);
+  const [savedResell,    setSavedResell]    = useState(false);
   const [savedMinSell,   setSavedMinSell]   = useState(false);
   const [savedWebhook,   setSavedWebhook]   = useState(false);
 
-  const [dropdownOpen,     setDropdownOpen]     = useState(false);
-  const [sellDropdownOpen, setSellDropdownOpen] = useState(false);
+  const [dropdownOpen,       setDropdownOpen]       = useState(false);
+  const [sellDropdownOpen,   setSellDropdownOpen]   = useState(false);
+  const [resellDropdownOpen, setResellDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/admin/marketplace/settings`, {
@@ -211,6 +218,23 @@ export default function AdminSettingsPage() {
       if (!res.ok) throw new Error();
       setSavedUserSell(true); setTimeout(() => setSavedUserSell(false), 2500);
     } finally { setSavingUserSell(false); }
+  };
+
+  const handleResellSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); setSavingResell(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/resell`, {
+        method: "PATCH", credentials: "include",
+        headers: { "Content-Type": "application/json", "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+        body: JSON.stringify({
+          resellModifierType: settings.resellModifierType,
+          resellModifierValue: Number(settings.resellModifierValue),
+          resellModifierEnabled: settings.resellModifierEnabled,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setSavedResell(true); setTimeout(() => setSavedResell(false), 2500);
+    } finally { setSavingResell(false); }
   };
 
   const handleMinSellSubmit = async (e: React.FormEvent) => {
@@ -358,6 +382,43 @@ export default function AdminSettingsPage() {
               />
             </div>
             <SaveButton saving={savingUserSell} saved={savedUserSell} label="Guardar Reglas de Venta" />
+          </form>
+        </div>
+      )}
+
+      {/* ── TAB: Reglas de Reventa ── */}
+      {activeTab === "reventa" && (
+        <div className="bg-[#110f1e]/40 border border-white/[0.06] rounded-2xl p-6">
+          <SectionHeader
+            title="Reglas de Reventa cs2.sh"
+            desc="Define cómo se modifican los precios para las skins bajo pedido traídas de Buff y Youpin."
+          />
+          <form onSubmit={handleResellSubmit} className="space-y-5">
+            <ToggleSwitch
+              checked={settings.resellModifierEnabled}
+              onChange={(v) => setSettings({ ...settings, resellModifierEnabled: v })}
+              label="Habilitar Modificador de Reventa"
+            />
+            <div className="space-y-1.5">
+              <FieldLabel>Tipo de Modificador</FieldLabel>
+              <CustomDropdown
+                value={settings.resellModifierType}
+                onChange={(v) => setSettings({ ...settings, resellModifierType: v })}
+                options={MODIFIER_OPTIONS}
+                open={resellDropdownOpen}
+                setOpen={setResellDropdownOpen}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <FieldLabel>Valor</FieldLabel>
+              <StyledInput
+                type="number"
+                step="0.01"
+                value={settings.resellModifierValue}
+                onChange={(e) => setSettings({ ...settings, resellModifierValue: Number(e.target.value) })}
+              />
+            </div>
+            <SaveButton saving={savingResell} saved={savedResell} label="Guardar Reglas de Reventa" />
           </form>
         </div>
       )}

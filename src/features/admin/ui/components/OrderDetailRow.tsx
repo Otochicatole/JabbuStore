@@ -1,7 +1,37 @@
 import React, { useState } from 'react';
-import { Copy, Check, ChevronDown } from 'lucide-react';
+import { Copy, Check, ChevronDown, ExternalLink } from 'lucide-react';
 import { Order } from '../../domain/types';
 import { rarityColors, getItemRarity, getItemExterior, hashCode } from './utils';
+
+function getCleanSearchName(fullName: string): string {
+  if (!fullName) return '';
+  let name = fullName;
+  
+  // Remove Doppler phases
+  const phases = [
+    ' | Phase 1', ' | Phase 2', ' | Phase 3', ' | Phase 4',
+    ' | Ruby', ' | Sapphire', ' | Black Pearl', ' | Emerald'
+  ];
+  phases.forEach(p => {
+    name = name.replace(p, '');
+  });
+
+  // Remove exteriors
+  const exteriors = [
+    ' (Factory New)', ' (Minimal Wear)', ' (Field-Tested)', ' (Well-Worn)', ' (Battle-Scarred)',
+    ' | Factory New', ' | Minimal Wear', ' | Field-Tested', ' | Well-Worn', ' | Battle-Scarred',
+    ' Factory New', ' Minimal Wear', ' Field-Tested', ' Well-Worn', ' Battle-Scarred'
+  ];
+  exteriors.forEach(ext => {
+    name = name.replace(ext, '');
+  });
+
+  // Remove star symbols
+  name = name.replace('★ ', '');
+  name = name.replace('★', '');
+
+  return name.trim();
+}
 
 interface OrderDetailRowProps {
   order: Order;
@@ -298,16 +328,48 @@ export function OrderDetailRow({ order, onUpdateStatus, resolvedItemsMap }: Orde
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-extrabold text-white block truncate">{item.name}</span>
                     {finalProvider === 'youpin' && (
-                      <span className="text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-mono">Youpin</span>
+                      <a 
+                        href={`https://www.youpin898.com/goodList?game=730&keyword=${encodeURIComponent(getCleanSearchName(item.name))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-mono transition-all hover:scale-105"
+                      >
+                        <span>Youpin</span>
+                        <ExternalLink className="w-2 h-2" />
+                      </a>
                     )}
                     {finalProvider === 'buff' && (
-                      <span className="text-[8px] font-black uppercase tracking-wider bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded font-mono">Buff</span>
+                      <a 
+                        href={`https://buff.163.com/market/csgo#game=csgo&page_num=1&search=${encodeURIComponent(getCleanSearchName(item.name))}&sort_by=price.asc&tab=selling`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded font-mono transition-all hover:scale-105"
+                      >
+                        <span>Buff</span>
+                        <ExternalLink className="w-2 h-2" />
+                      </a>
                     )}
                     {finalProvider === 'bots' && (
-                      <span className="text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">Bots</span>
+                      <a 
+                        href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.name)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono transition-all hover:scale-105"
+                      >
+                        <span>Bots (Steam)</span>
+                        <ExternalLink className="w-2 h-2" />
+                      </a>
                     )}
                     {finalProvider === 'user' && (
-                      <span className="text-[8px] font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded font-mono">Usuario</span>
+                      <a 
+                        href={order.user?.steamId ? `https://steamcommunity.com/profiles/${order.user.steamId}/inventory/#730` : `https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.name)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded font-mono transition-all hover:scale-105"
+                      >
+                        <span>Usuario</span>
+                        <ExternalLink className="w-2 h-2" />
+                      </a>
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[9px] font-mono">

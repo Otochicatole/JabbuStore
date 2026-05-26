@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Skin } from '../domain/skin';
 import { SkinCard } from './SkinCard';
 import { useFilters } from '@/features/filters/context/FilterContext';
@@ -13,11 +13,58 @@ interface SkinGridProps {
   onRetry?: () => void;
 }
 
+const ITEMS_PER_PAGE = 40;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  const pages: (number | string)[] = [];
+  
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Always include page 1
+    pages.push(1);
+
+    if (currentPage > 3) {
+      pages.push('...');
+    }
+
+    // Determine the range of middle pages
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    // Adjust if at the boundaries
+    let adjustedStart = start;
+    let adjustedEnd = end;
+    if (currentPage <= 3) {
+      adjustedEnd = 4;
+    } else if (currentPage >= totalPages - 2) {
+      adjustedStart = totalPages - 3;
+    }
+
+    for (let i = adjustedStart; i <= adjustedEnd; i++) {
+      pages.push(i);
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('...');
+    }
+
+    // Always include last page
+    pages.push(totalPages);
+  }
+
+  return pages;
+}
+
 export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
   const filters = useFilters();
-  const [visibleCount, setVisibleCount] = useState(40);
+  const [currentPage, setCurrentPage] = useState(1);
+  const gridRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    setVisibleCount(40);
+    setCurrentPage(1);
   }, [filters]);
 
   const filteredSkins = useMemo(() => applyFilters(skins, filters), [skins, filters]);
@@ -164,50 +211,110 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
     return Array.from(groupsMap.values());
   }, [filteredSkins]);
 
-  const visibleGroups = useMemo(() => {
-    return groupedSkins.slice(0, visibleCount);
-  }, [groupedSkins, visibleCount]);
+  const totalPages = Math.ceil(groupedSkins.length / ITEMS_PER_PAGE);
 
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + 40);
+  const visibleGroups = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return groupedSkins.slice(start, end);
+  }, [groupedSkins, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (gridRef.current) {
+      const yOffset = -120; // sticky header offset
+      const element = gridRef.current;
+      const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   };
 
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, groupedSkins.length);
+
+  const pageNumbers = getPageNumbers(currentPage, totalPages);
+
   return (
-    <div className="flex flex-col gap-10">
+    <div ref={gridRef} className="flex flex-col gap-10">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         {visibleGroups.map((group) => (
           <SkinCard key={group[0].id} skinsInGroup={group} />
         ))}
       </div>
 
-      {visibleCount < groupedSkins.length && (
-        <div className="flex flex-col items-center gap-4 mt-12 mb-6">
-          {/* Contador de progreso ultra-estético */}
-          <div className="text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-white/[0.02] border border-white/5 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-inner">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            Mostrando <span className="text-white">{visibleCount}</span> de <span className="text-white">{groupedSkins.length}</span> skins
-          </div>
-
-          <button
-            onClick={handleLoadMore}
-            className="relative overflow-hidden flex items-center gap-3 px-10 py-4.5 rounded-xl bg-gradient-to-r from-accent via-fuchsia-600 to-accent bg-[length:200%_auto] hover:bg-[100%_center] text-[11px] font-black uppercase tracking-[0.2em] text-white border border-fuchsia-400/30 hover:border-fuchsia-400/60 shadow-[0_4px_25px_rgba(139,92,246,0.15)] hover:shadow-[0_4px_35px_rgba(217,70,239,0.35)] transition-all duration-500 hover:-translate-y-0.5 active:scale-95 active:translate-y-0 group cursor-pointer"
-          >
-            {/* Shimmer Effect */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-            
-            <span>Cargar más skins</span>
-            <svg
-              className="w-4 h-4 text-white/80 group-hover:text-white transition-all duration-300 transform group-hover:translate-y-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+      <div className="flex flex-col items-center gap-6 mt-12 mb-6">
+        {/* Contador de progreso ultra-estético */}
+        <div className="text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-white/[0.02] border border-white/5 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-inner">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          Mostrando skins <span className="text-white">{startIndex} - {endIndex}</span> de <span className="text-white">{groupedSkins.length}</span>
         </div>
-      )}
+
+        {totalPages > 1 && (
+          <nav className="flex items-center gap-2" aria-label="Paginación de skins">
+            {/* Botón Anterior */}
+            <button
+              onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 bg-white/[0.02] text-[#84849b] transition-all duration-300 ${
+                currentPage === 1
+                  ? 'opacity-40 cursor-not-allowed text-white/20'
+                  : 'hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95 cursor-pointer'
+              }`}
+              title="Página Anterior"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Números de página */}
+            {pageNumbers.map((page, index) => {
+              if (page === '...') {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="w-10 h-10 flex items-center justify-center text-xs font-black text-white/30 font-mono select-none"
+                  >
+                    ...
+                  </span>
+                );
+              }
+
+              const isPageActive = page === currentPage;
+
+              return (
+                <button
+                  key={`page-${page}`}
+                  onClick={() => handlePageChange(Number(page))}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black font-mono tracking-wider transition-all duration-300 cursor-pointer ${
+                    isPageActive
+                      ? 'bg-gradient-to-r from-accent via-fuchsia-600 to-accent text-white border border-fuchsia-400/40 shadow-[0_0_20px_rgba(217,70,239,0.3)] scale-105'
+                      : 'border border-white/5 bg-white/[0.02] text-[#84849b] hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            {/* Botón Siguiente */}
+            <button
+              onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 bg-white/[0.02] text-[#84849b] transition-all duration-300 ${
+                currentPage === totalPages
+                  ? 'opacity-40 cursor-not-allowed text-white/20'
+                  : 'hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95 cursor-pointer'
+              }`}
+              title="Página Siguiente"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </nav>
+        )}
+      </div>
     </div>
   );
 };

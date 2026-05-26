@@ -40,6 +40,18 @@ const getConditionLabel = (float?: number) => {
   return 'Deplorable';
 };
 
+/** Devuelve el rango de float [min, max] según el exterior (para market listings sin float individual) */
+const getFloatRangeFromExterior = (exterior: string | null | undefined): [number, number] | null => {
+  if (!exterior) return null;
+  const ext = exterior.toLowerCase();
+  if (ext.includes('factory') || ext.includes('fn') || ext.includes('recién')) return [0.00, 0.07];
+  if (ext.includes('minimal') || ext.includes('mw') || ext.includes('casi')) return [0.07, 0.15];
+  if (ext.includes('field') || ext.includes('ft') || ext.includes('algo')) return [0.15, 0.38];
+  if (ext.includes('well') || ext.includes('ww') || ext.includes('bastante')) return [0.38, 0.45];
+  if (ext.includes('battle') || ext.includes('bs') || ext.includes('deplorable')) return [0.45, 1.00];
+  return null;
+};
+
 const getFloatColorClass = (float?: number) => {
   if (float === undefined) return 'bg-[#10b981]'; // Green
   if (float < 0.07) return 'bg-[#10b981]'; // Factory New (Green)
@@ -47,6 +59,14 @@ const getFloatColorClass = (float?: number) => {
   if (float < 0.38) return 'bg-[#eab308]'; // Field-Tested (Yellow)
   if (float < 0.45) return 'bg-[#f97316]'; // Well-Worn (Orange)
   return 'bg-[#ef4444]'; // Battle-Scarred (Red)
+};
+
+const getRangeColorClass = (min: number): string => {
+  if (min < 0.07) return 'bg-[#10b981]';
+  if (min < 0.15) return 'bg-[#84cc16]';
+  if (min < 0.38) return 'bg-[#eab308]';
+  if (min < 0.45) return 'bg-[#f97316]';
+  return 'bg-[#ef4444]';
 };
 
 export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
@@ -126,38 +146,77 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
 
       {/* Info Panel */}
       {!isMultiple ? (
-        // Standard single item info panel (transparent & borderless)
+        // Standard single item info panel
         <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px]">
-          <div className="flex items-center justify-between">
-            <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">
-              {skin.exterior || conditionLabel}
-            </span>
-            {skin.pattern !== undefined && (
-              <span className="text-[#84849b] text-[8px]">
-                Semilla: <span className="text-white font-bold">{skin.pattern}</span>
-              </span>
-            )}
-          </div>
-          
-          {skin.float !== undefined && (
-            <div className="flex flex-col gap-1 mt-1">
-              <div className="flex items-center justify-between text-[#84849b] text-[8px]">
-                <span>Float</span>
-                <span className="text-white font-bold">{skin.float.toFixed(6)}</span>
-              </div>
-              <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden relative">
-                <div className="absolute top-0 bottom-0 left-[7%] w-[1px] bg-white/20" />
-                <div className="absolute top-0 bottom-0 left-[15%] w-[1px] bg-white/20" />
-                <div className="absolute top-0 bottom-0 left-[38%] w-[1px] bg-white/20" />
-                <div className="absolute top-0 bottom-0 left-[45%] w-[1px] bg-white/20" />
-                
-                <div 
-                  className={`h-full ${getFloatColorClass(skin.float)} rounded-full transition-all duration-500`} 
-                  style={{ width: `${Math.min(100, skin.float * 100)}%` }}
-                />
-              </div>
-            </div>
-          )}
+          {(() => {
+            const isMarket = skin.isImmediate === false;
+            const floatRange = isMarket ? getFloatRangeFromExterior(skin.exterior) : null;
+
+            return (
+              <>
+                {/* Exterior + seed/seed-range */}
+                <div className="flex items-center justify-between">
+                  <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">
+                    {skin.exterior || conditionLabel}
+                  </span>
+                  {isMarket ? (
+                    <span className="text-[#84849b] text-[8px]">
+                      Semilla: <span className="text-white/60 font-bold">0 - 999</span>
+                    </span>
+                  ) : skin.pattern !== undefined && (
+                    <span className="text-[#84849b] text-[8px]">
+                      Semilla: <span className="text-white font-bold">{skin.pattern}</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Float exacto (bot) o rango (market) */}
+                {skin.float !== undefined ? (
+                  // Bot item: float exacto
+                  <div className="flex flex-col gap-1 mt-1">
+                    <div className="flex items-center justify-between text-[#84849b] text-[8px]">
+                      <span>Float</span>
+                      <span className="text-white font-bold">{skin.float.toFixed(6)}</span>
+                    </div>
+                    <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden relative">
+                      <div className="absolute top-0 bottom-0 left-[7%] w-[1px] bg-white/20" />
+                      <div className="absolute top-0 bottom-0 left-[15%] w-[1px] bg-white/20" />
+                      <div className="absolute top-0 bottom-0 left-[38%] w-[1px] bg-white/20" />
+                      <div className="absolute top-0 bottom-0 left-[45%] w-[1px] bg-white/20" />
+                      <div
+                        className={`h-full ${getFloatColorClass(skin.float)} rounded-full transition-all duration-500`}
+                        style={{ width: `${Math.min(100, skin.float * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : floatRange ? (
+                  // Market listing: rango de float según exterior
+                  <div className="flex flex-col gap-1 mt-1">
+                    <div className="flex items-center justify-between text-[#84849b] text-[8px]">
+                      <span>Float</span>
+                      <span className="text-white/70 font-bold">
+                        {floatRange[0].toFixed(2)} — {floatRange[1].toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden relative">
+                      <div className="absolute top-0 bottom-0 left-[7%] w-[1px] bg-white/20" />
+                      <div className="absolute top-0 bottom-0 left-[15%] w-[1px] bg-white/20" />
+                      <div className="absolute top-0 bottom-0 left-[38%] w-[1px] bg-white/20" />
+                      <div className="absolute top-0 bottom-0 left-[45%] w-[1px] bg-white/20" />
+                      {/* Barra que muestra el rango completo del exterior, no un punto */}
+                      <div
+                        className={`h-full ${getRangeColorClass(floatRange[0])} rounded-full opacity-60`}
+                        style={{
+                          marginLeft: `${floatRange[0] * 100}%`,
+                          width: `${(floatRange[1] - floatRange[0]) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            );
+          })()}
         </div>
       ) : (
         // Premium grouped items info panel (transparent & borderless)

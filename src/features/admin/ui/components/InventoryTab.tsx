@@ -401,11 +401,11 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-white/5 text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-                    <th className="pb-3 pl-4">Artículo</th>
-                    <th className="pb-3">Desgaste / Semilla</th>
-                    <th className="pb-3">Float</th>
-                    <th className="pb-3">Origen / Cuenta</th>
-                    <th className="pb-3 text-right pr-4">Precio</th>
+                    <th className="pb-3 pl-4 w-[35%]">Artículo</th>
+                    <th className="pb-3 w-[14%]">Desgaste / Semilla</th>
+                    <th className="pb-3 w-[16%] pr-8">Float</th>
+                    <th className="pb-3 w-[18%] pl-4">Origen / Cuenta</th>
+                    <th className="pb-3 text-right pr-4 w-[17%]">Precio</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.02]">
@@ -499,9 +499,9 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                         </td>
 
                         {/* Float range indicator */}
-                        <td className="py-3">
+                        <td className="py-3 pr-8">
                           {displayFloat !== null && displayFloat !== undefined ? (
-                            <div className="max-w-[120px] w-full">
+                            <div className="w-[130px]">
                               <span className="text-[10px] font-bold font-mono text-white block">
                                 {displayFloat.toFixed(8)}
                               </span>
@@ -518,7 +518,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                         </td>
 
                       {/* Origen / Cuenta */}
-                      <td className="py-3">
+                      <td className="py-3 pl-4">
                         {isResell ? (
                           <div className="flex flex-wrap gap-1">
                             {hashCode(item.assetId) % 2 === 0 ? (

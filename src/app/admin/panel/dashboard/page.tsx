@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { BACKEND_URL } from '@/shared/lib/api';
+import { StoreItem } from '@/features/admin/domain/types';
 import { AdminDashboardClient } from './AdminDashboardClient';
 
 export default async function AdminDashboardPage() {
@@ -13,7 +14,7 @@ export default async function AdminDashboardPage() {
   }
 
   let adminUser = null;
-  let initialItems = [];
+  const initialItems: StoreItem[] = [];
 
   try {
     // Validar el token JWT de la cookie con el endpoint seguro del backend
@@ -31,19 +32,6 @@ export default async function AdminDashboardPage() {
 
     const meData = await meResponse.json();
     adminUser = meData.admin;
-
-    // Obtener el stock inicial de la tienda en el servidor
-    const itemsResponse = await fetch(`${BACKEND_URL}/store/items`, {
-      headers: {
-        'Cookie': `admin_token=${token}`,
-        'X-Tunnel-Skip-AntiPhishing-Page': 'true',
-      },
-      next: { revalidate: 0 }
-    });
-
-    if (itemsResponse.ok) {
-      initialItems = await itemsResponse.json();
-    }
   } catch (err) {
     console.error('Error al validar la sesión del administrador en el servidor:', err);
     redirect('/admin/login');
@@ -53,6 +41,6 @@ export default async function AdminDashboardPage() {
     redirect('/admin/login');
   }
 
-  // Renderizar la interfaz del dashboard pasándole la data del admin y el catálogo inicial
+  // Renderizar la interfaz del dashboard pasándole la data del admin y el catálogo inicial (vacío para carga en cliente)
   return <AdminDashboardClient initialItems={initialItems} adminUser={adminUser} />;
 }

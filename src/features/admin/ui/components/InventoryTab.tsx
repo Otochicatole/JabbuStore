@@ -20,7 +20,7 @@ import { rarityColors } from './utils';
 import { PriceEditModal } from './PriceEditModal';
 
 interface InventoryTabProps {
-  initialItems: StoreItem[];
+  initialItems?: StoreItem[];
 }
 
 const ITEMS_PER_INVENTORY_PAGE = 50;
@@ -64,10 +64,10 @@ function getPageNumbers(currentPage: number, totalPages: number) {
   return pages;
 }
 
-export function InventoryTab({ initialItems }: InventoryTabProps) {
+export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
   const router = useRouter();
   const [items, setItems] = useState<StoreItem[]>(initialItems);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(initialItems.length === 0);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,6 +85,13 @@ export function InventoryTab({ initialItems }: InventoryTabProps) {
   useEffect(() => {
     setInventoryPage(1);
   }, [search, selectedRarity, sortBy]);
+
+  // Dynamic fetch on mount if initialItems is empty
+  useEffect(() => {
+    if (initialItems.length === 0) {
+      fetchStoreItems();
+    }
+  }, [initialItems]);
 
   const fetchStoreItems = async () => {
     setLoading(true);

@@ -1,0 +1,44 @@
+"use client";
+
+import React from 'react';
+import { useSearchParams } from 'next/navigation';
+import { AdminDashboardProps } from '../domain/types';
+import { InventoryTab } from './components/InventoryTab';
+import { PurchasesTab } from './components/PurchasesTab';
+import { ListingsTab } from './components/ListingsTab';
+import { BotsTab } from './components/BotsTab';
+
+export function AdminDashboard({ initialItems }: AdminDashboardProps) {
+  const searchParams = useSearchParams();
+  const currentTab = (searchParams.get('tab') as 'inventory' | 'purchases' | 'listings' | 'bots' | 'settings') || 'inventory';
+
+  return (
+    <div className="min-h-screen bg-[#070510] text-white">
+      {/* Main Container */}
+      <main className="w-full px-6 py-8 space-y-8">
+        {currentTab === 'inventory' && (
+          <InventoryTab initialItems={initialItems} />
+        )}
+
+        {currentTab === 'purchases' && (
+          <PurchasesTab />
+        )}
+
+        {currentTab === 'listings' && (
+          <ListingsTab />
+        )}
+
+        {currentTab === 'settings' && (
+          <div className="w-full min-h-[calc(100vh-180px)] rounded-2xl overflow-hidden bg-[#110f1e]/20 border border-white/5">
+            <iframe src="/admin/panel/settings" className="w-full h-full min-h-[calc(100vh-180px)] bg-transparent" />
+          </div>
+        )}
+
+        {currentTab === 'bots' && (
+          <BotsTab />
+        )}
+      </main>
+    </div>
+  );
+}
+export default AdminDashboard;

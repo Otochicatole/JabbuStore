@@ -194,8 +194,13 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
   };
 
   const getSkinGroupKey = (skin: Skin) => {
+    // Los market listings (Buff/YouPin) son únicos por definición — no agrupar
+    if (skin.isImmediate === false) {
+      return `market|${skin.id}`;
+    }
+    // Bot items: agrupar por nombre + condición como antes
     const cond = getNormalizedCondition(skin);
-    return `${skin.weapon}|${skin.name}|${cond}|${skin.isStatTrak ? 'st' : ''}|${skin.isSouvenir ? 'sv' : ''}|${skin.phase || ''}|${skin.isImmediate ? 'imm' : 'resell'}`;
+    return `${skin.weapon}|${skin.name}|${cond}|${skin.isStatTrak ? 'st' : ''}|${skin.isSouvenir ? 'sv' : ''}|${skin.phase || ''}`;
   };
   const groupedSkins = useMemo(() => {
     const groupsMap = new Map<string, Skin[]>();

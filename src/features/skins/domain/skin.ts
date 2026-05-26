@@ -15,6 +15,12 @@ export interface Skin {
   isSouvenir?: boolean;
   phase?: string;
   isImmediate?: boolean;
+  /** 'bot' = ítem físico de Steam | 'buff' | 'youpin' = catálogo de mercado externo */
+  provider?: 'bot' | 'buff' | 'youpin';
+  /** Para market listings: precio ask en YouPin */
+  youpinAsk?: number | null;
+  /** Para market listings: precio ask en Buff163 */
+  buffAsk?: number | null;
 }
 
 export interface SkinRepository {

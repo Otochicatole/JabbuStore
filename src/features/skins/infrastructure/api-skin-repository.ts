@@ -1,6 +1,8 @@
 import { Skin, SkinRepository, SkinRarity } from "../domain/skin";
 import { BACKEND_URL } from "@/shared/lib/api";
 
+// ─── Tipos de respuesta del backend ───────────────────────────────────────────
+
 export interface StoreItem {
   assetId: string;
   classId: string;
@@ -9,9 +11,8 @@ export interface StoreItem {
   iconUrl: string | null;
   tradable: boolean;
   marketable: boolean;
-  isImmediate?: boolean;
   price?: number;
-  displayPrice?: number; // Price with admin modifier applied (returned by backend)
+  displayPrice?: number;
   rarity?: string;
   exterior?: string | null;
   category?: string;
@@ -21,163 +22,135 @@ export interface StoreItem {
   pattern?: number | null;
 }
 
-// Helper function to create deterministic hash codes from strings
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const chr = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
-    hash |= 0; // Convert to 32bit integer
-  }
-  return hash;
+export interface MarketListingItem {
+  id: string;
+  name: string;
+  provider: 'buff' | 'youpin';
+  youpinAsk: number | null;
+  youpinVolume: number | null;
+  buffAsk: number | null;
+  buffVolume: number | null;
+  price: number;
+  displayPrice?: number;
+  iconUrl: string | null;
+  rarity: string;
+  exterior: string | null;
+  category: string;
+  isStatTrak: boolean;
+  isSouvenir: boolean;
 }
 
-// Map the backend StoreItem structure to the UI-compatible Skin interface deterministically
-function mapStoreItemToSkin(item: StoreItem): Skin {
-  let weapon = "Item";
-  let skinName = item.name;
-  let phase: string | undefined = undefined;
-  
-  if (item.name.includes(" | ")) {
-    const parts = item.name.split(" | ");
-    weapon = parts[0] || "Item";
-    skinName = parts[1] || "";
-    if (parts.length > 2) {
-      phase = parts[2];
-    }
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function toSkinRarity(raw: string | undefined): SkinRarity {
+  const normalized = (raw || 'common').toLowerCase();
+  const valid: SkinRarity[] = ['common', 'uncommon', 'rare', 'mythical', 'legendary', 'ancient', 'immortal'];
+  return valid.includes(normalized as SkinRarity) ? (normalized as SkinRarity) : 'common';
+}
+
+function parseName(fullName: string): { weapon: string; skinName: string; phase?: string } {
+  if (fullName.includes(' | ')) {
+    const parts = fullName.split(' | ');
+    const weapon = parts[0] || 'Item';
+    let skinName = parts[1] || '';
+    const phase = parts.length > 2 ? parts[2] : undefined;
+    // Quitar desgaste del nombre: "Redline (Field-Tested)" → "Redline"
+    if (skinName.includes(' (')) skinName = skinName.split(' (')[0] || skinName;
+    return { weapon, skinName, phase };
   }
-  
-  // Clean up skinName wear suffix (e.g. "Redline (Field-Tested)" -> "Redline")
-  let cleanSkinName = skinName;
-  if (skinName.includes(" (")) {
-    cleanSkinName = skinName.split(" (")[0] || skinName;
-  }
+  return { weapon: 'Item', skinName: fullName };
+}
 
-  // Determine Rarity based on description 'type' or fallback to database field
-  let rarity: SkinRarity = 'common';
-  if (item.rarity) {
-    const normalized = item.rarity.toLowerCase();
-    if (['common', 'uncommon', 'rare', 'mythical', 'legendary', 'ancient', 'immortal'].includes(normalized)) {
-      rarity = normalized as SkinRarity;
-    }
-  } else {
-    const typeLower = item.type.toLowerCase();
-    if (
-      typeLower.includes("encubierto") || 
-      typeLower.includes("covert") || 
-      typeLower.includes("cuchillo") || 
-      typeLower.includes("knife") || 
-      typeLower.includes("guantes") || 
-      typeLower.includes("gloves") || 
-      typeLower.includes("extraordinario") || 
-      typeLower.includes("contrabando")
-    ) {
-      rarity = 'ancient';
-    } else if (typeLower.includes("clasificado") || typeLower.includes("classified")) {
-      rarity = 'legendary';
-    } else if (typeLower.includes("restringido") || typeLower.includes("restricted")) {
-      rarity = 'mythical';
-    } else if (typeLower.includes("militar") || typeLower.includes("mil-spec")) {
-      rarity = 'rare';
-    } else if (typeLower.includes("industrial")) {
-      rarity = 'uncommon';
-    } else if (typeLower.includes("consumo") || typeLower.includes("consumer")) {
-      rarity = 'common';
-    } else {
-      const rarities: SkinRarity[] = ['common', 'uncommon', 'rare', 'mythical', 'legendary', 'ancient'];
-      const index = Math.abs(hashCode(item.classId)) % rarities.length;
-      rarity = rarities[index];
-    }
-  }
+// ─── Mappers ──────────────────────────────────────────────────────────────────
 
-  // Generate deterministic price based on rarity tier and a percentage variance based on assetId
-  let basePrice = 5;
-  if (rarity === 'ancient') basePrice = 1200;
-  else if (rarity === 'legendary') basePrice = 280;
-  else if (rarity === 'mythical') basePrice = 85;
-  else if (rarity === 'rare') basePrice = 30;
-  else if (rarity === 'uncommon') basePrice = 12;
-
-  const variance = (Math.abs(hashCode(item.assetId)) % 100) / 100; // 0.0 to 1.0
-  const effectivePrice = (item.displayPrice !== undefined && item.displayPrice > 0)
-    ? item.displayPrice
-    : item.price;
-
-  const finalPrice = effectivePrice && effectivePrice > 0
-    ? effectivePrice
-    : Math.round(basePrice * (0.8 + variance * 0.4) * 100) / 100; // variance of +/-20% as fallback
-
-  let calculatedFloat = item.float !== null && item.float !== undefined ? item.float : undefined;
-  let calculatedPattern = item.pattern !== null && item.pattern !== undefined ? item.pattern : undefined;
-
-  if (item.isImmediate === false) {
-    const hash = Math.abs(hashCode(item.assetId));
-    
-    // Semilla (pattern): entero determinista [1, 999]
-    calculatedPattern = (hash % 999) + 1;
-
-    // Rango realista según exterior
-    const ext = (item.exterior || '').toLowerCase();
-    let minF = 0.00;
-    let maxF = 0.07;
-    let hasFloat = true;
-
-    if (ext.includes('recién') || ext.includes('factory') || ext.includes('fn')) {
-      minF = 0.00; maxF = 0.07;
-    } else if (ext.includes('casi') || ext.includes('minimal') || ext.includes('mw')) {
-      minF = 0.07; maxF = 0.15;
-    } else if (ext.includes('algo') || ext.includes('field') || ext.includes('ft')) {
-      minF = 0.15; maxF = 0.38;
-    } else if (ext.includes('bastante') || ext.includes('well') || ext.includes('ww')) {
-      minF = 0.38; maxF = 0.45;
-    } else if (ext.includes('deplorable') || ext.includes('battle') || ext.includes('bs')) {
-      minF = 0.45; maxF = 0.99;
-    } else {
-      hasFloat = false; // Sin exterior (ej. stickers, música, graffitis)
-    }
-
-    if (hasFloat) {
-      const fraction = (hash % 1000000) / 1000000;
-      calculatedFloat = minF + fraction * (maxF - minF);
-    }
-  }
+/**
+ * Convierte un ítem físico de bot Steam al formato Skin.
+ * Mantiene float y seed reales del inventario de Steam.
+ */
+function mapBotItemToSkin(item: StoreItem): Skin {
+  const { weapon, skinName, phase } = parseName(item.name);
+  const price = (item.displayPrice && item.displayPrice > 0) ? item.displayPrice : (item.price || 0);
 
   return {
     id: item.assetId,
-    name: cleanSkinName,
+    name: skinName,
     weapon,
-    rarity,
-    price: finalPrice,
+    rarity: toSkinRarity(item.rarity),
+    price,
     imageUrl: item.iconUrl || '/skin.webp',
-    float: calculatedFloat,
-    pattern: calculatedPattern,
+    float: item.float ?? undefined,
+    pattern: item.pattern ?? undefined,
     exterior: item.exterior || null,
     category: item.category || 'other',
     isStatTrak: item.isStatTrak || false,
     isSouvenir: item.isSouvenir || false,
     phase,
-    isImmediate: item.isImmediate !== false,
+    isImmediate: true,
+    provider: 'bot',
   };
 }
+
+/**
+ * Convierte un listing de catálogo de mercado (Buff/YouPin) al formato Skin.
+ * NO tiene float ni seed individuales — son listings de catálogo, no ítems físicos.
+ */
+function mapMarketListingToSkin(item: MarketListingItem): Skin {
+  const { weapon, skinName, phase } = parseName(item.name);
+  const price = (item.displayPrice && item.displayPrice > 0) ? item.displayPrice : item.price;
+
+  return {
+    id: `market-${item.id}`,
+    name: skinName,
+    weapon,
+    rarity: toSkinRarity(item.rarity),
+    price,
+    imageUrl: item.iconUrl || '/skin.webp',
+    float: undefined,
+    pattern: undefined,
+    exterior: item.exterior || null,
+    category: item.category || 'other',
+    isStatTrak: item.isStatTrak || false,
+    isSouvenir: item.isSouvenir || false,
+    phase,
+    isImmediate: false,
+    provider: item.provider,
+    youpinAsk: item.youpinAsk,
+    buffAsk: item.buffAsk,
+  };
+}
+
+// ─── Repository ───────────────────────────────────────────────────────────────
 
 export class ApiSkinRepository implements SkinRepository {
   async getSkins(): Promise<Skin[]> {
     try {
-      const response = await fetch(`${BACKEND_URL}/store/items`, {
-        headers: {
-          'X-Tunnel-Skip-AntiPhishing-Page': 'true',
-          'Accept': 'application/json'
-        },
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch skins: ${response.statusText}`);
+      // Fetch paralelo de bots (trade inmediato) y mercado (Buff/YouPin)
+      const [botRes, marketRes] = await Promise.allSettled([
+        fetch(`${BACKEND_URL}/store/items`, {
+          headers: { 'X-Tunnel-Skip-AntiPhishing-Page': 'true', 'Accept': 'application/json' },
+          credentials: 'include',
+        }),
+        fetch(`${BACKEND_URL}/market/listings`, {
+          headers: { 'X-Tunnel-Skip-AntiPhishing-Page': 'true', 'Accept': 'application/json' },
+          credentials: 'include',
+        }),
+      ]);
+
+      let botSkins: Skin[] = [];
+      let marketSkins: Skin[] = [];
+
+      if (botRes.status === 'fulfilled' && botRes.value.ok) {
+        const data = (await botRes.value.json()) as StoreItem[];
+        if (Array.isArray(data)) botSkins = data.map(mapBotItemToSkin);
       }
-      const data = (await response.json()) as StoreItem[];
-      if (Array.isArray(data)) {
-        return data.map(mapStoreItemToSkin);
+
+      if (marketRes.status === 'fulfilled' && marketRes.value.ok) {
+        const data = (await marketRes.value.json()) as MarketListingItem[];
+        if (Array.isArray(data)) marketSkins = data.map(mapMarketListingToSkin);
       }
-      return [];
+
+      // Bots primero (trade inmediato), market listings después
+      return [...botSkins, ...marketSkins];
     } catch (error) {
       console.error("Error in ApiSkinRepository.getSkins:", error);
       return [];

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Bot, Settings, LogOut, Menu, X, Database, ShoppingBag, Tag } from "lucide-react";
+import { Bot, Settings, LogOut, Menu, X, Database, ShoppingBag, Tag, Globe } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 
 interface AdminUser {
@@ -51,7 +51,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const navItems = [
-    { name: "Inventario Tienda", href: "/admin/panel/dashboard?tab=inventory", icon: Database },
+    { name: "Inventario Bots", href: "/admin/panel/dashboard?tab=inventory", icon: Database },
+    { name: "Catálogo de Mercado", href: "/admin/panel/dashboard?tab=market", icon: Globe },
     { name: "Solicitudes de Compra", href: "/admin/panel/dashboard?tab=purchases", icon: ShoppingBag },
     { name: "Solicitudes de Venta", href: "/admin/panel/dashboard?tab=listings", icon: Tag },
     { name: "Gestión de Bots", href: "/admin/panel/bots", icon: Bot },

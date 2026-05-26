@@ -7,10 +7,11 @@ import { InventoryTab } from './components/InventoryTab';
 import { PurchasesTab } from './components/PurchasesTab';
 import { ListingsTab } from './components/ListingsTab';
 import { BotsTab } from './components/BotsTab';
+import { MarketCatalog } from '@/features/market/ui/MarketCatalog';
 
 export function AdminDashboard({ initialItems }: AdminDashboardProps) {
   const searchParams = useSearchParams();
-  const currentTab = (searchParams.get('tab') as 'inventory' | 'purchases' | 'listings' | 'bots' | 'settings') || 'inventory';
+  const currentTab = (searchParams.get('tab') as 'inventory' | 'market' | 'purchases' | 'listings' | 'bots' | 'settings') || 'inventory';
 
   return (
     <div className="min-h-screen bg-[#070510] text-white">
@@ -18,6 +19,10 @@ export function AdminDashboard({ initialItems }: AdminDashboardProps) {
       <main className="w-full px-6 py-8 space-y-8">
         {currentTab === 'inventory' && (
           <InventoryTab initialItems={initialItems} />
+        )}
+
+        {currentTab === 'market' && (
+          <MarketCatalog />
         )}
 
         {currentTab === 'purchases' && (

@@ -410,41 +410,8 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                 </thead>
                 <tbody className="divide-y divide-white/[0.02]">
                   {visibleInventoryItems.map((item) => {
-                    const isResell = item.botSteamId === "resell_market" || (item.assetId && typeof item.assetId === 'string' && item.assetId.startsWith("resell-"));
-                    let displayFloat = item.float;
-                    let displayPattern = item.pattern;
-
-                    if (isResell && (displayFloat === null || displayPattern === null)) {
-                      const hash = Math.abs(hashCode(item.assetId));
-                      if (displayPattern === null) {
-                        displayPattern = (hash % 999) + 1;
-                      }
-                      if (displayFloat === null) {
-                        const ext = (item.exterior || '').toLowerCase();
-                        let minF = 0.00;
-                        let maxF = 0.07;
-                        let hasFloat = true;
-
-                        if (ext.includes('recién') || ext.includes('factory') || ext.includes('fn')) {
-                          minF = 0.00; maxF = 0.07;
-                        } else if (ext.includes('casi') || ext.includes('minimal') || ext.includes('mw')) {
-                          minF = 0.07; maxF = 0.15;
-                        } else if (ext.includes('algo') || ext.includes('field') || ext.includes('ft')) {
-                          minF = 0.15; maxF = 0.38;
-                        } else if (ext.includes('bastante') || ext.includes('well') || ext.includes('ww')) {
-                          minF = 0.38; maxF = 0.45;
-                        } else if (ext.includes('deplorable') || ext.includes('battle') || ext.includes('bs')) {
-                          minF = 0.45; maxF = 0.99;
-                        } else {
-                          hasFloat = false;
-                        }
-
-                        if (hasFloat) {
-                          const fraction = (hash % 1000000) / 1000000;
-                          displayFloat = minF + fraction * (maxF - minF);
-                        }
-                      }
-                    }
+                    const displayFloat = item.float;
+                    const displayPattern = item.pattern;
 
                     return (
                       <tr 
@@ -517,48 +484,22 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                           )}
                         </td>
 
-                      {/* Origen / Cuenta */}
+                      {/* Bot / Origen */}
                       <td className="py-3 pl-4">
-                        {isResell ? (
-                          <div className="flex flex-wrap gap-1">
-                            {hashCode(item.assetId) % 2 === 0 ? (
-                              <a 
-                                href={`https://www.youpin898.com/goodList?game=730&keyword=${encodeURIComponent(getCleanSearchName(item.name))}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-mono transition-all hover:scale-105"
-                              >
-                                <span>Youpin</span>
-                                <ExternalLink className="w-2 h-2" />
-                              </a>
-                            ) : (
-                              <a 
-                                href={`https://buff.163.com/market/csgo#game=csgo&page_num=1&search=${encodeURIComponent(getCleanSearchName(item.name))}&sort_by=price.asc&tab=selling`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded font-mono transition-all hover:scale-105"
-                              >
-                                <span>Buff</span>
-                                <ExternalLink className="w-2 h-2" />
-                              </a>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-[#84849b] text-[10px]">
-                            <span className="font-mono text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">
-                              Bot {item.botSteamId.slice(-4)}
-                            </span>
-                            <a 
-                              href={`https://steamcommunity.com/profiles/${item.botSteamId}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="hover:text-accent transition-colors"
-                              title="Ver perfil de Steam del Bot"
-                            >
-                              <ExternalLink className="w-3 h-3 text-accent/85 hover:text-accent" />
-                            </a>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1.5 text-[#84849b] text-[10px]">
+                          <span className="font-mono text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">
+                            Bot {item.botSteamId.slice(-4)}
+                          </span>
+                          <a
+                            href={`https://steamcommunity.com/profiles/${item.botSteamId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-accent transition-colors"
+                            title="Ver perfil de Steam del Bot"
+                          >
+                            <ExternalLink className="w-3 h-3 text-accent/85 hover:text-accent" />
+                          </a>
+                        </div>
                       </td>
 
                       {/* Price tag */}

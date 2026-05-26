@@ -29,6 +29,20 @@ const CATEGORY_WEAPON_MAP: Record<string, string[]> = {
   "Pegatinas":              ["Sticker"],
 };
 
+// Normaliza el exterior en string al mismo código que CONDITION_FLOAT_MAP label
+function exteriorMatchesCondition(exterior: string | null | undefined, cond: string): boolean {
+  if (!exterior) return false;
+  const ext = exterior.toLowerCase();
+  switch (cond) {
+    case 'Recién fabricado':    return ext.includes('factory') || ext.includes('fn') || ext.includes('recién');
+    case 'Casi nuevo':          return ext.includes('minimal') || ext.includes('mw') || ext.includes('casi');
+    case 'Algo desgastado':     return ext.includes('field') || ext.includes('ft') || ext.includes('algo');
+    case 'Bastante desgastado': return ext.includes('well') || ext.includes('ww') || ext.includes('bastante');
+    case 'Deplorable':          return ext.includes('battle') || ext.includes('bs') || ext.includes('deplorable');
+    default: return false;
+  }
+}
+
 export function applyFilters(skins: Skin[], filters: FilterState): Skin[] {
   let result = [...skins];
 
@@ -59,33 +73,49 @@ export function applyFilters(skins: Skin[], filters: FilterState): Skin[] {
     );
   }
 
-  // 4. Conditions
+  // 4. Conditions — soporta tanto float real (bots) como exterior string (market listings)
   if (filters.selectedConditions.length > 0) {
     result = result.filter(skin => {
-      if (skin.float === undefined) return false;
       return filters.selectedConditions.some(cond => {
-        const range = CONDITION_FLOAT_MAP[cond];
-        if (!range) return false;
-        return skin.float! >= range[0] && skin.float! < range[1];
+        // Bot items: usar float real
+        if (skin.float !== undefined) {
+          const range = CONDITION_FLOAT_MAP[cond];
+          if (!range) return false;
+          return skin.float >= range[0] && skin.float < range[1];
+        }
+        // Market listings: usar el campo exterior
+        return exteriorMatchesCondition(skin.exterior, cond);
       });
     });
   }
 
   // 5. Sort
   switch (filters.sortOption) {
-    case "Precio: Mayor a Menor":
+    case 'Precio: Mayor a Menor':
       result.sort((a, b) => b.price - a.price);
       break;
-    case "Precio: Menor a Mayor":
+    case 'Precio: Menor a Mayor':
       result.sort((a, b) => a.price - b.price);
       break;
-    case "Float: Menor a Mayor":
-      result.sort((a, b) => (a.float ?? 0) - (b.float ?? 0));
+    case 'Float: Menor a Mayor':
+      // Market listings (sin float) van al final
+      result.sort((a, b) => {
+        if (a.float === undefined && b.float === undefined) return 0;
+        if (a.float === undefined) return 1;
+        if (b.float === undefined) return -1;
+        return a.float - b.float;
+      });
       break;
-    case "Float: Mayor a Menor":
-      result.sort((a, b) => (b.float ?? 0) - (a.float ?? 0));
+    case 'Float: Mayor a Menor':
+      // Market listings (sin float) van al final
+      result.sort((a, b) => {
+        if (a.float === undefined && b.float === undefined) return 0;
+        if (a.float === undefined) return 1;
+        if (b.float === undefined) return -1;
+        return b.float - a.float;
+      });
       break;
-    case "Más recientes":
+    case 'Más recientes':
       // id is assetId; higher numeric id = newer item
       result.sort((a, b) => (b.id > a.id ? 1 : -1));
       break;

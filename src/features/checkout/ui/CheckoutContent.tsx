@@ -184,28 +184,9 @@ export function CheckoutContent() {
             };
 
             if (checkoutType === 'buy') {
-              const hashCode = (str: string): number => {
-                let hash = 0;
-                for (let i = 0; i < str.length; i++) {
-                  const chr = str.charCodeAt(i);
-                  hash = ((hash << 5) - hash) + chr;
-                  hash |= 0;
-                }
-                return hash;
-              };
-
               const detailedItems = items.map(i => {
                 const cartItem = cartItems.find(c => c.skin.id === i.assetId);
                 const skin = cartItem?.skin;
-
-                let provider = 'bots';
-                if (skin) {
-                  if (skin.isImmediate === false) {
-                    provider = Math.abs(hashCode(i.assetId)) % 2 === 0 ? 'youpin' : 'buff';
-                  } else {
-                    provider = 'bots';
-                  }
-                }
 
                 return {
                   assetId: i.assetId,
@@ -216,7 +197,7 @@ export function CheckoutContent() {
                   pattern: skin?.pattern !== undefined ? skin.pattern : null,
                   rarity: skin?.rarity || 'common',
                   exterior: skin?.exterior || null,
-                  provider: provider
+                  provider: skin?.provider || 'bot',
                 };
               });
 

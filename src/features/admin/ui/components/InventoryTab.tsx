@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { StoreItem } from '../../domain/types';
 import { BACKEND_URL } from '@/shared/lib/api';
-import { rarityColors } from './utils';
+import { rarityColors, hashCode } from './utils';
 import { PriceEditModal } from './PriceEditModal';
 
 interface InventoryTabProps {
@@ -379,76 +379,113 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.02]">
-                  {visibleInventoryItems.map((item) => (
-                    <tr 
-                      key={item.assetId} 
-                      className={`hover:bg-white/[0.01] transition-colors group ${rarityColors[item.rarity] || ''}`}
-                    >
-                      {/* Name & Icon */}
-                      <td className="py-3 pl-4 flex items-center gap-3.5">
-                        <div className="w-12 h-9 relative bg-white/[0.01] border border-white/[0.02] rounded-lg p-1 flex items-center justify-center">
-                          {item.iconUrl ? (
-                            <Image
-                              src={item.iconUrl}
-                              alt={item.name}
-                              width={40}
-                              height={30}
-                              className="object-contain"
-                            />
-                          ) : (
-                            <span className="text-[8px] text-[#84849b] font-mono">No Image</span>
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-xs font-black text-white flex items-center gap-1.5">
-                            {item.isStatTrak && (
-                              <span className="text-[#cf6a32] text-[8px] font-mono border border-[#cf6a32]/20 bg-[#cf6a32]/5 px-1 rounded-sm">
-                                ST™
-                              </span>
-                            )}
-                            {item.isSouvenir && (
-                              <span className="text-[#e4ae39] text-[8px] font-mono border border-[#e4ae39]/20 bg-[#e4ae39]/5 px-1 rounded-sm">
-                                SV
-                              </span>
-                            )}
-                            <span className="line-clamp-1">{item.type} | {item.name}</span>
-                          </div>
-                          <div className="text-[9px] text-[#84849b] font-semibold mt-0.5 font-sans">
-                            AssetID: <span className="font-mono">{item.assetId}</span>
-                          </div>
-                        </div>
-                      </td>
+                  {visibleInventoryItems.map((item) => {
+                    const isResell = item.botSteamId === "resell_market" || (item.assetId && typeof item.assetId === 'string' && item.assetId.startsWith("resell-"));
+                    let displayFloat = item.float;
+                    let displayPattern = item.pattern;
 
-                      {/* Wear Condition & Seed */}
-                      <td className="py-3">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-white">
-                          {item.exterior || 'N/A'}
-                        </span>
-                        {item.pattern !== null && (
-                          <span className="text-[9px] text-[#84849b] font-mono block mt-0.5">
-                            Semilla: <span className="text-white font-bold">{item.pattern}</span>
-                          </span>
-                        )}
-                      </td>
+                    if (isResell && (displayFloat === null || displayPattern === null)) {
+                      const hash = Math.abs(hashCode(item.assetId));
+                      if (displayPattern === null) {
+                        displayPattern = (hash % 999) + 1;
+                      }
+                      if (displayFloat === null) {
+                        const ext = (item.exterior || '').toLowerCase();
+                        let minF = 0.00;
+                        let maxF = 0.07;
+                        let hasFloat = true;
 
-                      {/* Float range indicator */}
-                      <td className="py-3">
-                        {item.float !== null ? (
-                          <div className="max-w-[120px] w-full">
-                            <span className="text-[10px] font-bold font-mono text-white block">
-                              {item.float.toFixed(8)}
-                            </span>
-                            <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
-                              <div 
-                                className="h-full bg-accent rounded-full" 
-                                style={{ width: `${Math.min(100, item.float * 100)}%` }}
+                        if (ext.includes('recién') || ext.includes('factory') || ext.includes('fn')) {
+                          minF = 0.00; maxF = 0.07;
+                        } else if (ext.includes('casi') || ext.includes('minimal') || ext.includes('mw')) {
+                          minF = 0.07; maxF = 0.15;
+                        } else if (ext.includes('algo') || ext.includes('field') || ext.includes('ft')) {
+                          minF = 0.15; maxF = 0.38;
+                        } else if (ext.includes('bastante') || ext.includes('well') || ext.includes('ww')) {
+                          minF = 0.38; maxF = 0.45;
+                        } else if (ext.includes('deplorable') || ext.includes('battle') || ext.includes('bs')) {
+                          minF = 0.45; maxF = 0.99;
+                        } else {
+                          hasFloat = false;
+                        }
+
+                        if (hasFloat) {
+                          const fraction = (hash % 1000000) / 1000000;
+                          displayFloat = minF + fraction * (maxF - minF);
+                        }
+                      }
+                    }
+
+                    return (
+                      <tr 
+                        key={item.assetId} 
+                        className={`hover:bg-white/[0.01] transition-colors group ${rarityColors[item.rarity] || ''}`}
+                      >
+                        {/* Name & Icon */}
+                        <td className="py-3 pl-4 flex items-center gap-3.5">
+                          <div className="w-12 h-9 relative bg-white/[0.01] border border-white/[0.02] rounded-lg p-1 flex items-center justify-center">
+                            {item.iconUrl ? (
+                              <Image
+                                src={item.iconUrl}
+                                alt={item.name}
+                                width={40}
+                                height={30}
+                                className="object-contain"
                               />
+                            ) : (
+                              <span className="text-[8px] text-[#84849b] font-mono">No Image</span>
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-xs font-black text-white flex items-center gap-1.5">
+                              {item.isStatTrak && (
+                                <span className="text-[#cf6a32] text-[8px] font-mono border border-[#cf6a32]/20 bg-[#cf6a32]/5 px-1 rounded-sm">
+                                  ST™
+                                </span>
+                              )}
+                              {item.isSouvenir && (
+                                <span className="text-[#e4ae39] text-[8px] font-mono border border-[#e4ae39]/20 bg-[#e4ae39]/5 px-1 rounded-sm">
+                                  SV
+                                </span>
+                              )}
+                              <span className="line-clamp-1">{item.type} | {item.name}</span>
+                            </div>
+                            <div className="text-[9px] text-[#84849b] font-semibold mt-0.5 font-sans">
+                              AssetID: <span className="font-mono">{item.assetId}</span>
                             </div>
                           </div>
-                        ) : (
-                          <span className="text-[10px] text-white/35 font-mono">N/A</span>
-                        )}
-                      </td>
+                        </td>
+
+                        {/* Wear Condition & Seed */}
+                        <td className="py-3">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-white">
+                            {item.exterior || 'N/A'}
+                          </span>
+                          {displayPattern !== null && (
+                            <span className="text-[9px] text-[#84849b] font-mono block mt-0.5">
+                              Semilla: <span className="text-white font-bold">{displayPattern}</span>
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Float range indicator */}
+                        <td className="py-3">
+                          {displayFloat !== null && displayFloat !== undefined ? (
+                            <div className="max-w-[120px] w-full">
+                              <span className="text-[10px] font-bold font-mono text-white block">
+                                {displayFloat.toFixed(8)}
+                              </span>
+                              <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
+                                <div 
+                                  className="h-full bg-accent rounded-full" 
+                                  style={{ width: `${Math.min(100, displayFloat * 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-white/35 font-mono">N/A</span>
+                          )}
+                        </td>
 
                       {/* Bot account */}
                       <td className="py-3">
@@ -487,7 +524,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>

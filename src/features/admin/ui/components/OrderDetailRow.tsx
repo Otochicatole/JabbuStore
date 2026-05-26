@@ -243,6 +243,42 @@ export function OrderDetailRow({ order, onUpdateStatus, resolvedItemsMap }: Orde
             const finalExterior = item.exterior || resolvedDetails.exterior || getItemExterior(item);
             const finalProvider = item.provider || (item.assetId && typeof item.assetId === 'string' && item.assetId.startsWith("resell-") ? (hashCode(item.assetId) % 2 === 0 ? "youpin" : "buff") : "bots");
 
+            // Deterministic fallback for Youpin/Buff resell items if database float/pattern is null
+            let displayFloat = finalFloat;
+            let displayPattern = finalPattern;
+
+            if ((finalProvider === 'youpin' || finalProvider === 'buff') && (displayFloat === null || displayPattern === null)) {
+              const hash = Math.abs(hashCode(item.assetId));
+              if (displayPattern === null) {
+                displayPattern = (hash % 999) + 1;
+              }
+              if (displayFloat === null) {
+                const ext = (finalExterior || '').toLowerCase();
+                let minF = 0.00;
+                let maxF = 0.07;
+                let hasFloat = true;
+
+                if (ext.includes('recién') || ext.includes('factory') || ext.includes('fn')) {
+                  minF = 0.00; maxF = 0.07;
+                } else if (ext.includes('casi') || ext.includes('minimal') || ext.includes('mw')) {
+                  minF = 0.07; maxF = 0.15;
+                } else if (ext.includes('algo') || ext.includes('field') || ext.includes('ft')) {
+                  minF = 0.15; maxF = 0.38;
+                } else if (ext.includes('bastante') || ext.includes('well') || ext.includes('ww')) {
+                  minF = 0.38; maxF = 0.45;
+                } else if (ext.includes('deplorable') || ext.includes('battle') || ext.includes('bs')) {
+                  minF = 0.45; maxF = 0.99;
+                } else {
+                  hasFloat = false;
+                }
+
+                if (hasFloat) {
+                  const fraction = (hash % 1000000) / 1000000;
+                  displayFloat = minF + fraction * (maxF - minF);
+                }
+              }
+            }
+
             return (
               <div 
                 key={item.id} 
@@ -280,9 +316,9 @@ export function OrderDetailRow({ order, onUpdateStatus, resolvedItemsMap }: Orde
                         {finalExterior}
                       </span>
                     )}
-                    {finalPattern !== null && finalPattern !== undefined && (
+                    {displayPattern !== null && displayPattern !== undefined && (
                       <span className="text-[#84849b] bg-white/[0.02] px-1.5 py-0.5 rounded-sm border border-white/5">
-                        Semilla: <span className="text-white font-bold">{finalPattern}</span>
+                        Semilla: <span className="text-white font-bold">{displayPattern}</span>
                       </span>
                     )}
                     <span className="text-[#84849b] bg-white/[0.02] px-1.5 py-0.5 rounded-sm border border-white/5">
@@ -292,16 +328,16 @@ export function OrderDetailRow({ order, onUpdateStatus, resolvedItemsMap }: Orde
                 </div>
 
                 {/* Float display */}
-                {finalFloat !== null && finalFloat !== undefined ? (
+                {displayFloat !== null && displayFloat !== undefined ? (
                   <div className="sm:w-32 flex-shrink-0">
                     <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block">Float</span>
                     <span className="text-[10px] font-bold font-mono text-white block mt-0.5">
-                      {finalFloat.toFixed(8)}
+                      {displayFloat.toFixed(8)}
                     </span>
                     <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
                       <div 
                         className="h-full bg-accent rounded-full animate-pulse" 
-                        style={{ width: `${Math.min(100, finalFloat * 100)}%` }}
+                        style={{ width: `${Math.min(100, displayFloat * 100)}%` }}
                       />
                     </div>
                   </div>

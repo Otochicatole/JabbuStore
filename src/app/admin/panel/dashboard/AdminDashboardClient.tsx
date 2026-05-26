@@ -132,6 +132,45 @@ const hashCode = (str: string): number => {
   return Math.abs(hash);
 };
 
+function getPageNumbers(currentPage: number, totalPages: number) {
+  const pages: (number | string)[] = [];
+  
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    pages.push(1);
+
+    if (currentPage > 3) {
+      pages.push('...');
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    let adjustedStart = start;
+    let adjustedEnd = end;
+    if (currentPage <= 3) {
+      adjustedEnd = 4;
+    } else if (currentPage >= totalPages - 2) {
+      adjustedStart = totalPages - 3;
+    }
+
+    for (let i = adjustedStart; i <= adjustedEnd; i++) {
+      pages.push(i);
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('...');
+    }
+
+    pages.push(totalPages);
+  }
+
+  return pages;
+}
+
 const getItemExterior = (item: OrderItem) => {
   if (item.exterior) return item.exterior;
   const name = item.name.toLowerCase();
@@ -188,6 +227,14 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
   const [search, setSearch] = useState('');
   const [selectedRarity, setSelectedRarity] = useState('all');
   const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'float_asc' | 'float_desc'>('price_desc');
+
+  // Pagination State for Store Inventory
+  const [inventoryPage, setInventoryPage] = useState(1);
+  const ITEMS_PER_INVENTORY_PAGE = 50;
+
+  useEffect(() => {
+    setInventoryPage(1);
+  }, [search, selectedRarity, sortBy]);
 
   // Price modal states
   const [priceModalItem, setPriceModalItem] = useState<StoreItem | null>(null);
@@ -466,6 +513,14 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
       });
   }, [items, search, selectedRarity, sortBy]);
 
+  const totalInventoryPages = Math.ceil(filteredItems.length / ITEMS_PER_INVENTORY_PAGE);
+  const currentInventoryPage = inventoryPage > totalInventoryPages ? 1 : inventoryPage;
+
+  const visibleInventoryItems = useMemo(() => {
+    const start = (currentInventoryPage - 1) * ITEMS_PER_INVENTORY_PAGE;
+    return filteredItems.slice(start, start + ITEMS_PER_INVENTORY_PAGE);
+  }, [filteredItems, currentInventoryPage]);
+
   return (
     <div className="min-h-screen bg-[#070510] text-white">
 
@@ -671,6 +726,7 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
               No se encontraron artículos que coincidan con la búsqueda.
             </div>
           ) : (
+            <>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -683,7 +739,7 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.02]">
-                  {filteredItems.map((item) => (
+                  {visibleInventoryItems.map((item) => (
                     <tr 
                       key={item.assetId} 
                       className={`hover:bg-white/[0.01] transition-colors group ${rarityColors[item.rarity] || ''}`}
@@ -797,6 +853,82 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            <div className="flex flex-col items-center gap-6 mt-8 pt-6 border-t border-white/5">
+              {/* Counter banner */}
+              <div className="text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-[#161426]/30 border border-white/5 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-inner">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                Mostrando items <span className="text-white">{Math.min((currentInventoryPage - 1) * ITEMS_PER_INVENTORY_PAGE + 1, filteredItems.length)} - {Math.min(currentInventoryPage * ITEMS_PER_INVENTORY_PAGE, filteredItems.length)}</span> de <span className="text-white">{filteredItems.length}</span>
+              </div>
+
+              {totalInventoryPages > 1 && (
+                <nav className="flex items-center gap-2" aria-label="Paginación de inventario">
+                  {/* Previous Button */}
+                  <button
+                    onClick={() => currentInventoryPage > 1 && setInventoryPage(currentInventoryPage - 1)}
+                    disabled={currentInventoryPage === 1}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 bg-white/[0.02] text-[#84849b] transition-all duration-300 ${
+                      currentInventoryPage === 1
+                        ? 'opacity-40 cursor-not-allowed text-white/20'
+                        : 'hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95 cursor-pointer'
+                    }`}
+                    title="Página Anterior"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Page numbers */}
+                  {getPageNumbers(currentInventoryPage, totalInventoryPages).map((page, index) => {
+                    if (page === '...') {
+                      return (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="w-10 h-10 flex items-center justify-center text-xs font-black text-white/30 font-mono select-none"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+
+                    const isPageActive = page === currentInventoryPage;
+
+                    return (
+                      <button
+                        key={`page-${page}`}
+                        onClick={() => setInventoryPage(Number(page))}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black font-mono tracking-wider transition-all duration-300 cursor-pointer ${
+                          isPageActive
+                            ? 'bg-gradient-to-r from-accent via-fuchsia-600 to-accent text-white border border-fuchsia-400/40 shadow-[0_0_20px_rgba(217,70,239,0.3)] scale-105'
+                            : 'border border-white/5 bg-white/[0.02] text-[#84849b] hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+
+                  {/* Next Button */}
+                  <button
+                    onClick={() => currentInventoryPage < totalInventoryPages && setInventoryPage(currentInventoryPage + 1)}
+                    disabled={currentInventoryPage === totalInventoryPages}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 bg-white/[0.02] text-[#84849b] transition-all duration-300 ${
+                      currentInventoryPage === totalInventoryPages
+                        ? 'opacity-40 cursor-not-allowed text-white/20'
+                        : 'hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95 cursor-pointer'
+                    }`}
+                    title="Página Siguiente"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </nav>
+              )}
+            </div>
+            </>
           )}
 
         </div>

@@ -27,7 +27,9 @@ import {
   Pencil,
   ToggleLeft,
   ToggleRight,
-  DollarSign
+  DollarSign,
+  Copy,
+  Check
 } from 'lucide-react';
 
 interface StoreItem {
@@ -56,17 +58,34 @@ interface OrderItem {
   name: string;
   price: number;
   iconUrl: string | null;
+  rarity?: string | null;
+  exterior?: string | null;
+  float?: number | null;
+  pattern?: number | null;
+  provider?: string | null;
 }
 
 interface Order {
   id: string;
   userId: string;
-  user: { name: string | null; steamId: string | null; avatar: string | null };
+  user: { name: string | null; steamId: string | null; avatar: string | null; tradeUrl?: string | null };
   type: string;
   status: string;
   totalPrice: number;
   items: OrderItem[];
   createdAt: string;
+  paymentMethod?: string | null;
+  metadata?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    cbu?: string | null;
+    cuil?: string | null;
+    accountHolder?: string | null;
+    walletAddress?: string | null;
+    network?: string | null;
+  } | null;
 }
 
 interface Listing {
@@ -102,7 +121,38 @@ const rarityColors: Record<string, string> = {
   mythical: 'border-l-4 border-l-[#8847ff]',
   legendary: 'border-l-4 border-l-[#d32ce6]',
   ancient: 'border-l-4 border-l-[#eb4b4b]',
-  immortal: 'border-l-4 border-l-[#e4ae39]',
+};
+
+const hashCode = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
+
+const getItemExterior = (item: OrderItem) => {
+  if (item.exterior) return item.exterior;
+  const name = item.name.toLowerCase();
+  if (name.includes('factory new') || name.includes('(fn)')) return 'Factory New';
+  if (name.includes('minimal wear') || name.includes('(mw)')) return 'Minimal Wear';
+  if (name.includes('field-tested') || name.includes('(ft)')) return 'Field-Tested';
+  if (name.includes('well-worn') || name.includes('(ww)')) return 'Well-Worn';
+  if (name.includes('battle-scarred') || name.includes('(bs)')) return 'Battle-Scarred';
+  return null;
+};
+
+const getItemRarity = (item: OrderItem) => {
+  if (item.rarity) return item.rarity;
+  const name = item.name.toLowerCase();
+  if (name.includes('★') || name.includes('karambit') || name.includes('m9') || name.includes('butterfly') || name.includes('knife') || name.includes('gloves')) {
+    return 'ancient';
+  }
+  if (name.includes('doppler') || name.includes('fade') || name.includes('vulcan') || name.includes('asiimov')) {
+    return 'ancient';
+  }
+  return 'common';
 };
 
 export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboardClientProps) {
@@ -145,6 +195,74 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
   const [modalPriceValue, setModalPriceValue] = useState('');
   const [modalSaving, setModalSaving] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+
+  const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
+
+  // State for dynamically resolved historical skin details (floats and patterns)
+  const [resolvedItemsMap, setResolvedItemsMap] = useState<Record<string, { float: number | null, pattern: number | null, rarity?: string, exterior?: string }>>({});
+
+  const resolveMissingItemDetails = async (ordersList: Order[]) => {
+    // Gather all unique assetIds from orders that lack float or pattern details
+    const missingAssetIds = new Set<string>();
+    ordersList.forEach(order => {
+      order.items?.forEach(item => {
+        if ((item.float === null || item.float === undefined) && !resolvedItemsMap[item.assetId]) {
+          missingAssetIds.add(item.assetId);
+        }
+      });
+    });
+
+    if (missingAssetIds.size === 0) return;
+
+    console.log(`[Admin] Resolving missing details for ${missingAssetIds.size} assets...`);
+
+    const fetchPromises = Array.from(missingAssetIds).map(async (assetId) => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/admin/marketplace/items/details/${assetId}`, {
+          headers: {
+            'X-Tunnel-Skip-AntiPhishing-Page': 'true',
+          },
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const details = await response.json();
+          return { assetId, details };
+        }
+      } catch (err) {
+        console.error(`Error resolving details for asset ${assetId}:`, err);
+      }
+      return null;
+    });
+
+    const results = await Promise.all(fetchPromises);
+    const newResolutions: Record<string, { float: number | null, pattern: number | null, rarity?: string, exterior?: string }> = {};
+
+    results.forEach(res => {
+      if (res && res.details) {
+        newResolutions[res.assetId] = {
+          float: res.details.float,
+          pattern: res.details.pattern,
+          rarity: res.details.rarity,
+          exterior: res.details.exterior
+        };
+      }
+    });
+
+    if (Object.keys(newResolutions).length > 0) {
+      setResolvedItemsMap(prev => ({
+        ...prev,
+        ...newResolutions
+      }));
+    }
+  };
+
+  const handleCopyTradeLink = (tradeLink: string, orderId: string) => {
+    navigator.clipboard.writeText(tradeLink);
+    setCopiedOrderId(orderId);
+    setTimeout(() => {
+      setCopiedOrderId(null);
+    }, 2000);
+  };
 
   const openPriceModal = (item: StoreItem) => {
     setPriceModalItem(item);
@@ -255,8 +373,9 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
       }
       if (!response.ok) throw new Error('Error al cargar las órdenes.');
       const data: Order[] = await response.json();
-      // Only show BUY orders (purchases)
-      setOrders(data.filter(o => o.type === 'BUY'));
+      const filtered = data.filter(o => o.type === 'BUY');
+      setOrders(filtered);
+      resolveMissingItemDetails(filtered);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Error al cargar órdenes.');
@@ -275,8 +394,9 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
       if (response.status === 401) { router.push('/admin/login'); return; }
       if (!response.ok) throw new Error('Error al cargar las órdenes de venta.');
       const data: Order[] = await response.json();
-      // Only show SELL orders
-      setSellOrders(data.filter(o => o.type === 'SELL'));
+      const filtered = data.filter(o => o.type === 'SELL');
+      setSellOrders(filtered);
+      resolveMissingItemDetails(filtered);
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -827,24 +947,249 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
                         </div>
                       </div>
                     </div>
+
+                    {/* Sección Detallada de Cliente y Facturación/Cobro */}
+                    <div className="mb-6 bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                        <div className="w-1.5 h-4 bg-accent rounded-full animate-pulse" />
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] font-mono">
+                          Detalles del Cliente y Facturación / Cobro
+                        </h4>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                        
+                        {/* Columna 1: Datos Personales */}
+                        <div className="space-y-3">
+                          <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
+                            Datos del Cliente
+                          </h5>
+                          <div className="space-y-2 bg-white/[0.01] p-3 rounded-xl border border-white/5">
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">Nombre Completo</span>
+                              <span className="font-bold text-white block mt-0.5">
+                                {order.metadata?.firstName || order.metadata?.lastName
+                                  ? `${order.metadata.firstName || ''} ${order.metadata.lastName || ''}`.trim()
+                                  : order.user?.name || 'No especificado'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">Email</span>
+                              <span className="font-bold text-white block mt-0.5 break-all">
+                                {order.metadata?.email || 'No especificado'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">Teléfono</span>
+                              <span className="font-bold text-white block mt-0.5 font-mono">
+                                {order.metadata?.phone || 'No especificado'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Columna 2: Método y Datos de Pago/Cobro */}
+                        <div className="space-y-3">
+                          <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
+                            Método de Pago / Payout
+                          </h5>
+                          <div className="space-y-2 bg-white/[0.01] p-3 rounded-xl border border-white/5 min-h-[120px]">
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">Canal Elegido</span>
+                              <span className="font-bold text-accent block mt-0.5 uppercase tracking-wide">
+                                {order.paymentMethod === 'mercado_pago' ? 'Mercado Pago' : 
+                                 order.paymentMethod === 'paypal' ? 'PayPal' : 
+                                 order.paymentMethod === 'ethereum' ? 'Ethereum (Web3)' : 
+                                 order.paymentMethod === 'binance' ? 'Binance Pay' : 
+                                 order.paymentMethod || 'No especificado'}
+                              </span>
+                            </div>
+
+                            {/* Detalle dinámico según el método de pago */}
+                            {order.paymentMethod === 'mercado_pago' && (
+                              <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5">
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">CBU / CVU / Alias</span>
+                                  <span className="font-bold font-mono text-[10px] text-white block select-all break-all">{order.metadata?.cbu || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Titular</span>
+                                  <span className="font-bold text-white block">{order.metadata?.accountHolder || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">CUIL / CUIT</span>
+                                  <span className="font-bold font-mono text-[10px] text-white block select-all">{order.metadata?.cuil || 'N/A'}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {order.paymentMethod === 'paypal' && (
+                              <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5">
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Correo PayPal</span>
+                                  <span className="font-bold font-mono text-[10px] text-white block select-all break-all">{order.metadata?.cbu || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Titular</span>
+                                  <span className="font-bold text-white block">{order.metadata?.accountHolder || 'N/A'}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {(order.paymentMethod === 'ethereum' || order.paymentMethod === 'binance') && (
+                              <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5">
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Dirección / Wallet</span>
+                                  <span className="font-bold font-mono text-[10px] text-white block select-all break-all">{order.metadata?.walletAddress || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Red Blockchain</span>
+                                  <span className="font-bold text-white block">{order.metadata?.network || 'N/A'}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {!order.paymentMethod && (
+                              <p className="text-[10px] text-white/35 italic mt-2">Sin datos de cobro adicionales.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Columna 3: Steam Trade Link */}
+                        <div className="space-y-3">
+                          <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
+                            Steam Trade Link
+                          </h5>
+                          <div className="space-y-3 bg-white/[0.01] p-3 rounded-xl border border-white/5 min-h-[120px] flex flex-col justify-between font-sans">
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">URL de Intercambio</span>
+                              <span className="font-mono text-[10px] text-white/80 block mt-1 break-all select-all leading-normal">
+                                {order.user?.tradeUrl || 'Sin Trade URL registrado en el perfil'}
+                              </span>
+                            </div>
+                            
+                            {order.user?.tradeUrl && (
+                              <button
+                                onClick={() => order.user.tradeUrl && handleCopyTradeLink(order.user.tradeUrl, order.id)}
+                                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                                  copiedOrderId === order.id
+                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                                    : 'bg-white/5 border-white/5 text-[#84849b] hover:text-white hover:bg-white/10 hover:border-white/10 active:scale-95'
+                                }`}
+                              >
+                                {copiedOrderId === order.id ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 animate-pulse" />
+                                    <span>Copiado Exitosamente</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span>Copiar Tradelink</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
                     
                     <details className="group">
-                      <summary className="text-[10px] text-[#84849b] font-black uppercase tracking-widest cursor-pointer hover:text-white transition-colors flex items-center justify-between">
+                      <summary className="text-[10px] text-[#84849b] font-black uppercase tracking-widest cursor-pointer hover:text-white transition-colors flex items-center justify-between font-sans">
                         <span>Ítems de la orden ({order.items.length})</span>
                         <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
                       </summary>
-                      <div className="space-y-2 mt-3">
-                        {order.items.map(item => (
-                          <div key={item.id} className="flex items-center gap-3 bg-[#110f1e] p-3 rounded-lg border border-white/5">
-                            {item.iconUrl && (
-                              <img src={item.iconUrl} className="w-10 h-10 object-contain drop-shadow-md" alt={item.name} />
-                            )}
-                            <div className="flex-1 flex items-center justify-between">
-                              <span className="text-sm font-bold text-white">{item.name}</span>
-                              <span className="text-sm text-accent font-black">${item.price.toLocaleString()}</span>
+                      <div className="space-y-3 mt-3">
+                        {order.items.map(item => {
+                          const resolvedDetails = resolvedItemsMap[item.assetId] || {};
+                          const finalFloat = item.float !== null && item.float !== undefined ? item.float : (resolvedDetails.float !== undefined ? resolvedDetails.float : null);
+                          const finalPattern = item.pattern !== null && item.pattern !== undefined ? item.pattern : (resolvedDetails.pattern !== undefined ? resolvedDetails.pattern : null);
+                          const finalRarity = item.rarity || resolvedDetails.rarity || getItemRarity(item);
+                          const finalExterior = item.exterior || resolvedDetails.exterior || getItemExterior(item);
+                          const finalProvider = item.provider || (item.assetId && typeof item.assetId === 'string' && item.assetId.startsWith("resell-") ? (hashCode(item.assetId) % 2 === 0 ? "youpin" : "buff") : "bots");
+
+                          return (
+                            <div 
+                              key={item.id} 
+                              className={`flex flex-col sm:flex-row sm:items-center gap-4 bg-[#110f1e] p-4 rounded-xl border border-white/5 relative overflow-hidden group ${
+                                rarityColors[finalRarity] || ''
+                              }`}
+                            >
+                              {/* Icon image */}
+                              <div className="w-16 h-12 relative bg-white/[0.01] border border-white/[0.02] rounded-lg p-1.5 flex items-center justify-center flex-shrink-0">
+                                {item.iconUrl ? (
+                                  <img src={item.iconUrl} className="w-full h-full object-contain drop-shadow-md" alt={item.name} />
+                                ) : (
+                                  <span className="text-[8px] text-[#84849b] font-mono">No Image</span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-extrabold text-white block truncate">{item.name}</span>
+                                  {finalProvider === 'youpin' && (
+                                    <span className="text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-mono">Youpin</span>
+                                  )}
+                                  {finalProvider === 'buff' && (
+                                    <span className="text-[8px] font-black uppercase tracking-wider bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded font-mono">Buff</span>
+                                  )}
+                                  {finalProvider === 'bots' && (
+                                    <span className="text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">Bots</span>
+                                  )}
+                                  {finalProvider === 'user' && (
+                                    <span className="text-[8px] font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded font-mono">Usuario</span>
+                                  )}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[9px] font-mono">
+                                  {finalExterior && (
+                                    <span className="text-white/80 font-sans uppercase tracking-wider font-bold bg-white/5 px-1.5 py-0.5 rounded-sm">
+                                      {finalExterior}
+                                    </span>
+                                  )}
+                                  {finalPattern !== null && finalPattern !== undefined && (
+                                    <span className="text-[#84849b] bg-white/[0.02] px-1.5 py-0.5 rounded-sm border border-white/5">
+                                      Semilla: <span className="text-white font-bold">{finalPattern}</span>
+                                    </span>
+                                  )}
+                                  <span className="text-[#84849b] bg-white/[0.02] px-1.5 py-0.5 rounded-sm border border-white/5">
+                                    AssetID: <span className="text-white font-semibold select-all">{item.assetId}</span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Float display */}
+                              {finalFloat !== null && finalFloat !== undefined ? (
+                                <div className="sm:w-32 flex-shrink-0">
+                                  <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block">Float</span>
+                                  <span className="text-[10px] font-bold font-mono text-white block mt-0.5">
+                                    {finalFloat.toFixed(8)}
+                                  </span>
+                                  <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
+                                    <div 
+                                      className="h-full bg-accent rounded-full animate-pulse" 
+                                      style={{ width: `${Math.min(100, finalFloat * 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="sm:w-32 flex-shrink-0">
+                                  <span className="text-[9px] uppercase tracking-wider font-black text-white/20 font-mono block">Float</span>
+                                  <span className="text-[10px] text-white/35 font-mono block mt-0.5">N/A</span>
+                                </div>
+                              )}
+
+                              {/* Price */}
+                              <div className="text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0">
+                                <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block sm:hidden">Precio</span>
+                                <div>
+                                  <span className="text-sm sm:text-base font-black text-accent">${item.price.toLocaleString()}</span>
+                                  <span className="text-[9px] text-[#84849b] font-bold block">USD</span>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </details>
                   </div>
@@ -955,23 +1300,248 @@ export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboard
                       </div>
                     </div>
 
-                    <details className="group">
-                      <summary className="text-[10px] text-[#84849b] font-black uppercase tracking-widest cursor-pointer hover:text-white transition-colors flex items-center justify-between">
-                        <span>Ítems a comprar ({order.items.length})</span>
-                        <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
-                      </summary>
-                      <div className="space-y-2 mt-3">
-                        {order.items.map(item => (
-                          <div key={item.id} className="flex items-center gap-3 bg-[#110f1e] p-3 rounded-lg border border-white/5">
-                            {item.iconUrl && (
-                              <img src={item.iconUrl} className="w-10 h-10 object-contain drop-shadow-md" alt={item.name} />
-                            )}
-                            <div className="flex-1 flex items-center justify-between">
-                              <span className="text-sm font-bold text-white">{item.name}</span>
-                              <span className="text-sm text-accent font-black">${item.price.toLocaleString()}</span>
+                    {/* Sección Detallada de Cliente y Facturación/Cobro */}
+                    <div className="mb-6 bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+                        <div className="w-1.5 h-4 bg-accent rounded-full animate-pulse" />
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] font-mono">
+                          Detalles del Vendedor y Facturación / Cobro
+                        </h4>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+                        
+                        {/* Columna 1: Datos Personales */}
+                        <div className="space-y-3">
+                          <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
+                            Datos del Vendedor
+                          </h5>
+                          <div className="space-y-2 bg-white/[0.01] p-3 rounded-xl border border-white/5">
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">Nombre Completo</span>
+                              <span className="font-bold text-white block mt-0.5">
+                                {order.metadata?.firstName || order.metadata?.lastName
+                                  ? `${order.metadata.firstName || ''} ${order.metadata.lastName || ''}`.trim()
+                                  : order.user?.name || 'No especificado'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">Email</span>
+                              <span className="font-bold text-white block mt-0.5 break-all">
+                                {order.metadata?.email || 'No especificado'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">Teléfono</span>
+                              <span className="font-bold text-white block mt-0.5 font-mono">
+                                {order.metadata?.phone || 'No especificado'}
+                              </span>
                             </div>
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Columna 2: Método y Datos de Pago/Cobro */}
+                        <div className="space-y-3">
+                          <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
+                            Método de Cobro (Payout)
+                          </h5>
+                          <div className="space-y-2 bg-white/[0.01] p-3 rounded-xl border border-white/5 min-h-[120px]">
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">Canal Elegido</span>
+                              <span className="font-bold text-accent block mt-0.5 uppercase tracking-wide">
+                                {order.paymentMethod === 'mercado_pago' ? 'Mercado Pago' : 
+                                 order.paymentMethod === 'paypal' ? 'PayPal' : 
+                                 order.paymentMethod === 'ethereum' ? 'Ethereum (Web3)' : 
+                                 order.paymentMethod === 'binance' ? 'Binance Pay' : 
+                                 order.paymentMethod || 'No especificado'}
+                              </span>
+                            </div>
+
+                            {/* Detalle dinámico según el método de pago */}
+                            {order.paymentMethod === 'mercado_pago' && (
+                              <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5">
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">CBU / CVU / Alias</span>
+                                  <span className="font-bold font-mono text-[10px] text-white block select-all break-all">{order.metadata?.cbu || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Titular</span>
+                                  <span className="font-bold text-white block">{order.metadata?.accountHolder || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">CUIL / CUIT</span>
+                                  <span className="font-bold font-mono text-[10px] text-white block select-all">{order.metadata?.cuil || 'N/A'}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {order.paymentMethod === 'paypal' && (
+                              <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5">
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Correo PayPal</span>
+                                  <span className="font-bold font-mono text-[10px] text-white block select-all break-all">{order.metadata?.cbu || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Titular</span>
+                                  <span className="font-bold text-white block">{order.metadata?.accountHolder || 'N/A'}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {(order.paymentMethod === 'ethereum' || order.paymentMethod === 'binance') && (
+                              <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5">
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Dirección / Wallet</span>
+                                  <span className="font-bold font-mono text-[10px] text-white block select-all break-all">{order.metadata?.walletAddress || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-[#84849b] block">Red Blockchain</span>
+                                  <span className="font-bold text-white block">{order.metadata?.network || 'N/A'}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {!order.paymentMethod && (
+                              <p className="text-[10px] text-white/35 italic mt-2">Sin datos de cobro adicionales.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Columna 3: Steam Trade Link */}
+                        <div className="space-y-3">
+                          <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
+                            Steam Trade Link
+                          </h5>
+                          <div className="space-y-3 bg-white/[0.01] p-3 rounded-xl border border-white/5 min-h-[120px] flex flex-col justify-between font-sans">
+                            <div>
+                              <span className="text-[9px] text-[#84849b] uppercase block font-semibold">URL de Intercambio</span>
+                              <span className="font-mono text-[10px] text-white/80 block mt-1 break-all select-all leading-normal">
+                                {order.user?.tradeUrl || 'Sin Trade URL registrado en el perfil'}
+                              </span>
+                            </div>
+                            
+                            {order.user?.tradeUrl && (
+                              <button
+                                onClick={() => order.user.tradeUrl && handleCopyTradeLink(order.user.tradeUrl, order.id)}
+                                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                                  copiedOrderId === order.id
+                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                                    : 'bg-white/5 border-white/5 text-[#84849b] hover:text-white hover:bg-white/10 hover:border-white/10 active:scale-95'
+                                }`}
+                              >
+                                {copiedOrderId === order.id ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 animate-pulse" />
+                                    <span>Copiado Exitosamente</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span>Copiar Tradelink</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <details className="group">
+                      <summary className="text-[10px] text-[#84849b] font-black uppercase tracking-widest cursor-pointer hover:text-white transition-colors flex items-center justify-between font-sans">
+                        <span>Ítems a vender ({order.items.length})</span>
+                        <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="space-y-3 mt-3">
+                        {order.items.map(item => {
+                          const resolvedDetails = resolvedItemsMap[item.assetId] || {};
+                          const finalFloat = item.float !== null && item.float !== undefined ? item.float : (resolvedDetails.float !== undefined ? resolvedDetails.float : null);
+                          const finalPattern = item.pattern !== null && item.pattern !== undefined ? item.pattern : (resolvedDetails.pattern !== undefined ? resolvedDetails.pattern : null);
+                          const finalRarity = item.rarity || resolvedDetails.rarity || getItemRarity(item);
+                          const finalExterior = item.exterior || resolvedDetails.exterior || getItemExterior(item);
+                          const finalProvider = item.provider || (item.assetId && typeof item.assetId === 'string' && item.assetId.startsWith("resell-") ? (hashCode(item.assetId) % 2 === 0 ? "youpin" : "buff") : "bots");
+
+                          return (
+                            <div 
+                              key={item.id} 
+                              className={`flex flex-col sm:flex-row sm:items-center gap-4 bg-[#110f1e] p-4 rounded-xl border border-white/5 relative overflow-hidden group ${
+                                rarityColors[finalRarity] || ''
+                              }`}
+                            >
+                              {/* Icon image */}
+                              <div className="w-16 h-12 relative bg-white/[0.01] border border-white/[0.02] rounded-lg p-1.5 flex items-center justify-center flex-shrink-0">
+                                {item.iconUrl ? (
+                                  <img src={item.iconUrl} className="w-full h-full object-contain drop-shadow-md" alt={item.name} />
+                                ) : (
+                                  <span className="text-[8px] text-[#84849b] font-mono">No Image</span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-extrabold text-white block truncate">{item.name}</span>
+                                  {finalProvider === 'youpin' && (
+                                    <span className="text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-mono">Youpin</span>
+                                  )}
+                                  {finalProvider === 'buff' && (
+                                    <span className="text-[8px] font-black uppercase tracking-wider bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded font-mono">Buff</span>
+                                  )}
+                                  {finalProvider === 'bots' && (
+                                    <span className="text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">Bots</span>
+                                  )}
+                                  {finalProvider === 'user' && (
+                                    <span className="text-[8px] font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded font-mono">Usuario</span>
+                                  )}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[9px] font-mono">
+                                  {finalExterior && (
+                                    <span className="text-white/80 font-sans uppercase tracking-wider font-bold bg-white/5 px-1.5 py-0.5 rounded-sm">
+                                      {finalExterior}
+                                    </span>
+                                  )}
+                                  {finalPattern !== null && finalPattern !== undefined && (
+                                    <span className="text-[#84849b] bg-white/[0.02] px-1.5 py-0.5 rounded-sm border border-white/5">
+                                      Semilla: <span className="text-white font-bold">{finalPattern}</span>
+                                    </span>
+                                  )}
+                                  <span className="text-[#84849b] bg-white/[0.02] px-1.5 py-0.5 rounded-sm border border-white/5">
+                                    AssetID: <span className="text-white font-semibold select-all">{item.assetId}</span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Float display */}
+                              {finalFloat !== null && finalFloat !== undefined ? (
+                                <div className="sm:w-32 flex-shrink-0">
+                                  <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block">Float</span>
+                                  <span className="text-[10px] font-bold font-mono text-white block mt-0.5">
+                                    {finalFloat.toFixed(8)}
+                                  </span>
+                                  <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
+                                    <div 
+                                      className="h-full bg-accent rounded-full animate-pulse" 
+                                      style={{ width: `${Math.min(100, finalFloat * 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="sm:w-32 flex-shrink-0">
+                                  <span className="text-[9px] uppercase tracking-wider font-black text-white/20 font-mono block">Float</span>
+                                  <span className="text-[10px] text-white/35 font-mono block mt-0.5">N/A</span>
+                                </div>
+                              )}
+
+                              {/* Price */}
+                              <div className="text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0">
+                                <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block sm:hidden">Precio</span>
+                                <div>
+                                  <span className="text-sm sm:text-base font-black text-accent">${item.price.toLocaleString()}</span>
+                                  <span className="text-[9px] text-[#84849b] font-bold block">USD</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </details>
                   </div>

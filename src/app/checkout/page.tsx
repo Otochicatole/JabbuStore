@@ -235,11 +235,48 @@ function CheckoutContent() {
             };
 
             if (checkoutType === "buy") {
+              const hashCode = (str: string): number => {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                  const chr = str.charCodeAt(i);
+                  hash = ((hash << 5) - hash) + chr;
+                  hash |= 0;
+                }
+                return hash;
+              };
+
+              const detailedItems = items.map(i => {
+                const cartItem = cartItems.find(c => c.skin.id === i.assetId);
+                const skin = cartItem?.skin;
+
+                let provider = "bots";
+                if (skin) {
+                  if (skin.isImmediate === false) {
+                    provider = Math.abs(hashCode(i.assetId)) % 2 === 0 ? "youpin" : "buff";
+                  } else {
+                    provider = "bots";
+                  }
+                }
+
+                return {
+                  assetId: i.assetId,
+                  name: i.name,
+                  price: i.price,
+                  iconUrl: i.iconUrl,
+                  float: skin?.float !== undefined ? skin.float : null,
+                  pattern: skin?.pattern !== undefined ? skin.pattern : null,
+                  rarity: skin?.rarity || "common",
+                  exterior: skin?.exterior || null,
+                  provider: provider
+                };
+              });
+
               res = await fetchWithAuth(`${BACKEND_URL}/orders`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   itemIds: items.map(i => i.assetId),
+                  items: detailedItems,
                   paymentMethod: selectedMethod,
                   metadata: metadataPayload
                 })

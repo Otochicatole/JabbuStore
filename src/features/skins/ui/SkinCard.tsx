@@ -174,13 +174,19 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
 
       {/* Info Panel */}
       {!isMultiple ? (
-        // Standard single item info panel
-        <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px]">
+        // Standard single item info panel (mantiene altura h-[42px] fija para evitar que se desplace el contenido si no tiene float)
+        <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center">
           {(() => {
             const isMarket = skin.isImmediate === false;
             const floatRange = isMarket
               ? getFloatRangeFromExterior(skin.exterior)
               : null;
+            const hasFloat = skin.float !== undefined || floatRange !== null;
+
+            if (!hasFloat) {
+              // Si no tiene float (pegatinas, cajas, consumibles), dejamos el contenedor vacío pero conservamos la altura
+              return null;
+            }
 
             return (
               <>
@@ -257,10 +263,10 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
           })()}
         </div>
       ) : (
-        // Premium grouped items info panel (transparent & borderless)
+        // Premium grouped items info panel (mantiene altura h-[42px] fija)
         <div
           onClick={() => setIsModalOpen(true)}
-          className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent hover:bg-white/[0.02] font-mono text-[9px] cursor-pointer transition-colors"
+          className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent hover:bg-white/[0.02] font-mono text-[9px] cursor-pointer transition-colors h-[42px] justify-center"
         >
           <div className="flex items-center justify-between">
             <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">
@@ -293,20 +299,9 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
             ⚡ Trade Inmediato
           </div>
         ) : (
-          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 select-none">
-            <div className="bg-indigo-500/20 border border-indigo-500/40 rounded-full px-2 py-0.5 text-[8px] font-black uppercase text-indigo-400 tracking-wider flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-indigo-400"></span>⏳
-              Bajo Pedido
-            </div>
-            {(skin.youpinVolume || 0) + (skin.buffVolume || 0) > 0 && (
-              <div className="bg-black/40 border border-white/5 backdrop-blur-[2px] rounded-full px-2 py-0.5 text-[7.5px] font-bold text-white/60 uppercase tracking-widest font-mono flex items-center gap-1 self-start">
-                Stock:{" "}
-                {(
-                  (skin.youpinVolume || 0) + (skin.buffVolume || 0)
-                ).toLocaleString()}{" "}
-                uds
-              </div>
-            )}
+          <div className="absolute top-2 left-2 bg-indigo-500/20 border border-indigo-500/40 rounded-full px-2 py-0.5 text-[8px] font-black uppercase text-indigo-400 tracking-wider flex items-center gap-1 z-10 select-none">
+            <span className="w-1 h-1 rounded-full bg-indigo-400"></span>⏳ Bajo
+            Pedido
           </div>
         )}
 
@@ -325,6 +320,17 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
           height={130}
           className="object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
         />
+
+        {/* Stock Badge positioned at the bottom-right of the image container (only on re-sale / under-order catalog items) */}
+        {skin.isImmediate === false &&
+          (skin.youpinVolume || 0) + (skin.buffVolume || 0) > 0 && (
+            <div className="absolute bottom-2 right-2 bg-black/40 border border-white/5 backdrop-blur-[2px] rounded-full px-2 py-0.5 text-[7.5px] font-bold text-white/60 uppercase tracking-widest font-mono z-10 select-none">
+              Stock:{" "}
+              {(
+                (skin.youpinVolume || 0) + (skin.buffVolume || 0)
+              ).toLocaleString()}
+            </div>
+          )}
 
         {/* Absolute count badge positioned next to the image (transparent design) */}
         {isMultiple && (

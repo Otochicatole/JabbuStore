@@ -390,7 +390,7 @@ export default function AdminSettingsPage() {
       {activeTab === "reventa" && (
         <div className="bg-[#110f1e]/40 border border-white/[0.06] rounded-2xl p-6">
           <SectionHeader
-            title="Reglas de Reventa cs2.sh"
+            title="Reglas de Reventa SteamWebAPI"
             desc="Define cómo se modifican los precios para las skins bajo pedido traídas de Buff y Youpin."
           />
           <form onSubmit={handleResellSubmit} className="space-y-5 max-w-xl">

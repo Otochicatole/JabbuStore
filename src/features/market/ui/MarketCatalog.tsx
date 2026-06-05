@@ -85,7 +85,7 @@ export function MarketCatalog() {
         <div>
           <h2 className="text-lg font-black uppercase tracking-wider text-white">Catálogo de Mercado</h2>
           <p className="text-[10px] text-[#84849b] font-mono mt-0.5 uppercase tracking-wider">
-            Buff163 + YouPin via cs2.sh — {listings.length.toLocaleString()} listings
+            Buff163 + YouPin via SteamWebAPI — {listings.length.toLocaleString()} listings
           </p>
         </div>
         <div className="flex items-center gap-2">

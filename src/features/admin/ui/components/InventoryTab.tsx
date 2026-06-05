@@ -293,7 +293,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
             <Tags className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-wider">Servidor de Precios CS2.sh</p>
+            <p className="text-xs font-black uppercase tracking-wider">Servidor de Precios SteamWebAPI</p>
             <p className="text-[10px] text-[#84849b] font-medium font-mono">Última recarga automática de inventario de Steam exitosa</p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 /**
- * Listing de mercado externo (Buff163 o YouPin) obtenido via cs2.sh.
+ * Listing de mercado externo (Buff163 o YouPin) obtenido via SteamWebAPI.
  * NO es un ítem físico en inventario de bots.
  */
 export interface MarketListing {

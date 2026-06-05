@@ -1,4 +1,11 @@
-export type SkinRarity = 'common' | 'uncommon' | 'rare' | 'mythical' | 'legendary' | 'ancient' | 'immortal';
+export type SkinRarity =
+  | "common"
+  | "uncommon"
+  | "rare"
+  | "mythical"
+  | "legendary"
+  | "ancient"
+  | "immortal";
 
 export interface Skin {
   id: string;
@@ -16,11 +23,15 @@ export interface Skin {
   phase?: string;
   isImmediate?: boolean;
   /** 'bot' = ítem físico de Steam | 'buff' | 'youpin' = catálogo de mercado externo */
-  provider?: 'bot' | 'buff' | 'youpin';
+  provider?: "bot" | "buff" | "youpin";
   /** Para market listings: precio ask en YouPin */
   youpinAsk?: number | null;
   /** Para market listings: precio ask en Buff163 */
   buffAsk?: number | null;
+  /** Volumen de stock en YouPin */
+  youpinVolume?: number | null;
+  /** Volumen de stock en Buff163 */
+  buffVolume?: number | null;
 }
 
 export interface SkinRepository {

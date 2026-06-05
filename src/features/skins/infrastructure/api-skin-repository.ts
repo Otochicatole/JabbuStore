@@ -25,7 +25,7 @@ export interface StoreItem {
 export interface MarketListingItem {
   id: string;
   name: string;
-  provider: 'buff' | 'youpin';
+  provider: "buff" | "youpin";
   youpinAsk: number | null;
   youpinVolume: number | null;
   buffAsk: number | null;
@@ -43,22 +43,36 @@ export interface MarketListingItem {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function toSkinRarity(raw: string | undefined): SkinRarity {
-  const normalized = (raw || 'common').toLowerCase();
-  const valid: SkinRarity[] = ['common', 'uncommon', 'rare', 'mythical', 'legendary', 'ancient', 'immortal'];
-  return valid.includes(normalized as SkinRarity) ? (normalized as SkinRarity) : 'common';
+  const normalized = (raw || "common").toLowerCase();
+  const valid: SkinRarity[] = [
+    "common",
+    "uncommon",
+    "rare",
+    "mythical",
+    "legendary",
+    "ancient",
+    "immortal",
+  ];
+  return valid.includes(normalized as SkinRarity)
+    ? (normalized as SkinRarity)
+    : "common";
 }
 
-function parseName(fullName: string): { weapon: string; skinName: string; phase?: string } {
-  if (fullName.includes(' | ')) {
-    const parts = fullName.split(' | ');
-    const weapon = parts[0] || 'Item';
-    let skinName = parts[1] || '';
+function parseName(fullName: string): {
+  weapon: string;
+  skinName: string;
+  phase?: string;
+} {
+  if (fullName.includes(" | ")) {
+    const parts = fullName.split(" | ");
+    const weapon = parts[0] || "Item";
+    let skinName = parts[1] || "";
     const phase = parts.length > 2 ? parts[2] : undefined;
     // Quitar desgaste del nombre: "Redline (Field-Tested)" → "Redline"
-    if (skinName.includes(' (')) skinName = skinName.split(' (')[0] || skinName;
+    if (skinName.includes(" (")) skinName = skinName.split(" (")[0] || skinName;
     return { weapon, skinName, phase };
   }
-  return { weapon: 'Item', skinName: fullName };
+  return { weapon: "Item", skinName: fullName };
 }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
@@ -69,7 +83,10 @@ function parseName(fullName: string): { weapon: string; skinName: string; phase?
  */
 function mapBotItemToSkin(item: StoreItem): Skin {
   const { weapon, skinName, phase } = parseName(item.name);
-  const price = (item.displayPrice && item.displayPrice > 0) ? item.displayPrice : (item.price || 0);
+  const price =
+    item.displayPrice && item.displayPrice > 0
+      ? item.displayPrice
+      : item.price || 0;
 
   return {
     id: item.assetId,
@@ -77,16 +94,16 @@ function mapBotItemToSkin(item: StoreItem): Skin {
     weapon,
     rarity: toSkinRarity(item.rarity),
     price,
-    imageUrl: item.iconUrl || '/skin.webp',
+    imageUrl: item.iconUrl || "/skin.webp",
     float: item.float ?? undefined,
     pattern: item.pattern ?? undefined,
     exterior: item.exterior || null,
-    category: item.category || 'other',
+    category: item.category || "other",
     isStatTrak: item.isStatTrak || false,
     isSouvenir: item.isSouvenir || false,
     phase,
     isImmediate: true,
-    provider: 'bot',
+    provider: "bot",
   };
 }
 
@@ -96,7 +113,8 @@ function mapBotItemToSkin(item: StoreItem): Skin {
  */
 function mapMarketListingToSkin(item: MarketListingItem): Skin {
   const { weapon, skinName, phase } = parseName(item.name);
-  const price = (item.displayPrice && item.displayPrice > 0) ? item.displayPrice : item.price;
+  const price =
+    item.displayPrice && item.displayPrice > 0 ? item.displayPrice : item.price;
 
   return {
     id: `market-${item.id}`,
@@ -104,11 +122,11 @@ function mapMarketListingToSkin(item: MarketListingItem): Skin {
     weapon,
     rarity: toSkinRarity(item.rarity),
     price,
-    imageUrl: item.iconUrl || '/skin.webp',
+    imageUrl: item.iconUrl || "/skin.webp",
     float: undefined,
     pattern: undefined,
     exterior: item.exterior || null,
-    category: item.category || 'other',
+    category: item.category || "other",
     isStatTrak: item.isStatTrak || false,
     isSouvenir: item.isSouvenir || false,
     phase,
@@ -116,6 +134,8 @@ function mapMarketListingToSkin(item: MarketListingItem): Skin {
     provider: item.provider,
     youpinAsk: item.youpinAsk,
     buffAsk: item.buffAsk,
+    youpinVolume: item.youpinVolume,
+    buffVolume: item.buffVolume,
   };
 }
 
@@ -127,24 +147,30 @@ export class ApiSkinRepository implements SkinRepository {
       // Fetch paralelo de bots (trade inmediato) y mercado (Buff/YouPin)
       const [botRes, marketRes] = await Promise.allSettled([
         fetch(`${BACKEND_URL}/store/items`, {
-          headers: { 'X-Tunnel-Skip-AntiPhishing-Page': 'true', 'Accept': 'application/json' },
-          credentials: 'include',
+          headers: {
+            "X-Tunnel-Skip-AntiPhishing-Page": "true",
+            Accept: "application/json",
+          },
+          credentials: "include",
         }),
         fetch(`${BACKEND_URL}/market/listings`, {
-          headers: { 'X-Tunnel-Skip-AntiPhishing-Page': 'true', 'Accept': 'application/json' },
-          credentials: 'include',
+          headers: {
+            "X-Tunnel-Skip-AntiPhishing-Page": "true",
+            Accept: "application/json",
+          },
+          credentials: "include",
         }),
       ]);
 
       let botSkins: Skin[] = [];
       let marketSkins: Skin[] = [];
 
-      if (botRes.status === 'fulfilled' && botRes.value.ok) {
+      if (botRes.status === "fulfilled" && botRes.value.ok) {
         const data = (await botRes.value.json()) as StoreItem[];
         if (Array.isArray(data)) botSkins = data.map(mapBotItemToSkin);
       }
 
-      if (marketRes.status === 'fulfilled' && marketRes.value.ok) {
+      if (marketRes.status === "fulfilled" && marketRes.value.ok) {
         const data = (await marketRes.value.json()) as MarketListingItem[];
         if (Array.isArray(data)) marketSkins = data.map(mapMarketListingToSkin);
       }
@@ -160,7 +186,7 @@ export class ApiSkinRepository implements SkinRepository {
   async getSkinById(id: string): Promise<Skin | null> {
     try {
       const skins = await this.getSkins();
-      return skins.find(s => s.id === id) || null;
+      return skins.find((s) => s.id === id) || null;
     } catch (error) {
       console.error("Error in ApiSkinRepository.getSkinById:", error);
       return null;

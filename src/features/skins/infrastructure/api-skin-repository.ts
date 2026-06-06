@@ -117,7 +117,7 @@ function mapMarketListingToSkin(item: MarketListingItem): Skin {
     item.displayPrice && item.displayPrice > 0 ? item.displayPrice : item.price;
 
   return {
-    id: `market-${item.id}`,
+    id: `market-${item.name}`, // Usar el nombre único como ID estable contra regeneraciones de CUID
     name: skinName,
     weapon,
     rarity: toSkinRarity(item.rarity),

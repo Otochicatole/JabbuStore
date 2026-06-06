@@ -175,9 +175,7 @@ export function OrderDetailRow({
             <Layers className="w-3.5 h-3.5 text-accent" />
             Flujo de Operación de Compra
           </span>
-          <span className="text-white/40 font-mono">
-            Orden ID: {order.id.substring(0, 8)}...
-          </span>
+          <span className="text-white/40 font-mono">Orden ID: {order.id}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -514,6 +512,16 @@ export function OrderDetailRow({
 
               {order.paymentMethod === "mercado_pago" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
+                  {(order.metadata as any)?.mpPaymentId && (
+                    <div className="mb-2">
+                      <span className="text-[8.5px] text-[#84849b] block">
+                        ID de Operación MP
+                      </span>
+                      <span className="font-bold font-mono text-emerald-400 block select-all bg-emerald-500/10 p-1.5 rounded-[3px] border border-emerald-500/20 mt-0.5 shadow-[0_0_10px_rgba(16,185,129,0.05)]">
+                        {(order.metadata as any).mpPaymentId}
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block">
                       CBU / CVU / Alias

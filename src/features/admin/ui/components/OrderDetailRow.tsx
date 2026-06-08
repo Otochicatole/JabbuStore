@@ -510,6 +510,45 @@ export function OrderDetailRow({
                 </span>
               </div>
 
+              {order.paymentMethod === "nowpayments" && (
+                <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
+                  {(order.metadata as any)?.nowpaymentsPaymentId && (
+                    <div className="mb-2">
+                      <span className="text-[8.5px] text-[#84849b] block">
+                        ID de Pago NOWPayments
+                      </span>
+                      <span className="font-bold font-mono text-purple-400 block select-all bg-purple-500/10 p-1.5 rounded-[3px] border border-purple-500/20 mt-0.5 shadow-[0_0_10px_rgba(168,85,247,0.05)]">
+                        {(order.metadata as any).nowpaymentsPaymentId}
+                      </span>
+                    </div>
+                  )}
+                  {order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL" ? (
+                    <>
+                      <div>
+                        <span className="text-[8.5px] text-[#84849b] block">
+                          Billetera Destino Crypto
+                        </span>
+                        <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
+                          {order.metadata?.walletAddress || "N/A"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[8.5px] text-[#84849b] block">
+                          Red Blockchain
+                        </span>
+                        <span className="font-bold text-white block">
+                          {order.metadata?.network || "N/A"}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado y capturado vía NOWPayments API.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {order.paymentMethod === "mercado_pago" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
                   {(order.metadata as any)?.mpPaymentId && (
@@ -522,53 +561,79 @@ export function OrderDetailRow({
                       </span>
                     </div>
                   )}
-                  <div>
-                    <span className="text-[8.5px] text-[#84849b] block">
-                      CBU / CVU / Alias
-                    </span>
-                    <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
-                      {order.metadata?.cbu || "N/A"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
+                  {order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL" ? (
+                    <>
+                      <div>
+                        <span className="text-[8.5px] text-[#84849b] block">
+                          CBU / CVU / Alias de Destino
+                        </span>
+                        <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
+                          {order.metadata?.cbu || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[8.5px] text-[#84849b] block">
+                            Titular
+                          </span>
+                          <span className="font-bold text-white block">
+                            {order.metadata?.accountHolder || "N/A"}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[8.5px] text-[#84849b] block">
+                            CUIL / CUIT
+                          </span>
+                          <span className="font-bold font-mono text-white block select-all">
+                            {order.metadata?.cuil || "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
                     <div>
-                      <span className="text-[8.5px] text-[#84849b] block">
-                        Titular
-                      </span>
-                      <span className="font-bold text-white block">
-                        {order.metadata?.accountHolder || "N/A"}
-                      </span>
+                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado vía Mercado Pago Checkout Pro.</p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[8.5px] text-[#84849b] block">
-                        CUIL / CUIT
-                      </span>
-                      <span className="font-bold font-mono text-white block select-all">
-                        {order.metadata?.cuil || "N/A"}
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
 
               {order.paymentMethod === "paypal" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
-                  <div>
-                    <span className="text-[8.5px] text-[#84849b] block">
-                      Correo de Destino
-                    </span>
-                    <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
-                      {order.metadata?.cbu || "N/A"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[8.5px] text-[#84849b] block">
-                      Titular PayPal
-                    </span>
-                    <span className="font-bold text-white block">
-                      {order.metadata?.accountHolder || "N/A"}
-                    </span>
-                  </div>
+                  {(order.metadata as any)?.paypalPaymentId && (
+                    <div className="mb-2">
+                      <span className="text-[8.5px] text-[#84849b] block">
+                        ID de Captura PayPal
+                      </span>
+                      <span className="font-bold font-mono text-indigo-400 block select-all bg-indigo-500/10 p-1.5 rounded-[3px] border border-indigo-500/20 mt-0.5 shadow-[0_0_10px_rgba(99,102,241,0.05)]">
+                        {(order.metadata as any).paypalPaymentId}
+                      </span>
+                    </div>
+                  )}
+                  {order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL" ? (
+                    <>
+                      <div>
+                        <span className="text-[8.5px] text-[#84849b] block">
+                          Correo PayPal de Destino
+                        </span>
+                        <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
+                          {order.metadata?.cbu || "N/A"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[8.5px] text-[#84849b] block">
+                          Titular PayPal
+                        </span>
+                        <span className="font-bold text-white block">
+                          {order.metadata?.accountHolder || "N/A"}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado y capturado vía PayPal API.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -577,7 +642,7 @@ export function OrderDetailRow({
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block">
-                      Dirección / Wallet
+                      Dirección / Wallet de Destino
                     </span>
                     <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
                       {order.metadata?.walletAddress || "N/A"}

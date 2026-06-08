@@ -66,9 +66,11 @@ export function CheckoutContent() {
       network:
         selectedMethod === "ethereum"
           ? "ERC20"
-          : selectedMethod === "binance"
-            ? "BinancePay"
-            : "ERC20",
+          : selectedMethod === "nowpayments"
+            ? "TRC20"
+            : selectedMethod === "binance"
+              ? "BinancePay"
+              : "ERC20",
     }));
     setFormErrors({});
   }, [selectedMethod]);
@@ -223,6 +225,10 @@ export function CheckoutContent() {
         if (!formData.walletAddress.trim())
           errors.walletAddress =
             "La dirección de billetera Ethereum (Web3) es obligatoria.";
+      } else if (selectedMethod === "nowpayments") {
+        if (!formData.walletAddress.trim())
+          errors.walletAddress =
+            "La dirección de billetera de Criptomonedas es obligatoria.";
       } else if (selectedMethod === "binance") {
         if (!formData.walletAddress.trim())
           errors.walletAddress =

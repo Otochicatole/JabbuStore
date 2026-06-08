@@ -143,15 +143,25 @@ export function CheckoutForm({
             </div>
           )}
 
-          {(selectedMethod === "ethereum" || selectedMethod === "binance") && (
+          {(selectedMethod === "ethereum" || selectedMethod === "binance" || selectedMethod === "nowpayments") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5 col-span-2 md:col-span-1">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">
-                  {selectedMethod === "ethereum" ? "Dirección de Billetera Ethereum / Web3" : "Dirección de Depósito / Pay ID"}
+                  {selectedMethod === "ethereum" 
+                    ? "Dirección de Billetera Ethereum / Web3" 
+                    : selectedMethod === "nowpayments"
+                      ? "Dirección de Billetera Crypto (USDT, BTC, etc.)"
+                      : "Dirección de Depósito / Pay ID"}
                 </label>
                 <input
                   type="text"
-                  placeholder={selectedMethod === "ethereum" ? "Ej. 0x71C7656EC7ab88b098defB751B7401B5f6d8976F" : "Ej. Pay ID 4819401 o wallet address"}
+                  placeholder={
+                    selectedMethod === "ethereum" 
+                      ? "Ej. 0x71C7656EC7ab88b098defB751B7401B5f6d8976F" 
+                      : selectedMethod === "nowpayments"
+                        ? "Ej. Dirección USDT o tu billetera de preferencia"
+                        : "Ej. Pay ID 4819401 o wallet address"
+                  }
                   value={formData.walletAddress}
                   onChange={(e) => updateField("walletAddress", e.target.value)}
                   className={`w-full px-3.5 py-2.5 bg-white/[0.03] border rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 transition-colors font-mono ${formErrors.walletAddress ? 'border-red-500/50' : 'border-white/8'}`}
@@ -172,6 +182,14 @@ export function CheckoutForm({
                       <option value="BSC">BNB Smart Chain (BEP20)</option>
                       <option value="Polygon">Polygon POS (ERC20)</option>
                       <option value="Arbitrum">Arbitrum One (ERC20)</option>
+                    </>
+                  ) : selectedMethod === "nowpayments" ? (
+                    <>
+                      <option value="TRC20">USDT (TRC20) — Recomendado</option>
+                      <option value="BSC">USDT BNB Smart Chain (BEP20)</option>
+                      <option value="ERC20">USDT Ethereum (ERC20)</option>
+                      <option value="BTC">Bitcoin (BTC)</option>
+                      <option value="LTC">Litecoin (LTC)</option>
                     </>
                   ) : (
                     <>

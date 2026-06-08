@@ -89,6 +89,11 @@ export function applyFilters(skins: Skin[], filters: FilterState): Skin[] {
     });
   }
 
+  // 4.5. Immediate trade filter (exclude resell listings)
+  if (filters.immediateTradeOnly) {
+    result = result.filter(skin => skin.isImmediate !== false);
+  }
+
   // 5. Sort
   switch (filters.sortOption) {
     case 'Precio: Mayor a Menor':

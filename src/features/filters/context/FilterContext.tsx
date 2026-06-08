@@ -11,6 +11,7 @@ export interface FilterState {
   selectedCategories: string[];
   selectedConditions: string[];
   sortOption: SortOption;
+  immediateTradeOnly: boolean;
 }
 
 interface FilterContextType extends FilterState {
@@ -20,6 +21,7 @@ interface FilterContextType extends FilterState {
   toggleCategory: (cat: string) => void;
   toggleCondition: (cond: string) => void;
   setSortOption: (opt: SortOption) => void;
+  setImmediateTradeOnly: (v: boolean) => void;
   clearFilters: () => void;
 }
 
@@ -30,6 +32,7 @@ const defaultState: FilterState = {
   selectedCategories: [],
   selectedConditions: [],
   sortOption: "Precio: Mayor a Menor",
+  immediateTradeOnly: false,
 };
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -41,6 +44,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>("Precio: Mayor a Menor");
+  const [immediateTradeOnly, setImmediateTradeOnly] = useState(false);
 
   const toggleCategory = useCallback((cat: string) => {
     setSelectedCategories(prev =>
@@ -61,6 +65,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
     setSelectedCategories([]);
     setSelectedConditions([]);
     setSortOption("Precio: Mayor a Menor");
+    setImmediateTradeOnly(false);
   }, []);
 
   return (
@@ -72,6 +77,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
         selectedCategories, toggleCategory,
         selectedConditions, toggleCondition,
         sortOption, setSortOption,
+        immediateTradeOnly, setImmediateTradeOnly,
         clearFilters,
       }}
     >

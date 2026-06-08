@@ -23,4 +23,14 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     color:
       "from-purple-500/10 to-purple-500/5 hover:border-purple-500/30 border-white/5",
   },
+  {
+    id: "paypal",
+    name: "PayPal",
+    description:
+      "Paga con tu saldo de PayPal, tarjeta de crédito o cuenta bancaria internacional en dólares",
+    icon: <Wallet className="w-5 h-5 text-indigo-400" />,
+    badge: "USD / PayPal",
+    color:
+      "from-indigo-500/10 to-indigo-500/5 hover:border-indigo-500/30 border-white/5",
+  },
 ];

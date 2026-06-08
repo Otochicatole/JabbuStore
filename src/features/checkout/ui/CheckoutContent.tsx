@@ -73,29 +73,58 @@ export function CheckoutContent() {
     setFormErrors({});
   }, [selectedMethod]);
 
-  // 1. Manejar las redirecciones de retorno de Mercado Pago de forma aislada (evita bucle infinito de re-renders)
+  // 1. Manejar las redirecciones de retorno de Mercado Pago, NOWPayments o PayPal
   useEffect(() => {
     const status = searchParams.get("status");
     const orderId = searchParams.get("orderId");
-    if (status === "success" && orderId) {
-      setCreatedOrderId(orderId);
-      setIsSuccess(true);
-      if (checkoutType === "buy") {
-        clearCart();
-      } else {
-        clearSellList();
+    const method = searchParams.get("method");
+
+    const handleCallback = async () => {
+      if (status === "success" && orderId) {
+        // Si el método es PayPal, capturar el pago haciendo una petición al backend
+        if (method === "paypal") {
+          setLoading(true);
+          try {
+            const res = await fetchWithAuth(`${BACKEND_URL}/orders/webhook/paypal`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: searchParams.get("token") }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              throw new Error(data?.error || "Error al verificar la transacción de PayPal.");
+            }
+          } catch (err: any) {
+            console.error("PayPal verification error:", err);
+            setError(err.message || "No se pudo procesar tu pago de PayPal de manera segura.");
+            setLoading(false);
+            return;
+          }
+        }
+
+        setCreatedOrderId(orderId);
+        setIsSuccess(true);
+        if (checkoutType === "buy") {
+          clearCart();
+        } else {
+          clearSellList();
+        }
+        setLoading(false);
+      } else if (status === "failure") {
+        setError(
+          "El proceso de pago fue cancelado o rechazado. Por favor, intente nuevamente.",
+        );
+        setLoading(false);
+      } else if (status === "pending") {
+        setError(
+          "Su transacción se encuentra pendiente de acreditación. Procesaremos su orden apenas se apruebe de forma segura.",
+        );
+        setLoading(false);
       }
-      setLoading(false);
-    } else if (status === "failure") {
-      setError(
-        "El pago de Mercado Pago fue cancelado o rechazado. Por favor, intente nuevamente.",
-      );
-      setLoading(false);
-    } else if (status === "pending") {
-      setError(
-        "Su pago se encuentra pendiente de acreditación en Mercado Pago. Procesaremos su orden apenas se apruebe.",
-      );
-      setLoading(false);
+    };
+
+    if (status) {
+      handleCallback();
     }
   }, [searchParams, checkoutType]);
 
@@ -215,12 +244,12 @@ export function CheckoutContent() {
       return;
     }
 
-    // SI ES COMPRA Y EL MÉTODO ES MERCADO PAGO O NOWPAYMENTS: FLUJO REAL (No simulación)
-    if (checkoutType === "buy" && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments")) {
+    // SI ES COMPRA Y EL MÉTODO ES MERCADO PAGO, NOWPAYMENTS O PAYPAL: FLUJO REAL (No simulación)
+    if (checkoutType === "buy" && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments" || selectedMethod === "paypal")) {
       setIsSimulating(true);
       setSimulationStep(1); // "Conectando..."
 
-      const methodLabel = selectedMethod === "mercado_pago" ? "Mercado Pago" : "NOWPayments";
+      const methodLabel = selectedMethod === "mercado_pago" ? "Mercado Pago" : selectedMethod === "nowpayments" ? "NOWPayments" : "PayPal";
 
       setTimeout(async () => {
         try {

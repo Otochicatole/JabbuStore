@@ -3295,3 +3295,4 @@
 [2026-06-08T07:42:45.114Z] GET /api/proxy/admin/marketplace/items/details/market-★ StatTrak™ Butterfly Knife | Doppler (Minimal Wear) | Phase 3 -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/items/details/market-★ StatTrak™ Butterfly Knife | Doppler (Minimal Wear) | Phase 3)
 [2026-06-08T07:42:50.165Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)
 [2026-06-08T07:42:55.812Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)
+[2026-06-08T07:48:43.156Z] GET /api/proxy/orders/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/me)

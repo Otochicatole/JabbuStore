@@ -4,9 +4,9 @@ import { useCart } from "@/features/cart/context/CartContext";
 import { Button } from "./Button";
 import { SteamLoginButton } from "./SteamLoginButton";
 import Link from "next/link";
-import { ShoppingCart, User } from "lucide-react";
+import { ShoppingCart, User, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 
@@ -48,6 +48,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -100,7 +101,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           <div className="h-8 w-8 rounded-[4px] bg-accent flex items-center justify-center font-black text-white text-xs transition-transform group-hover:scale-110">
             JS
           </div>
-          <span className="text-lg font-black tracking-tight uppercase">
+          <span className="hidden sm:inline text-lg font-black tracking-tight uppercase">
             Jabbu<span className="text-accent">Store</span>
           </span>
         </Link>
@@ -276,8 +277,51 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           ) : (
             <SteamLoginButton />
           )}
+
+          {/* Mobile Hamburguer Toggle */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="flex items-center justify-center p-2 rounded-[3px] border border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/70 hover:text-white transition-all md:hidden cursor-pointer focus:outline-none"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu Sliding Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="border-t border-white/5 bg-background/95 backdrop-blur-lg md:hidden overflow-hidden"
+          >
+            <div className="flex flex-col p-4 space-y-2">
+              {NAV_LINKS.map((link) => {
+                const isActive = pathname === link.path;
+                return (
+                  <Link
+                    key={link.path}
+                    href={link.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`
+                      w-full py-3.5 px-4 text-center rounded-[3px] text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer border
+                      ${isActive 
+                        ? 'bg-accent/15 border-accent/20 text-white shadow-[0_0_15px_rgba(217,70,239,0.15)]' 
+                        : 'border-transparent text-white/55 hover:bg-white/[0.02] hover:text-white'
+                      }
+                    `}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

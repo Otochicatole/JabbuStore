@@ -1,8 +1,10 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ChevronRight, RotateCcw } from "lucide-react";
+import { Search, ChevronRight, RotateCcw, Filter, X } from "lucide-react";
 import { useFilters } from "@/features/filters/context/FilterContext";
+import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 const CATEGORIES = [
   "Cuchillos", "Guantes", "Pistolas", "Subfusiles",
@@ -18,13 +20,10 @@ const CONDITIONS = [
   "Deplorable"
 ];
 
-import { useState } from "react";
-
-import { usePathname } from "next/navigation";
-
 export const FilterSidebar = () => {
   const pathname = usePathname();
   const isSellPage = pathname === "/sell";
+  const [isOpenMobile, setIsMobileOpen] = useState(false);
 
   const {
     searchQuery, setSearchQuery,
@@ -38,8 +37,9 @@ export const FilterSidebar = () => {
 
   const [isConditionOpen, setIsConditionOpen] = useState(false);
 
-  return (
-    <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto pr-4 custom-scrollbar overscroll-contain lg:fixed lg:top-24 lg:left-6 pb-10">
+  // Original filters layout and elements character-by-character to avoid changing any styles
+  const renderFiltersContent = () => (
+    <>
       {/* Search */}
       <div>
         <div className="relative group">
@@ -58,7 +58,10 @@ export const FilterSidebar = () => {
       <div className="relative group w-full">
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={clearFilters}
+          onClick={() => {
+            clearFilters();
+            setIsMobileOpen(false);
+          }}
           className="w-full relative flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-white/[0.03] border border-white/5 text-white/40 hover:text-white hover:border-accent/40 transition-all duration-300 cursor-pointer overflow-hidden group"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-accent/20 via-accent/5 to-transparent -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
@@ -211,6 +214,74 @@ export const FilterSidebar = () => {
           })}
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* 🚀 DESKTOP PERSISTENT VIEW */}
+      <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto pr-4 custom-scrollbar overscroll-contain lg:fixed lg:top-24 lg:left-6 pb-10">
+        {renderFiltersContent()}
+      </aside>
+
+      {/* 📱 MOBILE FLOATING FILTER TOGGLE BUTTON */}
+      <div className="lg:hidden w-full flex items-center justify-between mb-4 gap-2 bg-[#110f1e]/40 p-2 border border-white/5 rounded-[3px]">
+        <span className="text-[9px] font-black uppercase tracking-wider text-[#84849b] font-mono leading-tight max-w-[150px] truncate">Buscador y Filtros</span>
+        <button
+          onClick={() => setIsMobileOpen(true)}
+          className="flex items-center gap-1 px-2.5 py-1.5 bg-accent text-white rounded-[3px] text-[9.5px] font-black uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(217,70,239,0.2)] shrink-0 cursor-pointer"
+        >
+          <Filter className="w-3 h-3" />
+          Filtrar Catálogo
+        </button>
+      </div>
+
+      {/* 📱 MOBILE SLIDING BOTTOM SHEET DRAWER */}
+      <AnimatePresence>
+        {isOpenMobile && (
+          <div className="fixed inset-0 z-[100] lg:hidden flex items-end justify-center">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileOpen(false)}
+              className="absolute inset-0 bg-black"
+            />
+            
+            {/* Drawer Sheet sliding from bottom */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.35 }}
+              className="relative w-full max-h-[85vh] bg-[#0c0a1a] border-t border-white/10 rounded-t-3xl p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 text-white"
+            >
+              {/* Drag Handle Indicator */}
+              <div className="w-12 h-1 bg-white/10 rounded-full mx-auto" />
+
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-accent" />
+                  <span className="text-xs font-black uppercase tracking-widest">Filtros de Búsqueda</span>
+                </div>
+                <button
+                  onClick={() => setIsMobileOpen(false)}
+                  className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-white/50 hover:text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Inner Filters Content with EXACT original styles */}
+              <div className="space-y-6">
+                {renderFiltersContent()}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };

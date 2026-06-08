@@ -70,9 +70,9 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
   const filteredSkins = useMemo(() => applyFilters(skins, filters), [skins, filters]);
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 w-full">
         {[...Array(10)].map((_, i) => (
-          <div key={i} className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 animate-pulse">
+          <div key={i} className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 animate-pulse w-full">
             
             {/* 1. Item Name Skeleton at the very top */}
             <div className="mb-2.5">
@@ -240,8 +240,8 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
   const pageNumbers = getPageNumbers(currentPage, totalPages);
 
   return (
-    <div ref={gridRef} className="flex flex-col gap-10">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+    <div ref={gridRef} className="flex flex-col gap-10 w-full overflow-hidden">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 w-full">
         {visibleGroups.map((group) => (
           <SkinCard key={group[0].id} skinsInGroup={group} />
         ))}

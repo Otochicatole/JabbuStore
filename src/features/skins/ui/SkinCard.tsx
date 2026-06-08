@@ -142,7 +142,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
   return (
     <div
       className={`
-      group relative flex flex-col bg-card rounded-2xl p-4 border transition-all duration-500 hover:-translate-y-1
+      group relative flex w-full flex-col bg-card rounded-2xl p-4 border transition-all duration-500 hover:-translate-y-1
       ${
         isInCart
           ? "border-accent shadow-[0_0_25px_rgba(217,70,239,0.2)]"
@@ -356,39 +356,39 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 h-10 w-full">
+      <div className="flex gap-2 h-10 w-full shrink-0">
         {!isMultiple ? (
           // Single Item Actions (Comprar o En el Carrito)
           !isInCart ? (
             <>
               <button
                 onClick={handleActionClick}
-                className="flex-1 flex items-center justify-center gap-2 bg-accent rounded-lg text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer border-none animate-fade-in"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-accent rounded-lg text-white text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer border-none animate-fade-in shrink-0 min-w-0"
               >
-                <ShoppingCart className="w-3.5 h-3.5" />
+                <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 Comprar
               </button>
               <button
                 onClick={() => addToCart(skin)}
-                className="w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer animate-fade-in"
+                className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer animate-fade-in shrink-0"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               </button>
             </>
           ) : (
             <>
               <button
                 onClick={handleActionClick}
-                className="flex-1 flex items-center justify-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer animate-fade-in"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest transition-all active:scale-95 cursor-pointer animate-fade-in shrink-0 min-w-0"
               >
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                En el Carrito
+                <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-emerald-400" />
+                Carrito
               </button>
               <button
                 onClick={() => removeFromCart(skin.id)}
-                className="w-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/10 rounded-lg transition-colors active:scale-95 cursor-pointer animate-fade-in"
+                className="w-8 sm:w-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/10 rounded-lg transition-colors active:scale-95 cursor-pointer animate-fade-in shrink-0"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               </button>
             </>
           )
@@ -397,47 +397,47 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
           <>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex-1 flex items-center justify-center gap-2 bg-accent rounded-lg text-white text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer border-none"
+              className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-accent rounded-lg text-white text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer border-none shrink-0 min-w-0"
             >
-              <ShoppingCart className="w-3.5 h-3.5" />
+              <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
               Elegir
             </button>
             <button
               onClick={handleIncrement}
-              className="w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer"
+              className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer shrink-0"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             </button>
           </>
         ) : (
           <>
             {/* Quantity increment / decrement selector directly on the card */}
-            <div className="flex-1 flex items-center justify-between bg-secondary rounded-lg border border-white/10 overflow-hidden">
+            <div className="flex-1 flex items-center justify-between bg-secondary rounded-lg border border-white/10 overflow-hidden shrink-0 min-w-0">
               <button
                 onClick={handleDecrement}
-                className="w-10 h-full flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer text-white/50 hover:text-white border-none bg-transparent"
+                className="w-7 sm:w-10 h-full flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer text-white/50 hover:text-white border-none bg-transparent shrink-0"
               >
-                <Minus className="w-3.5 h-3.5" />
+                <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
               </button>
-              <span className="text-[10px] font-black text-white">
-                {totalQuantityInCart} en carrito
+              <span className="text-[8.5px] sm:text-[10px] font-black text-white truncate px-1 shrink-0">
+                {totalQuantityInCart} en carro
               </span>
               <button
                 onClick={handleIncrement}
                 disabled={totalQuantityInCart >= skinsInGroup.length}
-                className="w-10 h-full flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer text-white/50 hover:text-white border-none bg-transparent"
+                className="w-7 sm:w-10 h-full flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer text-white/50 hover:text-white border-none bg-transparent shrink-0"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
               </button>
             </div>
 
             {/* Eye button on the right to view options */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="w-10 flex items-center justify-center bg-secondary hover:bg-white/10 text-white hover:text-accent border border-white/5 rounded-lg active:scale-95 transition-all cursor-pointer"
+              className="w-8 sm:w-10 flex items-center justify-center bg-secondary hover:bg-white/10 text-white hover:text-accent border border-white/5 rounded-lg active:scale-95 transition-all cursor-pointer shrink-0"
               title="Ver todas las opciones"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             </button>
           </>
         )}

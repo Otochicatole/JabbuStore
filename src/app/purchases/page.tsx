@@ -223,23 +223,13 @@ export default function UserOrdersPage() {
         </div>
 
         {/* Refresh & Tab Controls */}
-        <div className="flex flex-col items-end gap-3 shrink-0">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={fetchOrders}
-              disabled={loading}
-              className="flex items-center gap-2 h-10 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer"
-            >
-              <Loader2
-                className={`w-3.5 h-3.5 ${loading ? "animate-spin text-accent" : ""}`}
-              />
-              Actualizar
-            </button>
-
-            <div className="flex bg-[#110f1e]/80 border border-white/5 p-1 rounded-[3px] w-fit">
+        <div className="flex flex-col sm:items-end gap-3 shrink-0 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
+            {/* Tab Controls */}
+            <div className="flex bg-[#110f1e]/80 border border-white/5 p-1 rounded-[3px] w-full sm:w-fit justify-between">
               <button
                 onClick={() => setActiveTab("all")}
-                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-[3px] transition-all text-center ${
                   activeTab === "all"
                     ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
                     : "text-white/60 hover:text-white cursor-pointer"
@@ -249,27 +239,39 @@ export default function UserOrdersPage() {
               </button>
               <button
                 onClick={() => setActiveTab("buy")}
-                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center gap-2 ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center justify-center gap-1.5 text-center ${
                   activeTab === "buy"
                     ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
                     : "text-white/60 hover:text-white cursor-pointer"
                 }`}
               >
-                <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-400" />
+                <ArrowDownLeft className="w-3 h-3 text-emerald-400 shrink-0" />
                 Compras
               </button>
               <button
                 onClick={() => setActiveTab("sell")}
-                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center gap-2 ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center justify-center gap-1.5 text-center ${
                   activeTab === "sell"
                     ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
                     : "text-white/60 hover:text-white cursor-pointer"
                 }`}
               >
-                <ArrowUpRight className="w-3.5 h-3.5 text-purple-400" />
+                <ArrowUpRight className="w-3 h-3 text-purple-400 shrink-0" />
                 Ventas
               </button>
             </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={fetchOrders}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 h-10 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto"
+            >
+              <Loader2
+                className={`w-3.5 h-3.5 ${loading ? "animate-spin text-accent" : ""}`}
+              />
+              Actualizar
+            </button>
           </div>
         </div>
       </div>
@@ -328,21 +330,21 @@ export default function UserOrdersPage() {
                 }`} />
 
                 {/* Order Header / Main Stats */}
-                <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   {/* Left Side: ID, Date, Type Tag */}
-                  <div className="flex items-center gap-4 pl-1">
-                    <div className={`p-2.5 rounded-[3px] border ${
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className={`p-2.5 rounded-[3px] border shrink-0 ${
                       isBuy 
                         ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400' 
                         : 'bg-purple-500/5 border-purple-500/10 text-purple-400'
                     }`}>
-                      {isBuy ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                      {isBuy ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
                     </div>
                     
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1 sm:flex-initial">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-xs font-bold text-white/90">ID: <span className="text-accent">{order.id.slice(0, 8)}</span></span>
-                        <span className={`px-2 py-0.5 rounded-[3px] text-[9px] font-black tracking-widest uppercase ${
+                        <span className={`px-2 py-0.5 rounded-[3px] text-[8.5px] font-black tracking-widest uppercase ${
                           isBuy 
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                             : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
@@ -351,31 +353,33 @@ export default function UserOrdersPage() {
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-1.5 text-xs text-[#84849b] mt-1.5 font-medium">
-                        <Calendar className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1.5 text-xs text-[#84849b] mt-1 font-medium">
+                        <Calendar className="w-3 h-3" />
                         <span>{new Date(order.createdAt).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Right Side: Total Price, Status, Expand Arrow */}
-                  <div className="flex items-center gap-6 ml-auto md:ml-0">
-                    <div className="text-right">
-                      <span className="text-[10px] text-[#84849b] font-mono block uppercase tracking-widest">Monto Total</span>
-                      <span className="text-lg font-black text-white">${order.totalPrice.toLocaleString()} USD</span>
+                  <div className="flex flex-row items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t border-white/5 sm:border-t-0">
+                    <div className="text-left sm:text-right">
+                      <span className="text-[9px] text-[#84849b] font-mono block uppercase tracking-widest">Monto Total</span>
+                      <span className="text-sm sm:text-base font-black text-white">${order.totalPrice.toLocaleString()} USD</span>
                     </div>
 
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[3px] text-xs font-bold border ${statusConfig.color}`}>
-                      {statusConfig.icon}
-                      <span>{statusConfig.label}</span>
-                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-[3px] text-[10px] font-bold border ${statusConfig.color}`}>
+                        {statusConfig.icon}
+                        <span className="max-w-[120px] sm:max-w-none truncate">{statusConfig.label}</span>
+                      </div>
 
-                    <button
-                      onClick={() => toggleOrderExpand(order.id)}
-                      className="p-2 bg-white/5 hover:bg-white/10 rounded-[3px] transition-all text-white/50 hover:text-white cursor-pointer"
-                    >
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-accent animate-pulse' : ''}`} />
-                    </button>
+                      <button
+                        onClick={() => toggleOrderExpand(order.id)}
+                        className="p-2 bg-white/5 hover:bg-white/10 rounded-[3px] transition-all text-white/50 hover:text-white cursor-pointer shrink-0"
+                      >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-accent animate-pulse' : ''}`} />
+                      </button>
+                    </div>
                   </div>
                 </div>
 

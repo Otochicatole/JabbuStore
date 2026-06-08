@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   Plus,
   Loader2,
@@ -12,25 +12,13 @@ import {
   X,
   Check,
   Bot as BotIcon,
-  Cpu,
   Activity,
   Shield,
   AlertTriangle,
+  Cpu,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
-
-interface Bot {
-  id: string;
-  name: string;
-  steamId: string;
-  tradeUrl: string | null;
-  status: "active" | "inactive" | "maintenance" | "full" | "error";
-  maxItems: number;
-  currentItems: number;
-  isActive: boolean;
-  lastSyncAt: string | null;
-  createdAt: string;
-}
+import { useAdminBots, Bot } from "./useAdminBots";
 
 interface BotModalProps {
   bot?: Bot | null;
@@ -295,95 +283,24 @@ function DeleteConfirmModal({
 }
 
 export function AdminBotsPanel() {
-  const [bots, setBots] = useState<Bot[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [editingBot, setEditingBot] = useState<Bot | null>(null);
-  const [botToDelete, setBotToDelete] = useState<Bot | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  const fetchBots = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${BACKEND_URL}/admin/marketplace/bots`, {
-        credentials: "include",
-        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
-      });
-      if (!res.ok) throw new Error("Error al cargar los bots");
-      const data = await res.json();
-      setBots(data);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchBots();
-  }, [fetchBots]);
-
-  const handleToggle = async (bot: Bot) => {
-    setActionLoading(bot.id);
-    try {
-      const action = bot.isActive ? "deactivate" : "activate";
-      const res = await fetch(
-        `${BACKEND_URL}/admin/marketplace/bots/${bot.id}/${action}`,
-        {
-          method: "PATCH",
-          credentials: "include",
-        },
-      );
-      if (!res.ok) throw new Error("Error al cambiar estado del bot");
-      fetchBots();
-    } catch (e: any) {
-      alert(e.message);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleDelete = async (bot: Bot) => {
-    setActionLoading(bot.id);
-    try {
-      const res = await fetch(
-        `${BACKEND_URL}/admin/marketplace/bots/${bot.id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
-      if (!res.ok) throw new Error("Error al eliminar el bot");
-      fetchBots();
-      setBotToDelete(null);
-    } catch (e: any) {
-      alert(e.message);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const openCreate = () => {
-    setEditingBot(null);
-    setShowModal(true);
-  };
-  const openEdit = (bot: Bot) => {
-    setEditingBot(bot);
-    setShowModal(true);
-  };
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingBot(null);
-  };
-  const onSaved = () => {
-    closeModal();
-    fetchBots();
-  };
-
-  const totalItems = bots.reduce((sum, b) => sum + b.currentItems, 0);
-  const activeBots = bots.filter((b) => b.isActive).length;
+  const {
+    bots,
+    loading,
+    error,
+    showModal,
+    editingBot,
+    botToDelete,
+    setBotToDelete,
+    actionLoading,
+    fetchBots,
+    handleToggle,
+    handleDelete,
+    openCreate,
+    openEdit,
+    closeModal,
+    onSaved,
+    activeBots,
+  } = useAdminBots();
 
   return (
     <div className="space-y-6">
@@ -451,180 +368,159 @@ export function AdminBotsPanel() {
           </button>
         </div>
       ) : bots.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 py-20 text-center bg-[#110f1e]/20 border border-white/5 rounded-[3px]">
-          <div className="w-16 h-16 rounded-[3px] bg-white/[0.02] border border-white/8 flex items-center justify-center">
-            <BotIcon className="w-8 h-8 text-white/20" />
-          </div>
-          <div>
-            <p className="text-sm font-black text-white uppercase tracking-wider">
-              Sin bots registrados
-            </p>
-            <p className="text-xs text-[#84849b] mt-1">
-              Agrega el primer bot de Steam para comenzar.
-            </p>
-          </div>
+        <div className="bg-[#110f1e]/20 border border-white/5 rounded-[3px] p-12 text-center">
+          <BotIcon className="w-12 h-12 text-[#84849b] mx-auto mb-3" />
+          <h3 className="text-sm font-black uppercase tracking-wider mb-1">
+            No hay bots registrados
+          </h3>
+          <p className="text-xs text-[#84849b] max-w-sm mx-auto leading-relaxed mb-6">
+            Agrega tu primera cuenta de bot de Steam para empezar a depositar y
+            procesar inventario en la tienda.
+          </p>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" /> Agregar primer bot
+            <Plus className="w-4 h-4" />
+            Registrar Primer Bot
           </button>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-[#110f1e]/20 border border-white/5 rounded-[3px]">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/5 text-[10px] font-black uppercase text-[#84849b] tracking-wider">
-                <th className="px-5 py-4">Bot</th>
-                <th className="px-5 py-4">SteamID</th>
-                <th className="px-5 py-4">Estado</th>
-                <th className="px-5 py-4">Capacidad</th>
-                <th className="px-5 py-4 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bots.map((bot) => {
-                const statusCfg =
-                  statusConfig[bot.status] || statusConfig.inactive;
-                const capacity =
-                  bot.maxItems > 0
-                    ? (bot.currentItems / bot.maxItems) * 100
-                    : 0;
-                const isActioning = actionLoading === bot.id;
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {bots.map((b) => {
+            const status = statusConfig[b.status] || statusConfig.inactive;
+            const pct = b.maxItems > 0 ? (b.currentItems / b.maxItems) * 100 : 0;
+            const pctColor =
+              pct > 90
+                ? "bg-red-500"
+                : pct > 75
+                  ? "bg-orange-400"
+                  : "bg-accent";
 
-                return (
-                  <tr
-                    key={bot.id}
-                    className="border-b border-white/5 hover:bg-white/[0.01] transition-colors"
+            return (
+              <div
+                key={b.id}
+                className="bg-[#110f1e]/30 border border-white/5 rounded-[3px] p-5 space-y-5 relative overflow-hidden group"
+              >
+                {/* Status Indicator Bar */}
+                <div
+                  className={`absolute top-0 left-0 w-full h-[2px] ${status.dot}`}
+                />
+
+                {/* Card Header */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-[3px] bg-white/[0.02] border border-white/8 flex items-center justify-center shrink-0">
+                      <Cpu className="w-4 h-4 text-white/50 group-hover:text-accent transition-colors" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-black text-sm text-white truncate max-w-[150px]">
+                        {b.name}
+                      </h3>
+                      <p className="text-[9px] text-[#84849b] font-mono mt-0.5 uppercase tracking-wider">
+                        Steam Bot Account
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`px-2 py-0.5 rounded-[3px] text-[8px] font-black uppercase tracking-wider border flex items-center gap-1 shrink-0 ${status.bg} ${status.color}`}
                   >
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-9 h-9 rounded-[3px] flex items-center justify-center font-black text-xs border ${statusCfg.bg}`}
-                        >
-                          <BotIcon className={`w-4 h-4 ${statusCfg.color}`} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-white">
-                            {bot.name}
-                          </p>
-                          {bot.tradeUrl && (
-                            <a
-                              href={bot.tradeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] text-accent hover:text-accent/80 flex items-center gap-1 mt-0.5 font-mono truncate max-w-[200px]"
-                              title={bot.tradeUrl}
-                            >
-                              <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />{" "}
-                              {bot.tradeUrl.slice(0, 30)}...
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <Shield className="w-3 h-3 text-[#84849b]" />
-                        <span className="text-[11px] font-mono text-white/80">
-                          {bot.steamId}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${bot.isActive && bot.status === "active" ? "animate-pulse" : ""}`}
-                        />
-                        <span
-                          className={`text-[10px] font-bold uppercase tracking-wider ${statusCfg.color}`}
-                        >
-                          {statusCfg.label}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="w-32">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[9px] text-[#84849b] font-mono">
-                            {capacity.toFixed(1)}%
-                          </span>
-                          <span className="text-[9px] text-[#84849b] font-mono">
-                            {bot.currentItems}/{bot.maxItems}
-                          </span>
-                        </div>
-                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${
-                              capacity > 90
-                                ? "bg-red-500"
-                                : capacity > 70
-                                  ? "bg-orange-400"
-                                  : "bg-accent"
-                            }`}
-                            style={{ width: `${Math.min(100, capacity)}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <a
-                          href={`https://steamcommunity.com/profiles/${bot.steamId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-8 h-8 flex items-center justify-center rounded-[3px] bg-white/[0.03] hover:bg-white/[0.07] border border-white/8 text-[#84849b] hover:text-white transition-colors"
-                          title="Ver perfil de Steam"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                        <button
-                          onClick={() => openEdit(bot)}
-                          className="w-8 h-8 flex items-center justify-center rounded-[3px] bg-white/[0.03] hover:bg-white/[0.07] border border-white/8 text-[#84849b] hover:text-blue-400 transition-colors"
-                          title="Editar bot"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleToggle(bot)}
-                          disabled={isActioning}
-                          className={`w-8 h-8 flex items-center justify-center rounded-[3px] border transition-colors disabled:opacity-40 ${
-                            bot.isActive
-                              ? "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20 text-orange-400"
-                              : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400"
-                          }`}
-                          title={
-                            bot.isActive ? "Desactivar bot" : "Activar bot"
-                          }
-                        >
-                          {isActioning ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : bot.isActive ? (
-                            <PowerOff className="w-3.5 h-3.5" />
-                          ) : (
-                            <Power className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => setBotToDelete(bot)}
-                          disabled={isActioning}
-                          className="w-8 h-8 flex items-center justify-center rounded-[3px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-40"
-                          title="Eliminar bot"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    <span className={`w-1 h-1 rounded-full ${status.dot}`} />
+                    {status.label}
+                  </span>
+                </div>
+
+                {/* Properties */}
+                <div className="space-y-2.5 pt-1.5 border-t border-white/[0.03]">
+                  <div>
+                    <span className="text-[8px] font-black uppercase text-[#84849b] tracking-wider block">
+                      SteamID64 del Bot
+                    </span>
+                    <span className="text-[10px] font-mono text-white/70 block mt-0.5">
+                      {b.steamId}
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-[8px] font-black uppercase text-[#84849b] tracking-wider mb-1">
+                      <span>Capacidad de Almacenamiento</span>
+                      <span className="text-white/80">
+                        {b.currentItems} / {b.maxItems} items ({pct.toFixed(0)}
+                        %)
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-white/[0.03] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${pctColor}`}
+                        style={{ width: `${Math.min(100, pct)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-3 border-t border-white/[0.03] gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => openEdit(b)}
+                      className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/60 hover:text-white transition-all cursor-pointer"
+                      title="Editar Configuración"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setBotToDelete(b)}
+                      className="p-2 bg-white/[0.02] hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 rounded-[3px] text-white/40 hover:text-red-400 transition-all cursor-pointer"
+                      title="Eliminar Bot"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    {b.tradeUrl && (
+                      <a
+                        href={b.tradeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-[#84849b] hover:text-white transition-all cursor-pointer"
+                        title="Ver Enlace de Oferta de Intercambio"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handleToggle(b)}
+                    disabled={actionLoading === b.id}
+                    className={`flex items-center gap-1.5 px-3 py-2 text-[9px] font-black uppercase tracking-wider rounded-[3px] transition-all cursor-pointer select-none border disabled:opacity-45 ${
+                      b.isActive
+                        ? "bg-red-500/10 hover:bg-red-500/20 border-red-500/20 text-red-400"
+                        : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400"
+                    }`}
+                  >
+                    {actionLoading === b.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : b.isActive ? (
+                      <PowerOff className="w-3 h-3" />
+                    ) : (
+                      <Power className="w-3 h-3" />
+                    )}
+                    {b.isActive ? "Desactivar" : "Activar"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
+      {/* Forms and Deletions Modal Popups */}
       {showModal && (
-        <BotModal bot={editingBot} onClose={closeModal} onSaved={onSaved} />
+        <BotModal
+          bot={editingBot}
+          onClose={closeModal}
+          onSaved={onSaved}
+        />
       )}
 
       {botToDelete && (
@@ -638,3 +534,4 @@ export function AdminBotsPanel() {
     </div>
   );
 }
+export default AdminBotsPanel;

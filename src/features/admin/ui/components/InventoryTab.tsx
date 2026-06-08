@@ -1,6 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
   Loader2,
   Database,
@@ -15,9 +14,9 @@ import {
   Pencil,
 } from "lucide-react";
 import { StoreItem } from "../../domain/types";
-import { BACKEND_URL } from "@/shared/lib/api";
 import { rarityColors, hashCode } from "./utils";
 import { PriceEditModal } from "./PriceEditModal";
+import { useInventoryTab } from "./useInventoryTab";
 
 function getCleanSearchName(fullName: string): string {
   if (!fullName) return "";
@@ -71,8 +70,6 @@ interface InventoryTabProps {
   initialItems?: StoreItem[];
 }
 
-const ITEMS_PER_INVENTORY_PAGE = 50;
-
 function getPageNumbers(currentPage: number, totalPages: number) {
   const pages: (number | string)[] = [];
 
@@ -113,125 +110,28 @@ function getPageNumbers(currentPage: number, totalPages: number) {
 }
 
 export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
-  const router = useRouter();
-  const [items, setItems] = useState<StoreItem[]>(initialItems);
-  const [loading, setLoading] = useState(initialItems.length === 0);
-  const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Filter States
-  const [search, setSearch] = useState("");
-  const [selectedRarity, setSelectedRarity] = useState("all");
-  const [sortBy, setSortBy] = useState<
-    "price_asc" | "price_desc" | "float_asc" | "float_desc"
-  >("price_desc");
-
-  // Pagination State for Store Inventory
-  const [inventoryPage, setInventoryPage] = useState(1);
-
-  // Price Modal State
-  const [priceModalItem, setPriceModalItem] = useState<StoreItem | null>(null);
-
-  useEffect(() => {
-    setInventoryPage(1);
-  }, [search, selectedRarity, sortBy]);
-
-  // Dynamic fetch on mount if initialItems is empty
-  useEffect(() => {
-    if (initialItems.length === 0) {
-      fetchStoreItems();
-    }
-  }, [initialItems]);
-
-  const fetchStoreItems = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${BACKEND_URL}/store/items`, {
-        headers: {
-          "X-Tunnel-Skip-AntiPhishing-Page": "true",
-        },
-        credentials: "include",
-      });
-
-      if (response.status === 401) {
-        router.push("/admin/login");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error("Error al cargar los artículos de la tienda.");
-      }
-      const data = await response.json();
-      setItems(data);
-    } catch (err: any) {
-      setError(err.message || "Error de conexión.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const triggerSync = async () => {
-    setSyncing(true);
-    setTimeout(() => {
-      fetchStoreItems();
-      setSyncing(false);
-    }, 1500);
-  };
-
-  // Compute Statistics
-  const stats = useMemo(() => {
-    const totalItems = items.length;
-    const inventoryValue = items.reduce((sum, item) => sum + item.price, 0);
-    const uniqueTypes = new Set(items.map((item) => item.name)).size;
-    const botsConnected = new Set(items.map((item) => item.botSteamId)).size;
-
-    return {
-      totalItems,
-      inventoryValue,
-      uniqueTypes,
-      botsConnected: botsConnected || 2,
-    };
-  }, [items]);
-
-  // Filter and Sort Items
-  const filteredItems = useMemo(() => {
-    return items
-      .filter((item) => {
-        const matchesSearch =
-          item.name.toLowerCase().includes(search.toLowerCase()) ||
-          item.type.toLowerCase().includes(search.toLowerCase());
-        const matchesRarity =
-          selectedRarity === "all" || item.rarity === selectedRarity;
-        return matchesSearch && matchesRarity;
-      })
-      .sort((a, b) => {
-        if (sortBy === "price_asc") return a.price - b.price;
-        if (sortBy === "price_desc") return b.price - a.price;
-        if (sortBy === "float_asc") return (a.float || 0) - (b.float || 0);
-        if (sortBy === "float_desc") return (b.float || 0) - (a.float || 0);
-        return 0;
-      });
-  }, [items, search, selectedRarity, sortBy]);
-
-  const totalInventoryPages = Math.ceil(
-    filteredItems.length / ITEMS_PER_INVENTORY_PAGE,
-  );
-  const currentInventoryPage =
-    inventoryPage > totalInventoryPages ? 1 : inventoryPage;
-
-  const visibleInventoryItems = useMemo(() => {
-    const start = (currentInventoryPage - 1) * ITEMS_PER_INVENTORY_PAGE;
-    return filteredItems.slice(start, start + ITEMS_PER_INVENTORY_PAGE);
-  }, [filteredItems, currentInventoryPage]);
-
-  const handleUpdateItemPrice = (updatedItem: StoreItem) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.assetId === updatedItem.assetId ? updatedItem : item,
-      ),
-    );
-  };
+  const {
+    loading,
+    syncing,
+    error,
+    search,
+    setSearch,
+    selectedRarity,
+    setSelectedRarity,
+    sortBy,
+    setSortBy,
+    priceModalItem,
+    setPriceModalItem,
+    stats,
+    totalInventoryPages,
+    currentInventoryPage,
+    visibleInventoryItems,
+    handleUpdateItemPrice,
+    triggerSync,
+    inventoryPage,
+    setInventoryPage,
+    botMap,
+  } = useInventoryTab(initialItems);
 
   return (
     <div className="space-y-8">
@@ -350,443 +250,254 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
         <button
           onClick={triggerSync}
           disabled={syncing || loading}
-          className="px-4 py-2.5 bg-white hover:bg-white/95 text-black text-[11px] font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(255,255,255,0.05)] cursor-pointer disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-white text-[11px] font-black uppercase tracking-wider rounded-[3px] transition-all cursor-pointer select-none"
         >
-          {syncing ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
-              <span>Actualizando...</span>
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Forzar Sync Inventario</span>
-            </>
-          )}
+          <RefreshCw
+            className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
+          />
+          {syncing ? "Sincronizando..." : "Sincronizar Stock Manual"}
         </button>
       </div>
 
-      {/* Database Items List View */}
+      {/* Filters and Inventory List Section */}
       <div className="bg-[#110f1e]/20 border border-white/5 rounded-[3px] p-6 space-y-6">
-        {/* Header & Controls */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 pb-4 border-b border-white/5">
-          <div>
-            <h2 className="text-md font-black uppercase tracking-wider font-sans">
-              Artículos en la Tienda
-            </h2>
-            <p className="text-xs text-[#84849b] font-medium mt-0.5">
-              Listado de items que el usuario ve en el frontend
-            </p>
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="flex-1 max-w-md relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#84849b]" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nombre o tipo..."
+              className="w-full bg-[#110f1e]/40 border border-white/5 pl-10 pr-4 py-2.5 text-xs font-bold text-white placeholder-[#84849b] rounded-[3px] outline-none focus:border-accent/40 transition-colors"
+            />
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
-              <input
-                type="text"
-                placeholder="Buscar arma, diseño..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-[#161426]/40 border border-white/5 rounded-[3px] text-xs placeholder-white/20 focus:outline-none focus:border-accent/30 transition-all text-white"
-              />
-            </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Rarity Filter */}
+            <select
+              value={selectedRarity}
+              onChange={(e) => setSelectedRarity(e.target.value)}
+              className="bg-[#110f1e]/40 border border-white/5 text-xs font-bold px-4 py-2.5 rounded-[3px] text-white outline-none cursor-pointer"
+            >
+              <option value="all">Todas las rarezas</option>
+              <option value="coverte">★ Covert (Rojo)</option>
+              <option value="classified">Classified (Rosado)</option>
+              <option value="restricted">Restricted (Púrpura)</option>
+              <option value="mil-spec">Mil-Spec (Azul)</option>
+              <option value="industrial">Industrial Grade (Celeste)</option>
+              <option value="consumer">Consumer Grade (Gris)</option>
+            </select>
 
-            {/* Rarity select */}
-            <div className="relative">
-              <select
-                value={selectedRarity}
-                onChange={(e) => setSelectedRarity(e.target.value)}
-                className="px-3.5 py-2 bg-[#161426]/40 border border-white/5 rounded-[3px] text-xs text-white focus:outline-none focus:border-accent/30 transition-all uppercase font-mono tracking-wider font-bold cursor-pointer"
-              >
-                <option value="all">Todas las rarezas</option>
-                <option value="ancient">Encubierto (Rojo)</option>
-                <option value="legendary">Clasificado (Rosa)</option>
-                <option value="mythical">Restringido (Morado)</option>
-                <option value="rare">Militar (Azul)</option>
-              </select>
-            </div>
-
-            {/* Sort selector */}
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3.5 py-2 bg-[#161426]/40 border border-white/5 rounded-[3px] text-xs text-white focus:outline-none focus:border-accent/30 transition-all uppercase font-mono tracking-wider font-bold cursor-pointer"
-              >
-                <option value="price_desc">Precio: Mayor a menor</option>
-                <option value="price_asc">Precio: Menor a mayor</option>
-                <option value="float_asc">Float: Menor a mayor</option>
-                <option value="float_desc">Float: Mayor a menor</option>
-              </select>
-            </div>
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-[#110f1e]/40 border border-white/5 text-xs font-bold px-4 py-2.5 rounded-[3px] text-white outline-none cursor-pointer"
+            >
+              <option value="price_desc">Precio: Mayor a Menor</option>
+              <option value="price_asc">Precio: Menor a Mayor</option>
+              <option value="float_asc">Float: Menor a Mayor</option>
+              <option value="float_desc">Float: Mayor a Menor</option>
+            </select>
           </div>
         </div>
 
-        {/* Table Container */}
+        {/* Error Notification */}
+        {error && (
+          <div className="flex items-center gap-3 p-4 bg-red-500/5 border border-red-500/10 rounded-[3px] text-red-400">
+            <ShieldAlert className="w-5 h-5 shrink-0" />
+            <p className="text-xs font-bold">{error}</p>
+          </div>
+        )}
+
+        {/* Items Grid/List */}
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-accent" />
-            <p className="text-xs text-[#84849b] font-mono uppercase tracking-wider">
-              Cargando base de datos...
+          <div className="h-64 flex flex-col items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-accent mb-3" />
+            <p className="text-[10px] text-[#84849b] font-black uppercase tracking-widest">
+              Cargando catálogo del servidor...
             </p>
           </div>
-        ) : error ? (
-          <div className="py-12 flex flex-col items-center justify-center text-center max-w-md mx-auto gap-3">
-            <ShieldAlert className="w-10 h-10 text-red-500/80" />
-            <div>
-              <p className="text-sm font-black uppercase text-white">
-                Error de carga
-              </p>
-              <p className="text-xs text-[#84849b] mt-1">{error}</p>
-            </div>
-            <button
-              onClick={fetchStoreItems}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors"
-            >
-              Reintentar
-            </button>
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="py-16 text-center text-[#84849b] text-xs font-mono uppercase">
-            No se encontraron artículos que coincidan con la búsqueda.
+        ) : visibleInventoryItems.length === 0 ? (
+          <div className="h-64 flex flex-col items-center justify-center text-center">
+            <Database className="w-8 h-8 text-[#84849b] mb-3" />
+            <p className="text-xs text-[#84849b] font-bold">
+              No se encontraron artículos con los filtros aplicados.
+            </p>
           </div>
         ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-white/5 text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-                    <th className="pb-3 pl-4 w-[35%]">Artículo</th>
-                    <th className="pb-3 w-[14%]">Desgaste / Semilla</th>
-                    <th className="pb-3 w-[16%] pr-8">Float</th>
-                    <th className="pb-3 w-[18%] pl-4">Origen / Cuenta</th>
-                    <th className="pb-3 text-right pr-4 w-[17%]">Precio</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.02]">
-                  {visibleInventoryItems.map((item) => {
-                    const displayFloat = item.float;
-                    const displayPattern = item.pattern;
+          <div className="space-y-4">
+            <div className="border border-white/5 rounded-[3px] overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[800px]">
+                  <thead>
+                    <tr className="border-b border-white/5 bg-[#110f1e]/40 text-[#84849b] text-[10px] font-black uppercase tracking-wider font-mono">
+                      <th className="py-4 px-5">Skin</th>
+                      <th className="py-4 px-5">ID de Asset</th>
+                      <th className="py-4 px-5">Float Value</th>
+                      <th className="py-4 px-5">Bot Dueño</th>
+                      <th className="py-4 px-5">Precio</th>
+                      <th className="py-4 px-5 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-xs">
+                    {visibleInventoryItems.map((item) => {
+                      const color =
+                        rarityColors[item.rarity.toLowerCase()] ||
+                        rarityColors.common;
+                      const botName = botMap[item.botSteamId] || `Bot (${item.botSteamId.slice(-4)})`;
 
-                    return (
-                      <tr
-                        key={item.assetId}
-                        className={`hover:bg-white/[0.01] transition-colors group ${rarityColors[item.rarity] || ""}`}
-                      >
-                        {/* Name & Icon */}
-                        <td className="py-3 pl-4 flex items-center gap-3.5">
-                          <div className="w-12 h-9 relative bg-white/[0.01] border border-white/[0.02] rounded-[3px] p-1 flex items-center justify-center">
-                            {item.iconUrl ? (
-                              <Image
-                                src={item.iconUrl}
-                                alt={item.name}
-                                width={40}
-                                height={30}
-                                className="object-contain"
-                              />
-                            ) : (
-                              <span className="text-[8px] text-[#84849b] font-mono">
-                                No Image
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <div className="text-xs font-black text-white flex items-center gap-1.5">
-                              {item.isStatTrak && (
-                                <span className="text-[#cf6a32] text-[8px] font-mono border border-[#cf6a32]/20 bg-[#cf6a32]/5 px-1 rounded-sm">
-                                  ST™
-                                </span>
-                              )}
-                              {item.isSouvenir && (
-                                <span className="text-[#e4ae39] text-[8px] font-mono border border-[#e4ae39]/20 bg-[#e4ae39]/5 px-1 rounded-sm">
-                                  SV
-                                </span>
-                              )}
-                              <span className="line-clamp-1">
-                                {item.type} | {item.name}
-                              </span>
-                            </div>
-                            <div className="text-[9px] text-[#84849b] font-semibold mt-0.5 font-sans">
-                              AssetID:{" "}
-                              <span className="font-mono">{item.assetId}</span>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Wear Condition & Seed */}
-                        <td className="py-3">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-white">
-                            {item.exterior || "N/A"}
-                          </span>
-                          {displayPattern !== null && (
-                            <span className="text-[9px] text-[#84849b] font-mono block mt-0.5">
-                              Semilla:{" "}
-                              <span className="text-white font-bold">
-                                {displayPattern}
-                              </span>
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Float range indicator */}
-                        <td className="py-3 pr-8">
-                          {displayFloat !== null &&
-                          displayFloat !== undefined ? (
-                            <div className="w-[130px]">
-                              <span className="text-[10px] font-bold font-mono text-white block">
-                                {displayFloat.toFixed(8)}
-                              </span>
-                              <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
-                                <div
-                                  className="h-full bg-accent rounded-full"
-                                  style={{
-                                    width: `${Math.min(100, displayFloat * 100)}%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] text-white/35 font-mono">
-                              N/A
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Bot / Origen */}
-                        <td className="py-3 pl-4">
-                          <div className="flex items-center gap-1.5 text-[#84849b] text-[10px]">
-                            <span className="font-mono text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">
-                              Bot {item.botSteamId.slice(-4)}
-                            </span>
-                            <a
-                              href={`https://steamcommunity.com/profiles/${item.botSteamId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:text-accent transition-colors"
-                              title="Ver perfil de Steam del Bot"
+                      return (
+                        <tr
+                          key={item.assetId}
+                          className="hover:bg-white/[0.01] transition-colors"
+                        >
+                          <td className="py-3 px-5 flex items-center gap-3">
+                            <div
+                              className="relative w-12 h-12 rounded-[3px] bg-[#110f1e]/60 border border-white/[0.03] flex items-center justify-center p-1 shrink-0"
+                              style={{ borderColor: `${color}25` }}
                             >
-                              <ExternalLink className="w-3 h-3 text-accent/85 hover:text-accent" />
-                            </a>
-                          </div>
-                        </td>
-
-                        {/* Price tag */}
-                        <td className="py-4 text-right pr-6">
-                          <div
-                            onClick={() => setPriceModalItem(item)}
-                            className="cursor-pointer group/price flex items-center justify-end gap-2.5 hover:text-accent select-none p-1.5 rounded-[3px] hover:bg-white/[0.02] transition-all inline-flex"
-                            title="Clic para editar el precio"
-                          >
-                            <div className="text-right">
-                              <div className="flex items-center justify-end">
-                                <span className="text-sm sm:text-base font-extrabold text-white font-sans tracking-tight">
-                                  ${item.price.toLocaleString()}
+                              <div
+                                className="absolute inset-0 blur-md opacity-20 pointer-events-none rounded-[3px]"
+                                style={{
+                                  background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+                                }}
+                              />
+                              {item.iconUrl && (
+                                <Image
+                                  src={item.iconUrl}
+                                  alt={item.name}
+                                  width={44}
+                                  height={44}
+                                  className="object-contain z-10"
+                                />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-black text-white truncate max-w-xs">
+                                {item.name}
+                              </p>
+                              <p className="text-[10px] text-[#84849b] uppercase font-mono mt-0.5">
+                                {item.type}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="py-3 px-5 font-mono text-[10px] text-[#84849b]">
+                            {item.assetId}
+                          </td>
+                          <td className="py-3 px-5 font-mono text-[10px]">
+                            {item.float !== null &&
+                            item.float !== undefined ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-white font-bold">
+                                  {item.float.toFixed(5)}
                                 </span>
-                                {item.isPriceManual && (
-                                  <span className="text-[8px] font-black uppercase bg-yellow-500/20 border border-yellow-500/35 text-yellow-400 px-2 py-0.5 rounded-[3px] tracking-wider ml-2 font-mono">
-                                    Manual
-                                  </span>
-                                )}
                               </div>
-                              <span className="text-[10px] text-[#84849b] block font-bold mt-0.5">
-                                USD
+                            ) : (
+                              <span className="text-[#84849b]">N/A</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-5">
+                            <div className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="font-black text-white text-[10px] uppercase font-mono">
+                                {botName}
                               </span>
                             </div>
-                            <Pencil className="w-3.5 h-3.5 opacity-0 group-hover/price:opacity-100 transition-opacity text-accent" />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </td>
+                          <td className="py-3 px-5">
+                            <span className="font-black text-green-400 font-mono text-sm">
+                              ${item.price.toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="py-3 px-5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => setPriceModalItem(item)}
+                                className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/60 hover:text-accent hover:border-accent/40 transition-all cursor-pointer"
+                                title="Editar Precio"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <a
+                                href={`https://steamcommunity.com/profiles/${item.botSteamId}/inventory/#730`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-[#84849b] hover:text-white transition-all cursor-pointer"
+                                title="Ver Inventario del Bot"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col items-center gap-6 mt-8 pt-6 border-t border-white/5">
-              {/* Counter banner */}
-              <div className="text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-[#161426]/30 border border-white/5 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-inner">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                Mostrando items{" "}
-                <span className="text-white">
-                  {Math.min(
-                    (currentInventoryPage - 1) * ITEMS_PER_INVENTORY_PAGE + 1,
-                    filteredItems.length,
-                  )}{" "}
-                  -{" "}
-                  {Math.min(
-                    currentInventoryPage * ITEMS_PER_INVENTORY_PAGE,
-                    filteredItems.length,
-                  )}
-                </span>{" "}
-                de <span className="text-white">{filteredItems.length}</span>
-              </div>
+            {totalInventoryPages > 1 && (
+              <div className="flex items-center justify-between pt-4">
+                <span className="text-[10px] text-[#84849b] font-bold uppercase tracking-wider font-mono">
+                  Página {currentInventoryPage} de {totalInventoryPages}
+                </span>
 
-              {totalInventoryPages > 1 && (
-                <nav
-                  className="flex items-center gap-2"
-                  aria-label="Paginación de inventario"
-                >
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() =>
-                      currentInventoryPage > 1 &&
-                      setInventoryPage(currentInventoryPage - 1)
+                      setInventoryPage((p) => Math.max(1, p - 1))
                     }
                     disabled={currentInventoryPage === 1}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 bg-white/[0.02] text-[#84849b] transition-all duration-300 ${
-                      currentInventoryPage === 1
-                        ? "opacity-40 cursor-not-allowed text-white/20"
-                        : "hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95 cursor-pointer"
-                    }`}
-                    title="Página Anterior"
+                    className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-35 text-white text-[10px] font-bold uppercase rounded-[3px] border border-white/5 cursor-pointer select-none"
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
+                    Anterior
                   </button>
 
-                  {getPageNumbers(
-                    currentInventoryPage,
-                    totalInventoryPages,
-                  ).map((page, index) => {
-                    if (page === "...") {
-                      return (
-                        <span
-                          key={`ellipsis-${index}`}
-                          className="w-10 h-10 flex items-center justify-center text-xs font-black text-white/30 font-mono select-none"
-                        >
-                          ...
-                        </span>
-                      );
-                    }
-
-                    const isPageActive = page === currentInventoryPage;
-
-                    return (
+                  <div className="hidden sm:flex items-center gap-1">
+                    {getPageNumbers(
+                      currentInventoryPage,
+                      totalInventoryPages,
+                    ).map((page, idx) => (
                       <button
-                        key={`page-${page}`}
-                        onClick={() => setInventoryPage(Number(page))}
-                        className={`w-10 h-10 rounded-[3px] flex items-center justify-center text-xs font-black font-mono tracking-wider transition-all duration-300 cursor-pointer ${
-                          isPageActive
-                            ? "bg-gradient-to-r from-accent via-fuchsia-600 to-accent text-white border border-fuchsia-400/40 shadow-[0_0_20px_rgba(217,70,239,0.3)] scale-105"
-                            : "border border-white/5 bg-white/[0.02] text-[#84849b] hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95"
+                        key={idx}
+                        onClick={() => {
+                          if (typeof page === "number") setInventoryPage(page);
+                        }}
+                        disabled={page === "..."}
+                        className={`w-7 h-7 flex items-center justify-center text-[10px] font-bold rounded-[3px] border transition-all cursor-pointer select-none ${
+                          page === currentInventoryPage
+                            ? "bg-accent border-accent text-white font-black"
+                            : "bg-white/[0.02] border-white/5 text-[#84849b] hover:text-white"
                         }`}
                       >
                         {page}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
 
                   <button
                     onClick={() =>
-                      currentInventoryPage < totalInventoryPages &&
-                      setInventoryPage(currentInventoryPage + 1)
+                      setInventoryPage((p) =>
+                        Math.min(totalInventoryPages, p + 1),
+                      )
                     }
                     disabled={currentInventoryPage === totalInventoryPages}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 bg-white/[0.02] text-[#84849b] transition-all duration-300 ${
-                      currentInventoryPage === totalInventoryPages
-                        ? "opacity-40 cursor-not-allowed text-white/20"
-                        : "hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95 cursor-pointer"
-                    }`}
-                    title="Página Siguiente"
+                    className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-35 text-white text-[10px] font-bold uppercase rounded-[3px] border border-white/5 cursor-pointer select-none"
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
+                    Siguiente
                   </button>
-                </nav>
-              )}
-            </div>
-          </>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Bot Accounts Profile Section */}
-      <div className="bg-[#110f1e]/10 border border-white/5 rounded-[3px] p-6 space-y-4">
-        <div>
-          <h3 className="text-sm font-black uppercase tracking-wider font-sans">
-            Vendedores / Cuentas de Bots Registradas
-          </h3>
-          <p className="text-xs text-[#84849b] font-medium mt-0.5">
-            Cuentas configuradas en storeAccounts.ts que alimentan el catálogo
-            de venta
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center justify-between p-3.5 rounded-[3px] bg-[#110f1e]/40 border border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-[3px] bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-400 font-bold text-xs">
-                B1
-              </div>
-              <div>
-                <span className="text-xs font-black block">Bot Cuenta #1</span>
-                <span className="text-[9px] text-[#84849b] font-mono block mt-0.2">
-                  SteamID: 76561199649767651
-                </span>
-              </div>
-            </div>
-            <a
-              href="https://steamcommunity.com/profiles/76561199649767651"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-[3px] text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1 cursor-pointer"
-            >
-              <span>Perfil</span>
-              <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-          </div>
-
-          <div className="flex items-center justify-between p-3.5 rounded-[3px] bg-[#110f1e]/40 border border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-[3px] bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-400 font-bold text-xs">
-                B2
-              </div>
-              <div>
-                <span className="text-xs font-black block">Bot Cuenta #2</span>
-                <span className="text-[9px] text-[#84849b] font-mono block mt-0.2">
-                  SteamID: 76561199439383804
-                </span>
-              </div>
-            </div>
-            <a
-              href="https://steamcommunity.com/profiles/76561199439383804"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-[3px] text-[9px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1 cursor-pointer"
-            >
-              <span>Perfil</span>
-              <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Active Price Edit Modal */}
+      {/* Price Edit Modal popup */}
       {priceModalItem && (
         <PriceEditModal
           item={priceModalItem}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import {
   ExternalLink,
   RefreshCw,
@@ -9,9 +9,8 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
-import { MarketListing } from "../domain/types";
-import { BACKEND_URL } from "@/shared/lib/api";
 import { rarityColors } from "@/features/admin/ui/components/utils";
+import { useMarketCatalog } from "./useMarketCatalog";
 
 function getCleanSearchName(fullName: string): string {
   if (!fullName) return "";
@@ -43,74 +42,64 @@ function getCleanSearchName(fullName: string): string {
   return name.trim();
 }
 
+const ITEMS_PER_PAGE = 50;
+
+function getPageNumbers(currentPage: number, totalPages: number) {
+  const pages: (number | string)[] = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push("...");
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    let adjustedStart = start;
+    let adjustedEnd = end;
+    if (currentPage <= 3) {
+      adjustedEnd = 4;
+    } else if (currentPage >= totalPages - 2) {
+      adjustedStart = totalPages - 3;
+    }
+    for (let i = adjustedStart; i <= adjustedEnd; i++) {
+      pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
+  return pages;
+}
+
 export function MarketCatalog() {
-  const [listings, setListings] = useState<MarketListing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [syncMessage, setSyncMessage] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [providerFilter, setProviderFilter] = useState<
-    "all" | "buff" | "youpin"
-  >("all");
-  const [rarityFilter, setRarityFilter] = useState("all");
-  const [sortBy, setSortBy] = useState<"price_desc" | "price_asc" | "name">(
-    "price_desc",
+  const {
+    listings,
+    loading,
+    syncing,
+    error,
+    syncMessage,
+    search,
+    setSearch,
+    providerFilter,
+    setProviderFilter,
+    rarityFilter,
+    setRarityFilter,
+    sortBy,
+    setSortBy,
+    filtered,
+    youpinCount,
+    buffCount,
+    handleSync,
+    currentPage,
+    setCurrentPage,
+  } = useMarketCatalog();
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const currentActivePage = currentPage > totalPages ? 1 : currentPage;
+  const paginatedListings = filtered.slice(
+    (currentActivePage - 1) * ITEMS_PER_PAGE,
+    currentActivePage * ITEMS_PER_PAGE,
   );
-
-  const fetchListings = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch(`${BACKEND_URL}/market/listings`);
-      if (!res.ok) throw new Error(`Error ${res.status}`);
-      const data = await res.json();
-      setListings(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError("Error al cargar el catálogo de mercado.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchListings();
-  }, [fetchListings]);
-
-  const handleSync = async () => {
-    setSyncing(true);
-    setSyncMessage(null);
-    try {
-      const res = await fetch(`${BACKEND_URL}/market/sync`, { method: "POST" });
-      const data = await res.json();
-      setSyncMessage(data.message || "Sincronización completada.");
-      await fetchListings();
-    } catch {
-      setSyncMessage("Error al sincronizar el catálogo.");
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  // Filtrar y ordenar
-  const filtered = listings
-    .filter((l) => {
-      if (search && !l.name.toLowerCase().includes(search.toLowerCase()))
-        return false;
-      if (providerFilter !== "all" && l.provider !== providerFilter)
-        return false;
-      if (rarityFilter !== "all" && l.rarity !== rarityFilter) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortBy === "price_desc") return b.price - a.price;
-      if (sortBy === "price_asc") return a.price - b.price;
-      return a.name.localeCompare(b.name);
-    });
-
-  const youpinCount = listings.filter((l) => l.provider === "youpin").length;
-  const buffCount = listings.filter((l) => l.provider === "buff").length;
 
   return (
     <div className="space-y-6">
@@ -148,233 +137,267 @@ export function MarketCatalog() {
           <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
             Total
           </div>
-          <div className="text-lg font-black text-white mt-0.5">
+          <div className="text-xl font-bold mt-1 text-white">
             {listings.length.toLocaleString()}
           </div>
         </div>
-        <div className="bg-[#110f1e] border border-indigo-500/10 rounded-[3px] p-3">
-          <div className="text-[9px] text-indigo-400 font-mono uppercase tracking-wider">
-            YouPin
+        <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-3">
+          <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
+            Buff163 Listings
           </div>
-          <div className="text-lg font-black text-white mt-0.5">
-            {youpinCount.toLocaleString()}
+          <div className="text-xl font-bold mt-1 text-accent">
+            {buffCount.toLocaleString()}
           </div>
         </div>
-        <div className="bg-[#110f1e] border border-yellow-500/10 rounded-[3px] p-3">
-          <div className="text-[9px] text-yellow-400 font-mono uppercase tracking-wider">
-            Buff163
+        <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-3">
+          <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
+            YouPin Listings
           </div>
-          <div className="text-lg font-black text-white mt-0.5">
-            {buffCount.toLocaleString()}
+          <div className="text-xl font-bold mt-1 text-emerald-400">
+            {youpinCount.toLocaleString()}
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-[#84849b]" />
-          <input
-            type="text"
-            placeholder="Buscar skin..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#110f1e] border border-white/5 rounded-[3px] pl-8 pr-3 py-2 text-xs text-white placeholder:text-[#84849b] focus:outline-none focus:border-accent/30 font-mono"
-          />
-        </div>
-        <select
-          value={providerFilter}
-          onChange={(e) => setProviderFilter(e.target.value as any)}
-          className="bg-[#110f1e] border border-white/5 rounded-[3px] px-3 py-2 text-xs text-white focus:outline-none focus:border-accent/30 font-mono"
-        >
-          <option value="all">Todos los proveedores</option>
-          <option value="youpin">YouPin</option>
-          <option value="buff">Buff163</option>
-        </select>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as any)}
-          className="bg-[#110f1e] border border-white/5 rounded-[3px] px-3 py-2 text-xs text-white focus:outline-none focus:border-accent/30 font-mono"
-        >
-          <option value="price_desc">Precio: Mayor a Menor</option>
-          <option value="price_asc">Precio: Menor a Mayor</option>
-          <option value="name">Nombre A-Z</option>
-        </select>
-      </div>
+      <div className="bg-[#110f1e]/40 border border-white/5 rounded-[3px] p-4 space-y-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#84849b]" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar listings de Buff o YouPin..."
+              className="w-full bg-[#110f1e]/80 border border-white/5 pl-9 pr-3 py-2 text-xs font-bold text-white placeholder-[#84849b] rounded-[3px] outline-none focus:border-accent/40 transition-colors"
+            />
+          </div>
 
-      {/* Table */}
-      {loading ? (
-        <div className="py-20 text-center">
-          <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-[#84849b] text-xs font-mono">
-            Cargando catálogo de mercado...
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Provider */}
+            <select
+              value={providerFilter}
+              onChange={(e) => setProviderFilter(e.target.value as any)}
+              className="bg-[#110f1e]/80 border border-white/5 text-[11px] font-bold px-3 py-2 rounded-[3px] text-white outline-none cursor-pointer"
+            >
+              <option value="all">Todos los Proveedores</option>
+              <option value="buff">Buff163 Only</option>
+              <option value="youpin">YouPin Only</option>
+            </select>
+
+            {/* Rarity */}
+            <select
+              value={rarityFilter}
+              onChange={(e) => setRarityFilter(e.target.value)}
+              className="bg-[#110f1e]/80 border border-white/5 text-[11px] font-bold px-3 py-2 rounded-[3px] text-white outline-none cursor-pointer"
+            >
+              <option value="all">Todas las rarezas</option>
+              <option value="coverte">★ Covert (Rojo)</option>
+              <option value="classified">Classified (Rosado)</option>
+              <option value="restricted">Restricted (Púrpura)</option>
+              <option value="mil-spec">Mil-Spec (Azul)</option>
+              <option value="industrial">Industrial (Celeste)</option>
+              <option value="consumer">Consumer (Gris)</option>
+            </select>
+
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-[#110f1e]/80 border border-white/5 text-[11px] font-bold px-3 py-2 rounded-[3px] text-white outline-none cursor-pointer"
+            >
+              <option value="price_desc">Precio: Mayor a Menor</option>
+              <option value="price_asc">Precio: Menor a Mayor</option>
+              <option value="name">Alfabético</option>
+            </select>
+          </div>
         </div>
-      ) : error ? (
-        <div className="py-16 text-center text-red-400 text-xs font-mono">
-          {error}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="py-16 text-center text-[#84849b] text-xs font-mono uppercase">
-          No se encontraron listings.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/5 text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-                <th className="pb-3 pl-4 w-[38%]">Artículo</th>
-                <th className="pb-3 w-[14%]">Desgaste</th>
-                <th className="pb-3 w-[14%]">Proveedor</th>
-                <th className="pb-3 w-[17%]">Precios Mercado</th>
-                <th className="pb-3 text-right pr-4 w-[17%]">Precio Base</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.02]">
-              {filtered.slice(0, 500).map((listing) => (
-                <MarketListingRow key={listing.id} listing={listing} />
-              ))}
-            </tbody>
-          </table>
-          {filtered.length > 500 && (
-            <p className="text-center text-[10px] text-[#84849b] font-mono py-4">
-              Mostrando 500 de {filtered.length.toLocaleString()} resultados.
-              Usar el filtro de búsqueda para acotar.
-            </p>
-          )}
-        </div>
-      )}
+
+        {/* Error */}
+        {error && (
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-[3px] text-red-400 text-xs font-bold">
+            {error}
+          </div>
+        )}
+
+        {/* Listings List */}
+        {loading ? (
+          <div className="py-12 flex flex-col items-center justify-center">
+            <RefreshCw className="w-6 h-6 animate-spin text-accent mb-2" />
+            <span className="text-[10px] text-[#84849b] font-black uppercase tracking-widest">
+              Sincronizando listings...
+            </span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-12 text-center text-xs text-[#84849b] font-bold">
+            No se encontraron listings para tu búsqueda.
+          </div>
+        ) : (
+          <div className="border border-white/5 rounded-[3px] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-white/5 bg-[#110f1e]/60 text-[#84849b] text-[9px] font-black uppercase tracking-wider font-mono">
+                    <th className="py-3 px-4">Item</th>
+                    <th className="py-3 px-4">Estado / Wear</th>
+                    <th className="py-3 px-4">Proveedor</th>
+                    <th className="py-3 px-4">Precio Sugerido Youpin</th>
+                    <th className="py-3 px-4">Precio Sugerido Buff</th>
+                    <th className="py-3 px-4">Precio Sugerido Steam</th>
+                    <th className="py-3 px-4">Precio de Reventa</th>
+                    <th className="py-3 px-4 text-right">Links</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-xs">
+                  {paginatedListings.map((l) => {
+                    const color =
+                      rarityColors[l.rarity.toLowerCase()] ||
+                      rarityColors.common;
+                    return (
+                      <tr
+                        key={l.id}
+                        className="hover:bg-white/[0.01] transition-colors"
+                      >
+                        <td className="py-2.5 px-4 font-black text-white flex items-center gap-3">
+                          <div
+                            className="relative w-10 h-10 rounded-[3px] bg-[#110f1e]/60 border border-white/[0.03] flex items-center justify-center p-1 shrink-0"
+                            style={{ borderColor: `${color}15` }}
+                          >
+                            <div
+                              className="absolute inset-0 blur-md opacity-20 pointer-events-none rounded-[3px]"
+                              style={{
+                                background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+                              }}
+                            />
+                            {l.iconUrl && (
+                              <img
+                                src={l.iconUrl}
+                                alt={l.name}
+                                className="w-8 h-8 object-contain z-10"
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-black text-white">{l.name}</p>
+                            <p className="text-[10px] text-[#84849b] uppercase font-mono mt-0.5">
+                              {l.category}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-xs">
+                          {l.exterior ? (
+                            <span className="text-white font-medium uppercase text-[10px]">
+                              {l.exterior}
+                            </span>
+                          ) : (
+                            <span className="text-[#84849b]">N/A</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-4">
+                          <span
+                            className={`px-2 py-0.5 rounded-[3px] text-[9px] font-mono uppercase font-black ${
+                              l.provider === "buff"
+                                ? "bg-accent/10 text-accent border border-accent/20"
+                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            }`}
+                          >
+                            {l.provider}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-[#84849b]">
+                          {l.youpinAsk ? `$${l.youpinAsk}` : "—"}
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-[#84849b]">
+                          {l.buffAsk ? `$${l.buffAsk}` : "—"}
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-[#84849b]">
+                          {/* En MarketListing de front el precio de steam se aproxima por price o displayPrice si no existe steamPrice */}
+                          —
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-green-400 font-bold">
+                          ${l.price.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {l.provider === "buff" ? (
+                              <a
+                                href={`https://buff.163.com/market/csgo#tab=selling&page_num=1&search=${encodeURIComponent(getCleanSearchName(l.name))}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-accent/80 hover:text-accent hover:border-accent/30 transition-all cursor-pointer text-[10px] font-bold"
+                                title="Buscar en Buff163"
+                              >
+                                Buff163 <ExternalLink className="w-3 h-3 inline-block ml-1" />
+                              </a>
+                            ) : (
+                              <a
+                                href={`https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(l.name))}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[10px] font-bold"
+                                title="Buscar en YouPin"
+                              >
+                                YouPin <ExternalLink className="w-3 h-3 inline-block ml-1" />
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between p-4 bg-[#110f1e]/20 border-t border-white/5">
+                <span className="text-[10px] text-[#84849b] font-bold uppercase tracking-wider font-mono">
+                  Página {currentActivePage} de {totalPages} ({filtered.length.toLocaleString()} items)
+                </span>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentActivePage === 1}
+                    className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-35 text-white text-[10px] font-bold uppercase rounded-[3px] border border-white/5 cursor-pointer select-none"
+                  >
+                    Anterior
+                  </button>
+
+                  <div className="hidden sm:flex items-center gap-1">
+                    {getPageNumbers(currentActivePage, totalPages).map((page, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          if (typeof page === "number") setCurrentPage(page);
+                        }}
+                        disabled={page === "..."}
+                        className={`w-7 h-7 flex items-center justify-center text-[10px] font-bold rounded-[3px] border transition-all cursor-pointer select-none ${
+                          page === currentActivePage
+                            ? "bg-accent border-accent text-white font-black"
+                            : "bg-white/[0.02] border-white/5 text-[#84849b] hover:text-white"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentActivePage === totalPages}
+                    className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-35 text-white text-[10px] font-bold uppercase rounded-[3px] border border-white/5 cursor-pointer select-none"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-function MarketListingRow({ listing }: { listing: MarketListing }) {
-  const rarity = listing.rarity?.toLowerCase() || "common";
-  const borderClass = rarityColors[rarity] || "";
-
-  const buffUrl = `https://buff.163.com/market/csgo#game=csgo&page_num=1&search=${encodeURIComponent(getCleanSearchName(listing.name))}&sort_by=price.asc&tab=selling`;
-  const youpinUrl = `https://www.youpin898.com/goodList?game=730&keyword=${encodeURIComponent(getCleanSearchName(listing.name))}`;
-
-  return (
-    <tr
-      className={`group hover:bg-white/[0.015] transition-colors ${borderClass}`}
-    >
-      {/* Artículo */}
-      <td className="py-3 pl-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-9 bg-white/[0.02] border border-white/[0.03] rounded-[3px] p-1 flex items-center justify-center flex-shrink-0">
-            {listing.iconUrl ? (
-              <img
-                src={listing.iconUrl}
-                className="w-full h-full object-contain"
-                alt={listing.name}
-              />
-            ) : (
-              <span className="text-[7px] text-[#84849b] font-mono">IMG</span>
-            )}
-          </div>
-          <div className="min-w-0">
-            <span className="text-xs font-bold text-white block truncate max-w-[260px]">
-              {listing.name}
-            </span>
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              {listing.isStatTrak && (
-                <span className="text-[8px] font-black bg-orange-500/10 border border-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded font-mono">
-                  ST
-                </span>
-              )}
-              {listing.isSouvenir && (
-                <span className="text-[8px] font-black bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded font-mono">
-                  SV
-                </span>
-              )}
-              <span className="text-[8px] text-[#84849b] font-mono">
-                {listing.category}
-              </span>
-            </div>
-          </div>
-        </div>
-      </td>
-
-      {/* Desgaste */}
-      <td className="py-3">
-        <span className="text-[10px] font-bold text-white uppercase">
-          {listing.exterior || "N/A"}
-        </span>
-      </td>
-
-      {/* Proveedor con enlace */}
-      <td className="py-3">
-        {listing.provider === "youpin" ? (
-          <a
-            href={youpinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-[3px] font-mono transition-all hover:scale-105"
-          >
-            <span>YouPin</span>
-            <ExternalLink className="w-2 h-2" />
-          </a>
-        ) : (
-          <a
-            href={buffUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-[3px] font-mono transition-all hover:scale-105"
-          >
-            <span>Buff163</span>
-            <ExternalLink className="w-2 h-2" />
-          </a>
-        )}
-      </td>
-
-      {/* Precios de mercado */}
-      <td className="py-3">
-        <div className="space-y-0.5">
-          {listing.youpinAsk != null && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[8px] text-indigo-400 font-mono w-10">
-                YP:
-              </span>
-              <span className="text-[9px] font-bold text-white font-mono">
-                ${listing.youpinAsk.toFixed(2)}
-              </span>
-              {listing.youpinVolume != null && (
-                <span className="text-[7px] text-[#84849b] font-mono">
-                  ×{listing.youpinVolume}
-                </span>
-              )}
-            </div>
-          )}
-          {listing.buffAsk != null && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[8px] text-yellow-400 font-mono w-10">
-                BF:
-              </span>
-              <span className="text-[9px] font-bold text-white font-mono">
-                ${listing.buffAsk.toFixed(2)}
-              </span>
-              {listing.buffVolume != null && (
-                <span className="text-[7px] text-[#84849b] font-mono">
-                  ×{listing.buffVolume}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </td>
-
-      {/* Precio base */}
-      <td className="py-3 text-right pr-4">
-        <div className="text-sm font-extrabold text-white">
-          ${listing.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-        </div>
-        {listing.isPriceManual && (
-          <span className="text-[7px] font-black bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-1.5 py-0.5 rounded font-mono uppercase">
-            Manual
-          </span>
-        )}
-      </td>
-    </tr>
-  );
-}
+export default MarketCatalog;

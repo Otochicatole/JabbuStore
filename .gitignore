@@ -9,6 +9,8 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+proxy-log.txt
+.proxy-log.txt
 
 # testing
 /coverage

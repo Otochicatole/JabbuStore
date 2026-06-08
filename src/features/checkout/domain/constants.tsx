@@ -13,4 +13,14 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     color:
       "from-sky-500/10 to-sky-500/5 hover:border-sky-500/30 border-white/5",
   },
+  {
+    id: "nowpayments",
+    name: "NOWPayments (Criptomonedas)",
+    description:
+      "Paga de forma totalmente segura usando Bitcoin, USDT, Ethereum y más criptomonedas",
+    icon: <Coins className="w-5 h-5 text-purple-400" />,
+    badge: "Crypto / Web3",
+    color:
+      "from-purple-500/10 to-purple-500/5 hover:border-purple-500/30 border-white/5",
+  },
 ];

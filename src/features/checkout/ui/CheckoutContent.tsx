@@ -215,10 +215,12 @@ export function CheckoutContent() {
       return;
     }
 
-    // SI ES COMPRA Y EL MÉTODO ES MERCADO PAGO: FLUJO REAL CHECKOUT PRO (No simulación)
-    if (checkoutType === "buy" && selectedMethod === "mercado_pago") {
+    // SI ES COMPRA Y EL MÉTODO ES MERCADO PAGO O NOWPAYMENTS: FLUJO REAL (No simulación)
+    if (checkoutType === "buy" && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments")) {
       setIsSimulating(true);
       setSimulationStep(1); // "Conectando..."
+
+      const methodLabel = selectedMethod === "mercado_pago" ? "Mercado Pago" : "NOWPayments";
 
       setTimeout(async () => {
         try {
@@ -258,7 +260,7 @@ export function CheckoutContent() {
             body: JSON.stringify({
               itemIds: items.map((i) => i.assetId),
               items: detailedItems,
-              paymentMethod: "mercado_pago",
+              paymentMethod: selectedMethod,
               metadata: metadataPayload,
             }),
           });
@@ -266,24 +268,24 @@ export function CheckoutContent() {
           const data = await res.json();
           if (!res.ok) {
             throw new Error(
-              data?.error || "Error al registrar la orden de Mercado Pago.",
+              data?.error || `Error al registrar la orden de ${methodLabel}.`,
             );
           }
 
           if (data.paymentUrl) {
-            // 2. Redirigir de forma inmediata al Checkout Pro seguro de Mercado Pago
+            // 2. Redirigir de forma inmediata al link de pago seguro
             console.log(
-              `[Mercado Pago] Redirigiendo al usuario a: ${data.paymentUrl}`,
+              `[${methodLabel}] Redirigiendo al usuario a: ${data.paymentUrl}`,
             );
             window.location.href = data.paymentUrl;
           } else {
             throw new Error(
-              "El servidor no devolvió un enlace de pago de Mercado Pago válido.",
+              `El servidor no devolvió un enlace de pago de ${methodLabel} válido.`,
             );
           }
         } catch (err: any) {
-          console.error("Mercado Pago integration error:", err);
-          setError(err.message || "La conexión con Mercado Pago falló.");
+          console.error(`${methodLabel} integration error:`, err);
+          setError(err.message || `La conexión con ${methodLabel} falló.`);
           setIsSimulating(false);
         }
       }, 1000);

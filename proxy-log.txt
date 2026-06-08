@@ -3296,3 +3296,7 @@
 [2026-06-08T07:42:50.165Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)
 [2026-06-08T07:42:55.812Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)
 [2026-06-08T07:48:43.156Z] GET /api/proxy/orders/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/me)
+[2026-06-08T07:53:35.569Z] GET /api/proxy/store/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/store/items)
+[2026-06-08T07:53:36.951Z] GET /api/proxy/store/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/store/items)
+[2026-06-08T07:53:41.167Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)
+[2026-06-08T07:53:47.637Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)

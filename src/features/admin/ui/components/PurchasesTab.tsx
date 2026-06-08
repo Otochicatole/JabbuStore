@@ -141,7 +141,7 @@ export function PurchasesTab() {
         <button
           onClick={fetchOrders}
           disabled={loadingOrders}
-          className="flex items-center gap-2 h-10 px-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-2 h-10 px-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw className={`w-4 h-4 ${loadingOrders ? 'animate-spin text-accent' : ''}`} />
           Actualizar
@@ -149,7 +149,7 @@ export function PurchasesTab() {
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-[3px] text-sm">
           {error}
         </div>
       )}
@@ -203,7 +203,7 @@ export function PurchasesTab() {
 
       {/* Renderizado Condicional */}
       {loadingOrders ? (
-        <div className="flex justify-center py-20 bg-[#110f1e]/40 border border-white/5 rounded-2xl">
+        <div className="flex justify-center py-20 bg-[#110f1e]/40 border border-white/5 rounded-[3px]">
           <Loader2 className="w-8 h-8 animate-spin text-accent" />
         </div>
       ) : (() => {

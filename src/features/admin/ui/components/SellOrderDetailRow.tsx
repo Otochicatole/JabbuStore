@@ -67,7 +67,7 @@ function getCleanSearchName(fullName: string): string {
   return name.trim();
 }
 
-interface OrderDetailRowProps {
+interface SellOrderDetailRowProps {
   order: Order;
   onUpdateStatus: (orderId: string, newStatus: string) => Promise<void>;
   resolvedItemsMap: Record<
@@ -81,26 +81,28 @@ interface OrderDetailRowProps {
   >;
 }
 
-export function OrderDetailRow({
+export function SellOrderDetailRow({
   order,
   onUpdateStatus,
   resolvedItemsMap,
-}: OrderDetailRowProps) {
+}: SellOrderDetailRowProps) {
   const [copied, setCopied] = useState(false);
   const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  const isSellOrder = order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL";
-
-  // Workflow steps based on order status
+  // Workflow steps based on order status for SELL orders
+  // 1. PENDING_PAYMENT (Pendiente de Aprobación)
+  // 2. TRADE_PENDING (Venta Aprobada, Esperando Trade de la Skin)
+  // 3. PAID (Trade Confirmado / Pendiente de Pago al Usuario)
+  // 4. COMPLETED (Pago Realizado / Completado)
   const getWorkflowStep = (): number => {
     switch (order.status) {
       case "PENDING_PAYMENT":
         return 1;
-      case "PAID":
-        return 2;
       case "TRADE_PENDING":
+        return 2;
+      case "PAID":
         return 3;
       case "COMPLETED":
         return 4;
@@ -125,7 +127,6 @@ export function OrderDetailRow({
     }, 1500);
   };
 
-  // AUTOMATION: Copies ALL Asset IDs in a comma-separated format for quick search in Steam Trade Window
   const handleCopyAllAssetIds = () => {
     const assetIds = order.items.map((item) => item.assetId).join(", ");
     navigator.clipboard.writeText(assetIds);
@@ -135,53 +136,32 @@ export function OrderDetailRow({
     }, 2000);
   };
 
-  // AUTOMATION: Performs the transition in one click (e.g. Approve Payment & go straight to Trade Pending)
-  const handleAutoApproveAndTrade = async () => {
-    setUpdating(true);
-    try {
-      // 1. Mark as PAID
-      await onUpdateStatus(order.id, "PAID");
-      // 2. Mark as TRADE_PENDING
-      await onUpdateStatus(order.id, "TRADE_PENDING");
-      // 3. Automatically copy user tradelink to ease the operator's life
-      if (order.user?.tradeUrl) {
-        navigator.clipboard.writeText(order.user.tradeUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }
-    } catch (err) {
-      console.error("Auto-process failed:", err);
-    } finally {
-      setUpdating(false);
-    }
-  };
-
   const currentStep = getWorkflowStep();
 
   return (
     <div
-      className={`bg-[#0e0d16]/90 border p-6 transition-all duration-300 relative overflow-hidden rounded-[3px] ${
+      className={`bg-[#0e0d16]/95 border p-6 transition-all duration-300 relative overflow-hidden rounded-[3px] ${
         order.status === "PENDING_PAYMENT"
           ? "border-white/5 hover:border-orange-500/20"
-          : order.status === "PAID"
-            ? "border-blue-500/10 hover:border-blue-500/30"
-            : order.status === "TRADE_PENDING"
+          : order.status === "TRADE_PENDING"
+            ? "border-blue-500/10 hover:border-blue-500/30 shadow-[0_0_25px_rgba(59,130,246,0.05)]"
+            : order.status === "PAID"
               ? "border-purple-500/20 hover:border-purple-500/40 shadow-[0_0_25px_rgba(168,85,247,0.05)]"
               : "border-emerald-500/10 hover:border-emerald-500/30"
       }`}
     >
-      {/* 🚀 BARRA DE WORKFLOW VISUAL (UI/UX PREMIUM) */}
+      {/* 🚀 BARRA DE WORKFLOW VISUAL DE VENTA */}
       <div className="mb-6 bg-white/[0.01] border border-white/5 p-4 rounded-[3px]">
         <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider font-mono text-[#84849b] mb-4">
           <span className="flex items-center gap-1">
             <Layers className="w-3.5 h-3.5 text-accent" />
-            Flujo de Operación de Compra
+            Flujo de Operación de Venta
           </span>
           <span className="text-white/40 font-mono">Orden ID: {order.id}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-          {/* Paso 1: Pago */}
+          {/* Paso 1: Aprobación */}
           <div
             className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
               currentStep === 1
@@ -204,19 +184,19 @@ export function OrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Revisar Pago
+                Aprobar Venta
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 1 ? "Cobro pendiente" : "Pago verificado"}
+                {currentStep === 1 ? "Pendiente" : "Aprobada"}
               </span>
             </div>
           </div>
 
-          {/* Paso 2: Preparación */}
+          {/* Paso 2: Trade */}
           <div
             className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
               currentStep === 2
-                ? "bg-blue-500/5 border-blue-500/20 text-blue-400"
+                ? "bg-blue-500/5 border-blue-500/20 text-blue-400 animate-pulse"
                 : currentStep > 2
                   ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60"
                   : "bg-white/[0.01] border-white/5 text-white/30"
@@ -235,19 +215,19 @@ export function OrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Sourcing Ítems
+                Recibir Trade
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
                 {currentStep === 2
-                  ? "Buscar en Youpin/Buff"
+                  ? "Esperando ítem"
                   : currentStep > 2
-                    ? "Skins listas"
+                    ? "Ítem en bot"
                     : "En cola"}
               </span>
             </div>
           </div>
 
-          {/* Paso 3: Trade */}
+          {/* Paso 3: Pago */}
           <div
             className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
               currentStep === 3
@@ -260,7 +240,7 @@ export function OrderDetailRow({
             <div
               className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
                 currentStep === 3
-                  ? "bg-purple-400 text-black animate-pulse"
+                  ? "bg-purple-400 text-black"
                   : currentStep > 3
                     ? "bg-emerald-400 text-black"
                     : "bg-white/10 text-white/40"
@@ -270,13 +250,13 @@ export function OrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Enviar Trade
+                Pagar a Usuario
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
                 {currentStep === 3
-                  ? "Intercambio activo"
+                  ? "Por transferir"
                   : currentStep > 3
-                    ? "Trade aceptado"
+                    ? "Pago enviado"
                     : "En cola"}
               </span>
             </div>
@@ -292,26 +272,24 @@ export function OrderDetailRow({
           >
             <div
               className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                currentStep === 4
-                  ? "bg-emerald-400 text-black"
-                  : "bg-white/10 text-white/40"
+                currentStep === 4 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
               }`}
             >
               4
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Completado
+                Completada
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 4 ? "Skin entregada" : "En cola"}
+                {currentStep === 4 ? "Listo" : "Pendiente"}
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Cabecera de Datos Generales y Cambio de Estado Manual */}
+      {/* Cabecera de Datos Generales y Acción Paso a Paso */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
         <div className="flex items-center gap-3">
           {order.user?.avatar && (
@@ -323,7 +301,7 @@ export function OrderDetailRow({
           )}
           <div>
             <span className="text-[10px] text-[#84849b] font-mono block">
-              Comprador
+              Vendedor
             </span>
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-white text-sm">
@@ -338,7 +316,7 @@ export function OrderDetailRow({
 
         <div>
           <span className="text-[10px] text-[#84849b] font-mono block">
-            Importe Total
+            Monto a Pagar al Usuario
           </span>
           <span className="text-emerald-400 font-black text-xl leading-none block mt-0.5">
             ${order.totalPrice.toLocaleString()} USD
@@ -347,15 +325,15 @@ export function OrderDetailRow({
 
         <div>
           <span className="text-[10px] text-[#84849b] font-mono block">
-            Estado
+            Estado Real (DB)
           </span>
           <span
             className={`px-2.5 py-1 rounded-[3px] text-[10px] font-black uppercase tracking-widest block mt-0.5 ${
               order.status === "PENDING_PAYMENT"
                 ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-                : order.status === "PAID"
+                : order.status === "TRADE_PENDING"
                   ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                  : order.status === "TRADE_PENDING"
+                  : order.status === "PAID"
                     ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                     : order.status === "COMPLETED"
                       ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
@@ -366,82 +344,78 @@ export function OrderDetailRow({
           </span>
         </div>
 
-        {/* 🛠️ MANUAL STATUS BUTTONS (CAMBIO DE ESTADO MANUAL CLÁSICO) */}
-        <div>
+        {/* 🛠️ MANUAL / PASO A PASO ACTION BUTTONS */}
+        <div className="space-y-2">
           <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
-            Cambio Manual de Estado
+            Acción del Flujo Correcto de Venta
           </span>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => onUpdateStatus(order.id, "PENDING_PAYMENT")}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
-                order.status === "PENDING_PAYMENT"
-                  ? "bg-orange-500/20 border-orange-500/40 text-orange-400"
-                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
-              }`}
-            >
-              Pendiente
-            </button>
-            <button
-              onClick={() => onUpdateStatus(order.id, "PAID")}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
-                order.status === "PAID"
-                  ? "bg-blue-500/20 border-blue-500/40 text-blue-400"
-                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
-              }`}
-            >
-              Pagado
-            </button>
+          <div className="flex flex-wrap items-center gap-1.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px]">
+            {/* Paso 1: Aprobar Venta */}
             <button
               onClick={() => onUpdateStatus(order.id, "TRADE_PENDING")}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 order.status === "TRADE_PENDING"
-                  ? "bg-purple-500/20 border-purple-500/40 text-purple-400"
+                  ? "bg-orange-500/20 border-orange-500/40 text-orange-400 font-extrabold shadow-[0_0_10px_rgba(249,115,22,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
             >
-              Trade
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Paso 1: Venta Aprobada
             </button>
+
+            {/* Paso 2: Confirmar Trade Recibido */}
+            <button
+              onClick={() => onUpdateStatus(order.id, "PAID")}
+              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
+                order.status === "PAID"
+                  ? "bg-blue-500/20 border-blue-500/40 text-blue-400 font-extrabold shadow-[0_0_10px_rgba(59,130,246,0.1)]"
+                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
+              }`}
+            >
+              <Check className="w-3.5 h-3.5" />
+              Paso 2: Trade Recibido
+            </button>
+
+            {/* Paso 3: Pago al Usuario / Completar */}
             <button
               onClick={() => onUpdateStatus(order.id, "COMPLETED")}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 order.status === "COMPLETED"
-                  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 font-extrabold shadow-[0_0_10px_rgba(16,185,129,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
             >
-              Completar
+              <CreditCard className="w-3.5 h-3.5" />
+              Paso 3: Pago Enviado
             </button>
+
+            {/* Volver a Pendiente por si dio mal click */}
+            <button
+              onClick={() => onUpdateStatus(order.id, "PENDING_PAYMENT")}
+              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+                order.status === "PENDING_PAYMENT"
+                  ? "bg-[#110f1e] border-[#84849b]/40 text-[#84849b]"
+                  : "bg-white/5 border-white/5 text-white/30 hover:text-white"
+              }`}
+              title="Volver al estado inicial de Pendiente"
+            >
+              Volver a Pendiente
+            </button>
+
+            {/* Rechazar/Cancelar */}
             <button
               onClick={() => onUpdateStatus(order.id, "CANCELLED")}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 order.status === "CANCELLED"
                   ? "bg-red-500/20 border-red-500/40 text-red-400"
-                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
+                  : "bg-white/5 border-white/5 text-red-500/40 hover:text-red-400 hover:bg-red-500/5"
               }`}
             >
-              Cancelar
+              <XCircle className="w-3.5 h-3.5" />
+              Rechazar/Cancelar
             </button>
           </div>
         </div>
-
-        {/* AUTOMATION EXPRES BAR (Aprobar Pago y Generar Trade en 1 Clic) */}
-        {order.status === "PENDING_PAYMENT" && (
-          <div>
-            <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
-              Acción Express Automática
-            </span>
-            <button
-              onClick={handleAutoApproveAndTrade}
-              disabled={updating}
-              className="px-3 py-1.5 bg-gradient-to-r from-accent to-indigo-600 hover:brightness-110 text-white border-none rounded-[3px] text-[9.5px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_15px_rgba(217,70,239,0.2)] disabled:opacity-50"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Auto Aprobar y Generar Trade (1-Clic)
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* 💳 SECCIÓN DE DETALLES DE PAGO Y FACTURACIÓN */}
@@ -449,7 +423,7 @@ export function OrderDetailRow({
         <div className="flex items-center gap-2 pb-3 border-b border-white/5">
           <CreditCard className="w-4 h-4 text-[#84849b]" />
           <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] font-mono">
-            Detalles de Facturación y Cobros
+            Datos de Destino del Pago al Usuario
           </h4>
         </div>
 
@@ -474,7 +448,7 @@ export function OrderDetailRow({
                 <span className="text-[8.5px] text-[#84849b] uppercase block">
                   Email
                 </span>
-                <span className="font-bold text-white block mt-0.5 break-all select-all">
+                <span className="font-bold text-white block mt-0.5 break-all select-all font-mono">
                   {order.metadata?.email || "No especificado"}
                 </span>
               </div>
@@ -492,12 +466,12 @@ export function OrderDetailRow({
           {/* Columna 2: Método de Cobro */}
           <div className="space-y-2.5">
             <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-              Detalle del Cobro
+              Detalle del Cobro / Destino del Pago
             </h5>
             <div className="space-y-2 bg-[#110f1e]/40 p-3 border border-white/5 min-h-[120px] rounded-[3px]">
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block">
-                  Método de Pago
+                  Vía de Transferencia
                 </span>
                 <span className="font-black text-accent block mt-0.5 uppercase tracking-wide">
                   {order.paymentMethod === "mercado_pago"
@@ -514,128 +488,74 @@ export function OrderDetailRow({
 
               {order.paymentMethod === "nowpayments" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
-                  {(order.metadata as any)?.nowpaymentsPaymentId && (
-                    <div className="mb-2">
-                      <span className="text-[8.5px] text-[#84849b] block">
-                        ID de Pago NOWPayments
-                      </span>
-                      <span className="font-bold font-mono text-purple-400 block select-all bg-purple-500/10 p-1.5 rounded-[3px] border border-purple-500/20 mt-0.5 shadow-[0_0_10px_rgba(168,85,247,0.05)]">
-                        {(order.metadata as any).nowpaymentsPaymentId}
-                      </span>
-                    </div>
-                  )}
-                  {order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL" ? (
-                    <>
-                      <div>
-                        <span className="text-[8.5px] text-[#84849b] block">
-                          Billetera Destino Crypto
-                        </span>
-                        <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
-                          {order.metadata?.walletAddress || "N/A"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[8.5px] text-[#84849b] block">
-                          Red Blockchain
-                        </span>
-                        <span className="font-bold text-white block">
-                          {order.metadata?.network || "N/A"}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div>
-                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado y capturado vía NOWPayments API.</p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-[8.5px] text-[#84849b] block">
+                      Billetera Destino Crypto
+                    </span>
+                    <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
+                      {order.metadata?.walletAddress || "N/A"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] text-[#84849b] block">
+                      Red Blockchain
+                    </span>
+                    <span className="font-bold text-white block mt-0.5">
+                      {order.metadata?.network || "N/A"}
+                    </span>
+                  </div>
                 </div>
               )}
 
               {order.paymentMethod === "mercado_pago" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
-                  {(order.metadata as any)?.mpPaymentId && (
-                    <div className="mb-2">
-                      <span className="text-[8.5px] text-[#84849b] block">
-                        ID de Operación MP
-                      </span>
-                      <span className="font-bold font-mono text-emerald-400 block select-all bg-emerald-500/10 p-1.5 rounded-[3px] border border-emerald-500/20 mt-0.5 shadow-[0_0_10px_rgba(16,185,129,0.05)]">
-                        {(order.metadata as any).mpPaymentId}
-                      </span>
-                    </div>
-                  )}
-                  {order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL" ? (
-                    <>
-                      <div>
-                        <span className="text-[8.5px] text-[#84849b] block">
-                          CBU / CVU / Alias de Destino
-                        </span>
-                        <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
-                          {order.metadata?.cbu || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-[8.5px] text-[#84849b] block">
-                            Titular
-                          </span>
-                          <span className="font-bold text-white block">
-                            {order.metadata?.accountHolder || "N/A"}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[8.5px] text-[#84849b] block">
-                            CUIL / CUIT
-                          </span>
-                          <span className="font-bold font-mono text-white block select-all">
-                            {order.metadata?.cuil || "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
+                  <div>
+                    <span className="text-[8.5px] text-[#84849b] block">
+                      CBU / CVU / Alias de Destino
+                    </span>
+                    <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
+                      {order.metadata?.cbu || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
                     <div>
-                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado vía Mercado Pago Checkout Pro.</p>
+                      <span className="text-[8.5px] text-[#84849b] block">
+                        Titular
+                      </span>
+                      <span className="font-bold text-white block">
+                        {order.metadata?.accountHolder || "N/A"}
+                      </span>
                     </div>
-                  )}
+                    <div className="text-right">
+                      <span className="text-[8.5px] text-[#84849b] block">
+                        CUIL / CUIT
+                      </span>
+                      <span className="font-bold font-mono text-white block select-all">
+                        {order.metadata?.cuil || "N/A"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {order.paymentMethod === "paypal" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
-                  {(order.metadata as any)?.paypalPaymentId && (
-                    <div className="mb-2">
-                      <span className="text-[8.5px] text-[#84849b] block">
-                        ID de Captura PayPal
-                      </span>
-                      <span className="font-bold font-mono text-indigo-400 block select-all bg-indigo-500/10 p-1.5 rounded-[3px] border border-indigo-500/20 mt-0.5 shadow-[0_0_10px_rgba(99,102,241,0.05)]">
-                        {(order.metadata as any).paypalPaymentId}
-                      </span>
-                    </div>
-                  )}
-                  {order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL" ? (
-                    <>
-                      <div>
-                        <span className="text-[8.5px] text-[#84849b] block">
-                          Correo PayPal de Destino
-                        </span>
-                        <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
-                          {order.metadata?.cbu || "N/A"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[8.5px] text-[#84849b] block">
-                          Titular PayPal
-                        </span>
-                        <span className="font-bold text-white block">
-                          {order.metadata?.accountHolder || "N/A"}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div>
-                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado y capturado vía PayPal API.</p>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-[8.5px] text-[#84849b] block">
+                      Correo PayPal de Destino
+                    </span>
+                    <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
+                      {order.metadata?.cbu || "N/A"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] text-[#84849b] block mt-1">
+                      Titular PayPal
+                    </span>
+                    <span className="font-bold text-white block">
+                      {order.metadata?.accountHolder || "N/A"}
+                    </span>
+                  </div>
                 </div>
               )}
 
@@ -646,12 +566,12 @@ export function OrderDetailRow({
                     <span className="text-[8.5px] text-[#84849b] block">
                       Dirección / Wallet de Destino
                     </span>
-                    <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
+                    <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
                       {order.metadata?.walletAddress || "N/A"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[8.5px] text-[#84849b] block">
+                    <span className="text-[8.5px] text-[#84849b] block mt-1">
                       Red Blockchain
                     </span>
                     <span className="font-bold text-white block">
@@ -663,7 +583,7 @@ export function OrderDetailRow({
 
               {!order.paymentMethod && (
                 <p className="text-[9.5px] text-white/30 italic mt-2">
-                  Sin especificaciones de cobro externas.
+                  Sin especificaciones de transferencia externas.
                 </p>
               )}
             </div>
@@ -672,12 +592,12 @@ export function OrderDetailRow({
           {/* Columna 3: Steam Trade Link */}
           <div className="space-y-2.5">
             <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-              Consola de Trade
+              Consola de Trade (Skins a recibir)
             </h5>
             <div className="space-y-3 bg-[#110f1e]/40 p-3 border border-white/5 min-h-[120px] flex flex-col justify-between rounded-[3px]">
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block font-semibold">
-                  Trade Link del Cliente
+                  Trade Link del Vendedor
                 </span>
                 <span className="font-mono text-[9.5px] text-white/80 block mt-1 break-all select-all leading-normal">
                   {order.user?.tradeUrl ||
@@ -726,11 +646,11 @@ export function OrderDetailRow({
         </div>
       </div>
 
-      {/* 📦 SECCIÓN DE ÍTEMS PERMANENTEMENTE ABIERTA */}
+      {/* 📦 SECCIÓN DE ÍTEMS A RECIBIR */}
       <div className="space-y-3 border-t border-white/5 pt-5 mt-5">
         <div className="flex items-center justify-between font-sans mb-3 text-[10px] text-[#84849b] font-black uppercase tracking-widest">
           <span className="flex items-center gap-1.5">
-            Artículos en esta orden ({order.items.length})
+            Skins que se recibirán en esta venta ({order.items.length})
           </span>
 
           {/* AUTOMATION BUTTON: Copia todos los Asset IDs de golpe */}
@@ -741,16 +661,16 @@ export function OrderDetailRow({
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
                 : "bg-[#110f1e] border-white/5 text-[#84849b] hover:text-white hover:bg-white/5"
             }`}
-            title="Copiar todos los IDs para el buscador de Steam"
+            title="Copiar todos los IDs para buscar las skins del vendedor"
           >
             {copiedAllAssets ? (
               <>
-                <Check className="w-3 h-3 text-emerald-400 animate-pulse" />
+                <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                 <span>IDs Copiados de golpe</span>
               </>
             ) : (
               <>
-                <Copy className="w-3 h-3" />
+                <Copy className="w-3.5 h-3.5" />
                 <span>Copiar todos los Asset IDs</span>
               </>
             )}
@@ -778,81 +698,10 @@ export function OrderDetailRow({
               item.exterior ||
               resolvedDetails.exterior ||
               getItemExterior(item);
-            const finalProvider =
-              item.provider ||
-              (item.assetId &&
-              typeof item.assetId === "string" &&
-              item.assetId.startsWith("resell-")
-                ? hashCode(item.assetId) % 2 === 0
-                  ? "youpin"
-                  : "buff"
-                : "bots");
 
-            // Deterministic fallback for Youpin/Buff resell items if database float/pattern is null
-            let displayFloat = finalFloat;
-            let displayPattern = finalPattern;
+            const displayFloat = finalFloat;
+            const displayPattern = finalPattern;
 
-            if (
-              (finalProvider === "youpin" || finalProvider === "buff") &&
-              (displayFloat === null || displayPattern === null)
-            ) {
-              const hash = Math.abs(hashCode(item.assetId));
-              if (displayPattern === null) {
-                displayPattern = (hash % 999) + 1;
-              }
-              if (displayFloat === null) {
-                const ext = (finalExterior || "").toLowerCase();
-                let minF = 0.0;
-                let maxF = 0.07;
-                let hasFloat = true;
-
-                if (
-                  ext.includes("recién") ||
-                  ext.includes("factory") ||
-                  ext.includes("fn")
-                ) {
-                  minF = 0.0;
-                  maxF = 0.07;
-                } else if (
-                  ext.includes("casi") ||
-                  ext.includes("minimal") ||
-                  ext.includes("mw")
-                ) {
-                  minF = 0.07;
-                  maxF = 0.15;
-                } else if (
-                  ext.includes("algo") ||
-                  ext.includes("field") ||
-                  ext.includes("ft")
-                ) {
-                  minF = 0.15;
-                  maxF = 0.38;
-                } else if (
-                  ext.includes("bastante") ||
-                  ext.includes("well") ||
-                  ext.includes("ww")
-                ) {
-                  minF = 0.38;
-                  maxF = 0.45;
-                } else if (
-                  ext.includes("deplorable") ||
-                  ext.includes("battle") ||
-                  ext.includes("bs")
-                ) {
-                  minF = 0.45;
-                  maxF = 0.99;
-                } else {
-                  hasFloat = false;
-                }
-
-                if (hasFloat) {
-                  const fraction = (hash % 1000000) / 1000000;
-                  displayFloat = minF + fraction * (maxF - minF);
-                }
-              }
-            }
-
-            const isPhysical = finalProvider === "bots" || finalProvider === "user";
             const isStatTrak = item.name.includes("StatTrak™") || item.name.includes("StatTrak");
             const isSouvenir = item.name.includes("Souvenir");
             const isStar = item.name.includes("★") || item.name.includes("★");
@@ -860,20 +709,10 @@ export function OrderDetailRow({
             return (
               <div
                 key={item.id}
-                className={`flex flex-col sm:flex-row sm:items-center gap-6 bg-[#090812] p-5 border relative overflow-hidden group rounded-[3px] transition-all duration-300 hover:bg-[#0c0a1a] ${
-                  isPhysical 
-                    ? "border-emerald-500/10 hover:border-emerald-500/25 shadow-[0_0_20px_rgba(16,185,129,0.02)]" 
-                    : "border-white/5 hover:border-white/10"
-                } ${rarityColors[finalRarity] || ""}`}
+                className={`flex flex-col sm:flex-row sm:items-center gap-6 bg-[#090812] p-5 border relative overflow-hidden group rounded-[3px] transition-all duration-300 hover:bg-[#0c0a1a] border-white/5 ${rarityColors[finalRarity] || ""}`}
               >
                 {/* Visual Accent stripe for physical verified items vs resell items */}
-                <div 
-                  className={`absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b ${
-                    isPhysical 
-                      ? "from-emerald-500 via-teal-500 to-emerald-600" 
-                      : "from-indigo-500 via-purple-500 to-pink-500 opacity-60"
-                  }`} 
-                />
+                <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-rose-500 via-purple-500 to-indigo-500 opacity-60" />
 
                 {/* Icon image */}
                 <div className="w-24 h-16 relative bg-[#131124] border border-white/5 p-2 flex items-center justify-center flex-shrink-0 font-sans rounded-[4px] shadow-inner group-hover:scale-[1.02] transition-transform duration-300">
@@ -916,70 +755,24 @@ export function OrderDetailRow({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 text-[9px] font-mono text-[#84849b]">
-                    {/* ENHANCED LABELS & PROVIDER BADGES */}
-                    {finalProvider === "youpin" && (
-                      <a
-                        href={`https://www.youpin898.com/goodList?game=730&keyword=${encodeURIComponent(getCleanSearchName(item.name))}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105"
-                      >
-                        <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse mr-0.5" />
-                        <span>Reventa (Youpin)</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    )}
-                    {finalProvider === "buff" && (
-                      <a
-                        href={`https://buff.163.com/market/csgo#game=csgo&page_num=1&search=${encodeURIComponent(getCleanSearchName(item.name))}&sort_by=price.asc&tab=selling`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105"
-                      >
-                        <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse mr-0.5" />
-                        <span>Reventa (Buff163)</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    )}
-                    {finalProvider === "bots" && (
-                      <a
-                        href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.name)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105 shadow-[0_0_10px_rgba(16,185,129,0.05)]"
-                      >
-                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-0.5 animate-pulse" />
-                        <span>Bot (Stock Físico)</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    )}
-                    {finalProvider === "user" && (
-                      <a
-                        href={
-                          order.user?.steamId
-                            ? `https://steamcommunity.com/profiles/${order.user.steamId}/inventory/#730`
-                            : `https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.name)}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105 shadow-[0_0_10px_rgba(244,63,94,0.05)]"
-                      >
-                        <span className="w-1.5 h-1.5 bg-rose-400 rounded-full mr-0.5 animate-pulse" />
-                        <span>Inventario Cliente (Venta)</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    )}
+                    <a
+                      href={
+                        order.user?.steamId
+                          ? `https://steamcommunity.com/profiles/${order.user.steamId}/inventory/#730`
+                          : `https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.name)}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105 shadow-[0_0_10px_rgba(244,63,94,0.05)]"
+                    >
+                      <span className="w-1.5 h-1.5 bg-rose-400 rounded-full mr-0.5 animate-pulse" />
+                      <span>Inventario Cliente (Venta)</span>
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
 
-                    {/* PHYSICAL VS RESELL BADGES */}
-                    {isPhysical ? (
-                      <span className="text-[8.5px] font-black uppercase bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-[2px] font-sans tracking-wide">
-                        Skins Físicas
-                      </span>
-                    ) : (
-                      <span className="text-[8.5px] font-black uppercase bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-[2px] font-sans tracking-wide">
-                        Orden de Reventa
-                      </span>
-                    )}
+                    <span className="text-[8.5px] font-black uppercase bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-[2px] font-sans tracking-wide">
+                      Recibiendo Skin
+                    </span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 mt-2 text-[9.5px] font-mono">
@@ -1000,11 +793,6 @@ export function OrderDetailRow({
                         <span className="text-white/90 bg-white/5 px-2 py-0.5 rounded-sm border border-white/5 flex items-center gap-1">
                           <span className="text-[#84849b]">Semilla:</span>
                           <span className="font-extrabold text-accent">{displayPattern}</span>
-                          {isPhysical && (
-                            <span className="text-[8px] bg-emerald-500/10 text-emerald-400 px-1 rounded-[2px] ml-1 uppercase font-black font-sans tracking-wide">
-                              Físico
-                            </span>
-                          )}
                         </span>
                       )}
 
@@ -1029,16 +817,9 @@ export function OrderDetailRow({
                 {/* Float display */}
                 {displayFloat !== null && displayFloat !== undefined ? (
                   <div className="sm:w-48 flex-shrink-0 bg-[#121021]/80 border border-white/5 p-3 rounded-[3px]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono">
-                        Float Registrado
-                      </span>
-                      {isPhysical && (
-                        <span className="text-[7.5px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded font-sans tracking-wider">
-                          ✓ Real
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono">
+                      Float Registrado
+                    </span>
                     <span className="text-[11px] font-black font-mono text-white block mt-1 select-all">
                       {displayFloat.toFixed(10)}
                     </span>
@@ -1075,7 +856,7 @@ export function OrderDetailRow({
                 {/* Price */}
                 <div className="text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0">
                   <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block sm:hidden">
-                    Precio
+                    Precio Acordado
                   </span>
                   <div>
                     <span className="text-sm sm:text-base font-black text-accent">

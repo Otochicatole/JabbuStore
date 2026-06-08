@@ -4,6 +4,7 @@ import { RefreshCw, Loader2, Tag, Search, Filter } from "lucide-react";
 import { Order } from "../../domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { OrderDetailRow } from "./OrderDetailRow";
+import { SellOrderDetailRow } from "./SellOrderDetailRow";
 
 export function ListingsTab() {
   const router = useRouter();
@@ -278,14 +279,29 @@ export function ListingsTab() {
 
         return (
           <div className="space-y-4">
-            {filteredOrders.map(order => (
-              <OrderDetailRow 
-                key={order.id} 
-                order={order} 
-                onUpdateStatus={updateOrderStatus} 
-                resolvedItemsMap={resolvedItemsMap}
-              />
-            ))}
+            {filteredOrders.map(order => {
+              const isSellOrder = order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL";
+              
+              if (isSellOrder) {
+                return (
+                  <SellOrderDetailRow
+                    key={order.id}
+                    order={order}
+                    onUpdateStatus={updateOrderStatus}
+                    resolvedItemsMap={resolvedItemsMap}
+                  />
+                );
+              }
+
+              return (
+                <OrderDetailRow 
+                  key={order.id} 
+                  order={order} 
+                  onUpdateStatus={updateOrderStatus} 
+                  resolvedItemsMap={resolvedItemsMap}
+                />
+              );
+            })}
           </div>
         );
       })()}

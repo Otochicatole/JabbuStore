@@ -129,20 +129,22 @@ export default function UserOrdersPage() {
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
   const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await fetchWithAuth(`${BACKEND_URL}/orders/me`);
-        if (res.ok) {
-          const data = await res.json();
-          setOrders(data);
-        }
-      } catch (e) {
-        console.error("Error fetching orders:", e);
-      } finally {
-        setLoading(false);
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchWithAuth(`${BACKEND_URL}/orders/me`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
       }
-    };
+    } catch (e) {
+      console.error("Error fetching orders:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, []);
 
@@ -159,35 +161,37 @@ export default function UserOrdersPage() {
     setTimeout(() => { setCopiedAssetId(null); }, 1500);
   };
 
-  const getStatusConfig = (status: Order["status"]) => {
+  const getStatusConfig = (status: Order["status"], orderType: Order["type"]) => {
+    const isSell = orderType === "SELL";
+
     switch (status) {
       case "PENDING_PAYMENT":
         return {
-          label: "Pago Pendiente",
+          label: isSell ? "Pendiente Aprobación" : "Pago Pendiente",
           color: "text-orange-400 bg-orange-500/10 border-orange-500/20",
           icon: <Clock className="w-3.5 h-3.5 text-orange-400" />
         };
       case "PAID":
         return {
-          label: "Pagado",
-          color: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-          icon: <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+          label: isSell ? "Trade Confirmado / Pendiente Pago" : "Pagado",
+          color: isSell ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20",
+          icon: isSell ? <Clock className="w-3.5 h-3.5 text-purple-400 animate-pulse" /> : <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
         };
       case "TRADE_PENDING":
         return {
-          label: "Trade Pendiente",
-          color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
-          icon: <Clock className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+          label: isSell ? "Venta Aprobada (Enviar Trade)" : "Trade Pendiente",
+          color: isSell ? "text-blue-400 bg-blue-500/10 border-blue-500/20 animate-pulse" : "text-purple-400 bg-purple-500/10 border-purple-500/20",
+          icon: isSell ? <ArrowUpRight className="w-3.5 h-3.5 text-blue-400" /> : <Clock className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
         };
       case "COMPLETED":
         return {
-          label: "Completado",
+          label: isSell ? "Venta Completada / Pagado" : "Completado",
           color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
           icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
         };
       case "CANCELLED":
         return {
-          label: "Cancelado",
+          label: isSell ? "Venta Rechazada" : "Cancelado",
           color: "text-red-400 bg-red-500/10 border-red-500/20",
           icon: <XCircle className="w-3.5 h-3.5 text-red-400" />
         };
@@ -218,40 +222,55 @@ export default function UserOrdersPage() {
           </p>
         </div>
 
-        {/* Tab Controls */}
-        <div className="flex bg-[#110f1e]/80 border border-white/5 p-1 rounded-[3px] w-fit">
-          <button
-            onClick={() => setActiveTab("all")}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all ${
-              activeTab === "all"
-                ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
-                : "text-white/60 hover:text-white cursor-pointer"
-            }`}
-          >
-            Todos
-          </button>
-          <button
-            onClick={() => setActiveTab("buy")}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center gap-2 ${
-              activeTab === "buy"
-                ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
-                : "text-white/60 hover:text-white cursor-pointer"
-            }`}
-          >
-            <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-400" />
-            Compras
-          </button>
-          <button
-            onClick={() => setActiveTab("sell")}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center gap-2 ${
-              activeTab === "sell"
-                ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
-                : "text-white/60 hover:text-white cursor-pointer"
-            }`}
-          >
-            <ArrowUpRight className="w-3.5 h-3.5 text-purple-400" />
-            Ventas
-          </button>
+        {/* Refresh & Tab Controls */}
+        <div className="flex flex-col items-end gap-3 shrink-0">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchOrders}
+              disabled={loading}
+              className="flex items-center gap-2 h-10 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <Loader2
+                className={`w-3.5 h-3.5 ${loading ? "animate-spin text-accent" : ""}`}
+              />
+              Actualizar
+            </button>
+
+            <div className="flex bg-[#110f1e]/80 border border-white/5 p-1 rounded-[3px] w-fit">
+              <button
+                onClick={() => setActiveTab("all")}
+                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all ${
+                  activeTab === "all"
+                    ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
+                    : "text-white/60 hover:text-white cursor-pointer"
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                onClick={() => setActiveTab("buy")}
+                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center gap-2 ${
+                  activeTab === "buy"
+                    ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
+                    : "text-white/60 hover:text-white cursor-pointer"
+                }`}
+              >
+                <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-400" />
+                Compras
+              </button>
+              <button
+                onClick={() => setActiveTab("sell")}
+                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-[3px] transition-all flex items-center gap-2 ${
+                  activeTab === "sell"
+                    ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
+                    : "text-white/60 hover:text-white cursor-pointer"
+                }`}
+              >
+                <ArrowUpRight className="w-3.5 h-3.5 text-purple-400" />
+                Ventas
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -281,13 +300,19 @@ export default function UserOrdersPage() {
         <div className="space-y-4">
           {filteredOrders.map((order, idx) => {
             const isExpanded = !!expandedOrders[order.id];
-            const statusConfig = getStatusConfig(order.status);
+            const statusConfig = getStatusConfig(order.status, order.type);
             const isBuy = order.type === "BUY";
-            const currentStep = 
-              order.status === "PENDING_PAYMENT" ? 1 :
-              order.status === "PAID" ? 2 :
-              order.status === "TRADE_PENDING" ? 3 :
-              order.status === "COMPLETED" ? 4 : 0;
+            
+            // Map step sequence based on SELL vs BUY orders
+            const currentStep = isBuy
+              ? (order.status === "PENDING_PAYMENT" ? 1 :
+                 order.status === "PAID" ? 2 :
+                 order.status === "TRADE_PENDING" ? 3 :
+                 order.status === "COMPLETED" ? 4 : 0)
+              : (order.status === "PENDING_PAYMENT" ? 1 :
+                 order.status === "TRADE_PENDING" ? 2 :
+                 order.status === "PAID" ? 3 :
+                 order.status === "COMPLETED" ? 4 : 0);
 
             return (
               <motion.div
@@ -372,65 +397,127 @@ export default function UserOrdersPage() {
                             Progreso de la Transacción ({isBuy ? 'Compra' : 'Venta'})
                           </span>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
-                            <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-                              currentStep === 1 ? "bg-orange-500/5 border-orange-500/20 text-orange-400" :
-                              currentStep > 1 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
-                              "bg-white/[0.01] border-white/5 text-white/30"
-                            }`}>
-                              <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                                currentStep === 1 ? "bg-orange-400 text-black" :
-                                currentStep > 1 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
-                              }`}>{currentStep > 1 ? "✓" : "1"}</div>
-                              <div className="min-w-0">
-                                <span className="text-[10px] font-black uppercase block leading-tight">Verificar Pago</span>
-                                <span className="text-[8.5px] font-mono opacity-60">{currentStep === 1 ? "Cobro pendiente" : "Pago verificado"}</span>
+                          {isBuy ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
+                              <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+                                currentStep === 1 ? "bg-orange-500/5 border-orange-500/20 text-orange-400" :
+                                currentStep > 1 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
+                                "bg-white/[0.01] border-white/5 text-white/30"
+                              }`}>
+                                <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                                  currentStep === 1 ? "bg-orange-400 text-black" :
+                                  currentStep > 1 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                                }`}>{currentStep > 1 ? "✓" : "1"}</div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black uppercase block leading-tight">Verificar Pago</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 1 ? "Cobro pendiente" : "Pago verificado"}</span>
+                                </div>
                               </div>
-                            </div>
 
-                            <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-                              currentStep === 2 ? "bg-blue-500/5 border-blue-500/20 text-blue-400" :
-                              currentStep > 2 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
-                              "bg-white/[0.01] border-white/5 text-white/30"
-                            }`}>
-                              <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                                currentStep === 2 ? "bg-blue-400 text-black" :
-                                currentStep > 2 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
-                              }`}>{currentStep > 2 ? "✓" : "2"}</div>
-                              <div className="min-w-0">
-                                <span className="text-[10px] font-black uppercase block leading-tight">Sourcing Skins</span>
-                                <span className="text-[8.5px] font-mono opacity-60">{currentStep === 2 ? "Localizando skins" : "Skins listas"}</span>
+                              <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+                                currentStep === 2 ? "bg-blue-500/5 border-blue-500/20 text-blue-400" :
+                                currentStep > 2 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
+                                "bg-white/[0.01] border-white/5 text-white/30"
+                              }`}>
+                                <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                                  currentStep === 2 ? "bg-blue-400 text-black" :
+                                  currentStep > 2 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                                }`}>{currentStep > 2 ? "✓" : "2"}</div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black uppercase block leading-tight">Sourcing Skins</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 2 ? "Localizando skins" : "Skins listas"}</span>
+                                </div>
                               </div>
-                            </div>
 
-                            <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-                              currentStep === 3 ? "bg-purple-500/10 border-purple-500/30 text-purple-400" :
-                              currentStep > 3 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
-                              "bg-white/[0.01] border-white/5 text-white/30"
-                            }`}>
-                              <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                                currentStep === 3 ? "bg-purple-400 text-black animate-pulse" :
-                                currentStep > 3 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
-                              }`}>{currentStep > 3 ? "✓" : "3"}</div>
-                              <div className="min-w-0">
-                                <span className="text-[10px] font-black uppercase block leading-tight">Enviar Trade</span>
-                                <span className="text-[8.5px] font-mono opacity-60">{currentStep === 3 ? "Esperando aceptación" : "Trade entregado"}</span>
+                              <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+                                currentStep === 3 ? "bg-purple-500/10 border-purple-500/30 text-purple-400" :
+                                currentStep > 3 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
+                                "bg-white/[0.01] border-white/5 text-white/30"
+                              }`}>
+                                <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                                  currentStep === 3 ? "bg-purple-400 text-black animate-pulse" :
+                                  currentStep > 3 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                                }`}>{currentStep > 3 ? "✓" : "3"}</div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black uppercase block leading-tight">Enviar Trade</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 3 ? "Esperando aceptación" : "Trade entregado"}</span>
+                                </div>
                               </div>
-                            </div>
 
-                            <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-                              currentStep === 4 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
-                              "bg-white/[0.01] border-white/5 text-white/30"
-                            }`}>
-                              <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                                currentStep === 4 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
-                              }`}>4</div>
-                              <div className="min-w-0">
-                                <span className="text-[10px] font-black uppercase block leading-tight">Completado</span>
-                                <span className="text-[8.5px] font-mono opacity-60">{currentStep === 4 ? "Skin entregada" : "En cola"}</span>
+                              <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+                                currentStep === 4 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                                "bg-white/[0.01] border-white/5 text-white/30"
+                              }`}>
+                                <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                                  currentStep === 4 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                                }`}>4</div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black uppercase block leading-tight">Completado</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 4 ? "Skin entregada" : "En cola"}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
+                              <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+                                currentStep === 1 ? "bg-orange-500/5 border-orange-500/20 text-orange-400" :
+                                currentStep > 1 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
+                                "bg-white/[0.01] border-white/5 text-white/30"
+                              }`}>
+                                <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                                  currentStep === 1 ? "bg-orange-400 text-black" :
+                                  currentStep > 1 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                                }`}>{currentStep > 1 ? "✓" : "1"}</div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black uppercase block leading-tight">Aprobar Venta</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 1 ? "Revisión inicial" : "Aprobada"}</span>
+                                </div>
+                              </div>
+
+                              <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+                                currentStep === 2 ? "bg-blue-500/5 border-blue-500/20 text-blue-400 animate-pulse" :
+                                currentStep > 2 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
+                                "bg-white/[0.01] border-white/5 text-white/30"
+                              }`}>
+                                <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                                  currentStep === 2 ? "bg-blue-400 text-black" :
+                                  currentStep > 2 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                                }`}>{currentStep > 2 ? "✓" : "2"}</div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black uppercase block leading-tight">Enviar Skin (Trade)</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 2 ? "Esperando envío" : "Recibida en Bot"}</span>
+                                </div>
+                              </div>
+
+                              <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+                                currentStep === 3 ? "bg-purple-500/10 border-purple-500/30 text-purple-400" :
+                                currentStep > 3 ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60" :
+                                "bg-white/[0.01] border-white/5 text-white/30"
+                              }`}>
+                                <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                                  currentStep === 3 ? "bg-purple-400 text-black" :
+                                  currentStep > 3 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                                }`}>{currentStep > 3 ? "✓" : "3"}</div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black uppercase block leading-tight">Pagar a Usuario</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 3 ? "Pago por transferir" : "Pago realizado"}</span>
+                                </div>
+                              </div>
+
+                              <div className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+                                currentStep === 4 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                                "bg-white/[0.01] border-white/5 text-white/30"
+                              }`}>
+                                <div className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                                  currentStep === 4 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                                }`}>4</div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black uppercase block leading-tight">Completada</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 4 ? "Transacción lista" : "Pendiente"}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* 💳 DETALLES DE FACTURACION / COBRO */}

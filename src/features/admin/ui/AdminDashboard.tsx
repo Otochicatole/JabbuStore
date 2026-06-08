@@ -16,7 +16,7 @@ export function AdminDashboard({ initialItems }: AdminDashboardProps) {
   return (
     <div className="min-h-screen bg-[#070510] text-white">
       {/* Main Container */}
-      <main className="w-full px-6 py-8 space-y-8">
+      <main className="w-full px-3 sm:px-6 py-4 sm:py-8 space-y-6 sm:space-y-8">
         {currentTab === 'inventory' && (
           <InventoryTab initialItems={initialItems} />
         )}

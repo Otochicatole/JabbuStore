@@ -17,6 +17,7 @@ import { StoreItem } from "../../domain/types";
 import { rarityColors, hashCode } from "./utils";
 import { PriceEditModal } from "./PriceEditModal";
 import { useInventoryTab } from "./useInventoryTab";
+import { AdminSelect } from "@/shared/components/AdminSelect";
 
 function getCleanSearchName(fullName: string): string {
   if (!fullName) return "";
@@ -273,33 +274,33 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             {/* Rarity Filter */}
-            <select
+            <AdminSelect
               value={selectedRarity}
-              onChange={(e) => setSelectedRarity(e.target.value)}
-              className="bg-[#110f1e]/40 border border-white/5 text-xs font-bold px-4 py-2.5 rounded-[3px] text-white outline-none cursor-pointer"
-            >
-              <option value="all">Todas las rarezas</option>
-              <option value="coverte">★ Covert (Rojo)</option>
-              <option value="classified">Classified (Rosado)</option>
-              <option value="restricted">Restricted (Púrpura)</option>
-              <option value="mil-spec">Mil-Spec (Azul)</option>
-              <option value="industrial">Industrial Grade (Celeste)</option>
-              <option value="consumer">Consumer Grade (Gris)</option>
-            </select>
+              onChange={setSelectedRarity}
+              options={[
+                { value: "all", label: "Todas las rarezas" },
+                { value: "coverte", label: "★ Covert (Rojo)" },
+                { value: "classified", label: "Classified (Rosado)" },
+                { value: "restricted", label: "Restricted (Púrpura)" },
+                { value: "mil-spec", label: "Mil-Spec (Azul)" },
+                { value: "industrial", label: "Industrial Grade (Celeste)" },
+                { value: "consumer", label: "Consumer Grade (Gris)" },
+              ]}
+            />
 
             {/* Sort */}
-            <select
+            <AdminSelect
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-[#110f1e]/40 border border-white/5 text-xs font-bold px-4 py-2.5 rounded-[3px] text-white outline-none cursor-pointer"
-            >
-              <option value="price_desc">Precio: Mayor a Menor</option>
-              <option value="price_asc">Precio: Menor a Mayor</option>
-              <option value="float_asc">Float: Menor a Mayor</option>
-              <option value="float_desc">Float: Mayor a Menor</option>
-            </select>
+              onChange={(v) => setSortBy(v as any)}
+              options={[
+                { value: "price_desc", label: "Precio: Mayor a Menor" },
+                { value: "price_asc", label: "Precio: Menor a Mayor" },
+                { value: "float_asc", label: "Float: Menor a Mayor" },
+                { value: "float_desc", label: "Float: Mayor a Menor" },
+              ]}
+            />
           </div>
         </div>
 
@@ -329,7 +330,8 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
         ) : (
           <div className="space-y-4">
             <div className="border border-white/5 rounded-[3px] overflow-hidden">
-              <div className="overflow-x-auto">
+              {/* Desktop Table View */}
+              <div className="overflow-x-auto hidden md:block">
                 <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
                     <tr className="border-b border-white/5 bg-[#110f1e]/40 text-[#84849b] text-[10px] font-black uppercase tracking-wider font-mono">
@@ -436,6 +438,111 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card-Based View */}
+              <div className="md:hidden divide-y divide-white/5 bg-[#110f1e]/10">
+                {visibleInventoryItems.map((item) => {
+                  const color =
+                    rarityColors[item.rarity.toLowerCase()] ||
+                    rarityColors.common;
+                  const botName = botMap[item.botSteamId] || `Bot (${item.botSteamId.slice(-4)})`;
+
+                  return (
+                    <div
+                      key={item.assetId}
+                      className="p-4 flex flex-col gap-3.5 hover:bg-white/[0.01] transition-colors relative"
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Image Container with Glow */}
+                        <div
+                          className="relative w-14 h-14 rounded-[3px] bg-[#110f1e]/60 border border-white/[0.03] flex items-center justify-center p-1 shrink-0"
+                          style={{ borderColor: `${color}25` }}
+                        >
+                          <div
+                            className="absolute inset-0 blur-md opacity-25 pointer-events-none rounded-[3px]"
+                            style={{
+                              background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+                            }}
+                          />
+                          {item.iconUrl && (
+                            <Image
+                              src={item.iconUrl}
+                              alt={item.name}
+                              width={44}
+                              height={44}
+                              className="object-contain z-10"
+                            />
+                          )}
+                        </div>
+
+                        {/* Name & Type */}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-extrabold text-white text-xs leading-snug break-words">
+                            {item.name}
+                          </h4>
+                          <span className="inline-block text-[8.5px] text-[#84849b] uppercase font-mono mt-0.5 tracking-wider bg-white/[0.02] border border-white/5 px-1.5 py-0.5 rounded-sm">
+                            {item.type}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Technical Details Grid */}
+                      <div className="grid grid-cols-2 gap-3 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] text-[10px] font-mono">
+                        <div className="min-w-0">
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Asset ID</span>
+                          <span className="text-white/95 truncate block select-all mt-0.5">{item.assetId}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Bot Dueño</span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                            <span className="text-white font-black text-[9.5px] uppercase tracking-wide truncate">{botName}</span>
+                          </div>
+                        </div>
+                        <div className="col-span-2 border-t border-white/[0.03] pt-2">
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Float Value</span>
+                          <span className="text-white font-bold block mt-0.5">
+                            {item.float !== null && item.float !== undefined ? (
+                              <span className="text-white font-extrabold">{item.float.toFixed(5)}</span>
+                            ) : (
+                              <span className="text-[#84849b]">N/A</span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Pricing and Action Buttons */}
+                      <div className="flex items-center justify-between mt-0.5">
+                        <div>
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Precio</span>
+                          <span className="font-black text-green-400 font-mono text-sm block mt-0.5">
+                            ${item.price.toLocaleString()}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setPriceModalItem(item)}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/80 hover:text-accent hover:border-accent/40 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer min-h-[34px]"
+                          >
+                            <Pencil className="w-3 h-3 text-accent" />
+                            <span>Editar</span>
+                          </button>
+                          <a
+                            href={`https://steamcommunity.com/profiles/${item.botSteamId}/inventory/#730`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center w-8 h-8 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-[#84849b] hover:text-white transition-all cursor-pointer"
+                            title="Ver Inventario del Bot"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

@@ -5,12 +5,12 @@ import {
   ExternalLink,
   RefreshCw,
   Search,
-  Filter,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
 import { rarityColors } from "@/features/admin/ui/components/utils";
 import { useMarketCatalog } from "./useMarketCatalog";
+import { AdminSelect } from "@/shared/components/AdminSelect";
 
 function getCleanSearchName(fullName: string): string {
   if (!fullName) return "";
@@ -132,7 +132,7 @@ export function MarketCatalog() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-3">
           <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
             Total
@@ -175,41 +175,41 @@ export function MarketCatalog() {
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Provider */}
-            <select
+            <AdminSelect
               value={providerFilter}
-              onChange={(e) => setProviderFilter(e.target.value as any)}
-              className="bg-[#110f1e]/80 border border-white/5 text-[11px] font-bold px-3 py-2 rounded-[3px] text-white outline-none cursor-pointer"
-            >
-              <option value="all">Todos los Proveedores</option>
-              <option value="buff">Buff163 Only</option>
-              <option value="youpin">YouPin Only</option>
-            </select>
+              onChange={(v) => setProviderFilter(v as any)}
+              options={[
+                { value: "all", label: "Todos los Proveedores" },
+                { value: "buff", label: "Buff163 Only" },
+                { value: "youpin", label: "YouPin Only" },
+              ]}
+            />
 
             {/* Rarity */}
-            <select
+            <AdminSelect
               value={rarityFilter}
-              onChange={(e) => setRarityFilter(e.target.value)}
-              className="bg-[#110f1e]/80 border border-white/5 text-[11px] font-bold px-3 py-2 rounded-[3px] text-white outline-none cursor-pointer"
-            >
-              <option value="all">Todas las rarezas</option>
-              <option value="coverte">★ Covert (Rojo)</option>
-              <option value="classified">Classified (Rosado)</option>
-              <option value="restricted">Restricted (Púrpura)</option>
-              <option value="mil-spec">Mil-Spec (Azul)</option>
-              <option value="industrial">Industrial (Celeste)</option>
-              <option value="consumer">Consumer (Gris)</option>
-            </select>
+              onChange={setRarityFilter}
+              options={[
+                { value: "all", label: "Todas las rarezas" },
+                { value: "coverte", label: "★ Covert (Rojo)" },
+                { value: "classified", label: "Classified (Rosado)" },
+                { value: "restricted", label: "Restricted (Púrpura)" },
+                { value: "mil-spec", label: "Mil-Spec (Azul)" },
+                { value: "industrial", label: "Industrial (Celeste)" },
+                { value: "consumer", label: "Consumer (Gris)" },
+              ]}
+            />
 
             {/* Sort */}
-            <select
+            <AdminSelect
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-[#110f1e]/80 border border-white/5 text-[11px] font-bold px-3 py-2 rounded-[3px] text-white outline-none cursor-pointer"
-            >
-              <option value="price_desc">Precio: Mayor a Menor</option>
-              <option value="price_asc">Precio: Menor a Mayor</option>
-              <option value="name">Alfabético</option>
-            </select>
+              onChange={(v) => setSortBy(v as any)}
+              options={[
+                { value: "price_desc", label: "Precio: Mayor a Menor" },
+                { value: "price_asc", label: "Precio: Menor a Mayor" },
+                { value: "name", label: "Alfabético" },
+              ]}
+            />
           </div>
         </div>
 
@@ -234,7 +234,8 @@ export function MarketCatalog() {
           </div>
         ) : (
           <div className="border border-white/5 rounded-[3px] overflow-hidden">
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="overflow-x-auto hidden md:block">
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
                   <tr className="border-b border-white/5 bg-[#110f1e]/60 text-[#84849b] text-[9px] font-black uppercase tracking-wider font-mono">
@@ -347,6 +348,111 @@ export function MarketCatalog() {
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card-Based View */}
+            <div className="md:hidden divide-y divide-white/5 bg-[#110f1e]/10">
+              {paginatedListings.map((l) => {
+                const color =
+                  rarityColors[l.rarity.toLowerCase()] ||
+                  rarityColors.common;
+                return (
+                  <div
+                    key={l.id}
+                    className="p-4 flex flex-col gap-3.5 hover:bg-white/[0.01] transition-colors relative"
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Image Container with Glow */}
+                      <div
+                        className="relative w-12 h-12 rounded-[3px] bg-[#110f1e]/60 border border-white/[0.03] flex items-center justify-center p-1 shrink-0"
+                        style={{ borderColor: `${color}15` }}
+                      >
+                        <div
+                          className="absolute inset-0 blur-md opacity-25 pointer-events-none rounded-[3px]"
+                          style={{
+                            background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+                          }}
+                        />
+                        {l.iconUrl && (
+                          <img
+                            src={l.iconUrl}
+                            alt={l.name}
+                            className="w-8 h-8 object-contain z-10"
+                          />
+                        )}
+                      </div>
+
+                      {/* Name & Details */}
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-extrabold text-white text-xs leading-snug break-words">
+                          {l.name}
+                        </h4>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          <span className="inline-block text-[8px] text-[#84849b] uppercase font-mono tracking-wider bg-white/[0.02] border border-white/5 px-1 py-0.5 rounded-sm">
+                            {l.category}
+                          </span>
+                          {l.exterior && (
+                            <span className="inline-block text-[8px] text-white/90 uppercase font-mono tracking-wider bg-white/10 px-1 py-0.5 rounded-sm border border-white/5 font-bold">
+                              {l.exterior}
+                            </span>
+                          )}
+                          <span
+                            className={`px-1.5 py-0.5 rounded-[3px] text-[8px] font-mono uppercase font-black ${
+                              l.provider === "buff"
+                                ? "bg-accent/10 text-accent border border-accent/20"
+                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            }`}
+                          >
+                            {l.provider}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sugeridos and Resell Prices Grid */}
+                    <div className="grid grid-cols-2 gap-2.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] text-[9.5px] font-mono">
+                      <div>
+                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Sugerido Youpin</span>
+                        <span className="text-white/80 block mt-0.5">{l.youpinAsk ? `$${l.youpinAsk}` : "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Sugerido Buff</span>
+                        <span className="text-white/80 block mt-0.5">{l.buffAsk ? `$${l.buffAsk}` : "—"}</span>
+                      </div>
+                      <div className="col-span-2 border-t border-white/[0.03] pt-2 flex items-center justify-between">
+                        <div>
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Precio de Reventa</span>
+                          <span className="font-extrabold text-green-400 text-xs block mt-0.5">
+                            ${l.price.toLocaleString()}
+                          </span>
+                        </div>
+
+                        {l.provider === "buff" ? (
+                          <a
+                            href={`https://buff.163.com/market/csgo#tab=selling&page_num=1&search=${encodeURIComponent(getCleanSearchName(l.name))}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-accent/80 hover:text-accent hover:border-accent/30 transition-all cursor-pointer text-[9px] font-black uppercase tracking-wider flex items-center gap-1 min-h-[30px]"
+                          >
+                            <span>Buff163</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        ) : (
+                          <a
+                            href={`https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(l.name))}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[9px] font-black uppercase tracking-wider flex items-center gap-1 min-h-[30px]"
+                          >
+                            <span>YouPin</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Pagination Controls */}

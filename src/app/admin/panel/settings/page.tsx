@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Loader2,
   Check,
-  ChevronDown,
   TrendingUp,
   Users,
   ShieldCheck,
@@ -12,6 +11,7 @@ import {
   Coins,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
+import { AdminSelect } from "@/shared/components/AdminSelect";
 
 const MODIFIER_OPTIONS = [
   { value: "percentage_increase", label: "Aumento en Porcentaje (+%)" },
@@ -139,67 +139,6 @@ function ToggleSwitch({
   );
 }
 
-function CustomDropdown({
-  value,
-  onChange,
-  options,
-  open,
-  setOpen,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: typeof MODIFIER_OPTIONS;
-  open: boolean;
-  setOpen: (v: boolean) => void;
-}) {
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between gap-4 px-4 py-3 bg-white/[0.03] border transition-all duration-200 rounded-[3px] text-sm text-white ${
-          open
-            ? "border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]"
-            : "border-white/8 hover:border-white/20"
-        }`}
-      >
-        <span className="font-bold">
-          {options.find((o) => o.value === value)?.label}
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 text-white/40 transition-transform duration-200 ${open ? "rotate-180 text-accent" : ""}`}
-        />
-      </button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 mt-1 w-full bg-[#110f1e] border border-white/10 rounded-[3px] overflow-hidden shadow-2xl z-20">
-            <div className="py-1">
-              {options.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    onChange(option.value);
-                    setOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all ${
-                    value === option.value
-                      ? "bg-accent/10 text-accent border-r-2 border-accent"
-                      : "text-[#84849b] hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
 
 /* ══════════════════════════════════════════════ */
 export default function AdminSettingsPage() {
@@ -232,9 +171,7 @@ export default function AdminSettingsPage() {
   const [savedMinSell, setSavedMinSell] = useState(false);
   const [savedWebhook, setSavedWebhook] = useState(false);
 
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [sellDropdownOpen, setSellDropdownOpen] = useState(false);
-  const [resellDropdownOpen, setResellDropdownOpen] = useState(false);
+
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/admin/marketplace/settings`, {
@@ -393,7 +330,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 w-full space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 w-full space-y-6">
       {/* Page header */}
       <div>
         <h1 className="text-xl font-black uppercase tracking-wider text-white">
@@ -404,8 +341,8 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-2 bg-[#110f1e]/40 p-1 rounded-[3px] border border-white/5 flex-wrap">
+      {/* Tab bar - Horizontal scrollable on mobile */}
+      <div className="flex gap-2 bg-[#110f1e]/40 p-1 rounded-[3px] border border-white/5 overflow-x-auto scrollbar-none shrink-0 flex-nowrap sm:flex-wrap">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -414,7 +351,7 @@ export default function AdminSettingsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-[3px] text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex-1 justify-center
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[3px] text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 justify-center
                 ${
                   active
                     ? "bg-accent text-white shadow-[0_4px_20px_rgba(217,70,239,0.35)]"
@@ -448,7 +385,7 @@ export default function AdminSettingsPage() {
 
       {/* ── TAB: Precios Globales ── */}
       {activeTab === "precios" && (
-        <div className="bg-[#110f1e]/40 border border-white/5 p-6 rounded-[3px]">
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
           <SectionHeader
             title="Reglas Globales de Precios"
             desc="Define cómo se modifican automáticamente los precios de todos los artículos en la tienda."
@@ -463,14 +400,12 @@ export default function AdminSettingsPage() {
             />
             <div className="space-y-1.5">
               <FieldLabel>Tipo de Modificador</FieldLabel>
-              <CustomDropdown
+              <AdminSelect
                 value={settings.globalPriceModifierType}
                 onChange={(v) =>
                   setSettings({ ...settings, globalPriceModifierType: v })
                 }
                 options={MODIFIER_OPTIONS}
-                open={dropdownOpen}
-                setOpen={setDropdownOpen}
               />
             </div>
             <div className="space-y-1.5">
@@ -498,7 +433,7 @@ export default function AdminSettingsPage() {
 
       {/* ── TAB: Reglas de Venta ── */}
       {activeTab === "venta" && (
-        <div className="bg-[#110f1e]/40 border border-white/5 p-6 rounded-[3px]">
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
           <SectionHeader
             title="Reglas de Venta de Usuarios"
             desc="Define cómo se modifican los precios cuando un usuario te vende items desde su inventario."
@@ -513,14 +448,12 @@ export default function AdminSettingsPage() {
             />
             <div className="space-y-1.5">
               <FieldLabel>Tipo de Modificador</FieldLabel>
-              <CustomDropdown
+              <AdminSelect
                 value={settings.userSellModifierType}
                 onChange={(v) =>
                   setSettings({ ...settings, userSellModifierType: v })
                 }
                 options={MODIFIER_OPTIONS}
-                open={sellDropdownOpen}
-                setOpen={setSellDropdownOpen}
               />
             </div>
             <div className="space-y-1.5">
@@ -548,7 +481,7 @@ export default function AdminSettingsPage() {
 
       {/* ── TAB: Reglas de Reventa ── */}
       {activeTab === "reventa" && (
-        <div className="bg-[#110f1e]/40 border border-white/5 p-6 rounded-[3px]">
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
           <SectionHeader
             title="Reglas de Reventa SteamWebAPI"
             desc="Define cómo se modifican los precios para las skins bajo pedido traídas de Buff y Youpin."
@@ -563,14 +496,12 @@ export default function AdminSettingsPage() {
             />
             <div className="space-y-1.5">
               <FieldLabel>Tipo de Modificador</FieldLabel>
-              <CustomDropdown
+              <AdminSelect
                 value={settings.resellModifierType}
                 onChange={(v) =>
                   setSettings({ ...settings, resellModifierType: v })
                 }
                 options={MODIFIER_OPTIONS}
-                open={resellDropdownOpen}
-                setOpen={setResellDropdownOpen}
               />
             </div>
             <div className="space-y-1.5">
@@ -598,7 +529,7 @@ export default function AdminSettingsPage() {
 
       {/* ── TAB: Límites ── */}
       {activeTab === "limites" && (
-        <div className="bg-[#110f1e]/40 border border-white/5 p-6 rounded-[3px]">
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
           <SectionHeader
             title="Límites de Venta"
             desc="Establecé restricciones mínimas para las ventas que los usuarios pueden realizar en la plataforma."
@@ -638,7 +569,7 @@ export default function AdminSettingsPage() {
 
       {/* ── TAB: Webhook ── */}
       {activeTab === "webhook" && (
-        <div className="bg-[#110f1e]/40 border border-white/5 p-6 rounded-[3px]">
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
           <SectionHeader
             title="Notificaciones vía Webhook"
             desc="Configurá una URL externa para recibir notificaciones HTTP en tiempo real cada vez que ocurra una compra o venta."

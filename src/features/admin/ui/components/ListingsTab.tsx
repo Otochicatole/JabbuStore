@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Loader2, Tag, Search, Filter } from "lucide-react";
+import { RefreshCw, Loader2, Tag, Search } from "lucide-react";
 import { Order } from "../../domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { OrderDetailRow } from "./OrderDetailRow";
 import { SellOrderDetailRow } from "./SellOrderDetailRow";
+import { AdminSelect } from "@/shared/components/AdminSelect";
 
 export function ListingsTab() {
   const router = useRouter();
@@ -159,10 +160,10 @@ export function ListingsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-3">
-            <Tag className="w-5 h-5 text-accent" />
+          <h2 className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-3">
+            <Tag className="w-5 h-5 text-accent shrink-0" />
             Órdenes de Venta
           </h2>
           <p className="text-xs text-[#84849b] mt-1 font-medium">
@@ -173,7 +174,7 @@ export function ListingsTab() {
         <button
           onClick={fetchOrders}
           disabled={loadingOrders}
-          className="flex items-center gap-2 h-10 px-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer"
+          className="flex items-center justify-center gap-2 h-10 px-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer shrink-0 w-full sm:w-auto"
         >
           <RefreshCw
             className={`w-4 h-4 ${loadingOrders ? "animate-spin text-accent" : ""}`}
@@ -203,36 +204,32 @@ export function ListingsTab() {
         </div>
 
         {/* Filtro por Estado */}
-        <div className="relative w-full md:w-48 flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-[#84849b] shrink-0" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-3 py-2.5 bg-[#0e0d16] border border-white/10 rounded-[3px] text-xs text-white focus:outline-none focus:border-accent/40 font-mono cursor-pointer [&>option]:bg-[#0e0d16] [&>option]:text-white"
-          >
-            <option value="all">Todos los Estados</option>
-            <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
-            <option value="PAID">PAID</option>
-            <option value="TRADE_PENDING">TRADE PENDING</option>
-            <option value="COMPLETED">COMPLETED</option>
-            <option value="CANCELLED">CANCELLED</option>
-          </select>
-        </div>
+        <AdminSelect
+          value={statusFilter}
+          onChange={setStatusFilter}
+          className="w-full md:w-52"
+          options={[
+            { value: "all", label: "Todos los Estados" },
+            { value: "PENDING_PAYMENT", label: "Pending Payment" },
+            { value: "PAID", label: "Paid" },
+            { value: "TRADE_PENDING", label: "Trade Pending" },
+            { value: "COMPLETED", label: "Completed" },
+            { value: "CANCELLED", label: "Cancelled" },
+          ]}
+        />
 
         {/* Filtro por Método de Pago */}
-        <div className="relative w-full md:w-52 flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-[#84849b] shrink-0" />
-          <select
-            value={paymentFilter}
-            onChange={(e) => setPaymentFilter(e.target.value)}
-            className="w-full px-3 py-2.5 bg-[#0e0d16] border border-white/10 rounded-[3px] text-xs text-white focus:outline-none focus:border-accent/40 font-mono cursor-pointer [&>option]:bg-[#0e0d16] [&>option]:text-white"
-          >
-            <option value="all">Todos los Métodos</option>
-            <option value="mercado_pago">Mercado Pago</option>
-            <option value="paypal">PayPal</option>
-            <option value="nowpayments">NOWPayments (Crypto)</option>
-          </select>
-        </div>
+        <AdminSelect
+          value={paymentFilter}
+          onChange={setPaymentFilter}
+          className="w-full md:w-56"
+          options={[
+            { value: "all", label: "Todos los Métodos" },
+            { value: "mercado_pago", label: "Mercado Pago" },
+            { value: "paypal", label: "PayPal" },
+            { value: "nowpayments", label: "NowPayments (Crypto)" },
+          ]}
+        />
       </div>
 
       {/* Renderizado Condicional */}

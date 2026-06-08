@@ -160,7 +160,7 @@ export function OrderDetailRow({
 
   return (
     <div
-      className={`bg-[#0e0d16]/90 border p-6 transition-all duration-300 relative overflow-hidden rounded-[3px] ${
+      className={`bg-[#0e0d16]/90 border p-4 sm:p-6 transition-all duration-300 relative overflow-hidden rounded-[3px] ${
         order.status === "PENDING_PAYMENT"
           ? "border-white/5 hover:border-orange-500/20"
           : order.status === "PAID"
@@ -312,45 +312,45 @@ export function OrderDetailRow({
       </div>
 
       {/* Cabecera de Datos Generales y Cambio de Estado Manual */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
         <div className="flex items-center gap-3">
           {order.user?.avatar && (
             <img
               src={order.user.avatar}
-              className="w-10 h-10 border border-white/10 rounded-[3px]"
+              className="w-10 h-10 border border-white/10 rounded-[3px] shrink-0"
               alt="avatar"
             />
           )}
-          <div>
+          <div className="min-w-0">
             <span className="text-[10px] text-[#84849b] font-mono block">
               Comprador
             </span>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-white text-sm">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-extrabold text-white text-sm truncate max-w-[150px]">
                 {order.user?.name || "Usuario desconocido"}
               </span>
-              <span className="text-[9.5px] text-accent font-mono">
+              <span className="text-[9.5px] text-accent font-mono truncate">
                 ({order.user?.steamId})
               </span>
             </div>
           </div>
         </div>
 
-        <div>
-          <span className="text-[10px] text-[#84849b] font-mono block">
+        <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1 border-t border-b border-white/[0.02] py-2 lg:py-0 lg:border-none">
+          <span className="text-[10px] text-[#84849b] font-mono">
             Importe Total
           </span>
-          <span className="text-emerald-400 font-black text-xl leading-none block mt-0.5">
+          <span className="text-emerald-400 font-black text-xl leading-none block">
             ${order.totalPrice.toLocaleString()} USD
           </span>
         </div>
 
-        <div>
-          <span className="text-[10px] text-[#84849b] font-mono block">
+        <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1">
+          <span className="text-[10px] text-[#84849b] font-mono">
             Estado
           </span>
           <span
-            className={`px-2.5 py-1 rounded-[3px] text-[10px] font-black uppercase tracking-widest block mt-0.5 ${
+            className={`px-2.5 py-1 rounded-[3px] text-[10px] font-black uppercase tracking-widest block ${
               order.status === "PENDING_PAYMENT"
                 ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
                 : order.status === "PAID"
@@ -367,11 +367,11 @@ export function OrderDetailRow({
         </div>
 
         {/* 🛠️ MANUAL STATUS BUTTONS (CAMBIO DE ESTADO MANUAL CLÁSICO) */}
-        <div>
+        <div className="space-y-1.5 w-full lg:w-auto">
           <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
             Cambio Manual de Estado
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
               onClick={() => onUpdateStatus(order.id, "PENDING_PAYMENT")}
               className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
@@ -427,17 +427,17 @@ export function OrderDetailRow({
 
         {/* AUTOMATION EXPRES BAR (Aprobar Pago y Generar Trade en 1 Clic) */}
         {order.status === "PENDING_PAYMENT" && (
-          <div>
+          <div className="w-full lg:w-auto">
             <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
               Acción Express Automática
             </span>
             <button
               onClick={handleAutoApproveAndTrade}
               disabled={updating}
-              className="px-3 py-1.5 bg-gradient-to-r from-accent to-indigo-600 hover:brightness-110 text-white border-none rounded-[3px] text-[9.5px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_15px_rgba(217,70,239,0.2)] disabled:opacity-50"
+              className="w-full lg:w-auto justify-center px-3 py-1.5 bg-gradient-to-r from-accent to-indigo-600 hover:brightness-110 text-white border-none rounded-[3px] text-[9.5px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_15px_rgba(217,70,239,0.2)] disabled:opacity-50 min-h-[36px]"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              Auto Aprobar y Generar Trade (1-Clic)
+              <span>Auto Aprobar y Trade (1-Clic)</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>

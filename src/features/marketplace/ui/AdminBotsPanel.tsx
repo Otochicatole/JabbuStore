@@ -305,9 +305,9 @@ export function AdminBotsPanel() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-black uppercase tracking-wider">
+          <h2 className="text-lg font-black uppercase tracking-wider text-white">
             Gestión de Bots de Steam
           </h2>
           <p className="text-xs text-[#84849b] mt-0.5">
@@ -317,10 +317,10 @@ export function AdminBotsPanel() {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors shadow-[0_0_20px_rgba(217,70,239,0.2)]"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors shadow-[0_0_20px_rgba(217,70,239,0.2)] w-full sm:w-auto cursor-pointer min-h-[38px]"
         >
-          <Plus className="w-4 h-4" />
-          Nuevo Bot
+          <Plus className="w-4 h-4 shrink-0" />
+          <span>Nuevo Bot</span>
         </button>
       </div>
 

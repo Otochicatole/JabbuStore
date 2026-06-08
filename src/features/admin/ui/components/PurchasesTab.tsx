@@ -101,6 +101,12 @@ export function PurchasesTab() {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    // Actualización optimista local en memoria para evitar un parpadeo de recarga de red (sin Loader2)
+    const originalOrders = [...orders];
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+    );
+
     try {
       const response = await fetch(`${BACKEND_URL}/orders/${orderId}/status`, {
         method: 'PATCH',
@@ -112,9 +118,10 @@ export function PurchasesTab() {
         body: JSON.stringify({ status: newStatus })
       });
       if (!response.ok) throw new Error('Error actualizando estado.');
-      await fetchOrders(); // Refresh orders
     } catch (err: any) {
       alert(err.message);
+      // Revertir si falla
+      setOrders(originalOrders);
     }
   };
 

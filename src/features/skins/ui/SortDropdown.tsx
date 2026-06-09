@@ -24,7 +24,7 @@ export const SortDropdown = () => {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`
-            flex items-center justify-between gap-2 px-3 py-2 bg-[#110f1e]/80 border transition-all duration-300 rounded-lg min-w-[140px] sm:min-w-[180px] max-w-full group cursor-pointer flex-1 sm:flex-initial
+            flex items-center justify-between gap-2 px-3 py-2 bg-card border transition-all duration-300 rounded-lg min-w-[140px] sm:min-w-[180px] max-w-full group cursor-pointer flex-1 sm:flex-initial
             ${isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : 'border-white/5 hover:border-white/10'}
           `}
         >
@@ -43,7 +43,7 @@ export const SortDropdown = () => {
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute right-0 top-full mt-2 w-full min-w-[160px] bg-card border border-white/10 rounded-xl overflow-hidden shadow-2xl z-20 backdrop-blur-xl"
+              className="absolute right-0 top-full mt-2 w-full min-w-40 bg-card border border-white/10 rounded-xl overflow-hidden shadow-2xl z-20 backdrop-blur-xl"
             >
               <div className="py-2">
                 {SORT_OPTIONS.map((option) => (

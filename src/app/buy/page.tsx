@@ -28,7 +28,7 @@ export default function BuyPage() {
             <p className="text-xs sm:text-sm text-[#84849b] mt-0.5">Explora y compra las mejores skins de CS2 disponibles.</p>
           </header>
 
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.01] border border-white/5 p-3 rounded-[3px]">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-white/5 p-3 rounded-[3px]">
             <span className="text-[10px] sm:text-xs font-bold text-[#84849b] uppercase tracking-widest block sm:inline">
               {loading ? "Cargando catálogo..." : `${filteredCount} Resultados`}
             </span>

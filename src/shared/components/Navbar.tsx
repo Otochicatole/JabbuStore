@@ -98,7 +98,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-full items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2 text-white no-underline cursor-pointer group">
-          <div className="h-8 w-8 rounded-[4px] bg-accent flex items-center justify-center font-black text-white text-xs transition-transform group-hover:scale-110">
+          <div className="h-8 w-8 rounded-sm bg-accent flex items-center justify-center font-black text-white text-xs transition-transform group-hover:scale-110">
             JS
           </div>
           <span className="hidden sm:inline text-lg font-black tracking-tight uppercase">
@@ -176,7 +176,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
 
               {/* Floating Dropdown Card */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 rounded-2xl border border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl p-4 shadow-2xl shadow-black/80 z-50 flex flex-col gap-3 font-sans animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 mt-3 w-64 rounded-2xl border border-white/5 bg-card p-4 shadow-2xl shadow-black/80 z-50 flex flex-col gap-3 font-sans animate-in fade-in slide-in-from-top-2 duration-200">
                   
                   {/* User Info Header */}
                   <div className="flex items-center gap-3 border-b border-white/5 pb-3">

@@ -48,7 +48,7 @@ function SellPageContent() {
             </div>
           </header>
 
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/[0.01] border border-white/5 p-3 rounded-[3px]">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-white/5 p-3 rounded-[3px]">
             <span className="text-[10px] sm:text-xs font-bold text-[#84849b] uppercase tracking-widest">
               {loading ? "Cargando tu inventario..." : `Tu Inventario (${inventoryItems.length} items)`}
             </span>

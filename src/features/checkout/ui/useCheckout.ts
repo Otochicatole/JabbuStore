@@ -155,6 +155,11 @@ export function useCheckout() {
           payload = {
             type: "BUY",
             itemIds: cartItems.map((i) => i.skin.id),
+            items: cartItems.map((i) => ({
+              assetId: i.skin.id,
+              float: i.skin.float !== undefined ? i.skin.float : null,
+              pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
+            })),
           };
         } else {
           if (sellItems.length === 0) {

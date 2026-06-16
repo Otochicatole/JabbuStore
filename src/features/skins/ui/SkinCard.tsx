@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Skin } from "../domain/skin";
 import { useCart } from "../../cart/context/CartContext";
 import { ShoppingCart, Plus, Minus, X, Eye, Check, Trash2 } from "lucide-react";
+import { FloatsModal } from "./components/FloatsModal";
 
 interface SkinCardProps {
   skinsInGroup: Skin[];
@@ -83,6 +84,7 @@ const getRangeColorClass = (min: number): string => {
 export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
   const { addToCart, items, removeFromCart } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFloatsModalOpen, setIsFloatsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -110,7 +112,9 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
   const isInCart = totalQuantityInCart > 0;
 
   const handleActionClick = () => {
-    if (isMultiple) {
+    if (skin.isImmediate === false) {
+      setIsFloatsModalOpen(true);
+    } else if (isMultiple) {
       setIsModalOpen(true);
     } else {
       if (isInCart) {
@@ -175,7 +179,12 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
       {/* Info Panel */}
       {!isMultiple ? (
         // Standard single item info panel (mantiene altura h-[42px] fija para evitar que se desplace el contenido si no tiene float)
-        <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center">
+        <div
+          onClick={skin.isImmediate === false ? () => setIsFloatsModalOpen(true) : undefined}
+          className={`flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center ${
+            skin.isImmediate === false ? "cursor-pointer hover:bg-white/[0.02] transition-colors" : ""
+          }`}
+        >
           {(() => {
             const isMarket = skin.isImmediate === false;
             const floatRange = isMarket
@@ -369,7 +378,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 Comprar
               </button>
               <button
-                onClick={() => addToCart(skin)}
+                onClick={skin.isImmediate === false ? () => setIsFloatsModalOpen(true) : () => addToCart(skin)}
                 className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer animate-fade-in shrink-0"
               >
                 <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -595,6 +604,14 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
           </div>,
           document.body,
         )}
+
+      {mounted && (
+        <FloatsModal
+          skin={skin}
+          isOpen={isFloatsModalOpen}
+          onClose={() => setIsFloatsModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

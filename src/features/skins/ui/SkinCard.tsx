@@ -98,6 +98,20 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
   const conditionLabel = getConditionLabel(skin.float);
   const isMultiple = skinsInGroup.length >= 2;
 
+  // Determine if this item can have floats or is a non-float item like stickers, music kits, keys, etc.
+  const floatCompatibleCategories = ["knife", "gloves", "rifle", "pistol", "smg", "heavy"];
+  const isStickerOrOther =
+    skin.weapon?.toLowerCase().includes("sticker") ||
+    skin.weapon?.toLowerCase().includes("pegatina") ||
+    skin.weapon?.toLowerCase().includes("music kit") ||
+    skin.weapon?.toLowerCase().includes("graffiti") ||
+    skin.weapon?.toLowerCase().includes("key") ||
+    skin.weapon?.toLowerCase().includes("pin") ||
+    skin.weapon?.toLowerCase().includes("pass") ||
+    !skin.category ||
+    !floatCompatibleCategories.includes(skin.category.toLowerCase());
+  const showFloatsModalTrigger = skin.isImmediate === false && !isStickerOrOther;
+
   // Calculate prices
   const prices = skinsInGroup.map((s) => s.price);
   const minPrice = Math.min(...prices);
@@ -112,7 +126,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
   const isInCart = totalQuantityInCart > 0;
 
   const handleActionClick = () => {
-    if (skin.isImmediate === false) {
+    if (showFloatsModalTrigger) {
       setIsFloatsModalOpen(true);
     } else if (isMultiple) {
       setIsModalOpen(true);
@@ -180,9 +194,9 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
       {!isMultiple ? (
         // Standard single item info panel (mantiene altura h-[42px] fija para evitar que se desplace el contenido si no tiene float)
         <div
-          onClick={skin.isImmediate === false ? () => setIsFloatsModalOpen(true) : undefined}
+          onClick={showFloatsModalTrigger ? () => setIsFloatsModalOpen(true) : undefined}
           className={`flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center ${
-            skin.isImmediate === false ? "cursor-pointer hover:bg-white/[0.02] transition-colors" : ""
+            showFloatsModalTrigger ? "cursor-pointer hover:bg-white/[0.02] transition-colors" : ""
           }`}
         >
           {(() => {
@@ -378,7 +392,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 Comprar
               </button>
               <button
-                onClick={skin.isImmediate === false ? () => setIsFloatsModalOpen(true) : () => addToCart(skin)}
+                onClick={showFloatsModalTrigger ? () => setIsFloatsModalOpen(true) : () => addToCart(skin)}
                 className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer animate-fade-in shrink-0"
               >
                 <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />

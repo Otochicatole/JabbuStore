@@ -7,6 +7,41 @@ interface ItemsReviewProps {
   selectedMethod: string | null;
 }
 
+function ItemSpecs({ item }: { item: CheckoutItem }) {
+  const hasFloat = item.float !== null && item.float !== undefined;
+  const hasPattern = item.pattern !== null && item.pattern !== undefined;
+  const hasExterior = Boolean(item.exterior);
+  const hasSpecs = hasFloat || hasPattern || hasExterior;
+
+  if (!hasSpecs) {
+    return (
+      <p className="text-[9px] text-[#84849b]/70 font-mono mt-1 uppercase">
+        Sin especificaciones individuales
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+      {hasExterior && (
+        <span className="text-[8px] font-black uppercase tracking-wider bg-white/10 text-white/90 px-1.5 py-0.5 rounded-sm border border-white/5">
+          {item.exterior}
+        </span>
+      )}
+      {hasFloat && (
+        <span className="text-[8px] font-mono text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.5 rounded-sm">
+          Float: {item.float!.toFixed(10)}
+        </span>
+      )}
+      {hasPattern && (
+        <span className="text-[8px] font-mono text-white/80 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-sm">
+          Semilla: {item.pattern}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
   return (
     <section className="bg-card border border-white/5 rounded-3xl p-6 md:p-8">
@@ -30,10 +65,11 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">{item.name}</h4>
-                <p className="text-[9px] text-[#84849b] font-mono mt-1 uppercase">Asset: {item.assetId}</p>
+                <p className="text-[9px] text-[#84849b] font-mono mt-1 uppercase truncate">Asset: {item.assetId}</p>
+                <ItemSpecs item={item} />
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
               <p className="text-xs font-black text-white">${item.price.toFixed(2)}</p>
               <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">Listo</p>
             </div>

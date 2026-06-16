@@ -3,6 +3,10 @@ export interface CheckoutItem {
   name: string;
   price: number;
   iconUrl: string | null;
+  float?: number | null;
+  pattern?: number | null;
+  exterior?: string | null;
+  rarity?: string | null;
 }
 
 export interface PaymentMethod {

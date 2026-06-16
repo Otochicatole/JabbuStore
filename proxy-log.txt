@@ -5176,3 +5176,4 @@
 [2026-06-16T21:48:11.829Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)
 [2026-06-16T21:48:22.963Z] GET /api/proxy/market/listings/market-Souvenir AWP | Dragon Lore (Minimal Wear)/floats -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings/market-Souvenir AWP | Dragon Lore (Minimal Wear)/floats)
 [2026-06-16T21:49:06.044Z] GET /api/proxy/market/listings/market-Sticker | Reason Gaming (Holo) | Katowice 2014/floats -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings/market-Sticker | Reason Gaming (Holo) | Katowice 2014/floats)
+[2026-06-16T22:10:19.198Z] GET /api/proxy/market/listings/market-★ StatTrak™ Butterfly Knife | Gamma Doppler (Minimal Wear) | Emerald/floats -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings/market-★ StatTrak™ Butterfly Knife | Gamma Doppler (Minimal Wear) | Emerald/floats)

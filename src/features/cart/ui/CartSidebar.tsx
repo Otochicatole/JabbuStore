@@ -111,10 +111,6 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                           {item.skin.float !== undefined && ` • Float: ${item.skin.float.toFixed(5)}`}
                         </p>
                         
-                        {/* Quantity (fixed to 1 since it is a unique item) */}
-                        <p className="mt-2 text-[9px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block">
-                          Único en Stock
-                        </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-black text-white tracking-tighter">${(item.skin.price * item.quantity).toLocaleString()}</p>

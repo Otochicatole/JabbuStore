@@ -45,6 +45,14 @@ const getFloatColorClass = (float: number) => {
   return "bg-[#ef4444]"; // BS
 };
 
+const getFloatConditionStyle = (float: number) => {
+  if (float < 0.07) return { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/25" }; // FN
+  if (float < 0.15) return { text: "text-[#84cc16]", bg: "bg-[#84cc16]/10", border: "border-[#84cc16]/25" }; // MW
+  if (float < 0.38) return { text: "text-[#eab308]", bg: "bg-[#eab308]/10", border: "border-[#eab308]/25" }; // FT
+  if (float < 0.45) return { text: "text-[#f97316]", bg: "bg-[#f97316]/10", border: "border-[#f97316]/25" }; // WW
+  return { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/25" }; // BS
+};
+
 export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   const { addToCart, removeFromCart, items: cartItems } = useCart();
   const [mounted, setMounted] = useState(false);
@@ -273,41 +281,42 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                 cartItemForThisListing.skin.float === f.floatValue &&
                 cartItemForThisListing.skin.pattern === f.paintSeed;
 
+              const condStyle = getFloatConditionStyle(f.floatValue);
+
               return (
                 <div
                   key={f.id}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all gap-4 ${
+                  className={`group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-xl border transition-all duration-300 gap-4 ${
                     isSelectedInCart
-                      ? "bg-accent/5 border-accent shadow-[0_0_20px_rgba(217,70,239,0.15)]"
-                      : "bg-[#13111c]/40 border-white/5 hover:border-white/10"
+                      ? "bg-accent/[0.04] border-accent shadow-[0_0_25px_rgba(217,70,239,0.12)] scale-[1.01]"
+                      : "bg-[#13111c]/45 border-white/[0.04] hover:bg-white/[0.02] hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
                   }`}
                 >
                   {/* Left: Float and Seed Info */}
-                  <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <div className="flex-1 min-w-0 flex flex-col gap-2.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-black uppercase text-white font-mono tracking-wide">
+                      {/* Condition Badge */}
+                      <span className={`text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-full select-none border font-mono tracking-wider ${condStyle.bg} ${condStyle.text} ${condStyle.border}`}>
                         {getConditionLabel(f.floatValue)}
                       </span>
-                      <span className="text-[#84849b] text-[9px] font-mono">
+                      
+                      {/* Seed Badge */}
+                      <span className="bg-white/5 border border-white/10 text-white/70 text-[9.5px] font-mono px-2 py-0.5 rounded-md">
                         Semilla: <span className="text-white font-bold">{f.paintSeed}</span>
-                      </span>
-                      {/* Market Badge */}
-                      <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-md font-mono select-none bg-accent/10 border border-accent/20 text-accent">
-                        YOUPIN
                       </span>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="flex flex-col gap-1 w-full max-w-sm">
-                      <div className="flex items-center justify-between text-[9px] font-mono text-[#84849b]">
-                        <span>Float</span>
-                        <span className="text-white font-bold">{f.floatValue.toFixed(8)}</span>
+                    <div className="flex flex-col gap-1.5 w-full max-w-sm">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-[#84849b]">
+                        <span className="opacity-80">Float</span>
+                        <span className="text-white/90 font-bold tracking-tight">{f.floatValue.toFixed(8)}</span>
                       </div>
-                      <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden relative">
-                        <div className="absolute top-0 bottom-0 left-[7%] w-[1px] bg-white/20" />
-                        <div className="absolute top-0 bottom-0 left-[15%] w-[1px] bg-white/20" />
-                        <div className="absolute top-0 bottom-0 left-[38%] w-[1px] bg-white/20" />
-                        <div className="absolute top-0 bottom-0 left-[45%] w-[1px] bg-white/20" />
+                      <div className="h-[5px] w-full bg-white/5 rounded-full overflow-hidden relative border border-white/5">
+                        <div className="absolute top-0 bottom-0 left-[7%] w-[1px] bg-white/10" />
+                        <div className="absolute top-0 bottom-0 left-[15%] w-[1px] bg-white/10" />
+                        <div className="absolute top-0 bottom-0 left-[38%] w-[1px] bg-white/10" />
+                        <div className="absolute top-0 bottom-0 left-[45%] w-[1px] bg-white/10" />
                         <div
                           className={`h-full ${getFloatColorClass(f.floatValue)} rounded-full transition-all duration-500`}
                           style={{ width: `${Math.min(100, f.floatValue * 100)}%` }}
@@ -332,7 +341,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                       {f.inspectLink && (
                         <a
                           href={f.inspectLink}
-                          className="h-8 w-8 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg transition-all"
+                          className="h-9 w-9 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg transition-all hover:scale-105 active:scale-95"
                           title="Inspeccionar en el juego"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -342,14 +351,14 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                       {isSelectedInCart ? (
                         <button
                           onClick={handleRemoveFromCart}
-                          className="h-8 px-4 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-[9.5px] font-black uppercase tracking-wider rounded-lg cursor-pointer font-mono"
+                          className="h-9 px-4 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all hover:scale-[1.02] active:scale-95 text-[9.5px] font-black uppercase tracking-wider rounded-lg cursor-pointer font-mono"
                         >
                           Quitar
                         </button>
                       ) : (
                         <button
                           onClick={() => handleSelectFloat(f)}
-                          className="h-8 px-4 flex items-center justify-center gap-1 bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[9.5px] font-black uppercase tracking-wider rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)] font-mono"
+                          className="h-9 px-4 flex items-center justify-center gap-1 bg-accent text-white hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all text-[9.5px] font-black uppercase tracking-wider rounded-lg cursor-pointer border-none shadow-[0_4px_15px_rgba(217,70,239,0.2)] font-mono"
                         >
                           {cartItemForThisListing ? "Reemplazar" : "Seleccionar"}
                         </button>

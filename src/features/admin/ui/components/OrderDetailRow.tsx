@@ -18,54 +18,7 @@ import {
   getItemExterior,
   hashCode,
 } from "./utils";
-
-function getCleanSearchName(fullName: string): string {
-  if (!fullName) return "";
-  let name = fullName;
-
-  // Remove Doppler phases
-  const phases = [
-    " | Phase 1",
-    " | Phase 2",
-    " | Phase 3",
-    " | Phase 4",
-    " | Ruby",
-    " | Sapphire",
-    " | Black Pearl",
-    " | Emerald",
-  ];
-  phases.forEach((p) => {
-    name = name.replace(p, "");
-  });
-
-  // Remove exteriors
-  const exteriors = [
-    " (Factory New)",
-    " (Minimal Wear)",
-    " (Field-Tested)",
-    " (Well-Worn)",
-    " (Battle-Scarred)",
-    " | Factory New",
-    " | Minimal Wear",
-    " | Field-Tested",
-    " | Well-Worn",
-    " | Battle-Scarred",
-    " Factory New",
-    " Minimal Wear",
-    " Field-Tested",
-    " Well-Worn",
-    " Battle-Scarred",
-  ];
-  exteriors.forEach((ext) => {
-    name = name.replace(ext, "");
-  });
-
-  // Remove star symbols
-  name = name.replace("★ ", "");
-  name = name.replace("★", "");
-
-  return name.trim();
-}
+import { buildYoupinItemUrl } from "@/shared/lib/youpin";
 
 interface OrderDetailRowProps {
   order: Order;
@@ -782,9 +735,14 @@ export function OrderDetailRow({
               item.provider ||
               (item.assetId &&
               typeof item.assetId === "string" &&
-              item.assetId.startsWith("resell-")
+              (item.assetId.startsWith("resell-") ||
+                item.assetId.startsWith("market-"))
                 ? "youpin"
                 : "bots");
+            const youpinUrl = buildYoupinItemUrl({
+              externalId: item.externalId,
+              name: item.name,
+            });
 
             // Deterministic fallback for Youpin resell items if database float/pattern is null
             let displayFloat = finalFloat;
@@ -917,7 +875,7 @@ export function OrderDetailRow({
                     {/* ENHANCED LABELS & PROVIDER BADGES */}
                     {finalProvider === "youpin" && (
                       <a
-                        href={`https://www.youpin898.com/goodList?game=730&keyword=${encodeURIComponent(getCleanSearchName(item.name))}`}
+                        href={youpinUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105"
@@ -1056,6 +1014,25 @@ export function OrderDetailRow({
                     <span className="text-[10px] text-white/35 font-mono mt-1 font-bold">
                       N/A (Sujeto a entrega)
                     </span>
+                  </div>
+                )}
+
+                {finalProvider === "youpin" && (
+                  <div className="flex-shrink-0">
+                    <a
+                      href={youpinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 hover:text-indigo-200 rounded-[3px] text-[10px] font-black uppercase tracking-wider transition-all hover:scale-[1.02] shadow-[0_0_16px_rgba(99,102,241,0.08)]"
+                      title={
+                        item.externalId
+                          ? "Abrir el listing exacto en YouPin"
+                          : "Buscar el ítem en YouPin"
+                      }
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      {item.externalId ? "Ver ítem en YouPin" : "Buscar en YouPin"}
+                    </a>
                   </div>
                 )}
 

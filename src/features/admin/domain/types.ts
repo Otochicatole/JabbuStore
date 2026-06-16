@@ -29,6 +29,8 @@ export interface OrderItem {
   float?: number | null;
   pattern?: number | null;
   provider?: string | null;
+  /** YouPin listing id (SteamWebAPI marketid) when the user bought a specific float */
+  externalId?: string | null;
 }
 
 export interface Order {

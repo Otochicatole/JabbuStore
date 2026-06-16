@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Skin } from "../../domain/skin";
 import { useCart } from "../../../cart/context/CartContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
-import { X, Search, ArrowUpDown, ExternalLink, AlertCircle, Check, RefreshCw } from "lucide-react";
+import { X, Search, ArrowUpDown, ExternalLink, AlertCircle, Check, RefreshCw, Eye } from "lucide-react";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 
 interface FloatItem {
@@ -358,7 +358,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                           className="h-9 w-9 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg transition-all hover:scale-105 active:scale-95"
                           title="Inspeccionar en el juego"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <Eye className="w-4 h-4" />
                         </a>
                       )}
 

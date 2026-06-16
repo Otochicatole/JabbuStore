@@ -235,7 +235,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
     setSelectedItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const clearSellList = () => setSelectedItems([]);
+  const clearSellList = useCallback(() => setSelectedItems([]), []);
 
   const totalValue = selectedItems.reduce((sum, item) => sum + item.price, 0);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/context/CartContext";
 import { useInventory } from "@/features/inventory/context/InventoryContext";
@@ -17,6 +17,8 @@ export function useCheckout() {
   } = useInventory();
 
   const checkoutType: "buy" | "sell" = searchParams.get("type") === "sell" ? "sell" : "buy";
+
+  const processedRef = useRef(false);
 
   const [items, setItems] = useState<CheckoutItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -69,18 +71,34 @@ export function useCheckout() {
     const status = searchParams.get("status");
     const orderId = searchParams.get("orderId");
     const method = searchParams.get("method");
+    const token = searchParams.get("token");
+
+    console.log("[useCheckout] useEffect callback check:", {
+      status,
+      orderId,
+      method,
+      token,
+      alreadyProcessed: processedRef.current
+    });
+
+    if (!status || processedRef.current) return;
 
     const handleCallback = async () => {
+      processedRef.current = true;
+      console.log("[useCheckout] starting handleCallback...");
       if (status === "success" && orderId) {
         if (method === "paypal") {
           setLoading(true);
           try {
+            console.log("[useCheckout] posting to PayPal webhook endpoint with token:", token);
             const res = await fetchWithAuth(`${BACKEND_URL}/orders/webhook/paypal`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ token: searchParams.get("token") }),
+              body: JSON.stringify({ token }),
             });
+            console.log("[useCheckout] PayPal webhook response status:", res.status);
             const data = await res.json();
+            console.log("[useCheckout] PayPal webhook response data:", data);
             if (!res.ok) {
               throw new Error(data?.error || "Error al verificar la transacción de PayPal.");
             }
@@ -92,6 +110,7 @@ export function useCheckout() {
           }
         }
 
+        console.log("[useCheckout] Capture completed successfully. Updating frontend state.");
         setCreatedOrderId(orderId);
         setIsSuccess(true);
         if (checkoutType === "buy") {
@@ -100,6 +119,7 @@ export function useCheckout() {
           clearSellList();
         }
         setLoading(false);
+        console.log("[useCheckout] handleCallback finished. Loading set to false.");
       } else if (status === "failure") {
         setError(
           "El proceso de pago fue cancelado o rechazado. Por favor, intente nuevamente.",
@@ -113,9 +133,7 @@ export function useCheckout() {
       }
     };
 
-    if (status) {
-      handleCallback();
-    }
+    handleCallback();
   }, [searchParams, checkoutType, clearCart, clearSellList]);
 
   // 2. Validar ítems del checkout

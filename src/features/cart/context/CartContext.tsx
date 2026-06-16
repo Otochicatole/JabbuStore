@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { Skin } from '../../skins/domain/skin';
 import { CartItem } from '../domain/cart';
 
@@ -60,7 +60,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     setItems(prev => prev.filter(item => item.skin.id !== skinId));
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = useCallback(() => setItems([]), []);
 
   const total = useMemo(() => 
     items.reduce((sum, item) => sum + (item.skin.price * item.quantity), 0),

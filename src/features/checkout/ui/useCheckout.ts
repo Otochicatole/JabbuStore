@@ -247,7 +247,19 @@ export function useCheckout() {
 
   const handleSimulatePayment = () => {
     if (!selectedMethod) return;
+    
+    const sendDebugLog = (msg: string) => {
+      fetch('/api/proxy/debug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      }).catch(() => {});
+    };
+
+    sendDebugLog("handleSimulatePayment clicked, method: " + selectedMethod + ", type: " + checkoutType);
+
     if (!validateForm()) {
+      sendDebugLog("validateForm failed. Form errors: " + JSON.stringify(formErrors));
       const formSection = document.getElementById("checkout-form-section");
       if (formSection) {
         formSection.scrollIntoView({ behavior: "smooth" });
@@ -255,14 +267,18 @@ export function useCheckout() {
       return;
     }
 
+    sendDebugLog("validateForm passed. Proceeding with checkout.");
+
     // SI ES COMPRA Y EL MÉTODO ES MERCADO PAGO, NOWPAYMENTS O PAYPAL: FLUJO REAL
     if (checkoutType === "buy" && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments" || selectedMethod === "paypal")) {
       setIsSimulating(true);
       setSimulationStep(1);
 
       const methodLabel = selectedMethod === "mercado_pago" ? "Mercado Pago" : selectedMethod === "nowpayments" ? "NOWPayments" : "PayPal";
+      sendDebugLog("Real flow: starting setTimeout with 1000ms delay for " + methodLabel);
 
       setTimeout(async () => {
+        sendDebugLog("setTimeout callback started execution.");
         try {
           const metadataPayload = {
             firstName: formData.firstName,
@@ -276,23 +292,34 @@ export function useCheckout() {
             network: null,
           };
 
-          const detailedItems = items.map((i) => {
-            const cartItem = cartItems.find((c) => c.skin.id === i.assetId);
-            const skin = cartItem?.skin;
+          sendDebugLog("metadataPayload prepared: " + JSON.stringify(metadataPayload));
+          sendDebugLog("items in state count: " + items.length + ", cartItems count: " + cartItems.length);
 
-            return {
-              assetId: i.assetId,
-              name: i.name,
-              price: i.price,
-              iconUrl: i.iconUrl,
-              float: skin?.float !== undefined ? skin.float : null,
-              pattern: skin?.pattern !== undefined ? skin.pattern : null,
-              rarity: skin?.rarity || "common",
-              exterior: skin?.exterior || null,
-              provider: skin?.provider || "bot",
-            };
-          });
+          let detailedItems;
+          try {
+            detailedItems = items.map((i) => {
+              const cartItem = cartItems.find((c) => c.skin.id === i.assetId);
+              const skin = cartItem?.skin;
 
+              return {
+                assetId: i.assetId,
+                name: i.name,
+                price: i.price,
+                iconUrl: i.iconUrl,
+                float: skin?.float !== undefined ? skin.float : null,
+                pattern: skin?.pattern !== undefined ? skin.pattern : null,
+                rarity: skin?.rarity || "common",
+                exterior: skin?.exterior || null,
+                provider: skin?.provider || "bot",
+              };
+            });
+            sendDebugLog("detailedItems mapping completed: " + JSON.stringify(detailedItems));
+          } catch (mapErr: any) {
+            sendDebugLog("detailedItems map failed: " + mapErr.message + "\nStack: " + mapErr.stack);
+            throw mapErr;
+          }
+
+          sendDebugLog("Sending POST request to " + BACKEND_URL + "/orders");
           const res = await fetchWithAuth(`${BACKEND_URL}/orders`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -304,7 +331,10 @@ export function useCheckout() {
             }),
           });
 
+          sendDebugLog("fetchWithAuth response status: " + res.status);
           const data = await res.json();
+          sendDebugLog("fetchWithAuth response JSON: " + JSON.stringify(data));
+          
           if (!res.ok) {
             throw new Error(
               data?.error || `Error al registrar la orden de ${methodLabel}.`,
@@ -312,9 +342,7 @@ export function useCheckout() {
           }
 
           if (data.paymentUrl) {
-            console.log(
-              `[${methodLabel}] Redirigiendo al usuario a: ${data.paymentUrl}`,
-            );
+            sendDebugLog(`[${methodLabel}] Redirigiendo al usuario a: ${data.paymentUrl}`);
             window.location.href = data.paymentUrl;
           } else {
             throw new Error(
@@ -322,6 +350,7 @@ export function useCheckout() {
             );
           }
         } catch (err: any) {
+          sendDebugLog("Error inside setTimeout try-catch block: " + err.message + "\nStack: " + err.stack);
           console.error(`${methodLabel} integration error:`, err);
           setError(err.message || `La conexión con ${methodLabel} falló.`);
           setIsSimulating(false);

@@ -23,6 +23,19 @@ const HOP_BY_HOP_HEADERS = [
 async function handleProxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const resolvedParams = await params;
   const path = resolvedParams.path.join('/');
+
+  if (path === 'debug') {
+    try {
+      const body = await req.json();
+      const fs = require('fs');
+      const pathModule = require('path');
+      const logFilePath = pathModule.join(process.cwd(), 'proxy-log.txt');
+      const logMsg = `[CLIENT DEBUG] [${new Date().toISOString()}] ${body.message}\n`;
+      fs.appendFileSync(logFilePath, logMsg);
+    } catch (e) {}
+    return NextResponse.json({ ok: true });
+  }
+
   const url = new URL(req.url);
   const searchParams = url.searchParams.toString();
   const query = searchParams ? `?${searchParams}` : '';

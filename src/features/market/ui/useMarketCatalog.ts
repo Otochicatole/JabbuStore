@@ -11,9 +11,6 @@ export function useMarketCatalog() {
   const [error, setError] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [providerFilter, setProviderFilter] = useState<
-    "all" | "buff" | "youpin"
-  >("all");
   const [rarityFilter, setRarityFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"price_desc" | "price_asc" | "name">(
     "price_desc",
@@ -23,7 +20,7 @@ export function useMarketCatalog() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, providerFilter, rarityFilter, sortBy]);
+  }, [search, rarityFilter, sortBy]);
 
   const fetchListings = useCallback(async () => {
     try {
@@ -60,12 +57,10 @@ export function useMarketCatalog() {
     }
   };
 
-  // Filtrar y ordenar
+  // Filtrar y ordenar (el proveedor siempre es youpin)
   const filtered = listings
     .filter((l) => {
       if (search && !l.name.toLowerCase().includes(search.toLowerCase()))
-        return false;
-      if (providerFilter !== "all" && l.provider !== providerFilter)
         return false;
       if (rarityFilter !== "all" && l.rarity !== rarityFilter) return false;
       return true;
@@ -77,7 +72,6 @@ export function useMarketCatalog() {
     });
 
   const youpinCount = listings.filter((l) => l.provider === "youpin").length;
-  const buffCount = listings.filter((l) => l.provider === "buff").length;
 
   return {
     listings,
@@ -87,15 +81,12 @@ export function useMarketCatalog() {
     syncMessage,
     search,
     setSearch,
-    providerFilter,
-    setProviderFilter,
     rarityFilter,
     setRarityFilter,
     sortBy,
     setSortBy,
     filtered,
     youpinCount,
-    buffCount,
     handleSync,
     fetchListings,
     currentPage,

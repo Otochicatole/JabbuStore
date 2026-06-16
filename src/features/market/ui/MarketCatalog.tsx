@@ -5,8 +5,6 @@ import {
   ExternalLink,
   RefreshCw,
   Search,
-  TrendingUp,
-  TrendingDown,
 } from "lucide-react";
 import { rarityColors } from "@/features/admin/ui/components/utils";
 import { useMarketCatalog } from "./useMarketCatalog";
@@ -80,15 +78,12 @@ export function MarketCatalog() {
     syncMessage,
     search,
     setSearch,
-    providerFilter,
-    setProviderFilter,
     rarityFilter,
     setRarityFilter,
     sortBy,
     setSortBy,
     filtered,
     youpinCount,
-    buffCount,
     handleSync,
     currentPage,
     setCurrentPage,
@@ -107,11 +102,11 @@ export function MarketCatalog() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-black uppercase tracking-wider text-white">
-            Catálogo de Mercado
+            Catálogo de Mercado (YouPin)
           </h2>
           <p className="text-[10px] text-[#84849b] font-mono mt-0.5 uppercase tracking-wider">
-            Buff163 + YouPin via SteamWebAPI —{" "}
-            {listings.length.toLocaleString()} listings
+            YouPin via SteamWebAPI —{" "}
+            {listings.length.toLocaleString()} listings activos
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -132,28 +127,20 @@ export function MarketCatalog() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-4 flex flex-col justify-center">
           <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
-            Total
+            Total Listings en Catálogo
           </div>
-          <div className="text-xl font-bold mt-1 text-white">
+          <div className="text-2xl font-black mt-1 text-white">
             {listings.length.toLocaleString()}
           </div>
         </div>
-        <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-3">
+        <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-4 flex flex-col justify-center">
           <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
-            Buff163 Listings
+            YouPin Listings Soportados
           </div>
-          <div className="text-xl font-bold mt-1 text-accent">
-            {buffCount.toLocaleString()}
-          </div>
-        </div>
-        <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-3">
-          <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
-            YouPin Listings
-          </div>
-          <div className="text-xl font-bold mt-1 text-emerald-400">
+          <div className="text-2xl font-black mt-1 text-emerald-400">
             {youpinCount.toLocaleString()}
           </div>
         </div>
@@ -168,23 +155,12 @@ export function MarketCatalog() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar listings de Buff o YouPin..."
+              placeholder="Buscar listings de YouPin..."
               className="w-full bg-[#110f1e]/80 border border-white/5 pl-9 pr-3 py-2 text-xs font-bold text-white placeholder-[#84849b] rounded-[3px] outline-none focus:border-accent/40 transition-colors"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Provider */}
-            <AdminSelect
-              value={providerFilter}
-              onChange={(v) => setProviderFilter(v as any)}
-              options={[
-                { value: "all", label: "Todos los Proveedores" },
-                { value: "buff", label: "Buff163 Only" },
-                { value: "youpin", label: "YouPin Only" },
-              ]}
-            />
-
             {/* Rarity */}
             <AdminSelect
               value={rarityFilter}
@@ -243,9 +219,7 @@ export function MarketCatalog() {
                     <th className="py-3 px-4">Estado / Wear</th>
                     <th className="py-3 px-4">Proveedor</th>
                     <th className="py-3 px-4">Precio Sugerido Youpin</th>
-                    <th className="py-3 px-4">Precio Sugerido Buff</th>
-                    <th className="py-3 px-4">Precio Sugerido Steam</th>
-                    <th className="py-3 px-4">Precio de Reventa</th>
+                    <th className="py-3 px-4">Precio de Reventa (USD)</th>
                     <th className="py-3 px-4 text-right">Links</th>
                   </tr>
                 </thead>
@@ -295,52 +269,27 @@ export function MarketCatalog() {
                           )}
                         </td>
                         <td className="py-2.5 px-4">
-                          <span
-                            className={`px-2 py-0.5 rounded-[3px] text-[9px] font-mono uppercase font-black ${
-                              l.provider === "buff"
-                                ? "bg-accent/10 text-accent border border-accent/20"
-                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            }`}
-                          >
-                            {l.provider}
+                          <span className="px-2 py-0.5 rounded-[3px] text-[9px] font-mono uppercase font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            youpin
                           </span>
                         </td>
                         <td className="py-2.5 px-4 font-mono text-[#84849b]">
                           {l.youpinAsk ? `$${l.youpinAsk}` : "—"}
-                        </td>
-                        <td className="py-2.5 px-4 font-mono text-[#84849b]">
-                          {l.buffAsk ? `$${l.buffAsk}` : "—"}
-                        </td>
-                        <td className="py-2.5 px-4 font-mono text-[#84849b]">
-                          {/* En MarketListing de front el precio de steam se aproxima por price o displayPrice si no existe steamPrice */}
-                          —
                         </td>
                         <td className="py-2.5 px-4 font-mono text-green-400 font-bold">
                           ${l.price.toLocaleString()}
                         </td>
                         <td className="py-2.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            {l.provider === "buff" ? (
-                              <a
-                                href={`https://buff.163.com/market/csgo#tab=selling&page_num=1&search=${encodeURIComponent(getCleanSearchName(l.name))}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-accent/80 hover:text-accent hover:border-accent/30 transition-all cursor-pointer text-[10px] font-bold"
-                                title="Buscar en Buff163"
-                              >
-                                Buff163 <ExternalLink className="w-3 h-3 inline-block ml-1" />
-                              </a>
-                            ) : (
-                              <a
-                                href={`https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(l.name))}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[10px] font-bold"
-                                title="Buscar en YouPin"
-                              >
-                                YouPin <ExternalLink className="w-3 h-3 inline-block ml-1" />
-                              </a>
-                            )}
+                            <a
+                              href={`https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(l.name))}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[10px] font-bold"
+                              title="Buscar en YouPin"
+                            >
+                              YouPin <ExternalLink className="w-3 h-3 inline-block ml-1" />
+                            </a>
                           </div>
                         </td>
                       </tr>
@@ -396,14 +345,8 @@ export function MarketCatalog() {
                               {l.exterior}
                             </span>
                           )}
-                          <span
-                            className={`px-1.5 py-0.5 rounded-[3px] text-[8px] font-mono uppercase font-black ${
-                              l.provider === "buff"
-                                ? "bg-accent/10 text-accent border border-accent/20"
-                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            }`}
-                          >
-                            {l.provider}
+                          <span className="px-1.5 py-0.5 rounded-[3px] text-[8px] font-mono uppercase font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            youpin
                           </span>
                         </div>
                       </div>
@@ -415,10 +358,6 @@ export function MarketCatalog() {
                         <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Sugerido Youpin</span>
                         <span className="text-white/80 block mt-0.5">{l.youpinAsk ? `$${l.youpinAsk}` : "—"}</span>
                       </div>
-                      <div>
-                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Sugerido Buff</span>
-                        <span className="text-white/80 block mt-0.5">{l.buffAsk ? `$${l.buffAsk}` : "—"}</span>
-                      </div>
                       <div className="col-span-2 border-t border-white/[0.03] pt-2 flex items-center justify-between">
                         <div>
                           <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Precio de Reventa</span>
@@ -427,27 +366,15 @@ export function MarketCatalog() {
                           </span>
                         </div>
 
-                        {l.provider === "buff" ? (
-                          <a
-                            href={`https://buff.163.com/market/csgo#tab=selling&page_num=1&search=${encodeURIComponent(getCleanSearchName(l.name))}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-accent/80 hover:text-accent hover:border-accent/30 transition-all cursor-pointer text-[9px] font-black uppercase tracking-wider flex items-center gap-1 min-h-[30px]"
-                          >
-                            <span>Buff163</span>
-                            <ExternalLink className="w-2.5 h-2.5" />
-                          </a>
-                        ) : (
-                          <a
-                            href={`https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(l.name))}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[9px] font-black uppercase tracking-wider flex items-center gap-1 min-h-[30px]"
-                          >
-                            <span>YouPin</span>
-                            <ExternalLink className="w-2.5 h-2.5" />
-                          </a>
-                        )}
+                        <a
+                          href={`https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(l.name))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[9px] font-black uppercase tracking-wider flex items-center gap-1 min-h-[30px]"
+                        >
+                          <span>YouPin</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
                       </div>
                     </div>
                   </div>

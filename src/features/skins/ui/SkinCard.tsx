@@ -332,11 +332,11 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
 
         {/* Stock Badge positioned at the bottom-right of the image container (only on re-sale / under-order catalog items) */}
         {skin.isImmediate === false &&
-          (skin.youpinVolume || 0) + (skin.buffVolume || 0) > 0 && (
+          (skin.youpinVolume || 0) > 0 && (
             <div className="absolute bottom-2 right-2 bg-black/40 border border-white/5 backdrop-blur-[2px] rounded-full px-2 py-0.5 text-[7.5px] font-bold text-white/60 uppercase tracking-widest font-mono z-10 select-none">
               Stock:{" "}
               {(
-                (skin.youpinVolume || 0) + (skin.buffVolume || 0)
+                skin.youpinVolume || 0
               ).toLocaleString()}
             </div>
           )}

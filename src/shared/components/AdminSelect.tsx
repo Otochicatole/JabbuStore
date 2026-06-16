@@ -13,12 +13,14 @@ interface AdminSelectProps {
   value: string;
   onChange: (value: string) => void;
   options: Option[];
+  className?: string;
 }
 
 export function AdminSelect({
   value,
   onChange,
   options,
+  className,
 }: AdminSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +39,7 @@ export function AdminSelect({
   }, []);
 
   return (
-    <div className={`w-full sm:w-auto min-w-[140px] sm:min-w-[180px] ${isOpen ? 'relative z-50' : 'relative z-20'}`} ref={containerRef}>
+    <div className={`${className || "w-full sm:w-auto min-w-[140px] sm:min-w-[180px]"} ${isOpen ? 'relative z-50' : 'relative z-20'}`} ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}

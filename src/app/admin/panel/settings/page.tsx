@@ -44,7 +44,7 @@ const TABS: {
     id: "reventa",
     label: "Reglas de Reventa",
     icon: Coins,
-    desc: "Modificadores para ítems de Youpin/Buff (reventas)",
+    desc: "Modificadores para ítems de Youpin (reventas)",
   },
   {
     id: "limites",
@@ -484,7 +484,7 @@ export default function AdminSettingsPage() {
         <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
           <SectionHeader
             title="Reglas de Reventa SteamWebAPI"
-            desc="Define cómo se modifican los precios para las skins bajo pedido traídas de Buff y Youpin."
+            desc="Define cómo se modifican los precios para las skins bajo pedido traídas de Youpin."
           />
           <form onSubmit={handleResellSubmit} className="space-y-5 max-w-xl">
             <ToggleSwitch

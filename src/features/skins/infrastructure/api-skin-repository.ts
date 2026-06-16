@@ -25,11 +25,9 @@ export interface StoreItem {
 export interface MarketListingItem {
   id: string;
   name: string;
-  provider: "buff" | "youpin";
+  provider: "youpin";
   youpinAsk: number | null;
   youpinVolume: number | null;
-  buffAsk: number | null;
-  buffVolume: number | null;
   price: number;
   displayPrice?: number;
   iconUrl: string | null;
@@ -108,7 +106,7 @@ function mapBotItemToSkin(item: StoreItem): Skin {
 }
 
 /**
- * Convierte un listing de catálogo de mercado (Buff/YouPin) al formato Skin.
+ * Convierte un listing de catálogo de mercado (YouPin) al formato Skin.
  * NO tiene float ni seed individuales — son listings de catálogo, no ítems físicos.
  */
 function mapMarketListingToSkin(item: MarketListingItem): Skin {
@@ -133,9 +131,7 @@ function mapMarketListingToSkin(item: MarketListingItem): Skin {
     isImmediate: false,
     provider: item.provider,
     youpinAsk: item.youpinAsk,
-    buffAsk: item.buffAsk,
     youpinVolume: item.youpinVolume,
-    buffVolume: item.buffVolume,
   };
 }
 
@@ -144,7 +140,7 @@ function mapMarketListingToSkin(item: MarketListingItem): Skin {
 export class ApiSkinRepository implements SkinRepository {
   async getSkins(): Promise<Skin[]> {
     try {
-      // Fetch paralelo de bots (trade inmediato) y mercado (Buff/YouPin)
+      // Fetch paralelo de bots (trade inmediato) y mercado (YouPin)
       const [botRes, marketRes] = await Promise.allSettled([
         fetch(`${BACKEND_URL}/store/items`, {
           headers: {

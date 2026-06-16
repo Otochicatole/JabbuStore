@@ -239,7 +239,7 @@ export function OrderDetailRow({
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
                 {currentStep === 2
-                  ? "Buscar en Youpin/Buff"
+                  ? "Buscar en YouPin"
                   : currentStep > 2
                     ? "Skins listas"
                     : "En cola"}
@@ -773,7 +773,7 @@ export function OrderDetailRow({
                   ? resolvedDetails.pattern
                   : null;
             const finalRarity =
-              item.rarity || resolvedDetails.rarity || getItemRarity(item);
+                          item.rarity || resolvedDetails.rarity || getItemRarity(item);
             const finalExterior =
               item.exterior ||
               resolvedDetails.exterior ||
@@ -783,17 +783,15 @@ export function OrderDetailRow({
               (item.assetId &&
               typeof item.assetId === "string" &&
               item.assetId.startsWith("resell-")
-                ? hashCode(item.assetId) % 2 === 0
-                  ? "youpin"
-                  : "buff"
+                ? "youpin"
                 : "bots");
 
-            // Deterministic fallback for Youpin/Buff resell items if database float/pattern is null
+            // Deterministic fallback for Youpin resell items if database float/pattern is null
             let displayFloat = finalFloat;
             let displayPattern = finalPattern;
 
             if (
-              (finalProvider === "youpin" || finalProvider === "buff") &&
+              finalProvider === "youpin" &&
               (displayFloat === null || displayPattern === null)
             ) {
               const hash = Math.abs(hashCode(item.assetId));
@@ -929,18 +927,7 @@ export function OrderDetailRow({
                         <ExternalLink className="w-2.5 h-2.5" />
                       </a>
                     )}
-                    {finalProvider === "buff" && (
-                      <a
-                        href={`https://buff.163.com/market/csgo#game=csgo&page_num=1&search=${encodeURIComponent(getCleanSearchName(item.name))}&sort_by=price.asc&tab=selling`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-yellow-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105"
-                      >
-                        <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse mr-0.5" />
-                        <span>Reventa (Buff163)</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    )}
+
                     {finalProvider === "bots" && (
                       <a
                         href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.name)}`}

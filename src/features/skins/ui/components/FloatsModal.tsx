@@ -6,14 +6,14 @@ import Image from "next/image";
 import { Skin } from "../../domain/skin";
 import { useCart } from "../../../cart/context/CartContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
-import { X, Search, ArrowUpDown, Filter, ExternalLink, AlertCircle, Check, Loader2, RefreshCw } from "lucide-react";
+import { X, Search, ArrowUpDown, ExternalLink, AlertCircle, Check, RefreshCw } from "lucide-react";
 
 interface FloatItem {
   id: string;
   assetId: string;
   floatValue: number;
   paintSeed: number;
-  market: "BUFF" | "YOUPIN";
+  market: "YOUPIN";
   price: number;
   displayPrice: number;
   inspectLink: string | null;
@@ -54,7 +54,6 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
 
   // Filtros y ordenamiento
   const [search, setSearch] = useState("");
-  const [marketFilter, setMarketFilter] = useState<"ALL" | "BUFF" | "YOUPIN">("ALL");
   const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "float_asc" | "float_desc">("price_asc");
 
   useEffect(() => {
@@ -105,11 +104,6 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
       );
     }
 
-    // Filtro de mercado
-    if (marketFilter !== "ALL") {
-      result = result.filter((f) => f.market === marketFilter);
-    }
-
     // Ordenamiento
     result.sort((a, b) => {
       switch (sortBy) {
@@ -127,7 +121,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
     });
 
     return result;
-  }, [floats, search, marketFilter, sortBy]);
+  }, [floats, search, sortBy]);
 
   if (!isOpen || !mounted) return null;
 
@@ -138,7 +132,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
       price: float.displayPrice,
       float: float.floatValue,
       pattern: float.paintSeed,
-      provider: float.market.toLowerCase() as "buff" | "youpin",
+      provider: "youpin",
     };
 
     // Si ya existe algo de esta skin en el carro, lo quitamos primero para reemplazarlo
@@ -214,34 +208,6 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white placeholder-white/30 focus:outline-none focus:border-accent/50 transition-colors"
             />
-          </div>
-
-          {/* Selector de Mercado */}
-          <div className="flex bg-black/40 border border-white/10 rounded-lg p-0.5 shrink-0 select-none">
-            <button
-              onClick={() => setMarketFilter("ALL")}
-              className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer ${
-                marketFilter === "ALL" ? "bg-white/10 text-white" : "bg-transparent text-white/40 hover:text-white/70"
-              }`}
-            >
-              Todos
-            </button>
-            <button
-              onClick={() => setMarketFilter("BUFF")}
-              className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer ${
-                marketFilter === "BUFF" ? "bg-[#cf6a32]/20 text-[#ff8343] border border-[#cf6a32]/35" : "bg-transparent text-white/40 hover:text-white/70"
-              }`}
-            >
-              Buff
-            </button>
-            <button
-              onClick={() => setMarketFilter("YOUPIN")}
-              className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer ${
-                marketFilter === "YOUPIN" ? "bg-accent/20 text-accent border border-accent/35" : "bg-transparent text-white/40 hover:text-white/70"
-              }`}
-            >
-              YouPin
-            </button>
           </div>
 
           {/* Ordenamiento */}
@@ -326,14 +292,8 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                         Semilla: <span className="text-white font-bold">{f.paintSeed}</span>
                       </span>
                       {/* Market Badge */}
-                      <span
-                        className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md font-mono select-none ${
-                          f.market === "BUFF"
-                            ? "bg-[#cf6a32]/10 border border-[#cf6a32]/20 text-[#ff8343]"
-                            : "bg-accent/10 border border-accent/20 text-accent"
-                        }`}
-                      >
-                        {f.market}
+                      <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-md font-mono select-none bg-accent/10 border border-accent/20 text-accent">
+                        YOUPIN
                       </span>
                     </div>
 

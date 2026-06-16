@@ -1,16 +1,14 @@
 /**
- * Listing de mercado externo (Buff163 o YouPin) obtenido via SteamWebAPI.
+ * Listing de mercado externo (YouPin) obtenido via SteamWebAPI.
  * NO es un ítem físico en inventario de bots.
  */
 export interface MarketListing {
   id: string;
   name: string;
-  /** Plataforma con mejor precio/volumen */
-  provider: 'buff' | 'youpin';
+  /** Plataforma de reventa */
+  provider: 'youpin';
   youpinAsk: number | null;
   youpinVolume: number | null;
-  buffAsk: number | null;
-  buffVolume: number | null;
   /** Precio base del proveedor seleccionado */
   price: number;
   /** Precio con modificador de admin aplicado */

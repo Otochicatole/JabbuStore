@@ -194,7 +194,7 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
   };
 
   const getSkinGroupKey = (skin: Skin) => {
-    // Los market listings (Buff/YouPin) son únicos por definición — no agrupar
+    // Los market listings (YouPin) son únicos por definición — no agrupar
     if (skin.isImmediate === false) {
       return `market|${skin.id}`;
     }

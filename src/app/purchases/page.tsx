@@ -618,14 +618,14 @@ export default function UserOrdersPage() {
                             {order.items.map(item => {
                               const finalExterior = getItemExterior(item);
                               const finalRarity = getItemRarity(item);
-                              const finalProvider = item.provider || (item.assetId && typeof item.assetId === 'string' && item.assetId.startsWith("resell-") ? (hashCode(item.assetId) % 2 === 0 ? "youpin" : "buff") : "bots");
+                              const finalProvider = item.provider || (item.assetId && typeof item.assetId === 'string' && item.assetId.startsWith("resell-") ? "youpin" : "bots");
 
                               // Deterministic fallback for floats if null
                               const hash = Math.abs(hashCode(item.assetId));
                               let displayFloat = item.float ?? null;
                               let displayPattern = item.pattern ?? null;
 
-                              if ((finalProvider === 'youpin' || finalProvider === 'buff') && (displayFloat === null || displayPattern === null)) {
+                              if (finalProvider === 'youpin' && (displayFloat === null || displayPattern === null)) {
                                 if (displayPattern === null) {
                                   displayPattern = (hash % 999) + 1;
                                 }
@@ -699,9 +699,7 @@ export default function UserOrdersPage() {
                                       {finalProvider === 'youpin' && (
                                         <span className="text-[7.5px] font-black uppercase tracking-wider bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-[2px]">Youpin</span>
                                       )}
-                                      {finalProvider === 'buff' && (
-                                        <span className="text-[7.5px] font-black uppercase tracking-wider bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded-[2px]">Buff</span>
-                                      )}
+
                                       {finalProvider === 'bots' && (
                                         <span className="text-[7.5px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-[2px]">Bots</span>
                                       )}

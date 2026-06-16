@@ -302,7 +302,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                   key={f.id}
                   className={`group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-xl border transition-all duration-300 gap-4 ${
                     isSelectedInCart
-                      ? "bg-accent/[0.04] border-accent shadow-[0_0_25px_rgba(217,70,239,0.12)] scale-[1.01]"
+                      ? "bg-accent/[0.04] border-accent shadow-[0_0_25px_rgba(217,70,239,0.12)]"
                       : "bg-[#13111c]/45 border-white/[0.04] hover:bg-white/[0.02] hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
                   }`}
                 >

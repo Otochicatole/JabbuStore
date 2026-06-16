@@ -99,7 +99,14 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
   const isMultiple = skinsInGroup.length >= 2;
 
   // Determine if this item can have floats or is a non-float item like stickers, music kits, keys, etc.
-  const floatCompatibleCategories = ["knife", "gloves", "rifle", "pistol", "smg", "heavy"];
+  const floatCompatibleCategories = [
+    "knife",
+    "gloves",
+    "rifle",
+    "pistol",
+    "smg",
+    "heavy",
+  ];
   const isStickerOrOther =
     skin.weapon?.toLowerCase().includes("sticker") ||
     skin.weapon?.toLowerCase().includes("pegatina") ||
@@ -110,7 +117,8 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
     skin.weapon?.toLowerCase().includes("pass") ||
     !skin.category ||
     !floatCompatibleCategories.includes(skin.category.toLowerCase());
-  const showFloatsModalTrigger = skin.isImmediate === false && !isStickerOrOther;
+  const showFloatsModalTrigger =
+    skin.isImmediate === false && !isStickerOrOther;
 
   // Calculate prices
   const prices = skinsInGroup.map((s) => s.price);
@@ -160,7 +168,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
   return (
     <div
       className={`
-      group relative flex w-full flex-col bg-card rounded-2xl p-4 border transition-all duration-500 hover:-translate-y-1
+      group relative flex w-full flex-col bg-card rounded-2xl p-4 border transition-all duration-500
       ${
         isInCart
           ? "border-accent shadow-[0_0_25px_rgba(217,70,239,0.2)]"
@@ -194,9 +202,15 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
       {!isMultiple ? (
         // Standard single item info panel (mantiene altura h-[42px] fija para evitar que se desplace el contenido si no tiene float)
         <div
-          onClick={showFloatsModalTrigger ? () => setIsFloatsModalOpen(true) : undefined}
+          onClick={
+            showFloatsModalTrigger
+              ? () => setIsFloatsModalOpen(true)
+              : undefined
+          }
           className={`flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center ${
-            showFloatsModalTrigger ? "cursor-pointer hover:bg-white/[0.02] transition-colors" : ""
+            showFloatsModalTrigger
+              ? "cursor-pointer hover:bg-white/[0.02] transition-colors"
+              : ""
           }`}
         >
           {(() => {
@@ -345,7 +359,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
         />
 
         {/* Stock Badge positioned at the bottom-right of the image container (only on re-sale / under-order catalog items) */}
-        {skin.isImmediate === false &&
+        {/* skin.isImmediate === false &&
           (skin.youpinVolume || 0) > 0 && (
             <div className="absolute bottom-2 right-2 bg-black/40 border border-white/5 backdrop-blur-[2px] rounded-full px-2 py-0.5 text-[7.5px] font-bold text-white/60 uppercase tracking-widest font-mono z-10 select-none">
               Stock:{" "}
@@ -353,7 +367,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 skin.youpinVolume || 0
               ).toLocaleString()}
             </div>
-          )}
+          ) */}
 
         {/* Absolute count badge positioned next to the image (transparent design) */}
         {isMultiple && (
@@ -392,7 +406,11 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 Comprar
               </button>
               <button
-                onClick={showFloatsModalTrigger ? () => setIsFloatsModalOpen(true) : () => addToCart(skin)}
+                onClick={
+                  showFloatsModalTrigger
+                    ? () => setIsFloatsModalOpen(true)
+                    : () => addToCart(skin)
+                }
                 className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer animate-fade-in shrink-0"
               >
                 <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />

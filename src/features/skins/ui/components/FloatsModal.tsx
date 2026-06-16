@@ -68,6 +68,17 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   const fetchFloats = async () => {
     setLoading(true);
     setError(null);

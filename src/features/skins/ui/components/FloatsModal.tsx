@@ -7,6 +7,7 @@ import { Skin } from "../../domain/skin";
 import { useCart } from "../../../cart/context/CartContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { X, Search, ArrowUpDown, ExternalLink, AlertCircle, Check, RefreshCw } from "lucide-react";
+import { AdminSelect } from "@/shared/components/AdminSelect";
 
 interface FloatItem {
   id: string;
@@ -52,6 +53,13 @@ const getFloatConditionStyle = (float: number) => {
   if (float < 0.45) return { text: "text-[#f97316]", bg: "bg-[#f97316]/10", border: "border-[#f97316]/25" }; // WW
   return { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/25" }; // BS
 };
+
+const sortOptions = [
+  { value: "price_asc", label: "Menor Precio" },
+  { value: "price_desc", label: "Mayor Precio" },
+  { value: "float_asc", label: "Menor Wear (Float)" },
+  { value: "float_desc", label: "Mayor Wear (Float)" },
+];
 
 export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   const { addToCart, removeFromCart, items: cartItems } = useCart();
@@ -230,18 +238,13 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
           </div>
 
           {/* Ordenamiento */}
-          <div className="relative shrink-0 flex items-center gap-2 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5">
-            <ArrowUpDown className="w-3.5 h-3.5 text-white/40" />
-            <select
+          <div className="flex items-center gap-2 shrink-0">
+            <ArrowUpDown className="w-3.5 h-3.5 text-white/40 animate-pulse" />
+            <AdminSelect
               value={sortBy}
-              onChange={(e: any) => setSortBy(e.target.value)}
-              className="bg-transparent border-none text-xs font-bold text-white/80 focus:outline-none cursor-pointer"
-            >
-              <option value="price_asc" className="bg-[#0b0a11]">Menor Precio</option>
-              <option value="price_desc" className="bg-[#0b0a11]">Mayor Precio</option>
-              <option value="float_asc" className="bg-[#0b0a11]">Menor Wear (Float)</option>
-              <option value="float_desc" className="bg-[#0b0a11]">Mayor Wear (Float)</option>
-            </select>
+              onChange={(val: any) => setSortBy(val)}
+              options={sortOptions}
+            />
           </div>
         </div>
 

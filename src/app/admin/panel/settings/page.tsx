@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Webhook,
   Coins,
+  RefreshCw,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
@@ -20,7 +21,7 @@ const MODIFIER_OPTIONS = [
   { value: "fixed_decrease", label: "Descuento Fijo (-USD)" },
 ];
 
-type Tab = "precios" | "venta" | "reventa" | "limites" | "webhook";
+type Tab = "precios" | "venta" | "reventa" | "limites" | "webhook" | "sync";
 
 const TABS: {
   id: Tab;
@@ -57,6 +58,12 @@ const TABS: {
     label: "Webhook",
     icon: Webhook,
     desc: "Notificaciones en tiempo real",
+  },
+  {
+    id: "sync",
+    label: "Sincronización",
+    icon: RefreshCw,
+    desc: "Sincronización manual completa del catálogo y bots",
   },
 ];
 
@@ -170,6 +177,95 @@ export default function AdminSettingsPage() {
   const [savedResell, setSavedResell] = useState(false);
   const [savedMinSell, setSavedMinSell] = useState(false);
   const [savedWebhook, setSavedWebhook] = useState(false);
+
+  // --- States for Manual Sync and 3-Minute Cooldown ---
+  const [syncingAll, setSyncingAll] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("last_sync_timestamp");
+    if (saved) {
+      const diff = Date.now() - Number(saved);
+      const remaining = Math.max(0, Math.ceil((3 * 60 * 1000 - diff) / 1000));
+      setCooldownLeft(remaining);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (cooldownLeft <= 0) return;
+    const interval = setInterval(() => {
+      setCooldownLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownLeft]);
+
+  const handleFullSync = async () => {
+    if (cooldownLeft > 0) return;
+    setSyncingAll(true);
+    setSyncResult(null);
+    setSyncError(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/market/sync`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Error al sincronizar el servidor.");
+      }
+      setSyncResult(data.message || "Sincronización completa finalizada con éxito.");
+      
+      const now = Date.now();
+      localStorage.setItem("last_sync_timestamp", String(now));
+      setCooldownLeft(180); // 3 minutos
+    } catch (err: any) {
+      setSyncError(err.message || "Error al sincronizar la aplicación.");
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
+  // --- States for Manual Bot Price Sync ---
+  const [syncingPrices, setSyncingPrices] = useState(false);
+  const [syncPricesResult, setSyncPricesResult] = useState<string | null>(null);
+  const [syncPricesError, setSyncPricesError] = useState<string | null>(null);
+
+  const handleSyncPrices = async () => {
+    setSyncingPrices(true);
+    setSyncPricesResult(null);
+    setSyncPricesError(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/store/sync-prices`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Error al sincronizar precios de los bots.");
+      }
+      setSyncPricesResult(data.message || "Precios de los bots sincronizados exitosamente.");
+    } catch (err: any) {
+      setSyncPricesError(err.message || "Error al sincronizar precios.");
+    } finally {
+      setSyncingPrices(false);
+    }
+  };
 
 
 
@@ -617,6 +713,105 @@ export default function AdminSettingsPage() {
               label="Guardar Webhook"
             />
           </form>
+        </div>
+      )}
+
+      {/* ── TAB: Sincronización ── */}
+      {activeTab === "sync" && (
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px] space-y-6">
+          <SectionHeader
+            title="Sincronización Manual Completa"
+            desc="Fuerza una sincronización en tiempo real de todo el sistema. Esto actualizará el catálogo de mercado de YouPin y el inventario en stock de todos los bots conectados."
+          />
+          
+          <div className="max-w-xl space-y-6">
+            <div className="p-4 bg-white/[0.01] border border-white/5 rounded-[3px] space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                Procesos Ejecutados:
+              </h3>
+              <ul className="text-xs text-[#84849b] list-disc list-inside space-y-1.5 font-medium">
+                <li>Descarga de catálogo y precios de <span className="text-white">YouPin</span> vía SteamWebAPI.</li>
+                <li>Filtrado por liquidez y aplicación de reglas/caps de precios.</li>
+                <li>Actualización del stock de los bots de Steam e inventario físico.</li>
+                <li>Enriquecimiento de precios de bots usando los precios locales del mercado.</li>
+              </ul>
+            </div>
+
+            {/* Error notifications */}
+            {syncError && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-[3px]">
+                {syncError}
+              </div>
+            )}
+
+            {/* Success notifications */}
+            {syncResult && (
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-[3px]">
+                {syncResult}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <button
+                type="button"
+                onClick={handleFullSync}
+                disabled={syncingAll || cooldownLeft > 0}
+                className="px-6 py-3.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(217,70,239,0.25)] cursor-pointer select-none"
+              >
+                {syncingAll ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <RefreshCw className={`w-4 h-4 text-white ${syncingAll ? "animate-spin" : ""}`} />
+                )}
+                {syncingAll
+                  ? "Sincronizando Todo..."
+                  : cooldownLeft > 0
+                  ? `Espera ${Math.floor(cooldownLeft / 60)}m ${cooldownLeft % 60}s`
+                  : "Sincronizar Aplicación"}
+              </button>
+
+              {cooldownLeft > 0 && (
+                <span className="text-[10px] text-[#84849b] font-mono font-bold uppercase tracking-wider self-center">
+                  * Cooldown activo para evitar saturar las APIs (3 minutos)
+                </span>
+              )}
+            </div>
+
+            <hr className="border-white/5 my-6" />
+
+            <div className="space-y-4">
+              <SectionHeader
+                title="Actualizar Precios de Bots con YouPin"
+                desc="Recalcula localmente los precios de los ítems de tus bots usando los últimos valores registrados en el catálogo de mercado de YouPin. Este proceso es inmediato, 100% local y no consume llamadas de tu API Key."
+              />
+
+              {syncPricesError && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-[3px]">
+                  {syncPricesError}
+                </div>
+              )}
+
+              {syncPricesResult && (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-[3px]">
+                  {syncPricesResult}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleSyncPrices}
+                disabled={syncingPrices}
+                className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(16,185,129,0.2)] cursor-pointer select-none"
+              >
+                {syncingPrices ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 text-white" />
+                )}
+                {syncingPrices ? "Sincronizando Precios..." : "Actualizar Precios de Bots"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

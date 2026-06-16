@@ -232,33 +232,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
         </div>
       </div>
 
-      {/* Sync Controls and Notifications */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-[3px] bg-[#110f1e]/30 border border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/[0.02] border border-white/5 rounded-[3px] text-[#84849b]">
-            <Tags className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-black uppercase tracking-wider">
-              Servidor de Precios SteamWebAPI
-            </p>
-            <p className="text-[10px] text-[#84849b] font-medium font-mono">
-              Última recarga automática de inventario de Steam exitosa
-            </p>
-          </div>
-        </div>
 
-        <button
-          onClick={triggerSync}
-          disabled={syncing || loading}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-white text-[11px] font-black uppercase tracking-wider rounded-[3px] transition-all cursor-pointer select-none"
-        >
-          <RefreshCw
-            className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
-          />
-          {syncing ? "Sincronizando..." : "Sincronizar Stock Manual"}
-        </button>
-      </div>
 
       {/* Filters and Inventory List Section */}
       <div className="bg-[#110f1e]/20 border border-white/5 rounded-[3px] p-6 space-y-6">

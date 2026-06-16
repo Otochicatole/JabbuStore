@@ -109,21 +109,6 @@ export function MarketCatalog() {
             {listings.length.toLocaleString()} listings activos
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {syncMessage && (
-            <span className="text-[9px] text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded">
-              {syncMessage}
-            </span>
-          )}
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center gap-1.5 px-3 py-2 bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent text-[10px] font-black uppercase tracking-wider rounded-[3px] transition-all disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3 h-3 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Sincronizando..." : "Sincronizar"}
-          </button>
-        </div>
       </div>
 
       {/* Stats */}

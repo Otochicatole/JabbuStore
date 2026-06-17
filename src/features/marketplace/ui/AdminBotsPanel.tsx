@@ -16,6 +16,7 @@ import {
   Shield,
   AlertTriangle,
   Cpu,
+  RefreshCw,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { useAdminBots, Bot } from "./useAdminBots";
@@ -300,6 +301,10 @@ export function AdminBotsPanel() {
     closeModal,
     onSaved,
     activeBots,
+    syncingInventory,
+    syncMessage,
+    syncError,
+    handleSyncInventory,
   } = useAdminBots();
 
   return (
@@ -315,14 +320,42 @@ export function AdminBotsPanel() {
             marketplace.
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors shadow-[0_0_20px_rgba(217,70,239,0.2)] w-full sm:w-auto cursor-pointer min-h-[38px]"
-        >
-          <Plus className="w-4 h-4 shrink-0" />
-          <span>Nuevo Bot</span>
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button
+            onClick={handleSyncInventory}
+            disabled={syncingInventory || bots.length === 0}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors w-full sm:w-auto cursor-pointer min-h-[38px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {syncingInventory ? (
+              <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 shrink-0" />
+            )}
+            <span>
+              {syncingInventory ? "Sincronizando..." : "Sincronizar Inventario"}
+            </span>
+          </button>
+          <button
+            onClick={openCreate}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors shadow-[0_0_20px_rgba(217,70,239,0.2)] w-full sm:w-auto cursor-pointer min-h-[38px]"
+          >
+            <Plus className="w-4 h-4 shrink-0" />
+            <span>Nuevo Bot</span>
+          </button>
+        </div>
       </div>
+
+      {(syncMessage || syncError) && (
+        <div
+          className={`rounded-[3px] border px-4 py-3 text-xs font-bold ${
+            syncError
+              ? "bg-red-500/10 border-red-500/20 text-red-400"
+              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+          }`}
+        >
+          {syncError || syncMessage}
+        </div>
+      )}
 
       {/* Stats Strip */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

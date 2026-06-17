@@ -24,6 +24,9 @@ export function useAdminBots() {
   const [editingBot, setEditingBot] = useState<Bot | null>(null);
   const [botToDelete, setBotToDelete] = useState<Bot | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [syncingInventory, setSyncingInventory] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const fetchBots = useCallback(async () => {
     setLoading(true);
@@ -31,6 +34,7 @@ export function useAdminBots() {
     try {
       const res = await fetch(`${BACKEND_URL}/admin/marketplace/bots`, {
         credentials: "include",
+        cache: "no-store",
         headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
       });
       if (!res.ok) throw new Error("Error al cargar los bots");
@@ -104,6 +108,29 @@ export function useAdminBots() {
     fetchBots();
   };
 
+  const handleSyncInventory = async () => {
+    setSyncingInventory(true);
+    setSyncMessage(null);
+    setSyncError(null);
+    try {
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/bots/sync`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Error al sincronizar inventario de bots");
+      }
+      setSyncMessage(data.message || "Sincronización completada.");
+      await fetchBots();
+    } catch (e: any) {
+      setSyncError(e.message);
+    } finally {
+      setSyncingInventory(false);
+    }
+  };
+
   const totalItems = bots.reduce((sum, b) => sum + b.currentItems, 0);
   const activeBots = bots.filter((b) => b.isActive).length;
 
@@ -125,5 +152,9 @@ export function useAdminBots() {
     onSaved,
     totalItems,
     activeBots,
+    syncingInventory,
+    syncMessage,
+    syncError,
+    handleSyncInventory,
   };
 }

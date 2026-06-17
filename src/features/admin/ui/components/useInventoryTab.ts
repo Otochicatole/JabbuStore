@@ -93,10 +93,23 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
 
   const triggerSync = async () => {
     setSyncing(true);
-    setTimeout(() => {
-      fetchStoreItems();
+    setError(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/bots/sync`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al sincronizar inventario de bots.");
+      }
+      await Promise.all([fetchStoreItems(), fetchBotsList()]);
+    } catch (err: any) {
+      setError(err.message || "Error de conexión.");
+    } finally {
       setSyncing(false);
-    }, 1500);
+    }
   };
 
   // Compute Statistics

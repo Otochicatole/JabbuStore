@@ -113,10 +113,16 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
     }
   }, [isOpen, skin.id]);
 
-  // Encontrar si este listado de mercado está en el carrito
+  // Encontrar si este listado (o un asset youpin del mismo skin) está en el carrito
   const cartItemForThisListing = useMemo(() => {
-    return cartItems.find((item) => item.skin.id === skin.id);
-  }, [cartItems, skin.id]);
+    return cartItems.find(
+      (item) =>
+        item.skin.id === skin.id ||
+        (item.skin.id.startsWith("youpin-") &&
+          item.skin.name === skin.name &&
+          item.skin.weapon === skin.weapon),
+    );
+  }, [cartItems, skin.id, skin.name, skin.weapon]);
 
   // Filtrado y Ordenamiento
   const processedFloats = useMemo(() => {
@@ -155,25 +161,38 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   if (!isOpen || !mounted) return null;
 
   const handleSelectFloat = (float: FloatItem) => {
-    // Crear el clon de skin con la información del float seleccionado
+    const assetId = float.id ? `youpin-${float.id}` : skin.id;
     const selectedSkin: Skin = {
       ...skin,
+      id: assetId,
       price: float.displayPrice,
       float: float.floatValue,
       pattern: float.paintSeed,
       provider: "youpin",
+      inspectLink: float.inspectLink ?? skin.inspectLink ?? null,
     };
 
-    // Si ya existe algo de esta skin en el carro, lo quitamos primero para reemplazarlo
-    if (cartItemForThisListing) {
-      removeFromCart(skin.id);
+    const existing = cartItems.find(
+      (item) => item.skin.id === assetId || item.skin.id === skin.id,
+    );
+    if (existing) {
+      removeFromCart(existing.skin.id);
     }
 
     addToCart(selectedSkin);
   };
 
   const handleRemoveFromCart = () => {
-    removeFromCart(skin.id);
+    const existing = cartItems.find(
+      (item) =>
+        item.skin.id === skin.id ||
+        (item.skin.id.startsWith("youpin-") &&
+          item.skin.name === skin.name &&
+          item.skin.weapon === skin.weapon),
+    );
+    if (existing) {
+      removeFromCart(existing.skin.id);
+    }
   };
 
   return createPortal(
@@ -292,10 +311,12 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
           ) : (
             // Floats List
             processedFloats.map((f) => {
+              const assetId = f.id ? `youpin-${f.id}` : null;
               const isSelectedInCart =
                 cartItemForThisListing &&
-                cartItemForThisListing.skin.float === f.floatValue &&
-                cartItemForThisListing.skin.pattern === f.paintSeed;
+                (cartItemForThisListing.skin.id === assetId ||
+                  (cartItemForThisListing.skin.float === f.floatValue &&
+                    cartItemForThisListing.skin.pattern === f.paintSeed));
 
               const condStyle = getFloatConditionStyle(f.floatValue);
 

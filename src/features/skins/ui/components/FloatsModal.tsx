@@ -354,7 +354,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {f.inspectLink && (
+                      {f.inspectLink && !/%[a-z0-9_:]+%/i.test(f.inspectLink) && (
                         <a
                           href={f.inspectLink}
                           className="h-9 w-9 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg transition-all hover:scale-105 active:scale-95"

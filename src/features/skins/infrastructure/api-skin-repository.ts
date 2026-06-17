@@ -20,6 +20,7 @@ export interface StoreItem {
   isSouvenir?: boolean;
   float?: number | null;
   pattern?: number | null;
+  inspectLink?: string | null;
 }
 
 export interface MarketListingItem {
@@ -102,6 +103,7 @@ function mapBotItemToSkin(item: StoreItem): Skin {
     phase,
     isImmediate: true,
     provider: "bot",
+    inspectLink: item.inspectLink ?? null,
   };
 }
 

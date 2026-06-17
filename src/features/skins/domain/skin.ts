@@ -28,6 +28,8 @@ export interface Skin {
   youpinAsk?: number | null;
   /** Volumen de stock en YouPin */
   youpinVolume?: number | null;
+  /** Enlace steam:// para inspeccionar in-game (ítems de bot) */
+  inspectLink?: string | null;
 }
 
 export interface SkinRepository {

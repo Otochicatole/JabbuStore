@@ -81,6 +81,25 @@ const getRangeColorClass = (min: number): string => {
   return "bg-[#ef4444]";
 };
 
+const InspectInGameButton = ({
+  href,
+  className = "h-9 w-9",
+}: {
+  href: string;
+  className?: string;
+}) => {
+  if (!href || /%[a-z0-9_:]+%/i.test(href)) return null;
+  return (
+  <a
+    href={href}
+    className={`${className} flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg transition-all hover:scale-105 active:scale-95 shrink-0`}
+    title="Inspeccionar en el juego"
+  >
+    <Eye className="w-4 h-4" />
+  </a>
+  );
+};
+
 export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
   const { addToCart, items, removeFromCart } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -405,6 +424,12 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 Comprar
               </button>
+              {skin.isImmediate && skin.inspectLink && (
+                <InspectInGameButton
+                  href={skin.inspectLink}
+                  className="w-8 sm:w-10 h-10"
+                />
+              )}
               <button
                 onClick={
                   showFloatsModalTrigger
@@ -425,6 +450,12 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-emerald-400" />
                 Carrito
               </button>
+              {skin.isImmediate && skin.inspectLink && (
+                <InspectInGameButton
+                  href={skin.inspectLink}
+                  className="w-8 sm:w-10 h-10"
+                />
+              )}
               <button
                 onClick={() => removeFromCart(skin.id)}
                 className="w-8 sm:w-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/10 rounded-lg transition-colors active:scale-95 cursor-pointer animate-fade-in shrink-0"
@@ -589,7 +620,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                       </div>
 
                       {/* Price and Button */}
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 sm:gap-4">
                         <div className="text-right">
                           <span className="text-[#84849b] uppercase font-bold text-[8px] block">
                             Precio
@@ -598,6 +629,10 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                             ${s.price.toLocaleString()}
                           </span>
                         </div>
+
+                        {s.isImmediate && s.inspectLink && (
+                          <InspectInGameButton href={s.inspectLink} />
+                        )}
 
                         {!isThisInCart ? (
                           <button

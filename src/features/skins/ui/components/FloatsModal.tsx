@@ -14,7 +14,7 @@ interface FloatItem {
   assetId: string;
   floatValue: number;
   paintSeed: number;
-  market: "YOUPIN";
+  market: "YOUPIN" | "CSFLOAT";
   price: number;
   displayPrice: number;
   inspectLink: string | null;
@@ -91,7 +91,9 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchWithAuth(`${BACKEND_URL}/market/listings/${skin.id}/floats`);
+      const response = await fetchWithAuth(
+        `${BACKEND_URL}/market/listings/${encodeURIComponent(skin.id)}/floats`,
+      );
       if (!response.ok) {
         throw new Error("No se pudieron obtener los floats de la API.");
       }

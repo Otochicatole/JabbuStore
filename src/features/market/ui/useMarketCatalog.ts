@@ -26,7 +26,7 @@ export function useMarketCatalog() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${BACKEND_URL}/market/listings`);
+      const res = await fetch(`${BACKEND_URL}/market/listings?all=true`);
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json();
       setListings(Array.isArray(data) ? data : []);

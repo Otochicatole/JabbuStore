@@ -106,8 +106,8 @@ function mapBotItemToSkin(item: StoreItem): Skin {
 }
 
 /**
- * Convierte un listing de catálogo de mercado (YouPin) al formato Skin.
- * NO tiene float ni seed individuales — son listings de catálogo, no ítems físicos.
+ * Convierte un listing de reventa YouPin al formato Skin.
+ * El catálogo viene del sync de MarketListing; los floats se cargan al abrir el modal.
  */
 function mapMarketListingToSkin(item: MarketListingItem): Skin {
   const { weapon, skinName, phase } = parseName(item.name);

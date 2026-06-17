@@ -618,7 +618,7 @@ export default function UserOrdersPage() {
                             {order.items.map(item => {
                               const finalExterior = getItemExterior(item);
                               const finalRarity = getItemRarity(item);
-                              const finalProvider = item.provider || (item.assetId && typeof item.assetId === 'string' && item.assetId.startsWith("resell-") ? "youpin" : "bots");
+                              const finalProvider = item.provider || (item.assetId && typeof item.assetId === 'string' && (item.assetId.startsWith("resell-") || item.assetId.startsWith("youpin-") || item.assetId.startsWith("market-")) ? "youpin" : "bots");
 
                               // Deterministic fallback for floats if null
                               const hash = Math.abs(hashCode(item.assetId));

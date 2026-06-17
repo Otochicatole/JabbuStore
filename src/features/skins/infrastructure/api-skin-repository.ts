@@ -23,14 +23,21 @@ export interface StoreItem {
   inspectLink?: string | null;
 }
 
-export interface MarketListingItem {
+export interface MarketStoreAssetItem {
   id: string;
+  floatItemId: string;
+  assetId: string;
+  listingId: string;
   name: string;
   provider: "youpin";
   youpinAsk: number | null;
   youpinVolume: number | null;
   price: number;
   displayPrice?: number;
+  float: number;
+  pattern: number;
+  inspectLink: string | null;
+  externalId: string | null;
   iconUrl: string | null;
   rarity: string;
   exterior: string | null;
@@ -108,23 +115,22 @@ function mapBotItemToSkin(item: StoreItem): Skin {
 }
 
 /**
- * Convierte un listing de reventa YouPin al formato Skin.
- * El catálogo viene del sync de MarketListing; los floats se cargan al abrir el modal.
+ * Convierte un asset YouPin individual (con float) al formato Skin.
  */
-function mapMarketListingToSkin(item: MarketListingItem): Skin {
+function mapMarketStoreAssetToSkin(item: MarketStoreAssetItem): Skin {
   const { weapon, skinName, phase } = parseName(item.name);
   const price =
     item.displayPrice && item.displayPrice > 0 ? item.displayPrice : item.price;
 
   return {
-    id: `market-${item.name}`, // Usar el nombre único como ID estable contra regeneraciones de CUID
+    id: item.id,
     name: skinName,
     weapon,
     rarity: toSkinRarity(item.rarity),
     price,
     imageUrl: item.iconUrl || "/skin.webp",
-    float: undefined,
-    pattern: undefined,
+    float: item.float,
+    pattern: item.pattern,
     exterior: item.exterior || null,
     category: item.category || "other",
     isStatTrak: item.isStatTrak || false,
@@ -134,6 +140,7 @@ function mapMarketListingToSkin(item: MarketListingItem): Skin {
     provider: item.provider,
     youpinAsk: item.youpinAsk,
     youpinVolume: item.youpinVolume,
+    inspectLink: item.inspectLink,
   };
 }
 
@@ -169,8 +176,8 @@ export class ApiSkinRepository implements SkinRepository {
       }
 
       if (marketRes.status === "fulfilled" && marketRes.value.ok) {
-        const data = (await marketRes.value.json()) as MarketListingItem[];
-        if (Array.isArray(data)) marketSkins = data.map(mapMarketListingToSkin);
+        const data = (await marketRes.value.json()) as MarketStoreAssetItem[];
+        if (Array.isArray(data)) marketSkins = data.map(mapMarketStoreAssetToSkin);
       }
 
       // Bots primero (trade inmediato), market listings después

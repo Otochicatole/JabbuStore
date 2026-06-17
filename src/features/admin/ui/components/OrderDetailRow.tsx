@@ -736,7 +736,8 @@ export function OrderDetailRow({
               (item.assetId &&
               typeof item.assetId === "string" &&
               (item.assetId.startsWith("resell-") ||
-                item.assetId.startsWith("market-"))
+                item.assetId.startsWith("market-") ||
+                item.assetId.startsWith("youpin-"))
                 ? "youpin"
                 : "bots");
             const youpinUrl = buildYoupinItemUrl({

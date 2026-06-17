@@ -137,7 +137,9 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
     !skin.category ||
     !floatCompatibleCategories.includes(skin.category.toLowerCase());
   const showFloatsModalTrigger =
-    skin.isImmediate === false && !isStickerOrOther;
+    skin.isImmediate === false &&
+    !isStickerOrOther &&
+    skin.float === undefined;
 
   // Calculate prices
   const prices = skinsInGroup.map((s) => s.price);
@@ -233,10 +235,10 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
           }`}
         >
           {(() => {
-            const isMarket = skin.isImmediate === false;
-            const floatRange = isMarket
-              ? getFloatRangeFromExterior(skin.exterior)
-              : null;
+            const floatRange =
+              skin.isImmediate === false && skin.float === undefined
+                ? getFloatRangeFromExterior(skin.exterior)
+                : null;
             const hasFloat = skin.float !== undefined || floatRange !== null;
 
             if (!hasFloat) {
@@ -251,21 +253,19 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                   <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">
                     {skin.exterior || conditionLabel}
                   </span>
-                  {isMarket ? (
+                  {skin.pattern !== undefined ? (
+                    <span className="text-[#84849b] text-[8px]">
+                      Semilla:{" "}
+                      <span className="text-white font-bold">
+                        {skin.pattern}
+                      </span>
+                    </span>
+                  ) : skin.isImmediate === false ? (
                     <span className="text-[#84849b] text-[8px]">
                       Semilla:{" "}
                       <span className="text-white/60 font-bold">0 - 999</span>
                     </span>
-                  ) : (
-                    skin.pattern !== undefined && (
-                      <span className="text-[#84849b] text-[8px]">
-                        Semilla:{" "}
-                        <span className="text-white font-bold">
-                          {skin.pattern}
-                        </span>
-                      </span>
-                    )
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Float exacto (bot) o rango (market) */}
@@ -424,7 +424,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 Comprar
               </button>
-              {skin.isImmediate && skin.inspectLink && (
+              {skin.inspectLink && (
                 <InspectInGameButton
                   href={skin.inspectLink}
                   className="w-8 sm:w-10 h-10"
@@ -450,7 +450,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                 <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-emerald-400" />
                 Carrito
               </button>
-              {skin.isImmediate && skin.inspectLink && (
+              {skin.inspectLink && (
                 <InspectInGameButton
                   href={skin.inspectLink}
                   className="w-8 sm:w-10 h-10"
@@ -630,7 +630,7 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
                           </span>
                         </div>
 
-                        {s.isImmediate && s.inspectLink && (
+                        {s.inspectLink && (
                           <InspectInGameButton href={s.inspectLink} />
                         )}
 

@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import { SkinImage } from "@/shared/components/SkinImage";
 import {
   Loader2,
   Database,
@@ -358,12 +358,14 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                                 }}
                               />
                               {item.iconUrl && (
-                                <Image
+                                <SkinImage
                                   src={item.iconUrl}
                                   alt={item.name}
                                   width={44}
                                   height={44}
-                                  className="object-contain z-10"
+                                  maxWidth={44}
+                                  maxHeight={44}
+                                  className="z-10"
                                 />
                               )}
                             </div>
@@ -457,12 +459,14 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                             }}
                           />
                           {item.iconUrl && (
-                            <Image
+                            <SkinImage
                               src={item.iconUrl}
                               alt={item.name}
                               width={44}
                               height={44}
-                              className="object-contain z-10"
+                              maxWidth={44}
+                              maxHeight={44}
+                              className="z-10"
                             />
                           )}
                         </div>

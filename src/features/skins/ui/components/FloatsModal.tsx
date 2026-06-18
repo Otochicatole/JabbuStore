@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
+import { SkinImage } from "@/shared/components/SkinImage";
 import { Skin } from "../../domain/skin";
 import { useCart } from "../../../cart/context/CartContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
@@ -208,12 +208,14 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
         <div className="flex items-start justify-between pb-4 border-b border-white/5 mb-4">
           <div className="flex items-center gap-4">
             <div className="relative w-16 h-16 bg-white/5 border border-white/10 rounded-xl p-1 flex items-center justify-center shrink-0">
-              <Image
+              <SkinImage
                 src={skin.imageUrl}
                 alt={skin.name}
                 width={60}
                 height={60}
-                className="object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
+                maxWidth={60}
+                maxHeight={60}
+                className="drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
               />
             </div>
             <div>

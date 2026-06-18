@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import { Skin } from "../domain/skin";
 import { useCart } from "../../cart/context/CartContext";
 import { ShoppingCart, Plus, Minus, X, Eye, Check, Trash2 } from "lucide-react";
 import { FloatsModal } from "./components/FloatsModal";
+import { SkinImage } from "@/shared/components/SkinImage";
 
 interface SkinCardProps {
   skinsInGroup: Skin[];
+  /** First row above the fold — eager load for LCP. */
+  priority?: boolean;
 }
 
 const rarityColors: Record<string, string> = {
@@ -100,7 +102,7 @@ const InspectInGameButton = ({
   );
 };
 
-export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
+export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   const { addToCart, items, removeFromCart } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFloatsModalOpen, setIsFloatsModalOpen] = useState(false);
@@ -369,12 +371,11 @@ export const SkinCard = ({ skinsInGroup }: SkinCardProps) => {
           }}
         />
 
-        <Image
+        <SkinImage
           src={skin.imageUrl}
           alt={skin.name}
-          width={180}
-          height={130}
-          className="object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
+          priority={priority}
+          className="transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
         />
 
         {/* Stock Badge positioned at the bottom-right of the image container (only on re-sale / under-order catalog items) */}

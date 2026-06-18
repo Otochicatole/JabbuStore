@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import { SkinImage } from "@/shared/components/SkinImage";
 import { Skin } from "../../skins/domain/skin";
 import { useInventory } from "../context/InventoryContext";
 import { Zap, Plus, Check, Lock } from "lucide-react";
@@ -174,12 +174,10 @@ export const InventoryCard = ({
           }}
         />
 
-        <Image
+        <SkinImage
           src={skin.imageUrl}
           alt={skin.name}
-          width={180}
-          height={130}
-          className="object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
+          className="transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
         />
       </div>
 

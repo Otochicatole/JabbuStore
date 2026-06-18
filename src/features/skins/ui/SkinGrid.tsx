@@ -242,8 +242,12 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
   return (
     <div ref={gridRef} className="flex flex-col gap-10 w-full overflow-hidden">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 w-full">
-        {visibleGroups.map((group) => (
-          <SkinCard key={group[0].id} skinsInGroup={group} />
+        {visibleGroups.map((group, index) => (
+          <SkinCard
+            key={group[0].id}
+            skinsInGroup={group}
+            priority={index < 5}
+          />
         ))}
       </div>
 

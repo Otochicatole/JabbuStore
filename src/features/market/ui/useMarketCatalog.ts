@@ -17,7 +17,6 @@ export function useMarketCatalog() {
   );
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [search, rarityFilter, sortBy]);
@@ -26,7 +25,11 @@ export function useMarketCatalog() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${BACKEND_URL}/market/listings?all=true`);
+      const res = await fetch(`${BACKEND_URL}/market/listings?all=true`, {
+        credentials: "include",
+        cache: "no-store",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json();
       setListings(Array.isArray(data) ? data : []);
@@ -45,19 +48,34 @@ export function useMarketCatalog() {
   const handleSync = async () => {
     setSyncing(true);
     setSyncMessage(null);
+    setError(null);
     try {
-      const res = await fetch(`${BACKEND_URL}/market/sync`, { method: "POST" });
-      const data = await res.json();
-      setSyncMessage(data.message || "Sincronización completada.");
-      await fetchListings();
-    } catch {
-      setSyncMessage("Error al sincronizar el catálogo.");
+      const res = await fetch(`${BACKEND_URL}/market/sync`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Error al sincronizar el catálogo.");
+      }
+      setSyncMessage(
+        data.message ||
+          "Sincronización iniciada. Esperá ~30s y refrescá el listado.",
+      );
+      setTimeout(() => {
+        fetchListings();
+      }, 35000);
+    } catch (err: any) {
+      setError(err.message || "Error al sincronizar el catálogo.");
     } finally {
       setSyncing(false);
     }
   };
 
-  // Filtrar y ordenar (el proveedor siempre es youpin)
   const filtered = listings
     .filter((l) => {
       if (search && !l.name.toLowerCase().includes(search.toLowerCase()))

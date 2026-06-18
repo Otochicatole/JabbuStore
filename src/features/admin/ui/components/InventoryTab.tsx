@@ -115,6 +115,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
     loading,
     syncing,
     error,
+    syncSuccess,
     search,
     setSearch,
     selectedRarity,
@@ -275,8 +276,24 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                 { value: "float_desc", label: "Float: Mayor a Menor" },
               ]}
             />
+
+            <button
+              type="button"
+              onClick={triggerSync}
+              disabled={syncing}
+              className="px-4 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-[10px] font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Sync..." : "Sync bots"}
+            </button>
           </div>
         </div>
+
+        {syncSuccess && (
+          <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-[3px] text-emerald-400">
+            <p className="text-xs font-bold">{syncSuccess}</p>
+          </div>
+        )}
 
         {/* Error Notification */}
         {error && (

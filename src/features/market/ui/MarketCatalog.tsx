@@ -85,6 +85,7 @@ export function MarketCatalog() {
     filtered,
     youpinCount,
     handleSync,
+    fetchListings,
     currentPage,
     setCurrentPage,
   } = useMarketCatalog();
@@ -105,11 +106,42 @@ export function MarketCatalog() {
             Catálogo de Mercado (YouPin)
           </h2>
           <p className="text-[10px] text-[#84849b] font-mono mt-0.5 uppercase tracking-wider">
-            YouPin via SteamWebAPI —{" "}
-            {listings.length.toLocaleString()} listings activos
+            Indexado vía float/assets —{" "}
+            {listings.length.toLocaleString()} listings con floats YouPin
           </p>
         </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <button
+            type="button"
+            onClick={fetchListings}
+            disabled={loading}
+            className="px-4 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 text-[10px] font-black uppercase tracking-wider text-white rounded-[3px] transition-all cursor-pointer disabled:opacity-50"
+          >
+            Refrescar
+          </button>
+          <button
+            type="button"
+            onClick={handleSync}
+            disabled={syncing}
+            className="px-4 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-[10px] font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Sincronizando..." : "Sincronizar catálogo"}
+          </button>
+        </div>
       </div>
+
+      {(syncMessage || error) && (
+        <div
+          className={`p-3 rounded-[3px] text-xs font-bold border ${
+            error
+              ? "bg-red-500/10 border-red-500/20 text-red-400"
+              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+          }`}
+        >
+          {error || syncMessage}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

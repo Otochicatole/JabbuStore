@@ -91,9 +91,12 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
     }
   };
 
+  const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
+
   const triggerSync = async () => {
     setSyncing(true);
     setError(null);
+    setSyncSuccess(null);
     try {
       const response = await fetch(`${BACKEND_URL}/admin/marketplace/bots/sync`, {
         method: "POST",
@@ -103,6 +106,14 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(data.error || "Error al sincronizar inventario de bots.");
+      }
+      if (data.skipped) {
+        setSyncSuccess(data.message || "Sync omitido (sin ítems o sin bots activos).");
+      } else {
+        setSyncSuccess(
+          data.message ||
+            `${data.itemsSynced ?? 0} ítems sincronizados de ${data.activeBots ?? 0} bot(s).`,
+        );
       }
       await Promise.all([fetchStoreItems(), fetchBotsList()]);
     } catch (err: any) {
@@ -180,6 +191,7 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
     loading,
     syncing,
     error,
+    syncSuccess,
     search,
     setSearch,
     selectedRarity,

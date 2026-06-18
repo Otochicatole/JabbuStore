@@ -277,7 +277,18 @@ export default function AdminSettingsPage() {
     })
       .then((r) => r.json())
       .then((data) => {
-        if (data && !data.error) setSettings(data);
+        if (data && !data.error) {
+          setSettings((prev) => ({
+            ...prev,
+            ...data,
+            resellModifierType:
+              data.resellModifierType ?? data.marketModifierType ?? prev.resellModifierType,
+            resellModifierValue:
+              data.resellModifierValue ?? data.marketModifierValue ?? prev.resellModifierValue,
+            resellModifierEnabled:
+              data.resellModifierEnabled ?? data.marketModifierEnabled ?? prev.resellModifierEnabled,
+          }));
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -360,6 +371,14 @@ export default function AdminSettingsPage() {
         },
       );
       if (!res.ok) throw new Error();
+      const saved = await res.json();
+      setSettings((prev) => ({
+        ...prev,
+        ...saved,
+        resellModifierType: saved.resellModifierType ?? saved.marketModifierType,
+        resellModifierValue: saved.resellModifierValue ?? saved.marketModifierValue,
+        resellModifierEnabled: saved.resellModifierEnabled ?? saved.marketModifierEnabled,
+      }));
       setSavedResell(true);
       setTimeout(() => setSavedResell(false), 2500);
     } finally {
@@ -730,10 +749,9 @@ export default function AdminSettingsPage() {
                 Procesos Ejecutados:
               </h3>
               <ul className="text-xs text-[#84849b] list-disc list-inside space-y-1.5 font-medium">
-                <li>Descarga de catálogo y precios de <span className="text-white">YouPin</span> vía SteamWebAPI.</li>
-                <li>Filtrado por liquidez y aplicación de reglas/caps de precios.</li>
-                <li>Actualización del stock de los bots de Steam e inventario físico.</li>
-                <li>Enriquecimiento de precios de bots usando los precios locales del mercado.</li>
+                <li>Catálogo YouPin vía <span className="text-white">/steam/api/float/assets</span> (assets con float).</li>
+                <li>Persistencia de <span className="text-white">FloatItem</span> + listings agrupados.</li>
+                <li>Inventario de bots Steam + inspect links + precios YouPin.</li>
               </ul>
             </div>
 
@@ -782,7 +800,7 @@ export default function AdminSettingsPage() {
             <div className="space-y-4">
               <SectionHeader
                 title="Actualizar Precios de Bots con YouPin"
-                desc="Recalcula localmente los precios de los ítems de tus bots usando los últimos valores registrados en el catálogo de mercado de YouPin. Este proceso es inmediato, 100% local y no consume llamadas de tu API Key."
+                desc="Recalcula los precios de StoreItem de bots activos vía GET /market/youpin/prices (SteamWebAPI). No usa el catálogo legacy /items."
               />
 
               {syncPricesError && (

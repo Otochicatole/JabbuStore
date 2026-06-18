@@ -255,11 +255,14 @@ export default function AdminSettingsPage() {
           "X-Tunnel-Skip-AntiPhishing-Page": "true",
         },
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(data.error || "Error al sincronizar precios de los bots.");
       }
-      setSyncPricesResult(data.message || "Precios de los bots sincronizados exitosamente.");
+      setSyncPricesResult(
+        data.message ||
+          "Sincronización de precios iniciada en segundo plano. Refrescá la tienda en unos minutos.",
+      );
     } catch (err: any) {
       setSyncPricesError(err.message || "Error al sincronizar precios.");
     } finally {

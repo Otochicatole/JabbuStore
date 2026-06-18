@@ -31,7 +31,7 @@ export function useMarketCatalog() {
         headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
       });
       if (!res.ok) throw new Error(`Error ${res.status}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => []);
       setListings(Array.isArray(data) ? data : []);
     } catch (err) {
       setError("Error al cargar el catálogo de mercado.");

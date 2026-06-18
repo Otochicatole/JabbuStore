@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MarketListing } from "../domain/types";
+import { MarketStoreAsset } from "../domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
 
 export function useMarketCatalog() {
-  const [listings, setListings] = useState<MarketListing[]>([]);
+  const [listings, setListings] = useState<MarketStoreAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export function useMarketCatalog() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${BACKEND_URL}/market/listings?all=true`, {
+      const res = await fetch(`${BACKEND_URL}/market/listings`, {
         credentials: "include",
         cache: "no-store",
         headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
@@ -84,12 +84,14 @@ export function useMarketCatalog() {
       return true;
     })
     .sort((a, b) => {
-      if (sortBy === "price_desc") return b.price - a.price;
-      if (sortBy === "price_asc") return a.price - b.price;
+      const priceA = a.displayPrice ?? a.price;
+      const priceB = b.displayPrice ?? b.price;
+      if (sortBy === "price_desc") return priceB - priceA;
+      if (sortBy === "price_asc") return priceA - priceB;
       return a.name.localeCompare(b.name);
     });
 
-  const youpinCount = listings.filter((l) => l.provider === "youpin").length;
+  const youpinCount = listings.length;
 
   return {
     listings,

@@ -40,6 +40,13 @@ function getCleanSearchName(fullName: string): string {
   return name.trim();
 }
 
+function youpinAssetUrl(asset: { externalId: string | null; name: string }): string {
+  if (asset.externalId) {
+    return `https://www.youpin898.com/goodDetail?id=${encodeURIComponent(asset.externalId)}`;
+  }
+  return `https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(asset.name))}`;
+}
+
 const ITEMS_PER_PAGE = 50;
 
 function getPageNumbers(currentPage: number, totalPages: number) {
@@ -106,8 +113,8 @@ export function MarketCatalog() {
             Catálogo de Mercado (YouPin)
           </h2>
           <p className="text-[10px] text-[#84849b] font-mono mt-0.5 uppercase tracking-wider">
-            Indexado vía float/assets —{" "}
-            {listings.length.toLocaleString()} listings con floats YouPin
+            Mismo catálogo que /buy (reventa) —{" "}
+            {listings.length.toLocaleString()} assets YouPin indexados
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -147,7 +154,7 @@ export function MarketCatalog() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-4 flex flex-col justify-center">
           <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
-            Total Listings en Catálogo
+            Total assets en catálogo
           </div>
           <div className="text-2xl font-black mt-1 text-white">
             {listings.length.toLocaleString()}
@@ -155,7 +162,7 @@ export function MarketCatalog() {
         </div>
         <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-4 flex flex-col justify-center">
           <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
-            YouPin Listings Soportados
+            Assets visibles en tienda
           </div>
           <div className="text-2xl font-black mt-1 text-emerald-400">
             {youpinCount.toLocaleString()}
@@ -233,10 +240,10 @@ export function MarketCatalog() {
                 <thead>
                   <tr className="border-b border-white/5 bg-[#110f1e]/60 text-[#84849b] text-[9px] font-black uppercase tracking-wider font-mono">
                     <th className="py-3 px-4">Item</th>
+                    <th className="py-3 px-4">Float / Pattern</th>
                     <th className="py-3 px-4">Estado / Wear</th>
-                    <th className="py-3 px-4">Proveedor</th>
-                    <th className="py-3 px-4">Precio Sugerido Youpin</th>
-                    <th className="py-3 px-4">Precio de Reventa (USD)</th>
+                    <th className="py-3 px-4">Precio base (USD)</th>
+                    <th className="py-3 px-4">Precio tienda (USD)</th>
                     <th className="py-3 px-4 text-right">Links</th>
                   </tr>
                 </thead>
@@ -276,6 +283,10 @@ export function MarketCatalog() {
                             </p>
                           </div>
                         </td>
+                        <td className="py-2.5 px-4 font-mono text-[10px] text-white/80">
+                          <div>{l.float?.toFixed(6) ?? "—"}</div>
+                          <div className="text-[#84849b]">#{l.pattern ?? "—"}</div>
+                        </td>
                         <td className="py-2.5 px-4 font-mono text-xs">
                           {l.exterior ? (
                             <span className="text-white font-medium uppercase text-[10px]">
@@ -285,25 +296,20 @@ export function MarketCatalog() {
                             <span className="text-[#84849b]">N/A</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-4">
-                          <span className="px-2 py-0.5 rounded-[3px] text-[9px] font-mono uppercase font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            youpin
-                          </span>
-                        </td>
                         <td className="py-2.5 px-4 font-mono text-[#84849b]">
-                          {l.youpinAsk ? `$${l.youpinAsk}` : "—"}
+                          ${l.price.toLocaleString()}
                         </td>
                         <td className="py-2.5 px-4 font-mono text-green-400 font-bold">
-                          ${l.price.toLocaleString()}
+                          ${(l.displayPrice ?? l.price).toLocaleString()}
                         </td>
                         <td className="py-2.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <a
-                              href={`https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(l.name))}`}
+                              href={youpinAssetUrl(l)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[10px] font-bold"
-                              title="Buscar en YouPin"
+                              title="Ver en YouPin"
                             >
                               YouPin <ExternalLink className="w-3 h-3 inline-block ml-1" />
                             </a>
@@ -372,19 +378,23 @@ export function MarketCatalog() {
                     {/* Sugeridos and Resell Prices Grid */}
                     <div className="grid grid-cols-2 gap-2.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] text-[9.5px] font-mono">
                       <div>
-                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Sugerido Youpin</span>
-                        <span className="text-white/80 block mt-0.5">{l.youpinAsk ? `$${l.youpinAsk}` : "—"}</span>
+                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Float</span>
+                        <span className="text-white/80 block mt-0.5">{l.float?.toFixed(6) ?? "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Pattern</span>
+                        <span className="text-white/80 block mt-0.5">#{l.pattern ?? "—"}</span>
                       </div>
                       <div className="col-span-2 border-t border-white/[0.03] pt-2 flex items-center justify-between">
                         <div>
-                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Precio de Reventa</span>
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Precio tienda</span>
                           <span className="font-extrabold text-green-400 text-xs block mt-0.5">
-                            ${l.price.toLocaleString()}
+                            ${(l.displayPrice ?? l.price).toLocaleString()}
                           </span>
                         </div>
 
                         <a
-                          href={`https://www.youpin898.com/goodList?gameId=730&keywords=${encodeURIComponent(getCleanSearchName(l.name))}`}
+                          href={youpinAssetUrl(l)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-2 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[9px] font-black uppercase tracking-wider flex items-center gap-1 min-h-[30px]"

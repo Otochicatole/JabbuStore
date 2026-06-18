@@ -71,6 +71,8 @@ interface InventoryTabProps {
   initialItems?: StoreItem[];
 }
 
+type InventorySortBy = "price_asc" | "price_desc" | "float_asc" | "float_desc";
+
 function getPageNumbers(currentPage: number, totalPages: number) {
   const pages: (number | string)[] = [];
 
@@ -268,7 +270,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
             {/* Sort */}
             <AdminSelect
               value={sortBy}
-              onChange={(v) => setSortBy(v as any)}
+              onChange={(v) => setSortBy(v as InventorySortBy)}
               options={[
                 { value: "price_desc", label: "Precio: Mayor a Menor" },
                 { value: "price_asc", label: "Precio: Menor a Mayor" },
@@ -284,7 +286,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
               className="px-4 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-[10px] font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-              {syncing ? "Sync..." : "Sync bots"}
+              {syncing ? "Sincronizando inventario..." : "Sincronizar inventario bots"}
             </button>
           </div>
         </div>

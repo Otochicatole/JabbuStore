@@ -13,7 +13,6 @@ import {
   Check,
   Bot as BotIcon,
   Activity,
-  Shield,
   AlertTriangle,
   Cpu,
   RefreshCw,
@@ -63,6 +62,10 @@ const statusConfig: Record<
   },
 };
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 function BotModal({ bot, onClose, onSaved }: BotModalProps) {
   const [name, setName] = useState(bot ? bot.name : "");
   const [steamId, setSteamId] = useState(bot ? bot.steamId : "");
@@ -100,8 +103,8 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
       }
 
       onSaved();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Error al guardar el bot"));
     } finally {
       setSaving(false);
     }
@@ -302,8 +305,11 @@ export function AdminBotsPanel() {
     onSaved,
     activeBots,
     syncingInventory,
+    refreshingCatalog,
+    catalogStatus,
     syncMessage,
     syncError,
+    handleRefreshPriceCatalog,
     handleSyncInventory,
   } = useAdminBots();
 
@@ -322,6 +328,22 @@ export function AdminBotsPanel() {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
+            onClick={handleRefreshPriceCatalog}
+            disabled={refreshingCatalog}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors w-full sm:w-auto cursor-pointer min-h-[38px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {refreshingCatalog ? (
+              <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 shrink-0" />
+            )}
+            <span>
+              {refreshingCatalog
+                ? "Descargando precios..."
+                : "Descargar catálogo precios"}
+            </span>
+          </button>
+          <button
             onClick={handleSyncInventory}
             disabled={syncingInventory || bots.length === 0}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors w-full sm:w-auto cursor-pointer min-h-[38px] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -332,7 +354,9 @@ export function AdminBotsPanel() {
               <RefreshCw className="w-4 h-4 shrink-0" />
             )}
             <span>
-              {syncingInventory ? "Sincronizando..." : "Sincronizar Inventario"}
+              {syncingInventory
+                ? "Sincronizando inventario..."
+                : "Sincronizar inventario bots"}
             </span>
           </button>
           <button
@@ -354,6 +378,31 @@ export function AdminBotsPanel() {
           }`}
         >
           {syncError || syncMessage}
+        </div>
+      )}
+
+      {catalogStatus && (
+        <div className="rounded-[3px] border border-white/10 bg-white/3 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
+          Catálogo precios:{" "}
+          <span className="text-white">
+            {catalogStatus.itemCount.toLocaleString()} items
+          </span>
+          {" · "}
+          <span className={catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}>
+            {catalogStatus.exists
+              ? catalogStatus.stale
+                ? "desactualizado"
+                : "listo"
+              : "no descargado"}
+          </span>
+          {catalogStatus.fetchedAt && (
+            <>
+              {" · actualizado "}
+              <span className="text-white">
+                {new Date(catalogStatus.fetchedAt).toLocaleString()}
+              </span>
+            </>
+          )}
         </div>
       )}
 

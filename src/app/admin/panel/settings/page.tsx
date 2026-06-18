@@ -23,6 +23,17 @@ const MODIFIER_OPTIONS = [
 
 type Tab = "precios" | "venta" | "reventa" | "limites" | "webhook" | "sync";
 
+type PriceCatalogStatus = {
+  exists: boolean;
+  stale: boolean;
+  fetchedAt: string | null;
+  itemCount: number;
+  pageCount: number;
+  currency: string;
+  market: string;
+  lastError?: string;
+};
+
 const TABS: {
   id: Tab;
   label: string;
@@ -94,6 +105,10 @@ function StyledInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
       className="w-full px-4 py-3 bg-white/[0.03] border border-white/8 rounded-[3px] text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all"
     />
   );
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }
 
 function SaveButton({
@@ -185,12 +200,15 @@ export default function AdminSettingsPage() {
   const [cooldownLeft, setCooldownLeft] = useState(0);
 
   useEffect(() => {
-    const saved = localStorage.getItem("last_sync_timestamp");
-    if (saved) {
-      const diff = Date.now() - Number(saved);
-      const remaining = Math.max(0, Math.ceil((3 * 60 * 1000 - diff) / 1000));
-      setCooldownLeft(remaining);
-    }
+    const timer = window.setTimeout(() => {
+      const saved = localStorage.getItem("last_sync_timestamp");
+      if (saved) {
+        const diff = Date.now() - Number(saved);
+        const remaining = Math.max(0, Math.ceil((3 * 60 * 1000 - diff) / 1000));
+        setCooldownLeft(remaining);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -230,8 +248,8 @@ export default function AdminSettingsPage() {
       const now = Date.now();
       localStorage.setItem("last_sync_timestamp", String(now));
       setCooldownLeft(180); // 3 minutos
-    } catch (err: any) {
-      setSyncError(err.message || "Error al sincronizar la aplicación.");
+    } catch (err: unknown) {
+      setSyncError(getErrorMessage(err, "Error al sincronizar la aplicación."));
     } finally {
       setSyncingAll(false);
     }
@@ -241,6 +259,55 @@ export default function AdminSettingsPage() {
   const [syncingPrices, setSyncingPrices] = useState(false);
   const [syncPricesResult, setSyncPricesResult] = useState<string | null>(null);
   const [syncPricesError, setSyncPricesError] = useState<string | null>(null);
+  const [refreshingCatalog, setRefreshingCatalog] = useState(false);
+  const [catalogStatus, setCatalogStatus] = useState<PriceCatalogStatus | null>(null);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+
+  const fetchCatalogStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/store/prices/catalog/status`, {
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al obtener estado del catálogo.");
+      }
+      setCatalogStatus(data);
+      setCatalogError(null);
+    } catch (err: unknown) {
+      setCatalogError(getErrorMessage(err, "Error al obtener estado del catálogo."));
+    }
+  };
+
+  const handleRefreshPriceCatalog = async () => {
+    setRefreshingCatalog(true);
+    setCatalogError(null);
+    setSyncPricesResult(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/store/prices/catalog/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al actualizar catálogo de precios.");
+      }
+      setCatalogStatus(data.catalog ?? null);
+      setSyncPricesResult(data.message || "Catálogo de precios actualizado.");
+      if (Array.isArray(data.errors) && data.errors.length > 0) {
+        setCatalogError(data.errors.join(" | "));
+      }
+    } catch (err: unknown) {
+      setCatalogError(getErrorMessage(err, "Error al actualizar catálogo de precios."));
+    } finally {
+      setRefreshingCatalog(false);
+    }
+  };
 
   const handleSyncPrices = async () => {
     setSyncingPrices(true);
@@ -263,8 +330,9 @@ export default function AdminSettingsPage() {
         data.message ||
           "Sincronización de precios iniciada en segundo plano. Refrescá la tienda en unos minutos.",
       );
-    } catch (err: any) {
-      setSyncPricesError(err.message || "Error al sincronizar precios.");
+      void fetchCatalogStatus();
+    } catch (err: unknown) {
+      setSyncPricesError(getErrorMessage(err, "Error al sincronizar precios."));
     } finally {
       setSyncingPrices(false);
     }
@@ -295,6 +363,13 @@ export default function AdminSettingsPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetchCatalogStatus();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handlePricingSubmit = async (e: React.FormEvent) => {
@@ -785,10 +860,10 @@ export default function AdminSettingsPage() {
                   <RefreshCw className={`w-4 h-4 text-white ${syncingAll ? "animate-spin" : ""}`} />
                 )}
                 {syncingAll
-                  ? "Sincronizando Todo..."
+                  ? "Sincronizando catálogo e inventario..."
                   : cooldownLeft > 0
                   ? `Espera ${Math.floor(cooldownLeft / 60)}m ${cooldownLeft % 60}s`
-                  : "Sincronizar Aplicación"}
+                  : "Sincronizar catálogo + inventario bots"}
               </button>
 
               {cooldownLeft > 0 && (
@@ -802,9 +877,50 @@ export default function AdminSettingsPage() {
 
             <div className="space-y-4">
               <SectionHeader
-                title="Actualizar Precios de Bots con YouPin"
-                desc="Recalcula los precios de StoreItem de bots activos vía GET /market/youpin/prices (SteamWebAPI). No usa el catálogo legacy /items."
+                title="Catálogo Local de Precios"
+                desc="Descarga SteamWebAPI /steam/api/items y guarda el JSON local usado para asignar precios a bots."
               />
+
+              {catalogStatus && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="p-4 bg-white/3 border border-white/10 rounded-[3px]">
+                    <p className="text-[10px] uppercase tracking-wider text-[#84849b] font-black">
+                      Items en catálogo
+                    </p>
+                    <p className="text-lg font-black text-white">
+                      {catalogStatus.itemCount.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-white/3 border border-white/10 rounded-[3px]">
+                    <p className="text-[10px] uppercase tracking-wider text-[#84849b] font-black">
+                      Última actualización
+                    </p>
+                    <p className="text-xs font-bold text-white">
+                      {catalogStatus.fetchedAt
+                        ? new Date(catalogStatus.fetchedAt).toLocaleString()
+                        : "Sin catálogo"}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-white/3 border border-white/10 rounded-[3px]">
+                    <p className="text-[10px] uppercase tracking-wider text-[#84849b] font-black">
+                      Estado
+                    </p>
+                    <p className={`text-xs font-black ${catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}`}>
+                      {catalogStatus.exists
+                        ? catalogStatus.stale
+                          ? "Desactualizado"
+                          : "Listo"
+                        : "No existe"}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {catalogError && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold rounded-[3px]">
+                  {catalogError}
+                </div>
+              )}
 
               {syncPricesError && (
                 <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-[3px]">
@@ -818,19 +934,39 @@ export default function AdminSettingsPage() {
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={handleSyncPrices}
-                disabled={syncingPrices}
-                className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(16,185,129,0.2)] cursor-pointer select-none"
-              >
-                {syncingPrices ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
-                ) : (
-                  <RefreshCw className="w-4 h-4 text-white" />
-                )}
-                {syncingPrices ? "Sincronizando Precios..." : "Actualizar Precios de Bots"}
-              </button>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={handleRefreshPriceCatalog}
+                  disabled={refreshingCatalog}
+                  className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(16,185,129,0.2)] cursor-pointer select-none"
+                >
+                  {refreshingCatalog ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 text-white" />
+                  )}
+                  {refreshingCatalog
+                    ? "Descargando precios desde API..."
+                    : "Descargar catálogo de precios"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSyncPrices}
+                  disabled={syncingPrices || !catalogStatus?.exists}
+                  className="px-6 py-3.5 bg-white/10 hover:bg-white/15 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
+                >
+                  {syncingPrices ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 text-white" />
+                  )}
+                  {syncingPrices
+                    ? "Aplicando precios a bots..."
+                    : "Aplicar precios del catálogo a bots"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -107,15 +107,13 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
       if (!response.ok) {
         throw new Error(data.error || "Error al sincronizar inventario de bots.");
       }
-      if (data.skipped) {
-        setSyncSuccess(data.message || "Sync omitido (sin ítems o sin bots activos).");
-      } else {
-        setSyncSuccess(
-          data.message ||
-            `${data.itemsSynced ?? 0} ítems sincronizados de ${data.activeBots ?? 0} bot(s).`,
-        );
-      }
-      await Promise.all([fetchStoreItems(), fetchBotsList()]);
+      setSyncSuccess(
+        data.message ||
+          "Sincronización iniciada en segundo plano. Esperá 1–3 minutos y refrescá el inventario.",
+      );
+      setTimeout(() => {
+        void Promise.all([fetchStoreItems(), fetchBotsList()]);
+      }, 90000);
     } catch (err: any) {
       setError(err.message || "Error de conexión.");
     } finally {

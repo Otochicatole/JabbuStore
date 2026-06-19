@@ -5,7 +5,11 @@ import { Trash2, TrendingUp, DollarSign, Loader2, AlertTriangle, Info } from 'lu
 import { BACKEND_URL, fetchWithAuth } from '@/shared/lib/api';
 import { useRouter } from 'next/navigation';
 
-export const SellBasket = () => {
+interface SellBasketProps {
+  embedded?: boolean;
+}
+
+export const SellBasket = ({ embedded = false }: SellBasketProps) => {
   const { selectedItems, removeFromSellList, totalValue, clearSellList, minSellPrice } = useInventory();
   const router = useRouter();
   const [selling, setSelling] = useState(false);
@@ -34,7 +38,7 @@ export const SellBasket = () => {
   };
 
   return (
-    <div className="bg-card rounded-2xl p-4 sm:p-6 border border-white/5 lg:sticky lg:top-24">
+    <div className={`${embedded ? "bg-transparent p-0 border-0 rounded-none" : "bg-card rounded-2xl p-4 sm:p-6 border border-white/5 lg:sticky lg:top-24"}`}>
       <div className="flex items-center justify-between gap-3 mb-6">
         <h3 className="text-sm font-black text-white uppercase tracking-widest">
           Resumen de <span className="text-accent">Venta</span>

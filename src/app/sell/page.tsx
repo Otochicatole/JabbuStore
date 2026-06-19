@@ -1,15 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
 import { useInventory } from "@/features/inventory/context/InventoryContext";
 import { InventoryGrid } from "@/features/inventory/ui/InventoryGrid";
 import { SellBasket } from "@/features/inventory/ui/SellBasket";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ShoppingBag, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 function SellPageContent() {
-  const { inventoryItems, loading, syncing, refetchInventory } = useInventory();
+  const { inventoryItems, loading, syncing, refetchInventory, selectedItems } = useInventory();
+  const [isSellBasketOpen, setIsSellBasketOpen] = useState(false);
 
   const totalValue = inventoryItems.reduce((sum, item) => sum + item.price, 0);
+  const selectedTotal = selectedItems.reduce((sum, item) => sum + item.price, 0);
 
   return (
     <main className="mx-auto max-w-full px-4 sm:px-6 pt-24 pb-20 overflow-x-hidden">
@@ -68,10 +72,81 @@ function SellPageContent() {
         </section>
 
         {/* Right Panel: Sell List */}
-        <aside className="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-24">
-          <SellBasket />
+        <aside className="hidden xl:block xl:w-80 flex-shrink-0 xl:sticky xl:top-24 bg-card rounded-2xl p-5 border border-white/5">
+          <SellBasket embedded />
         </aside>
       </div>
+
+      {/* Floating sell basket for < xl screens */}
+      <motion.button
+        type="button"
+        onClick={() => setIsSellBasketOpen(true)}
+        initial={{ opacity: 0, x: 24, scale: 0.9 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        whileTap={{ scale: 0.94 }}
+        className="fixed right-4 bottom-6 z-50 flex xl:hidden h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_30px_rgba(217,70,239,0.35)]"
+        aria-label="Abrir resumen de venta"
+      >
+        <ShoppingBag className="h-5 w-5" />
+        {selectedItems.length > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border border-white/20 bg-[#0f0d1e] px-1.5 text-[9px] font-black text-white">
+            {selectedItems.length}
+          </span>
+        )}
+      </motion.button>
+
+      <AnimatePresence>
+        {isSellBasketOpen && (
+          <motion.div
+            className="fixed inset-0 z-[90] xl:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.button
+              type="button"
+              className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+              aria-label="Cerrar resumen de venta"
+              onClick={() => setIsSellBasketOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+
+            <motion.aside
+              className="absolute bottom-0 right-0 top-0 flex h-dvh w-full max-w-md flex-col overflow-hidden bg-card border-l border-white/10 shadow-2xl shadow-black/80"
+              initial={{ x: "100%", opacity: 0.6 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "100%", opacity: 0.6 }}
+              transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            >
+              <div className="flex items-center justify-between gap-3 border-b border-white/5 bg-[#110f1e]/80 px-4 py-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">
+                    Resumen de venta
+                  </p>
+                  <p className="truncate text-xs font-bold text-white">
+                    {selectedItems.length} item{selectedItems.length === 1 ? "" : "s"} · ${selectedTotal.toLocaleString()} USD
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSellBasketOpen(false)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+                  aria-label="Cerrar resumen de venta"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 custom-scrollbar">
+                <SellBasket embedded />
+              </div>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

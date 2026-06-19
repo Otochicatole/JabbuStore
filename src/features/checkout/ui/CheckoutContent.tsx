@@ -9,7 +9,7 @@ import { CheckoutForm } from "./components/CheckoutForm";
 import { ItemsReview } from "./components/ItemsReview";
 import { OrderSummary } from "./components/OrderSummary";
 import { SuccessScreen } from "./components/SuccessScreen";
-import { SimulationOverlay } from "./components/SimulationOverlay";
+import { PaymentProcessingOverlay } from "./components/PaymentProcessingOverlay";
 import { useCheckout } from "./useCheckout";
 
 export function CheckoutContent() {
@@ -21,14 +21,14 @@ export function CheckoutContent() {
     error,
     selectedMethod,
     setSelectedMethod,
-    isSimulating,
-    simulationStep,
+    isProcessingPayment,
+    paymentStep,
     isSuccess,
     createdOrderId,
     formData,
     setFormData,
     formErrors,
-    handleSimulatePayment,
+    handleSubmitCheckout,
     router,
   } = useCheckout();
 
@@ -43,7 +43,7 @@ export function CheckoutContent() {
     );
   }
 
-  if (error && !isSimulating) {
+  if (error && !isProcessingPayment) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center pt-24 bg-[#070510] px-6">
         <div className="p-8 rounded-3xl bg-red-500/5 border border-red-500/10 text-center max-w-md">
@@ -96,8 +96,7 @@ export function CheckoutContent() {
           </span>
         </h1>
         <p className="text-sm text-[#84849b] mt-1">
-          Verifica tus artículos y proporciona tus datos para simular la
-          transacción.
+          Verifica tus artículos y completa la operación con una pasarela de pago segura.
         </p>
       </div>
 
@@ -128,18 +127,19 @@ export function CheckoutContent() {
             itemsCount={items.length}
             totalPrice={totalPrice}
             selectedMethod={selectedMethod}
-            isSimulating={isSimulating}
+            isProcessingPayment={isProcessingPayment}
             checkoutType={checkoutType}
-            onSubmit={handleSimulatePayment}
+            onSubmit={handleSubmitCheckout}
           />
         </div>
       </div>
 
-      {/* Simulator Sandbox Step Overlay Modal */}
-      {isSimulating && selectedMethodObj && (
-        <SimulationOverlay
+      {/* Secure payment processing overlay */}
+      {isProcessingPayment && selectedMethodObj && (
+        <PaymentProcessingOverlay
           selectedMethodName={selectedMethodObj.name}
-          simulationStep={simulationStep}
+          paymentStep={paymentStep}
+          checkoutType={checkoutType}
         />
       )}
     </main>

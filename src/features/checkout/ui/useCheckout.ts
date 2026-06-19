@@ -7,6 +7,14 @@ import { useInventory } from "@/features/inventory/context/InventoryContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { CheckoutItem, CheckoutFormData, FormErrors } from "../domain/types";
 
+function getErrorMessage(error: unknown, fallback = "Ocurrió un error inesperado.") {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getErrorStack(error: unknown) {
+  return error instanceof Error && error.stack ? `\nStack: ${error.stack}` : "";
+}
+
 export function useCheckout() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -28,8 +36,8 @@ export function useCheckout() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(
     "mercado_pago",
   );
-  const [isSimulating, setIsSimulating] = useState<boolean>(false);
-  const [simulationStep, setSimulationStep] = useState<number>(0);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
+  const [paymentStep, setPaymentStep] = useState<number>(0);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
 
@@ -48,22 +56,26 @@ export function useCheckout() {
 
   // Reset payout fields when payment method changes
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      cbu: "",
-      cuil: "",
-      accountHolder: "",
-      walletAddress: "",
-      network:
-        selectedMethod === "ethereum"
-          ? "ERC20"
-          : selectedMethod === "nowpayments"
-            ? "TRC20"
-            : selectedMethod === "binance"
-              ? "BinancePay"
-              : "ERC20",
-    }));
-    setFormErrors({});
+    const timeoutId = window.setTimeout(() => {
+      setFormData((prev) => ({
+        ...prev,
+        cbu: "",
+        cuil: "",
+        accountHolder: "",
+        walletAddress: "",
+        network:
+          selectedMethod === "ethereum"
+            ? "ERC20"
+            : selectedMethod === "nowpayments"
+              ? "TRC20"
+              : selectedMethod === "binance"
+                ? "BinancePay"
+                : "ERC20",
+      }));
+      setFormErrors({});
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [selectedMethod]);
 
   // 1. Manejar las redirecciones de retorno
@@ -102,9 +114,9 @@ export function useCheckout() {
             if (!res.ok) {
               throw new Error(data?.error || "Error al verificar la transacción de PayPal.");
             }
-          } catch (err: any) {
+          } catch (err: unknown) {
             console.error("PayPal verification error:", err);
-            setError(err.message || "No se pudo procesar tu pago de PayPal de manera segura.");
+            setError(getErrorMessage(err, "No se pudo procesar tu pago de PayPal de manera segura."));
             setLoading(false);
             return;
           }
@@ -145,7 +157,7 @@ export function useCheckout() {
       setLoading(true);
       setError(null);
       try {
-        let payload: any = {};
+        let payload: Record<string, unknown> = {};
         if (checkoutType === "buy") {
           if (cartItems.length === 0) {
             setError("Tu carrito está vacío. Agrega skins para comprar.");
@@ -191,11 +203,13 @@ export function useCheckout() {
 
         setItems(data.items);
         setTotalPrice(data.totalPrice);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Validation error:", err);
         setError(
-          err.message ||
+          getErrorMessage(
+            err,
             "Ocurrió un error inesperado al validar tus productos.",
+          ),
         );
       } finally {
         setLoading(false);
@@ -250,7 +264,7 @@ export function useCheckout() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSimulatePayment = () => {
+  const handleSubmitCheckout = () => {
     if (!selectedMethod) return;
     
     const sendDebugLog = (msg: string) => {
@@ -261,7 +275,7 @@ export function useCheckout() {
       }).catch(() => {});
     };
 
-    sendDebugLog("handleSimulatePayment clicked, method: " + selectedMethod + ", type: " + checkoutType);
+    sendDebugLog("handleSubmitCheckout clicked, method: " + selectedMethod + ", type: " + checkoutType);
 
     if (!validateForm()) {
       sendDebugLog("validateForm failed. Form errors: " + JSON.stringify(formErrors));
@@ -276,11 +290,11 @@ export function useCheckout() {
 
     // SI ES COMPRA Y EL MÉTODO ES MERCADO PAGO, NOWPAYMENTS O PAYPAL: FLUJO REAL
     if (checkoutType === "buy" && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments" || selectedMethod === "paypal")) {
-      setIsSimulating(true);
-      setSimulationStep(1);
+      setIsProcessingPayment(true);
+      setPaymentStep(1);
 
       const methodLabel = selectedMethod === "mercado_pago" ? "Mercado Pago" : selectedMethod === "nowpayments" ? "NOWPayments" : "PayPal";
-      sendDebugLog("Real flow: starting setTimeout with 1000ms delay for " + methodLabel);
+      sendDebugLog("Checkout flow: preparing payment order for " + methodLabel);
 
       setTimeout(async () => {
         sendDebugLog("setTimeout callback started execution.");
@@ -299,6 +313,7 @@ export function useCheckout() {
 
           sendDebugLog("metadataPayload prepared: " + JSON.stringify(metadataPayload));
           sendDebugLog("items in state count: " + items.length + ", cartItems count: " + cartItems.length);
+          setPaymentStep(2);
 
           let detailedItems;
           try {
@@ -319,8 +334,12 @@ export function useCheckout() {
               };
             });
             sendDebugLog("detailedItems mapping completed: " + JSON.stringify(detailedItems));
-          } catch (mapErr: any) {
-            sendDebugLog("detailedItems map failed: " + mapErr.message + "\nStack: " + mapErr.stack);
+          } catch (mapErr: unknown) {
+            sendDebugLog(
+              "detailedItems map failed: " +
+                getErrorMessage(mapErr) +
+                getErrorStack(mapErr),
+            );
             throw mapErr;
           }
 
@@ -347,6 +366,7 @@ export function useCheckout() {
           }
 
           if (data.paymentUrl) {
+            setPaymentStep(3);
             sendDebugLog(`[${methodLabel}] Redirigiendo al usuario a: ${data.paymentUrl}`);
             window.location.href = data.paymentUrl;
           } else {
@@ -354,25 +374,29 @@ export function useCheckout() {
               `El servidor no devolvió un enlace de pago de ${methodLabel} válido.`,
             );
           }
-        } catch (err: any) {
-          sendDebugLog("Error inside setTimeout try-catch block: " + err.message + "\nStack: " + err.stack);
+        } catch (err: unknown) {
+          sendDebugLog(
+            "Error inside setTimeout try-catch block: " +
+              getErrorMessage(err) +
+              getErrorStack(err),
+          );
           console.error(`${methodLabel} integration error:`, err);
-          setError(err.message || `La conexión con ${methodLabel} falló.`);
-          setIsSimulating(false);
+          setError(getErrorMessage(err, `La conexión con ${methodLabel} falló.`));
+          setIsProcessingPayment(false);
         }
       }, 1000);
       return;
     }
 
-    // FLUJO SIMULADO
-    setIsSimulating(true);
-    setSimulationStep(1);
+    // Flujo de creación de orden de venta o métodos internos sin redirección externa.
+    setIsProcessingPayment(true);
+    setPaymentStep(1);
 
     setTimeout(() => {
-      setSimulationStep(2);
+      setPaymentStep(2);
 
       setTimeout(() => {
-        setSimulationStep(3);
+        setPaymentStep(3);
 
         setTimeout(async () => {
           try {
@@ -455,12 +479,12 @@ export function useCheckout() {
             } else {
               clearSellList();
             }
-          } catch (err: any) {
+          } catch (err: unknown) {
             console.error("Submit order error:", err);
             setError(
-              err.message || "La simulación falló al registrar la orden.",
+              getErrorMessage(err, "No pudimos registrar la orden."),
             );
-            setIsSimulating(false);
+            setIsProcessingPayment(false);
           }
         }, 1000);
       }, 1000);
@@ -475,14 +499,14 @@ export function useCheckout() {
     error,
     selectedMethod,
     setSelectedMethod,
-    isSimulating,
-    simulationStep,
+    isProcessingPayment,
+    paymentStep,
     isSuccess,
     createdOrderId,
     formData,
     setFormData,
     formErrors,
-    handleSimulatePayment,
+    handleSubmitCheckout,
     router,
   };
 }

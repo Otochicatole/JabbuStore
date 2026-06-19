@@ -1,5 +1,4 @@
 import React from 'react';
-import { HelpCircle } from 'lucide-react';
 import { CheckoutFormData, FormErrors } from '../../domain/types';
 import { PAYMENT_METHODS } from '../../domain/constants';
 

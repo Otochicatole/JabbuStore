@@ -5,7 +5,7 @@ interface OrderSummaryProps {
   itemsCount: number;
   totalPrice: number;
   selectedMethod: string | null;
-  isSimulating: boolean;
+  isProcessingPayment: boolean;
   checkoutType: "buy" | "sell";
   onSubmit: () => void;
 }
@@ -14,7 +14,7 @@ export function OrderSummary({
   itemsCount,
   totalPrice,
   selectedMethod,
-  isSimulating,
+  isProcessingPayment,
   checkoutType,
   onSubmit
 }: OrderSummaryProps) {
@@ -28,12 +28,12 @@ export function OrderSummary({
           <span className="text-white">${totalPrice.toFixed(2)}</span>
         </div>
         <div className="flex items-center justify-between text-xs text-[#84849b] font-semibold">
-          <span>Comisión de Pasarela (Simulada)</span>
-          <span className="text-emerald-400">Gratis (0.00)</span>
+          <span>Comisión de pasarela</span>
+          <span className="text-emerald-400">Incluida</span>
         </div>
         <div className="flex items-center justify-between text-xs text-[#84849b] font-semibold">
-          <span>Impuestos de Blockchain / Red</span>
-          <span className="text-emerald-400">Bonificado</span>
+          <span>Validación de orden</span>
+          <span className="text-emerald-400">Server-side</span>
         </div>
       </div>
 
@@ -49,10 +49,10 @@ export function OrderSummary({
 
       <button
         onClick={onSubmit}
-        disabled={!selectedMethod || isSimulating}
+        disabled={!selectedMethod || isProcessingPayment}
         className="w-full h-14 bg-accent text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-[0_0_35px_rgba(217,70,239,0.35)] hover:shadow-[0_0_45px_rgba(217,70,239,0.5)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
       >
-        {checkoutType === "buy" ? "Completar Pago" : "Confirmar Venta"}
+        {checkoutType === "buy" ? "Continuar al Pago Seguro" : "Confirmar Venta"}
         <ArrowRight className="w-4 h-4" />
       </button>
 

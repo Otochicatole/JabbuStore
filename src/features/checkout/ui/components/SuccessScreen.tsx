@@ -39,8 +39,8 @@ export function SuccessScreen({
         </button>
         <p className="text-xs text-[#84849b] max-w-sm mx-auto leading-relaxed mb-8 mt-2">
           {checkoutType === "buy"
-            ? "Su pago está siendo procesado de forma automática por Mercado Pago. El bot de Steam iniciará el envío de sus Skins tan pronto como se reciba la acreditación."
-            : "Tus skins han sido ingresadas correctamente en el Marketplace y la transacción está en cola para su validación."}
+            ? "Tu orden quedó registrada. El estado se actualizará automáticamente cuando la pasarela confirme el pago y el equipo iniciará el envío de tus skins."
+            : "Tus skins fueron registradas correctamente y la operación quedó en seguimiento para su validación."}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button

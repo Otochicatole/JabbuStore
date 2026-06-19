@@ -5,9 +5,9 @@ import { PaymentMethod } from "./types";
 export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "mercado_pago",
-    name: "Mercado Pago / Banco",
+    name: "Mercado Pago",
     description:
-      "Paga con transferencia, saldo de Mercado Pago o tarjetas de crédito/débito",
+      "Paga con saldo de Mercado Pago, transferencia o tarjetas compatibles",
     icon: <CreditCard className="w-5 h-5 text-sky-400" />,
     badge: "ARS / CBU / Alias",
     color:
@@ -17,7 +17,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "nowpayments",
     name: "NOWPayments (Criptomonedas)",
     description:
-      "Paga de forma totalmente segura usando Bitcoin, USDT, Ethereum y más criptomonedas",
+      "Paga con Bitcoin, USDT, Ethereum y otras criptomonedas mediante checkout seguro",
     icon: <Coins className="w-5 h-5 text-purple-400" />,
     badge: "Crypto / Web3",
     color:
@@ -27,7 +27,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "paypal",
     name: "PayPal",
     description:
-      "Paga con tu saldo de PayPal, tarjeta de crédito o cuenta bancaria internacional en dólares",
+      "Paga con saldo de PayPal, tarjeta o cuenta bancaria internacional",
     icon: <Wallet className="w-5 h-5 text-indigo-400" />,
     badge: "USD / PayPal",
     color:

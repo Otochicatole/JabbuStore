@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, Loader2, Search } from 'lucide-react';
 import { Order } from '../../domain/types';
@@ -8,6 +8,7 @@ import { AdminSelect } from '@/shared/components/AdminSelect';
 
 export function PurchasesTab() {
   const router = useRouter();
+  const updatingStatusRef = useRef<Set<string>>(new Set());
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +20,20 @@ export function PurchasesTab() {
 
   // State for dynamically resolved historical skin details (floats and patterns)
   const [resolvedItemsMap, setResolvedItemsMap] = useState<Record<string, { float: number | null, pattern: number | null, rarity?: string, exterior?: string }>>({});
+
+  const getUnknownErrorMessage = (err: unknown, fallback: string) =>
+    err instanceof Error ? err.message : fallback;
+
+  const getErrorMessage = async (response: Response, fallback: string) => {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await response.json().catch(() => null);
+      return data?.error || data?.message || fallback;
+    }
+
+    const text = await response.text().catch(() => '');
+    return text || fallback;
+  };
 
   const fetchOrders = async () => {
     setLoadingOrders(true);
@@ -39,9 +54,9 @@ export function PurchasesTab() {
       const filtered = data.filter(o => o.type === 'BUY');
       setOrders(filtered);
       resolveMissingItemDetails(filtered);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || 'Error al cargar órdenes.');
+      setError(getUnknownErrorMessage(err, 'Error al cargar órdenes.'));
     } finally {
       setLoadingOrders(false);
     }
@@ -102,8 +117,11 @@ export function PurchasesTab() {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    if (updatingStatusRef.current.has(orderId)) return;
+
     // Actualización optimista local en memoria para evitar un parpadeo de recarga de red (sin Loader2)
     const originalOrders = [...orders];
+    updatingStatusRef.current.add(orderId);
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
     );
@@ -118,16 +136,45 @@ export function PurchasesTab() {
         credentials: 'include',
         body: JSON.stringify({ status: newStatus })
       });
-      if (!response.ok) throw new Error('Error actualizando estado.');
-    } catch (err: any) {
-      alert(err.message);
+      if (response.status === 401 || response.status === 403) {
+        const message = await getErrorMessage(response, 'Tu sesión de admin expiró o no tenés permisos.');
+        if (response.status === 401) router.push('/admin/login');
+        throw new Error(message);
+      }
+
+      if (!response.ok) {
+        throw new Error(await getErrorMessage(response, 'Error actualizando estado.'));
+      }
+
+      const updatedOrder: Order = await response.json();
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                ...updatedOrder,
+                user: order.user,
+                items: updatedOrder.items ?? order.items,
+              }
+            : order,
+        ),
+      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error actualizando estado.';
+      alert(message);
       // Revertir si falla
       setOrders(originalOrders);
+    } finally {
+      updatingStatusRef.current.delete(orderId);
     }
   };
 
   useEffect(() => {
-    fetchOrders();
+    const timeoutId = window.setTimeout(() => {
+      fetchOrders();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   return (
@@ -165,7 +212,7 @@ export function PurchasesTab() {
             placeholder="Buscar por ID de Orden, cliente, SteamID o skins..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white/[0.02] hover:bg-white/[0.04] focus:bg-[#0f0d1e] border border-white/10 focus:border-accent/40 rounded-[3px] text-xs text-white placeholder-white/25 focus:outline-none transition-all font-mono"
+            className="w-full pl-10 pr-4 py-2.5 bg-white/2 hover:bg-white/4 focus:bg-[#0f0d1e] border border-white/10 focus:border-accent/40 rounded-[3px] text-xs text-white placeholder-white/25 focus:outline-none transition-all font-mono"
           />
         </div>
 

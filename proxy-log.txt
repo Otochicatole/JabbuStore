@@ -7915,3 +7915,133 @@ Stack: Error: El servidor no devolvió un enlace de pago de Mercado Pago válido
 [2026-06-19T21:24:30.008Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
 [2026-06-19T21:24:30.528Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
 [2026-06-19T21:24:30.751Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:30:02.990Z] GET /api/proxy/orders/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/me)
+[2026-06-19T21:32:01.996Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:32:02.520Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:32:41.151Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:32:41.724Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:33:40.241Z] PATCH /api/proxy/admin/marketplace/settings/pricing -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings/pricing)
+[2026-06-19T21:33:56.956Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:33:56.991Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:33:57.005Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:33:57.158Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:33:57.197Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:33:57.456Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:33:57.461Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:34:06.995Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:34:07.759Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T21:34:07.793Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[CLIENT DEBUG] [2026-06-19T21:34:28.053Z] validateForm passed. Proceeding with checkout.
+[CLIENT DEBUG] [2026-06-19T21:34:28.061Z] handleSubmitCheckout clicked, method: mercado_pago, type: buy
+[CLIENT DEBUG] [2026-06-19T21:34:28.083Z] Checkout flow: preparing payment order for Mercado Pago
+[CLIENT DEBUG] [2026-06-19T21:34:29.010Z] detailedItems mapping completed: [{"assetId":"51215135685","name":"★ M9 Bayonet | Doppler (Factory New) | Black Pearl","price":8000,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Wts2sab1iLvWHMWad_ux6seJiXyyyhxEYvjyXmIP8KDHCOml8U8UoAfkItRCwl9XnNe207lCN2t1EzXr93ClN5yc_5L5UVaRxr6HSjQGXYrc9_9BdcwX6MBne","float":0.019015902653336525,"pattern":745,"rarity":"ancient","exterior":"Factory New","provider":"bot"}]
+[CLIENT DEBUG] [2026-06-19T21:34:29.015Z] items in state count: 1, cartItems count: 1
+[CLIENT DEBUG] [2026-06-19T21:34:29.021Z] Sending POST request to /api/proxy/orders
+[CLIENT DEBUG] [2026-06-19T21:34:29.044Z] setTimeout callback started execution.
+[CLIENT DEBUG] [2026-06-19T21:34:29.053Z] metadataPayload prepared: {"firstName":"asd","lastName":"asd","email":"asd@gmail.com","phone":"23123","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null}
+[2026-06-19T21:34:30.060Z] POST /api/proxy/orders -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders)
+[CLIENT DEBUG] [2026-06-19T21:34:30.179Z] [Mercado Pago] Redirigiendo al usuario a: https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-73395a52-fe95-488b-9425-d42fe0ee8bb7
+[CLIENT DEBUG] [2026-06-19T21:34:30.185Z] fetchWithAuth response JSON: {"id":"8d176814-c6e9-481b-92e4-e52a71874c8c","userId":"b99ec1a1-1279-448c-85af-09330f52f32e","type":"BUY","status":"PENDING_PAYMENT","totalPrice":8000,"paymentMethod":"mercado_pago","metadata":{"firstName":"asd","lastName":"asd","email":"asd@gmail.com","phone":"23123","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null},"createdAt":"2026-06-19T21:34:29.324Z","updatedAt":"2026-06-19T21:34:29.324Z","items":[{"id":"7f2d9f81-8d78-4ff1-b9b8-5b5559c88540","orderId":"8d176814-c6e9-481b-92e4-e52a71874c8c","assetId":"51215135685","name":"★ M9 Bayonet | Doppler (Factory New) | Black Pearl","price":8000,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Wts2sab1iLvWHMWad_ux6seJiXyyyhxEYvjyXmIP8KDHCOml8U8UoAfkItRCwl9XnNe207lCN2t1EzXr93ClN5yc_5L5UVaRxr6HSjQGXYrc9_9BdcwX6MBne","rarity":"ancient","exterior":"Factory New","float":0.019015902653336525,"pattern":745,"provider":"bot"}],"paymentUrl":"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-73395a52-fe95-488b-9425-d42fe0ee8bb7"}
+[CLIENT DEBUG] [2026-06-19T21:34:30.195Z] fetchWithAuth response status: 201
+[2026-06-19T21:34:36.336Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:34:36.362Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:34:36.593Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:34:36.629Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:34:36.853Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:34:38.723Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:34:38.913Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:37:09.449Z] PATCH /api/proxy/admin/marketplace/settings/user-sell -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings/user-sell)
+[2026-06-19T21:37:28.321Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:37:28.545Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:37:28.588Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:37:28.591Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:37:28.797Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:37:28.997Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:37:29.056Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:37:35.311Z] PATCH /api/proxy/admin/marketplace/settings/user-sell -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings/user-sell)
+[2026-06-19T21:37:38.022Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:37:38.331Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:37:41.326Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:37:41.529Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:37:41.565Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:37:41.568Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:37:41.828Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:42:36.752Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:42:37.235Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:42:40.070Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:42:40.109Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:42:40.189Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:42:40.540Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:42:40.543Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:42:40.583Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:42:40.726Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:42:47.202Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:42:47.844Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T21:42:47.995Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[CLIENT DEBUG] [2026-06-19T21:42:59.723Z] validateForm passed. Proceeding with checkout.
+[CLIENT DEBUG] [2026-06-19T21:42:59.731Z] Checkout flow: preparing payment order for Mercado Pago
+[CLIENT DEBUG] [2026-06-19T21:42:59.752Z] handleSubmitCheckout clicked, method: mercado_pago, type: buy
+[CLIENT DEBUG] [2026-06-19T21:43:00.683Z] detailedItems mapping completed: [{"assetId":"51215135685","name":"★ M9 Bayonet | Doppler (Factory New) | Black Pearl","price":16000,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Wts2sab1iLvWHMWad_ux6seJiXyyyhxEYvjyXmIP8KDHCOml8U8UoAfkItRCwl9XnNe207lCN2t1EzXr93ClN5yc_5L5UVaRxr6HSjQGXYrc9_9BdcwX6MBne","float":0.019015902653336525,"pattern":745,"rarity":"ancient","exterior":"Factory New","provider":"bot"}]
+[CLIENT DEBUG] [2026-06-19T21:43:00.690Z] Sending POST request to /api/proxy/orders
+[CLIENT DEBUG] [2026-06-19T21:43:00.709Z] items in state count: 1, cartItems count: 1
+[CLIENT DEBUG] [2026-06-19T21:43:00.714Z] setTimeout callback started execution.
+[CLIENT DEBUG] [2026-06-19T21:43:00.735Z] metadataPayload prepared: {"firstName":"asd","lastName":"asd","email":"asd@asd.com","phone":"213123","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null}
+[2026-06-19T21:43:02.282Z] POST /api/proxy/orders -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders)
+[CLIENT DEBUG] [2026-06-19T21:43:02.415Z] [Mercado Pago] Redirigiendo al usuario a: https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-46222d6d-e162-4d36-a59f-bc38005d3f4f
+[CLIENT DEBUG] [2026-06-19T21:43:02.420Z] fetchWithAuth response status: 201
+[CLIENT DEBUG] [2026-06-19T21:43:02.426Z] fetchWithAuth response JSON: {"id":"9a30e9b9-02b4-46fc-8ad9-52874b3ccc0a","userId":"b99ec1a1-1279-448c-85af-09330f52f32e","type":"BUY","status":"PENDING_PAYMENT","totalPrice":16000,"paymentMethod":"mercado_pago","metadata":{"firstName":"asd","lastName":"asd","email":"asd@asd.com","phone":"213123","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null},"createdAt":"2026-06-19T21:43:01.534Z","updatedAt":"2026-06-19T21:43:01.534Z","items":[{"id":"6af64420-fd00-435f-97e3-0f3020c17a5f","orderId":"9a30e9b9-02b4-46fc-8ad9-52874b3ccc0a","assetId":"51215135685","name":"★ M9 Bayonet | Doppler (Factory New) | Black Pearl","price":16000,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Wts2sab1iLvWHMWad_ux6seJiXyyyhxEYvjyXmIP8KDHCOml8U8UoAfkItRCwl9XnNe207lCN2t1EzXr93ClN5yc_5L5UVaRxr6HSjQGXYrc9_9BdcwX6MBne","rarity":"ancient","exterior":"Factory New","float":0.019015902653336525,"pattern":745,"provider":"bot"}],"paymentUrl":"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-46222d6d-e162-4d36-a59f-bc38005d3f4f"}
+[2026-06-19T21:43:10.681Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:43:10.683Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:43:10.719Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:43:10.936Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:43:11.269Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:43:36.786Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)
+[2026-06-19T21:43:36.832Z] GET /api/proxy/market/listings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/market/listings)
+[2026-06-19T21:43:37.932Z] GET /api/proxy/orders/all -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/all)
+[2026-06-19T21:54:28.971Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:54:29.472Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:54:36.851Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:54:37.587Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T21:54:37.661Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[CLIENT DEBUG] [2026-06-19T21:54:44.428Z] handleSubmitCheckout clicked, method: mercado_pago, type: buy
+[CLIENT DEBUG] [2026-06-19T21:54:44.465Z] Checkout flow: preparing payment order for Mercado Pago
+[CLIENT DEBUG] [2026-06-19T21:54:45.419Z] detailedItems mapping completed: [{"assetId":"51215135685","name":"★ M9 Bayonet | Doppler (Factory New) | Black Pearl","price":16000,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Wts2sab1iLvWHMWad_ux6seJiXyyyhxEYvjyXmIP8KDHCOml8U8UoAfkItRCwl9XnNe207lCN2t1EzXr93ClN5yc_5L5UVaRxr6HSjQGXYrc9_9BdcwX6MBne","float":0.019015902653336525,"pattern":745,"rarity":"ancient","exterior":"Factory New","provider":"bot"}]
+[CLIENT DEBUG] [2026-06-19T21:54:45.426Z] items in state count: 1, cartItems count: 1
+[CLIENT DEBUG] [2026-06-19T21:54:45.454Z] Sending POST request to /api/proxy/orders
+[2026-06-19T21:54:46.417Z] POST /api/proxy/orders -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders)
+[CLIENT DEBUG] [2026-06-19T21:54:46.532Z] [Mercado Pago] Redirigiendo al usuario a: https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-7eba2801-4651-4bed-a49d-3604e4f10ba5
+[CLIENT DEBUG] [2026-06-19T21:54:46.565Z] fetchWithAuth response status: 201
+[CLIENT DEBUG] [2026-06-19T21:54:46.600Z] fetchWithAuth response JSON: {"id":"03fe0e5e-6448-4332-82c7-e58b2232763d","userId":"b99ec1a1-1279-448c-85af-09330f52f32e","type":"BUY","status":"PENDING_PAYMENT","totalPrice":16000,"paymentMethod":"mercado_pago","metadata":{"firstName":"asd","lastName":"asd","email":"asd@asd.com","phone":"2131","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null},"createdAt":"2026-06-19T21:54:45.678Z","updatedAt":"2026-06-19T21:54:45.678Z","items":[{"id":"512e0dd2-f550-4424-a782-ff18d2b7d9a2","orderId":"03fe0e5e-6448-4332-82c7-e58b2232763d","assetId":"51215135685","name":"★ M9 Bayonet | Doppler (Factory New) | Black Pearl","price":16000,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Wts2sab1iLvWHMWad_ux6seJiXyyyhxEYvjyXmIP8KDHCOml8U8UoAfkItRCwl9XnNe207lCN2t1EzXr93ClN5yc_5L5UVaRxr6HSjQGXYrc9_9BdcwX6MBne","rarity":"ancient","exterior":"Factory New","float":0.019015902653336525,"pattern":745,"provider":"bot"}],"paymentUrl":"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-7eba2801-4651-4bed-a49d-3604e4f10ba5"}
+[2026-06-19T21:54:53.918Z] PATCH /api/proxy/orders/03fe0e5e-6448-4332-82c7-e58b2232763d/cancel-payment -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/03fe0e5e-6448-4332-82c7-e58b2232763d/cancel-payment)
+[2026-06-19T21:54:54.241Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:54:54.244Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:54:54.277Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:54:54.462Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:54:54.721Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:55:03.549Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:55:03.844Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T21:55:10.242Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:55:10.293Z] GET /api/proxy/users/me/inventory -> 401 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:55:10.317Z] GET /api/proxy/admins/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admins/me)
+[2026-06-19T21:55:10.322Z] GET /api/proxy/orders/all -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/all)
+[2026-06-19T21:55:30.050Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_asc)
+[2026-06-19T21:55:30.277Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_asc)
+[2026-06-19T21:55:35.959Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:55:36.434Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T21:55:36.514Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[CLIENT DEBUG] [2026-06-19T21:55:45.928Z] Checkout flow: preparing payment order for Mercado Pago
+[CLIENT DEBUG] [2026-06-19T21:55:45.961Z] handleSubmitCheckout clicked, method: mercado_pago, type: buy
+[CLIENT DEBUG] [2026-06-19T21:55:46.884Z] detailedItems mapping completed: [{"assetId":"youpin-c7834e91-5e08-439e-a104-b3330093c8be","name":"PP-Bizon | Runic (Well-Worn)","price":0.05,"iconUrl":"https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpotLO_JAlf1OD3czRY49KJnIWHm-X1Or_UhFRc7cF4n-SPot-kila18hU5YG3zINCVegZsYlqB81e3kOfrhJG078idy3JrsicltmGdwUK-9svtsw","float":0.40784752368927,"pattern":787,"rarity":"rare","exterior":"Well-Worn","provider":"bot"}]
+[CLIENT DEBUG] [2026-06-19T21:55:46.915Z] Sending POST request to /api/proxy/orders
+[CLIENT DEBUG] [2026-06-19T21:55:46.952Z] items in state count: 1, cartItems count: 1
+[2026-06-19T21:55:47.908Z] POST /api/proxy/orders -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders)
+[CLIENT DEBUG] [2026-06-19T21:55:48.031Z] [Mercado Pago] Redirigiendo al usuario a: https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-7c72ca21-e245-43c7-acc2-de150deaaa31
+[CLIENT DEBUG] [2026-06-19T21:55:48.057Z] fetchWithAuth response status: 201
+[CLIENT DEBUG] [2026-06-19T21:55:48.064Z] fetchWithAuth response JSON: {"id":"f6b3d01f-5e28-46f0-9c42-95deac11cec3","userId":"b99ec1a1-1279-448c-85af-09330f52f32e","type":"BUY","status":"PENDING_PAYMENT","totalPrice":0.05,"paymentMethod":"mercado_pago","metadata":{"firstName":"asd","lastName":"asd","email":"asd@asd.com","phone":"2131","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null},"createdAt":"2026-06-19T21:55:47.190Z","updatedAt":"2026-06-19T21:55:47.190Z","items":[{"id":"a33e4fe5-e0d4-4f0a-920e-75902a378c41","orderId":"f6b3d01f-5e28-46f0-9c42-95deac11cec3","assetId":"youpin-c7834e91-5e08-439e-a104-b3330093c8be","name":"PP-Bizon | Runic (Well-Worn)","price":0.05,"iconUrl":"https://community.akamai.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpotLO_JAlf1OD3czRY49KJnIWHm-X1Or_UhFRc7cF4n-SPot-kila18hU5YG3zINCVegZsYlqB81e3kOfrhJG078idy3JrsicltmGdwUK-9svtsw","rarity":"rare","exterior":"Well-Worn","float":0.40784752368927,"pattern":787,"provider":"youpin"}],"paymentUrl":"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-7c72ca21-e245-43c7-acc2-de150deaaa31"}
+[2026-06-19T21:55:59.146Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T21:55:59.174Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:55:59.187Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T21:55:59.410Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:55:59.636Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T21:56:00.710Z] GET /api/proxy/orders/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/me)
+[2026-06-19T21:56:13.999Z] GET /api/proxy/orders/all -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/all)

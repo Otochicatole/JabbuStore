@@ -133,6 +133,21 @@ export function useCheckout() {
         setLoading(false);
         console.log("[useCheckout] handleCallback finished. Loading set to false.");
       } else if (status === "failure") {
+        if (orderId) {
+          try {
+            console.log("[useCheckout] cancelling pending order after payment failure:", {
+              orderId,
+              method,
+            });
+            await fetchWithAuth(`${BACKEND_URL}/orders/${orderId}/cancel-payment`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+            });
+          } catch (err: unknown) {
+            console.error("Payment cancellation status update error:", err);
+          }
+        }
+
         setError(
           "El proceso de pago fue cancelado o rechazado. Por favor, intente nuevamente.",
         );

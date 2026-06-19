@@ -16,8 +16,6 @@ import {
   ExternalLink,
   CreditCard,
   User,
-  Copy,
-  Check,
   ShieldCheck,
   Cpu,
   Layers,
@@ -127,7 +125,6 @@ export default function UserOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "buy" | "sell">("all");
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
-  const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -153,12 +150,6 @@ export default function UserOrdersPage() {
       ...prev,
       [orderId]: !prev[orderId]
     }));
-  };
-
-  const handleCopyAssetId = (assetId: string) => {
-    navigator.clipboard.writeText(assetId);
-    setCopiedAssetId(assetId);
-    setTimeout(() => { setCopiedAssetId(null); }, 1500);
   };
 
   const getStatusConfig = (status: Order["status"], orderType: Order["type"]) => {
@@ -696,13 +687,6 @@ export default function UserOrdersPage() {
                                           Souvenir
                                         </span>
                                       )}
-                                      {finalProvider === 'youpin' && (
-                                        <span className="text-[7.5px] font-black uppercase tracking-wider bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-[2px]">Youpin</span>
-                                      )}
-
-                                      {finalProvider === 'bots' && (
-                                        <span className="text-[7.5px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-[2px]">Bots</span>
-                                      )}
                                     </div>
 
                                     {/* Sub-text seed, exterior, asset copies */}
@@ -715,17 +699,6 @@ export default function UserOrdersPage() {
                                       {displayPattern !== null && (
                                         <span>Semilla: <span className="text-white font-bold">{displayPattern}</span></span>
                                       )}
-                                      <button 
-                                        onClick={() => handleCopyAssetId(item.assetId)}
-                                        className="text-[#84849b] hover:text-white flex items-center gap-1 bg-white/[0.01] border border-white/5 px-1.5 py-0.2 rounded-sm cursor-pointer"
-                                      >
-                                        <span>AssetID: {item.assetId}</span>
-                                        {copiedAssetId === item.assetId ? (
-                                          <Check className="w-2.5 h-2.5 text-emerald-400 animate-pulse" />
-                                        ) : (
-                                          <Copy className="w-2.5 h-2.5" />
-                                        )}
-                                      </button>
                                     </div>
                                   </div>
 

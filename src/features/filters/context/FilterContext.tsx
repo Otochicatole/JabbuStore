@@ -47,7 +47,23 @@ const defaultState: FilterState = {
 };
 
 const FILTER_ROUTES = new Set(["/buy", "/sell"]);
-const FILTER_QUERY_KEYS = ["q", "min", "max", "cat", "cond", "sort", "instant", "group"];
+const FILTER_QUERY_KEYS = [
+  "search",
+  "minPrice",
+  "maxPrice",
+  "categories",
+  "conditions",
+  "sort",
+  "immediate",
+  "group",
+  // Legacy keys are deleted when rewriting the URL.
+  "q",
+  "min",
+  "max",
+  "cat",
+  "cond",
+  "instant",
+];
 const SORT_OPTIONS: SortOption[] = [
   "Precio: Mayor a Menor",
   "Precio: Menor a Mayor",
@@ -55,6 +71,54 @@ const SORT_OPTIONS: SortOption[] = [
   "Float: Mayor a Menor",
   "Más recientes",
 ];
+
+const SORT_LABEL_TO_TOKEN: Record<SortOption, string> = {
+  "Precio: Mayor a Menor": "price_desc",
+  "Precio: Menor a Mayor": "price_asc",
+  "Float: Menor a Mayor": "float_asc",
+  "Float: Mayor a Menor": "float_desc",
+  "Más recientes": "newest",
+};
+
+const SORT_TOKEN_TO_LABEL: Record<string, SortOption> = {
+  price_desc: "Precio: Mayor a Menor",
+  price_asc: "Precio: Menor a Mayor",
+  float_asc: "Float: Menor a Mayor",
+  float_desc: "Float: Mayor a Menor",
+  newest: "Más recientes",
+};
+
+const CATEGORY_LABEL_TO_TOKEN: Record<string, string> = {
+  Cuchillos: "knives",
+  Guantes: "gloves",
+  Pistolas: "pistols",
+  Subfusiles: "smgs",
+  "Rifles de asalto": "rifles",
+  "Rifles de francotirador": "snipers",
+  Escopetas: "shotguns",
+  Ametralladoras: "machine_guns",
+  Agentes: "agents",
+  Contenedores: "containers",
+  "Kits musicales": "music_kits",
+  Parches: "patches",
+  Pegatinas: "stickers",
+};
+
+const CATEGORY_TOKEN_TO_LABEL = Object.fromEntries(
+  Object.entries(CATEGORY_LABEL_TO_TOKEN).map(([label, token]) => [token, label]),
+) as Record<string, string>;
+
+const CONDITION_LABEL_TO_TOKEN: Record<string, string> = {
+  "Recién fabricado": "factory_new",
+  "Casi nuevo": "minimal_wear",
+  "Algo desgastado": "field_tested",
+  "Bastante desgastado": "well_worn",
+  Deplorable: "battle_scarred",
+};
+
+const CONDITION_TOKEN_TO_LABEL = Object.fromEntries(
+  Object.entries(CONDITION_LABEL_TO_TOKEN).map(([label, token]) => [token, label]),
+) as Record<string, string>;
 
 function parseListParam(value: string | null): string[] {
   if (!value) return [];
@@ -65,20 +129,38 @@ function parseListParam(value: string | null): string[] {
 }
 
 function parseSortOption(value: string | null): SortOption {
+  if (value && SORT_TOKEN_TO_LABEL[value]) {
+    return SORT_TOKEN_TO_LABEL[value];
+  }
+
   return SORT_OPTIONS.includes(value as SortOption)
     ? (value as SortOption)
     : defaultState.sortOption;
 }
 
+function labelsFromTokens(values: string[], tokenToLabel: Record<string, string>): string[] {
+  return values.map((value) => tokenToLabel[value] ?? value);
+}
+
+function tokensFromLabels(values: string[], labelToToken: Record<string, string>): string[] {
+  return values.map((value) => labelToToken[value] ?? value);
+}
+
 function filterStateFromSearchParams(params: URLSearchParams): FilterState {
   return {
-    searchQuery: params.get("q") ?? defaultState.searchQuery,
-    minPrice: params.get("min") ?? defaultState.minPrice,
-    maxPrice: params.get("max") ?? defaultState.maxPrice,
-    selectedCategories: parseListParam(params.get("cat")),
-    selectedConditions: parseListParam(params.get("cond")),
+    searchQuery: params.get("search") ?? params.get("q") ?? defaultState.searchQuery,
+    minPrice: params.get("minPrice") ?? params.get("min") ?? defaultState.minPrice,
+    maxPrice: params.get("maxPrice") ?? params.get("max") ?? defaultState.maxPrice,
+    selectedCategories: labelsFromTokens(
+      parseListParam(params.get("categories") ?? params.get("cat")),
+      CATEGORY_TOKEN_TO_LABEL,
+    ),
+    selectedConditions: labelsFromTokens(
+      parseListParam(params.get("conditions") ?? params.get("cond")),
+      CONDITION_TOKEN_TO_LABEL,
+    ),
     sortOption: parseSortOption(params.get("sort")),
-    immediateTradeOnly: params.get("instant") === "1",
+    immediateTradeOnly: (params.get("immediate") ?? params.get("instant")) === "1",
     groupSameItems: params.get("group") === "1",
   };
 }
@@ -92,19 +174,25 @@ function writeFilterStateToSearchParams(
     next.delete(key);
   }
 
-  if (state.searchQuery.trim()) next.set("q", state.searchQuery.trim());
-  if (state.minPrice.trim()) next.set("min", state.minPrice.trim());
-  if (state.maxPrice.trim()) next.set("max", state.maxPrice.trim());
+  if (state.searchQuery.trim()) next.set("search", state.searchQuery.trim());
+  if (state.minPrice.trim()) next.set("minPrice", state.minPrice.trim());
+  if (state.maxPrice.trim()) next.set("maxPrice", state.maxPrice.trim());
   if (state.selectedCategories.length > 0) {
-    next.set("cat", state.selectedCategories.join(","));
+    next.set(
+      "categories",
+      tokensFromLabels(state.selectedCategories, CATEGORY_LABEL_TO_TOKEN).join(","),
+    );
   }
   if (state.selectedConditions.length > 0) {
-    next.set("cond", state.selectedConditions.join(","));
+    next.set(
+      "conditions",
+      tokensFromLabels(state.selectedConditions, CONDITION_LABEL_TO_TOKEN).join(","),
+    );
   }
   if (state.sortOption !== defaultState.sortOption) {
-    next.set("sort", state.sortOption);
+    next.set("sort", SORT_LABEL_TO_TOKEN[state.sortOption]);
   }
-  if (state.immediateTradeOnly) next.set("instant", "1");
+  if (state.immediateTradeOnly) next.set("immediate", "1");
   if (state.groupSameItems) next.set("group", "1");
 
   return next;

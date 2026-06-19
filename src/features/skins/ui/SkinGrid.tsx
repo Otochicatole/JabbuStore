@@ -1,19 +1,18 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from 'react';
-import { Skin } from '../domain/skin';
+import { useMemo, useEffect, useRef } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Skin, SkinPagination } from '../domain/skin';
 import { SkinCard } from './SkinCard';
 import { useFilters } from '@/features/filters/context/FilterContext';
-import { applyFilters } from '@/features/filters/utils/applyFilters';
 
 interface SkinGridProps {
   skins: Skin[];
+  pagination: SkinPagination;
   loading: boolean;
   error?: string | null;
   onRetry?: () => void;
 }
-
-const ITEMS_PER_PAGE = 40;
 
 function getPageNumbers(currentPage: number, totalPages: number) {
   const pages: (number | string)[] = [];
@@ -58,16 +57,60 @@ function getPageNumbers(currentPage: number, totalPages: number) {
   return pages;
 }
 
-export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
+export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGridProps) => {
   const filters = useFilters();
-  const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const gridRef = useRef<HTMLDivElement>(null);
+  const lastFilterSignatureRef = useRef<string | null>(null);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
+    const signature = JSON.stringify({
+      searchQuery: filters.searchQuery,
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice,
+      selectedCategories: filters.selectedCategories,
+      selectedConditions: filters.selectedConditions,
+      sortOption: filters.sortOption,
+      immediateTradeOnly: filters.immediateTradeOnly,
+      groupSameItems: filters.groupSameItems,
+    });
 
-  const filteredSkins = useMemo(() => applyFilters(skins, filters), [skins, filters]);
+    if (lastFilterSignatureRef.current === null) {
+      lastFilterSignatureRef.current = signature;
+      return;
+    }
+
+    if (lastFilterSignatureRef.current === signature) return;
+    lastFilterSignatureRef.current = signature;
+
+    const currentPageParam = Number.parseInt(searchParams.get("page") ?? "1", 10) || 1;
+    if (currentPageParam <= 1 || !pathname) return;
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("page");
+    router.replace(nextParams.toString() ? `${pathname}?${nextParams}` : pathname, {
+      scroll: false,
+    });
+  }, [
+    filters.groupSameItems,
+    filters.immediateTradeOnly,
+    filters.maxPrice,
+    filters.minPrice,
+    filters.searchQuery,
+    filters.selectedCategories,
+    filters.selectedConditions,
+    filters.sortOption,
+    pathname,
+    router,
+    searchParams,
+  ]);
+
+  const groupedSkins = useMemo(() => {
+    return skins.map((skin) => skin.variants && skin.variants.length > 0 ? skin.variants : [skin]);
+  }, [skins]);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 w-full">
@@ -149,7 +192,7 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
 
   const hasActiveFilters = !!(filters.searchQuery || filters.minPrice || filters.maxPrice || filters.selectedCategories.length || filters.selectedConditions.length);
 
-  if (filteredSkins.length === 0) {
+  if (skins.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-16 text-center bg-card rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden group">
         {/* Glow Effects */}
@@ -175,65 +218,23 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
     );
   }
 
-  const getNormalizedCondition = (skin: Skin) => {
-    if (skin.exterior) {
-      const ext = skin.exterior.toLowerCase().trim();
-      if (ext.includes('recién') || ext.includes('factory') || ext.includes('fn')) return 'fn';
-      if (ext.includes('casi') || ext.includes('minimal') || ext.includes('mw')) return 'mw';
-      if (ext.includes('algo') || ext.includes('field') || ext.includes('ft')) return 'ft';
-      if (ext.includes('bastante') || ext.includes('well') || ext.includes('ww')) return 'ww';
-      if (ext.includes('deplorable') || ext.includes('battle') || ext.includes('bs')) return 'bs';
-      return ext;
-    }
-    if (skin.float === undefined) return 'fn';
-    if (skin.float < 0.07) return 'fn';
-    if (skin.float < 0.15) return 'mw';
-    if (skin.float < 0.38) return 'ft';
-    if (skin.float < 0.45) return 'ww';
-    return 'bs';
-  };
-
-  const getSkinGroupKey = (skin: Skin) => {
-    const cond = getNormalizedCondition(skin);
-    return [
-      skin.isImmediate === false ? 'market' : 'bot',
-      skin.weapon,
-      skin.name,
-      cond,
-      skin.isStatTrak ? 'st' : '',
-      skin.isSouvenir ? 'sv' : '',
-      skin.phase || '',
-    ].join('|');
-  };
-
-  const groupedSkins = useMemo(() => {
-    if (!filters.groupSameItems) {
-      return filteredSkins.map((skin) => [skin]);
-    }
-
-    const groupsMap = new Map<string, Skin[]>();
-    for (const skin of filteredSkins) {
-      const key = getSkinGroupKey(skin);
-      const list = groupsMap.get(key);
-      if (list) {
-        list.push(skin);
-      } else {
-        groupsMap.set(key, [skin]);
-      }
-    }
-    return Array.from(groupsMap.values());
-  }, [filteredSkins, filters.groupSameItems]);
-
-  const totalPages = Math.ceil(groupedSkins.length / ITEMS_PER_PAGE);
-
-  const visibleGroups = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    return groupedSkins.slice(start, end);
-  }, [groupedSkins, currentPage]);
+  const currentPage = pagination.page;
+  const totalPages = pagination.totalPages;
+  const visibleGroups = groupedSkins;
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    if (!pathname || page === currentPage) return;
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (page <= 1) {
+      nextParams.delete("page");
+    } else {
+      nextParams.set("page", String(page));
+    }
+    router.replace(nextParams.toString() ? `${pathname}?${nextParams}` : pathname, {
+      scroll: false,
+    });
+
     if (gridRef.current) {
       const yOffset = -120; // sticky header offset
       const element = gridRef.current;
@@ -242,8 +243,8 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
     }
   };
 
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, groupedSkins.length);
+  const startIndex = pagination.total === 0 ? 0 : (currentPage - 1) * pagination.limit + 1;
+  const endIndex = Math.min(currentPage * pagination.limit, pagination.total);
 
   const pageNumbers = getPageNumbers(currentPage, totalPages);
 
@@ -263,7 +264,7 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
         {/* Contador de progreso ultra-estético */}
         <div className="text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-white/[0.02] border border-white/5 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-inner">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          Mostrando skins <span className="text-white">{startIndex} - {endIndex}</span> de <span className="text-white">{groupedSkins.length}</span>
+          Mostrando skins <span className="text-white">{startIndex} - {endIndex}</span> de <span className="text-white">{pagination.total}</span>
         </div>
 
         {totalPages > 1 && (

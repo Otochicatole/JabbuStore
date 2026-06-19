@@ -30,9 +30,36 @@ export interface Skin {
   youpinVolume?: number | null;
   /** Enlace steam:// para inspeccionar in-game (ítems de bot) */
   inspectLink?: string | null;
+  /** Variantes exactas cuando el catálogo viene agrupado desde backend. */
+  variants?: Skin[];
+}
+
+export interface SkinPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface SkinCatalogResult {
+  items: Skin[];
+  pagination: SkinPagination;
+}
+
+export interface SkinCatalogQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  categories?: string[];
+  conditions?: string[];
+  sort?: string;
+  immediate?: boolean;
+  group?: boolean;
 }
 
 export interface SkinRepository {
-  getSkins(): Promise<Skin[]>;
+  getSkins(query?: SkinCatalogQuery): Promise<SkinCatalogResult>;
   getSkinById(id: string): Promise<Skin | null>;
 }

@@ -1,16 +1,29 @@
 import React from 'react';
 import { PAYMENT_METHODS } from '../../domain/constants';
+import { ManualTransferSettings } from '../../domain/types';
 
 interface PaymentMethodsSelectorProps {
   selectedMethod: string | null;
   onSelectMethod: (method: string) => void;
   checkoutType: "buy" | "sell";
+  manualTransferSettings: ManualTransferSettings | null;
 }
 
-export function PaymentMethodsSelector({ selectedMethod, onSelectMethod, checkoutType }: PaymentMethodsSelectorProps) {
-  const methods = PAYMENT_METHODS.filter(
-    (method) => checkoutType === "buy" || method.id !== "manual_transfer",
-  );
+export function PaymentMethodsSelector({
+  selectedMethod,
+  onSelectMethod,
+  checkoutType,
+  manualTransferSettings,
+}: PaymentMethodsSelectorProps) {
+  const methods = PAYMENT_METHODS.filter((method) => {
+    if (checkoutType !== "buy") return method.id !== "manual_transfer";
+    if (!manualTransferSettings) return method.id !== "manual_transfer";
+    if (method.id === "mercado_pago") return manualTransferSettings.mercadoPagoEnabled;
+    if (method.id === "paypal") return manualTransferSettings.paypalEnabled;
+    if (method.id === "nowpayments") return manualTransferSettings.nowpaymentsEnabled;
+    if (method.id === "manual_transfer") return manualTransferSettings.manualTransferEnabled;
+    return true;
+  });
 
   return (
     <section className="bg-card border border-white/5 rounded-3xl p-6 md:p-8">
@@ -20,6 +33,14 @@ export function PaymentMethodsSelector({ selectedMethod, onSelectMethod, checkou
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {methods.length === 0 && (
+          <div className="md:col-span-2 p-4 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-200">
+            <p className="text-[10px] font-black uppercase tracking-wider">
+              No hay métodos de pago habilitados. Contactá al soporte o intentá más tarde.
+            </p>
+          </div>
+        )}
+
         {methods.map((method) => {
           const isSelected = selectedMethod === method.id;
           return (

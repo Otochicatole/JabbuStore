@@ -11,6 +11,7 @@ import {
   FormErrors,
   ManualTransferSettings,
 } from "../domain/types";
+import { PAYMENT_METHODS } from "../domain/constants";
 
 function getErrorMessage(error: unknown, fallback = "Ocurrió un error inesperado.") {
   return error instanceof Error ? error.message : fallback;
@@ -106,6 +107,9 @@ export function useCheckout() {
         if (!response.ok) return;
         const data = await response.json();
         setManualTransferSettings({
+          mercadoPagoEnabled: data.mercadoPagoEnabled !== false,
+          paypalEnabled: data.paypalEnabled !== false,
+          nowpaymentsEnabled: data.nowpaymentsEnabled !== false,
           manualTransferEnabled: Boolean(data.manualTransferEnabled),
           manualBankAlias: data.manualBankAlias ?? null,
           manualBankCbu: data.manualBankCbu ?? null,
@@ -122,6 +126,28 @@ export function useCheckout() {
 
     void loadPublicSettings();
   }, []);
+
+  useEffect(() => {
+    if (!manualTransferSettings || checkoutType !== "buy") return;
+
+    const availableMethods = PAYMENT_METHODS.filter((method) => {
+      if (method.id === "mercado_pago") return manualTransferSettings.mercadoPagoEnabled;
+      if (method.id === "paypal") return manualTransferSettings.paypalEnabled;
+      if (method.id === "nowpayments") return manualTransferSettings.nowpaymentsEnabled;
+      if (method.id === "manual_transfer") return manualTransferSettings.manualTransferEnabled;
+      return true;
+    });
+
+    if (selectedMethod && availableMethods.some((method) => method.id === selectedMethod)) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSelectedMethod(availableMethods[0]?.id ?? null);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [checkoutType, manualTransferSettings, selectedMethod]);
 
   // 1. Manejar las redirecciones de retorno
   useEffect(() => {
@@ -292,6 +318,16 @@ export function useCheckout() {
       errors.email = "Correo electrónico no válido.";
     }
     if (!formData.phone.trim()) errors.phone = "El teléfono es obligatorio.";
+
+    if (checkoutType === "buy" && selectedMethod === "mercado_pago" && manualTransferSettings?.mercadoPagoEnabled === false) {
+      errors.paymentMethod = "Mercado Pago no está habilitado.";
+    }
+    if (checkoutType === "buy" && selectedMethod === "paypal" && manualTransferSettings?.paypalEnabled === false) {
+      errors.paymentMethod = "PayPal no está habilitado.";
+    }
+    if (checkoutType === "buy" && selectedMethod === "nowpayments" && manualTransferSettings?.nowpaymentsEnabled === false) {
+      errors.paymentMethod = "NOWPayments no está habilitado.";
+    }
 
     if (checkoutType === "buy" && selectedMethod === "manual_transfer") {
       if (!manualTransferSettings?.manualTransferEnabled) {

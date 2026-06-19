@@ -35,6 +35,9 @@ export interface CheckoutFormData {
 export type FormErrors = Record<string, string>;
 
 export interface ManualTransferSettings {
+  mercadoPagoEnabled: boolean;
+  paypalEnabled: boolean;
+  nowpaymentsEnabled: boolean;
   manualTransferEnabled: boolean;
   manualBankAlias: string | null;
   manualBankCbu: string | null;

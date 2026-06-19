@@ -11,6 +11,7 @@ import {
   Coins,
   RefreshCw,
   Landmark,
+  CreditCard,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
@@ -22,7 +23,7 @@ const MODIFIER_OPTIONS = [
   { value: "fixed_decrease", label: "Descuento Fijo (-USD)" },
 ];
 
-type Tab = "precios" | "venta" | "reventa" | "limites" | "transferencia" | "webhook" | "sync";
+type Tab = "precios" | "venta" | "reventa" | "limites" | "pagos" | "transferencia" | "webhook" | "sync";
 
 type PriceCatalogStatus = {
   exists: boolean;
@@ -75,6 +76,12 @@ const TABS: {
     label: "Webhook",
     icon: Webhook,
     desc: "Notificaciones en tiempo real",
+  },
+  {
+    id: "pagos",
+    label: "Pagos",
+    icon: CreditCard,
+    desc: "Habilitar o deshabilitar pasarelas de pago",
   },
   {
     id: "transferencia",
@@ -199,6 +206,9 @@ export default function AdminSettingsPage() {
     resellModifierEnabled: false,
     minimumUserSellPrice: 1.0,
     webhookUrl: "",
+    mercadoPagoEnabled: true,
+    paypalEnabled: true,
+    nowpaymentsEnabled: true,
     manualTransferEnabled: false,
     manualBankAlias: "",
     manualBankCbu: "",
@@ -216,12 +226,14 @@ export default function AdminSettingsPage() {
   const [savingResell, setSavingResell] = useState(false);
   const [savingMinSell, setSavingMinSell] = useState(false);
   const [savingWebhook, setSavingWebhook] = useState(false);
+  const [savingPaymentMethods, setSavingPaymentMethods] = useState(false);
   const [savingManualTransfer, setSavingManualTransfer] = useState(false);
   const [savedPricing, setSavedPricing] = useState(false);
   const [savedUserSell, setSavedUserSell] = useState(false);
   const [savedResell, setSavedResell] = useState(false);
   const [savedMinSell, setSavedMinSell] = useState(false);
   const [savedWebhook, setSavedWebhook] = useState(false);
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState(false);
   const [savedManualTransfer, setSavedManualTransfer] = useState(false);
 
   // --- States for Manual Sync and 3-Minute Cooldown ---
@@ -558,6 +570,42 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handlePaymentMethodsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingPaymentMethods(true);
+    try {
+      const res = await fetch(
+        `${BACKEND_URL}/admin/marketplace/settings/payment-methods`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tunnel-Skip-AntiPhishing-Page": "true",
+          },
+          body: JSON.stringify({
+            mercadoPagoEnabled: settings.mercadoPagoEnabled,
+            paypalEnabled: settings.paypalEnabled,
+            nowpaymentsEnabled: settings.nowpaymentsEnabled,
+          }),
+        },
+      );
+      if (!res.ok) throw new Error();
+      const saved = await res.json();
+      setSettings((prev) => ({
+        ...prev,
+        ...saved,
+        resellModifierType: saved.resellModifierType ?? saved.marketModifierType ?? prev.resellModifierType,
+        resellModifierValue: saved.resellModifierValue ?? saved.marketModifierValue ?? prev.resellModifierValue,
+        resellModifierEnabled: saved.resellModifierEnabled ?? saved.marketModifierEnabled ?? prev.resellModifierEnabled,
+      }));
+      setSavedPaymentMethods(true);
+      setTimeout(() => setSavedPaymentMethods(false), 2500);
+    } finally {
+      setSavingPaymentMethods(false);
+    }
+  };
+
   const handleManualTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingManualTransfer(true);
@@ -840,6 +888,64 @@ export default function AdminSettingsPage() {
               saving={savingMinSell}
               saved={savedMinSell}
               label="Guardar Precio Mínimo"
+            />
+          </form>
+        </div>
+      )}
+
+      {/* ── TAB: Métodos de Pago ── */}
+      {activeTab === "pagos" && (
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
+          <SectionHeader
+            title="Métodos de Pago"
+            desc="Definí qué pasarelas externas pueden elegir los compradores durante el checkout."
+          />
+          <form onSubmit={handlePaymentMethodsSubmit} className="space-y-5 max-w-xl">
+            <div className="space-y-4">
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-[3px]">
+                <ToggleSwitch
+                  checked={settings.mercadoPagoEnabled}
+                  onChange={(v) =>
+                    setSettings({ ...settings, mercadoPagoEnabled: v })
+                  }
+                  label="Habilitar Mercado Pago"
+                />
+                <p className="text-[10px] text-[#84849b] mt-2 font-mono">
+                  Si está deshabilitado, no aparece en checkout y el backend rechaza nuevas órdenes con este método.
+                </p>
+              </div>
+
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-[3px]">
+                <ToggleSwitch
+                  checked={settings.paypalEnabled}
+                  onChange={(v) =>
+                    setSettings({ ...settings, paypalEnabled: v })
+                  }
+                  label="Habilitar PayPal"
+                />
+                <p className="text-[10px] text-[#84849b] mt-2 font-mono">
+                  Controla el checkout de PayPal sin afectar credenciales ni webhooks existentes.
+                </p>
+              </div>
+
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-[3px]">
+                <ToggleSwitch
+                  checked={settings.nowpaymentsEnabled}
+                  onChange={(v) =>
+                    setSettings({ ...settings, nowpaymentsEnabled: v })
+                  }
+                  label="Habilitar NOWPayments"
+                />
+                <p className="text-[10px] text-[#84849b] mt-2 font-mono">
+                  Controla pagos cripto por NOWPayments. La transferencia manual cripto se configura aparte.
+                </p>
+              </div>
+            </div>
+
+            <SaveButton
+              saving={savingPaymentMethods}
+              saved={savedPaymentMethods}
+              label="Guardar Métodos de Pago"
             />
           </form>
         </div>

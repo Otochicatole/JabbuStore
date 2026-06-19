@@ -8531,3 +8531,152 @@ Stack: Error: El servidor no devolvió un enlace de pago de Mercado Pago válido
 [2026-06-19T23:31:18.852Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
 [2026-06-19T23:31:18.855Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
 [2026-06-19T23:31:19.321Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:32:32.050Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:32:32.085Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:32:32.238Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:32:32.240Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:32:32.275Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:32:32.516Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:32:32.747Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:32:48.496Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:32:48.992Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:32:53.827Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:32:54.330Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:32:54.348Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:32:54.367Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:32:54.576Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:34:38.967Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:34:38.989Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:34:39.007Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:34:39.023Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:34:39.245Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:34:39.286Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:34:39.434Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:35:47.805Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:35:48.427Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:35:48.542Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:35:48.617Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:35:48.713Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[CLIENT DEBUG] [2026-06-19T23:40:31.576Z] validateForm failed. Form errors: {}
+[CLIENT DEBUG] [2026-06-19T23:40:31.608Z] handleSubmitCheckout clicked, method: mercado_pago, type: buy
+[CLIENT DEBUG] [2026-06-19T23:40:38.429Z] handleSubmitCheckout clicked, method: mercado_pago, type: buy
+[CLIENT DEBUG] [2026-06-19T23:40:38.460Z] validateForm passed. Proceeding with checkout.
+[CLIENT DEBUG] [2026-06-19T23:40:38.696Z] Checkout flow: preparing payment order for Mercado Pago
+[CLIENT DEBUG] [2026-06-19T23:40:39.401Z] detailedItems mapping completed: [{"assetId":"50655863811","name":"★ Butterfly Knife | Gamma Doppler (Factory New) | Emerald","price":8277.84,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Z-ua6bbZrLOmsD2qvxONzouBlSxa-lA8lvziMgIr9HifOOV5kFJp2Ee9b4Rntm4GxY7_ntQHc2o1DmH6r3Hgcv3w4t-pXU6ZzrPHQjQnfcepq0dwfRJw","float":0.03401391580700874,"pattern":825,"rarity":"ancient","exterior":"Factory New","provider":"bot"}]
+[CLIENT DEBUG] [2026-06-19T23:40:39.409Z] Sending POST request to /api/proxy/orders
+[CLIENT DEBUG] [2026-06-19T23:40:39.426Z] items in state count: 1, cartItems count: 1
+[CLIENT DEBUG] [2026-06-19T23:40:39.649Z] metadataPayload prepared: {"firstName":"as","lastName":"dasd","email":"asd@asd.com","phone":"21312","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null}
+[CLIENT DEBUG] [2026-06-19T23:40:39.655Z] setTimeout callback started execution.
+[2026-06-19T23:40:40.808Z] POST /api/proxy/orders -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders)
+[CLIENT DEBUG] [2026-06-19T23:40:40.922Z] [Mercado Pago] Redirigiendo al usuario a: https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-23a08366-4c7f-4954-b7d8-6fb0804cd8a8
+[CLIENT DEBUG] [2026-06-19T23:40:40.933Z] fetchWithAuth response JSON: {"id":"ae1c4768-94dc-48c6-8c36-77913a2ebbfe","userId":"b99ec1a1-1279-448c-85af-09330f52f32e","type":"BUY","status":"PENDING_PAYMENT","totalPrice":8277.84,"paymentMethod":"mercado_pago","metadata":{"firstName":"as","lastName":"dasd","email":"asd@asd.com","phone":"21312","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null},"createdAt":"2026-06-19T23:40:40.047Z","updatedAt":"2026-06-19T23:40:40.047Z","items":[{"id":"ef98a05b-8c7f-4bf4-99b2-99ccdd355103","orderId":"ae1c4768-94dc-48c6-8c36-77913a2ebbfe","assetId":"50655863811","name":"★ Butterfly Knife | Gamma Doppler (Factory New) | Emerald","price":8277.84,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Z-ua6bbZrLOmsD2qvxONzouBlSxa-lA8lvziMgIr9HifOOV5kFJp2Ee9b4Rntm4GxY7_ntQHc2o1DmH6r3Hgcv3w4t-pXU6ZzrPHQjQnfcepq0dwfRJw","rarity":"ancient","exterior":"Factory New","float":0.03401391580700874,"pattern":825,"provider":"bot"}],"paymentUrl":"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-23a08366-4c7f-4954-b7d8-6fb0804cd8a8"}
+[CLIENT DEBUG] [2026-06-19T23:40:40.939Z] fetchWithAuth response status: 201
+[2026-06-19T23:40:55.254Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:40:55.630Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:40:55.642Z] PATCH /api/proxy/orders/ae1c4768-94dc-48c6-8c36-77913a2ebbfe/cancel-payment -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/ae1c4768-94dc-48c6-8c36-77913a2ebbfe/cancel-payment)
+[2026-06-19T23:40:55.645Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:41:39.018Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:41:39.026Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:41:39.054Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:41:39.257Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:41:39.279Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:41:39.528Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:41:48.359Z] POST /api/proxy/orders/ae1c4768-94dc-48c6-8c36-77913a2ebbfe/payment-proof/buyer -> 400 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/ae1c4768-94dc-48c6-8c36-77913a2ebbfe/payment-proof/buyer)
+[2026-06-19T23:42:06.796Z] POST /api/proxy/orders/ae1c4768-94dc-48c6-8c36-77913a2ebbfe/payment-proof/buyer -> 400 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/ae1c4768-94dc-48c6-8c36-77913a2ebbfe/payment-proof/buyer)
+[2026-06-19T23:42:22.652Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:42:22.686Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:42:22.906Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:42:22.939Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:42:23.134Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:42:26.263Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:42:26.557Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:42:32.132Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:42:32.778Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:42:32.901Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:42:32.937Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:42:33.201Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[CLIENT DEBUG] [2026-06-19T23:42:42.556Z] validateForm passed. Proceeding with checkout.
+[CLIENT DEBUG] [2026-06-19T23:42:42.561Z] handleSubmitCheckout clicked, method: mercado_pago, type: buy
+[CLIENT DEBUG] [2026-06-19T23:42:42.588Z] Checkout flow: preparing payment order for Mercado Pago
+[CLIENT DEBUG] [2026-06-19T23:42:43.511Z] detailedItems mapping completed: [{"assetId":"51204142947","name":"★ Karambit | Doppler (Factory New) | Phase 2","price":1770.25,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Q7uCvZaZkNM-SA1iUzv5mvOR7cDm7lA4i4QKJk4jxNWWXawUgA8dxRLEO40KwkobnMbnj5QKL348Qmy-sji5K7i466uxUUKQn5OSJ2KBZjkQR","float":0.007693829946219921,"pattern":795,"rarity":"ancient","exterior":"Factory New","provider":"bot"}]
+[CLIENT DEBUG] [2026-06-19T23:42:43.516Z] Sending POST request to /api/proxy/orders
+[CLIENT DEBUG] [2026-06-19T23:42:43.522Z] items in state count: 1, cartItems count: 1
+[CLIENT DEBUG] [2026-06-19T23:42:43.540Z] metadataPayload prepared: {"firstName":"asd","lastName":"asd","email":"asd@asd.com","phone":"123123","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null}
+[CLIENT DEBUG] [2026-06-19T23:42:43.548Z] setTimeout callback started execution.
+[2026-06-19T23:42:44.647Z] POST /api/proxy/orders -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders)
+[CLIENT DEBUG] [2026-06-19T23:42:44.763Z] fetchWithAuth response JSON: {"id":"b6d93438-8f0d-4163-8491-17608eb4f0d6","userId":"b99ec1a1-1279-448c-85af-09330f52f32e","type":"BUY","status":"PENDING_PAYMENT","totalPrice":1770.25,"paymentMethod":"mercado_pago","metadata":{"firstName":"asd","lastName":"asd","email":"asd@asd.com","phone":"123123","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null},"createdAt":"2026-06-19T23:42:43.922Z","updatedAt":"2026-06-19T23:42:43.922Z","items":[{"id":"1dd4c91a-8e7e-46f0-96f1-088629c059be","orderId":"b6d93438-8f0d-4163-8491-17608eb4f0d6","assetId":"51204142947","name":"★ Karambit | Doppler (Factory New) | Phase 2","price":1770.25,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Q7uCvZaZkNM-SA1iUzv5mvOR7cDm7lA4i4QKJk4jxNWWXawUgA8dxRLEO40KwkobnMbnj5QKL348Qmy-sji5K7i466uxUUKQn5OSJ2KBZjkQR","rarity":"ancient","exterior":"Factory New","float":0.007693829946219921,"pattern":795,"provider":"bot"}],"paymentUrl":"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-406998b2-c99d-44ad-abb3-e6e86a5ebd18"}
+[CLIENT DEBUG] [2026-06-19T23:42:44.772Z] fetchWithAuth response status: 201
+[CLIENT DEBUG] [2026-06-19T23:42:44.777Z] [Mercado Pago] Redirigiendo al usuario a: https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-406998b2-c99d-44ad-abb3-e6e86a5ebd18
+[2026-06-19T23:43:18.034Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:43:18.040Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:43:18.070Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:43:18.289Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:43:18.320Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:43:18.511Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:43:22.974Z] POST /api/proxy/orders/b6d93438-8f0d-4163-8491-17608eb4f0d6/payment-proof/buyer -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/b6d93438-8f0d-4163-8491-17608eb4f0d6/payment-proof/buyer)
+[2026-06-19T23:43:27.440Z] GET /api/proxy/orders/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/me)
+[2026-06-19T23:46:44.320Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:46:44.797Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:46:52.705Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:46:53.170Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:46:53.361Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:46:53.437Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:46:53.730Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[CLIENT DEBUG] [2026-06-19T23:47:00.429Z] Checkout flow: preparing payment order for Mercado Pago
+[CLIENT DEBUG] [2026-06-19T23:47:01.385Z] setTimeout callback started execution.
+[CLIENT DEBUG] [2026-06-19T23:47:01.411Z] detailedItems mapping completed: [{"assetId":"50134960933","name":"★ Karambit | Doppler (Factory New) | Phase 2","price":1770.25,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Q7uCvZaZkNM-SA1iUzv5mvOR7cDm7lA4i4QKJk4jxNWWXawUgA8dxRLEO40KwkobnMbnj5QKL348Qmy-sji5K7i466uxUUKQn5OSJ2KBZjkQR","float":0.028669949620962143,"pattern":619,"rarity":"ancient","exterior":"Factory New","provider":"bot"}]
+[CLIENT DEBUG] [2026-06-19T23:47:01.447Z] Sending POST request to /api/proxy/orders
+[2026-06-19T23:47:02.405Z] POST /api/proxy/orders -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders)
+[CLIENT DEBUG] [2026-06-19T23:47:02.539Z] fetchWithAuth response status: 201
+[CLIENT DEBUG] [2026-06-19T23:47:02.573Z] fetchWithAuth response JSON: {"id":"ef508142-679a-46d9-abc8-0ff1be2f81d0","userId":"b99ec1a1-1279-448c-85af-09330f52f32e","type":"BUY","status":"PENDING_PAYMENT","totalPrice":1770.25,"paymentMethod":"mercado_pago","metadata":{"firstName":"asd","lastName":"asd","email":"asd@asd.com","phone":"2131231","cbu":null,"cuil":null,"accountHolder":null,"walletAddress":null,"network":null},"createdAt":"2026-06-19T23:47:01.683Z","updatedAt":"2026-06-19T23:47:01.683Z","items":[{"id":"52f214b3-3f12-4830-9ed8-d9606e81ea92","orderId":"ef508142-679a-46d9-abc8-0ff1be2f81d0","assetId":"50134960933","name":"★ Karambit | Doppler (Factory New) | Phase 2","price":1770.25,"iconUrl":"https://community.cloudflare.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Q7uCvZaZkNM-SA1iUzv5mvOR7cDm7lA4i4QKJk4jxNWWXawUgA8dxRLEO40KwkobnMbnj5QKL348Qmy-sji5K7i466uxUUKQn5OSJ2KBZjkQR","rarity":"ancient","exterior":"Factory New","float":0.028669949620962143,"pattern":619,"provider":"bot"}],"paymentUrl":"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-0222f7fb-89e6-4a06-bfef-5864572ac2f1"}
+[CLIENT DEBUG] [2026-06-19T23:47:02.601Z] [Mercado Pago] Redirigiendo al usuario a: https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=2631768469-0222f7fb-89e6-4a06-bfef-5864572ac2f1
+[2026-06-19T23:47:13.280Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:47:13.308Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:47:13.659Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:47:13.661Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:47:13.665Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:47:13.906Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:47:18.306Z] POST /api/proxy/orders/ef508142-679a-46d9-abc8-0ff1be2f81d0/payment-proof/buyer -> 201 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/ef508142-679a-46d9-abc8-0ff1be2f81d0/payment-proof/buyer)
+[2026-06-19T23:47:20.464Z] GET /api/proxy/orders/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/me)
+[2026-06-19T23:48:03.600Z] GET /api/proxy/orders/all -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/all)
+[2026-06-19T23:48:09.039Z] GET /api/proxy/orders/ef508142-679a-46d9-abc8-0ff1be2f81d0/payment-proof/buyer -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/ef508142-679a-46d9-abc8-0ff1be2f81d0/payment-proof/buyer)
+[2026-06-19T23:49:48.017Z] GET /api/proxy/admin/marketplace/settings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings)
+[2026-06-19T23:49:48.090Z] GET /api/proxy/admin/marketplace/settings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings)
+[2026-06-19T23:49:48.096Z] GET /api/proxy/store/prices/catalog/status -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/store/prices/catalog/status)
+[2026-06-19T23:54:05.510Z] GET /api/proxy/store/prices/catalog/status -> 502 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/store/prices/catalog/status)
+[2026-06-19T23:54:07.529Z] GET /api/proxy/admin/marketplace/settings -> 502 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings)
+[2026-06-19T23:56:01.585Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:56:01.592Z] GET /api/proxy/admin/marketplace/settings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings)
+[2026-06-19T23:56:01.626Z] GET /api/proxy/users/me/inventory -> 401 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:56:01.630Z] GET /api/proxy/admins/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admins/me)
+[2026-06-19T23:56:01.856Z] GET /api/proxy/store/prices/catalog/status -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/store/prices/catalog/status)
+[2026-06-19T23:57:18.615Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:57:18.905Z] GET /api/proxy/catalog/items -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/catalog/items?page=1&limit=40&sort=price_desc)
+[2026-06-19T23:57:25.380Z] PATCH /api/proxy/admin/marketplace/settings/payment-methods -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings/payment-methods)
+[2026-06-19T23:57:27.848Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:57:28.344Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:57:28.463Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:57:28.502Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:57:28.558Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:57:34.085Z] PATCH /api/proxy/admin/marketplace/settings/payment-methods -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings/payment-methods)
+[2026-06-19T23:57:46.167Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:57:46.340Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:57:46.343Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:57:46.346Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:57:46.395Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:57:46.535Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:57:46.752Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:58:02.444Z] PATCH /api/proxy/admin/marketplace/settings/payment-methods -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings/payment-methods)
+[2026-06-19T23:58:06.486Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:58:06.542Z] GET /api/proxy/users/me/inventory -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:58:06.582Z] POST /api/proxy/orders/validate -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/orders/validate)
+[2026-06-19T23:58:06.587Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:58:06.819Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)
+[2026-06-19T23:58:06.876Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:58:07.136Z] GET /api/proxy/users/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me)
+[2026-06-19T23:58:20.038Z] PATCH /api/proxy/admin/marketplace/settings/payment-methods -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings/payment-methods)
+[2026-06-19T23:58:39.562Z] GET /api/proxy/admins/me -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admins/me)
+[2026-06-19T23:58:39.565Z] GET /api/proxy/admin/marketplace/settings -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/admin/marketplace/settings)
+[2026-06-19T23:58:39.572Z] GET /api/proxy/users/me/inventory -> 401 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/users/me/inventory)
+[2026-06-19T23:58:39.576Z] GET /api/proxy/store/prices/catalog/status -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/store/prices/catalog/status)
+[2026-06-19T23:58:39.595Z] GET /api/proxy/marketplace/settings/public -> 200 (Target: https://w3q58vst-3001.brs.devtunnels.ms/api/marketplace/settings/public)

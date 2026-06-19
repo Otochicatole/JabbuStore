@@ -109,6 +109,7 @@ export function CheckoutContent() {
             selectedMethod={selectedMethod}
             onSelectMethod={setSelectedMethod}
             checkoutType={checkoutType}
+            manualTransferSettings={manualTransferSettings}
           />
 
           {selectedMethod && (
@@ -135,6 +136,11 @@ export function CheckoutContent() {
             checkoutType={checkoutType}
             onSubmit={handleSubmitCheckout}
           />
+          {checkoutType === "buy" && !selectedMethod && (
+            <p className="mt-3 text-[10px] text-red-300 font-bold uppercase tracking-wider text-center">
+              No hay métodos de pago habilitados.
+            </p>
+          )}
         </div>
       </div>
 

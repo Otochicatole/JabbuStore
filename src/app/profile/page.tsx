@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { 
-  Loader2, 
-  User, 
-  Mail, 
-  Link2, 
-  Copy, 
-  Check, 
-  HelpCircle, 
-  Save, 
-  ExternalLink 
+import {
+  Loader2,
+  User,
+  Mail,
+  Link2,
+  Copy,
+  Check,
+  HelpCircle,
+  Save,
+  ExternalLink,
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 
@@ -31,7 +31,7 @@ export default function UserProfilePage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
-  
+
   // Form fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -69,19 +69,26 @@ export default function UserProfilePage() {
     setSaving(true);
     setSuccess(false);
 
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+
     try {
       const res = await fetchWithAuth(`${BACKEND_URL}/users/me`, {
         method: "PATCH",
+        signal: controller.signal,
         body: JSON.stringify({
           name: name.trim() || null,
           email: email.trim() || null,
-          tradeUrl: tradeUrl.trim() || null
-        })
+          tradeUrl: tradeUrl.trim() || null,
+        }),
       });
 
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
+        setName(data.name || "");
+        setEmail(data.email || "");
+        setTradeUrl(data.tradeUrl || "");
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } else {
@@ -90,8 +97,13 @@ export default function UserProfilePage() {
       }
     } catch (err) {
       console.error("Error saving profile:", err);
-      alert("Error de conexión al guardar el perfil.");
+      alert(
+        err instanceof DOMException && err.name === "AbortError"
+          ? "El guardado tardó demasiado. Revisá que el backend esté corriendo y volvé a intentar."
+          : "Error de conexión al guardar el perfil.",
+      );
     } finally {
+      window.clearTimeout(timeout);
       setSaving(false);
     }
   };
@@ -103,27 +115,35 @@ export default function UserProfilePage() {
           Mi <span className="text-accent">Perfil</span>
         </h1>
         <p className="text-sm text-[#84849b] mt-1.5 font-medium">
-          Personaliza tu información de contacto y configura tu Trade Link de Steam para poder recibir y vender tus skins.
+          Personaliza tu información de contacto y configura tu Trade Link de
+          Steam para poder recibir y vender tus skins.
         </p>
       </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-[#110f1e]/20 border border-white/5 rounded-3xl backdrop-blur-md">
           <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
-          <p className="text-xs text-[#84849b] font-bold uppercase tracking-widest">Cargando perfil...</p>
+          <p className="text-xs text-[#84849b] font-bold uppercase tracking-widest">
+            Cargando perfil...
+          </p>
         </div>
       ) : !profile ? (
         <div className="text-center py-20 bg-[#110f1e]/20 border border-white/5 rounded-3xl">
-          <p className="text-[#84849b] font-bold">Por favor, inicia sesión para ver tu perfil.</p>
+          <p className="text-[#84849b] font-bold">
+            Por favor, inicia sesión para ver tu perfil.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Left Column: Steam Card */}
           <div className="bg-[#110f1e]/40 border border-white/5 rounded-2xl p-6 h-fit flex flex-col items-center text-center backdrop-blur-sm">
             <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-accent/40 shadow-xl shadow-accent/5 mb-4 group">
               {profile.avatar ? (
-                <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                <img
+                  src={profile.avatar}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="w-full h-full bg-accent/15 flex items-center justify-center">
                   <User className="w-10 h-10 text-accent" />
@@ -140,10 +160,10 @@ export default function UserProfilePage() {
             </h3>
 
             {profile.profileUrl && (
-              <a 
-                href={profile.profileUrl} 
-                target="_blank" 
-                rel="noreferrer" 
+              <a
+                href={profile.profileUrl}
+                target="_blank"
+                rel="noreferrer"
                 className="text-xs font-semibold text-accent/80 hover:text-accent flex items-center gap-1.5 mt-1 transition-colors group"
               >
                 <span>Perfil de Steam</span>
@@ -154,14 +174,22 @@ export default function UserProfilePage() {
             <div className="w-full border-t border-white/5 my-5" />
 
             <div className="w-full text-left">
-              <span className="text-[9px] text-[#84849b] font-mono block uppercase tracking-widest mb-1.5">Steam ID de la Cuenta</span>
+              <span className="text-[9px] text-[#84849b] font-mono block uppercase tracking-widest mb-1.5">
+                Steam ID de la Cuenta
+              </span>
               <div className="flex items-center justify-between gap-3 bg-[#0d0b16] border border-white/5 rounded-xl px-3.5 py-2.5">
-                <span className="font-mono text-xs text-white/90 truncate">{profile.steamId}</span>
-                <button 
+                <span className="font-mono text-xs text-white/90 truncate">
+                  {profile.steamId}
+                </span>
+                <button
                   onClick={handleCopySteamId}
                   className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition-all cursor-pointer flex-shrink-0"
                 >
-                  {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedId ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -174,7 +202,6 @@ export default function UserProfilePage() {
             </h2>
 
             <form onSubmit={handleSave} className="space-y-6">
-              
               {/* Alias / Name */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] flex items-center gap-1.5">
@@ -212,10 +239,10 @@ export default function UserProfilePage() {
                     <Link2 className="w-3.5 h-3.5" />
                     Steam Trade Offer URL (Trade Link)
                   </span>
-                  
-                  <a 
-                    href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url" 
-                    target="_blank" 
+
+                  <a
+                    href="https://steamcommunity.com/my/tradeoffers/privacy#trade_offer_access_url"
+                    target="_blank"
                     rel="noreferrer"
                     className="text-[9px] font-bold text-accent/80 hover:text-accent flex items-center gap-1 normal-case tracking-normal"
                   >
@@ -230,12 +257,17 @@ export default function UserProfilePage() {
                   placeholder="https://steamcommunity.com/tradeoffer/new/?partner=..."
                   className="w-full px-4 py-3 bg-white/[0.03] border border-white/8 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 transition-colors font-mono"
                 />
-                
+
                 {/* Guide banner */}
                 <div className="mt-1.5 p-3.5 bg-accent/5 border border-accent/15 rounded-xl flex items-start gap-3">
                   <HelpCircle className="w-4 h-4 text-accent/80 mt-0.5 flex-shrink-0" />
                   <p className="text-[11px] text-white/70 leading-relaxed font-medium">
-                    El <strong>Trade URL</strong> es obligatorio para poder mandarte ofertas de intercambio de forma automática cuando compras o vendes skins en JabbuStore. Asegúrate de configurar tu inventario de Steam como <strong>Público</strong> para evitar cancelaciones automáticas.
+                    El <strong>Trade URL</strong> es obligatorio para poder
+                    mandarte ofertas de intercambio de forma automática cuando
+                    compras o vendes skins en JabbuStore. Asegúrate de
+                    configurar tu inventario de Steam como{" "}
+                    <strong>Público</strong> para evitar cancelaciones
+                    automáticas.
                   </p>
                 </div>
               </div>
@@ -244,7 +276,7 @@ export default function UserProfilePage() {
               <div className="border-t border-white/5 pt-6 flex items-center justify-between gap-4">
                 <div>
                   {success && (
-                    <motion.span 
+                    <motion.span
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2"
@@ -258,7 +290,7 @@ export default function UserProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-3 bg-accent hover:bg-accent/90 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.25)] flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-accent cursor-pointer hover:bg-accent/90 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.25)] flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <>
@@ -273,10 +305,8 @@ export default function UserProfilePage() {
                   )}
                 </button>
               </div>
-
             </form>
           </div>
-
         </div>
       )}
     </div>

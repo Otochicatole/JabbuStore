@@ -329,16 +329,16 @@ export function AdminBotsPanel() {
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={handleRefreshPriceCatalog}
-            disabled={refreshingCatalog}
+            disabled={refreshingCatalog || Boolean(catalogStatus?.running)}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors w-full sm:w-auto cursor-pointer min-h-[38px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {refreshingCatalog ? (
+            {refreshingCatalog || catalogStatus?.running ? (
               <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
             ) : (
               <RefreshCw className="w-4 h-4 shrink-0" />
             )}
             <span>
-              {refreshingCatalog
+              {refreshingCatalog || catalogStatus?.running
                 ? "Descargando precios..."
                 : "Descargar catálogo precios"}
             </span>
@@ -388,8 +388,10 @@ export function AdminBotsPanel() {
             {catalogStatus.itemCount.toLocaleString()} items
           </span>
           {" · "}
-          <span className={catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}>
-            {catalogStatus.exists
+          <span className={catalogStatus.running ? "text-sky-400" : catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}>
+            {catalogStatus.running
+              ? "descargando"
+              : catalogStatus.exists
               ? catalogStatus.stale
                 ? "desactualizado"
                 : "listo"

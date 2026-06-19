@@ -25,6 +25,11 @@ type PriceCatalogStatus = {
   currency: string;
   market: string;
   lastError?: string;
+  running?: boolean;
+  lastStartedAt?: string | null;
+  lastFinishedAt?: string | null;
+  lastItemCount?: number | null;
+  triggeredBy?: string | null;
 };
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -101,8 +106,9 @@ export function useAdminBots() {
           credentials: "include",
         },
       );
-      if (!res.ok) throw new Error("Error al eliminar el bot");
-      fetchBots();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Error al eliminar el bot");
+      await fetchBots();
       setBotToDelete(null);
     } catch (e: unknown) {
       alert(getErrorMessage(e, "Error al eliminar el bot"));
@@ -165,11 +171,16 @@ export function useAdminBots() {
         },
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        setCatalogStatus(data.catalog ?? null);
+        setSyncError(data.message || "Ya hay una descarga del catálogo en curso.");
+        return;
+      }
       if (!res.ok) {
         throw new Error(data.error || "Error al descargar catálogo de precios");
       }
       setCatalogStatus(data.catalog ?? null);
-      setSyncMessage(data.message || "Catálogo de precios descargado desde SteamWebAPI.");
+      setSyncMessage(data.message || "Descarga del catálogo iniciada en segundo plano.");
     } catch (e: unknown) {
       setSyncError(getErrorMessage(e, "Error al descargar catálogo de precios"));
     } finally {
@@ -207,6 +218,14 @@ export function useAdminBots() {
 
   const totalItems = bots.reduce((sum, b) => sum + b.currentItems, 0);
   const activeBots = bots.filter((b) => b.isActive).length;
+
+  useEffect(() => {
+    if (!catalogStatus?.running) return;
+    const interval = window.setInterval(() => {
+      void fetchCatalogStatus();
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [catalogStatus?.running, fetchCatalogStatus]);
 
   return {
     bots,

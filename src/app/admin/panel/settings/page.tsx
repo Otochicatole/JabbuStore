@@ -32,6 +32,11 @@ type PriceCatalogStatus = {
   currency: string;
   market: string;
   lastError?: string;
+  running?: boolean;
+  lastStartedAt?: string | null;
+  lastFinishedAt?: string | null;
+  lastItemCount?: number | null;
+  triggeredBy?: string | null;
 };
 
 const TABS: {
@@ -294,11 +299,16 @@ export default function AdminSettingsPage() {
         },
       });
       const data = await response.json().catch(() => ({}));
+      if (response.status === 409) {
+        setCatalogStatus(data.catalog ?? null);
+        setCatalogError(data.message || "Ya hay una descarga del catálogo en curso.");
+        return;
+      }
       if (!response.ok) {
         throw new Error(data.error || "Error al actualizar catálogo de precios.");
       }
       setCatalogStatus(data.catalog ?? null);
-      setSyncPricesResult(data.message || "Catálogo de precios actualizado.");
+      setSyncPricesResult(data.message || "Descarga del catálogo iniciada en segundo plano.");
       if (Array.isArray(data.errors) && data.errors.length > 0) {
         setCatalogError(data.errors.join(" | "));
       }
@@ -371,6 +381,14 @@ export default function AdminSettingsPage() {
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!catalogStatus?.running) return;
+    const interval = window.setInterval(() => {
+      void fetchCatalogStatus();
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [catalogStatus?.running]);
 
   const handlePricingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -905,8 +923,10 @@ export default function AdminSettingsPage() {
                     <p className="text-[10px] uppercase tracking-wider text-[#84849b] font-black">
                       Estado
                     </p>
-                    <p className={`text-xs font-black ${catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}`}>
-                      {catalogStatus.exists
+                    <p className={`text-xs font-black ${catalogStatus.running ? "text-sky-400" : catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}`}>
+                      {catalogStatus.running
+                        ? "Descargando"
+                        : catalogStatus.exists
                         ? catalogStatus.stale
                           ? "Desactualizado"
                           : "Listo"
@@ -938,15 +958,15 @@ export default function AdminSettingsPage() {
                 <button
                   type="button"
                   onClick={handleRefreshPriceCatalog}
-                  disabled={refreshingCatalog}
+                  disabled={refreshingCatalog || Boolean(catalogStatus?.running)}
                   className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(16,185,129,0.2)] cursor-pointer select-none"
                 >
-                  {refreshingCatalog ? (
+                  {refreshingCatalog || catalogStatus?.running ? (
                     <Loader2 className="w-4 h-4 animate-spin text-white" />
                   ) : (
                     <RefreshCw className="w-4 h-4 text-white" />
                   )}
-                  {refreshingCatalog
+                  {refreshingCatalog || catalogStatus?.running
                     ? "Descargando precios desde API..."
                     : "Descargar catálogo de precios"}
                 </button>

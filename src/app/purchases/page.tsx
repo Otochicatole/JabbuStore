@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Loader2, 
@@ -13,15 +13,27 @@ import {
   ArrowDownLeft, 
   Calendar, 
   Tag, 
-  ExternalLink,
-  CreditCard,
-  User,
-  ShieldCheck,
-  Cpu,
   Layers,
-  Sparkles
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
+
+const ORDERS_FETCH_TIMEOUT_MS = 15000;
+
+function getOrdersFetchErrorMessage(error: unknown) {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "La carga de pedidos tardó demasiado. Revisá la conexión con el backend/devtunnel e intentá nuevamente.";
+  }
+
+  if (error instanceof TypeError && error.message === "Failed to fetch") {
+    return "No pudimos conectar con el backend. Si estás usando DevTunnel, verificá que siga activo y reintentá.";
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "No pudimos cargar tus pedidos. Intentá nuevamente.";
+}
 
 interface OrderItem {
   id: string;
@@ -103,46 +115,58 @@ const getItemRarity = (item: OrderItem) => {
   return 'common';
 };
 
-function getCleanSearchName(fullName: string): string {
-  if (!fullName) return "";
-  let name = fullName;
-  const phases = [
-    " | Phase 1", " | Phase 2", " | Phase 3", " | Phase 4",
-    " | Ruby", " | Sapphire", " | Black Pearl", " | Emerald"
-  ];
-  phases.forEach((p) => { name = name.replace(p, ""); });
-  const exteriors = [
-    " (Factory New)", " (Minimal Wear)", " (Field-Tested)", " (Well-Worn)", " (Battle-Scarred)",
-    " | Factory New", " | Minimal Wear", " | Field-Tested", " | Well-Worn", " | Battle-Scarred"
-  ];
-  exteriors.forEach((ext) => { name = name.replace(ext, ""); });
-  name = name.replace("★ ", "").replace("★", "");
-  return name.trim();
-}
-
 export default function UserOrdersPage() {
+  const isFetchingRef = useRef(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "buy" | "sell">("all");
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
 
   const fetchOrders = async () => {
+    if (isFetchingRef.current) return;
+
+    isFetchingRef.current = true;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, ORDERS_FETCH_TIMEOUT_MS);
+
     setLoading(true);
+    setError(null);
+
     try {
-      const res = await fetchWithAuth(`${BACKEND_URL}/orders/me`);
-      if (res.ok) {
-        const data = await res.json();
-        setOrders(data);
+      const res = await fetchWithAuth(`${BACKEND_URL}/orders/me`, {
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const contentType = res.headers.get("content-type") || "";
+        const responseMessage = contentType.includes("application/json")
+          ? (await res.json().catch(() => null))?.error
+          : await res.text().catch(() => "");
+
+        throw new Error(responseMessage || `Error ${res.status} al cargar pedidos.`);
       }
+
+      const data = await res.json();
+      setOrders(data);
     } catch (e) {
       console.error("Error fetching orders:", e);
+      setError(getOrdersFetchErrorMessage(e));
     } finally {
+      window.clearTimeout(timeoutId);
+      isFetchingRef.current = false;
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchOrders();
+    const timeoutId = window.setTimeout(() => {
+      fetchOrders();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const toggleOrderExpand = (orderId: string) => {
@@ -267,8 +291,29 @@ export default function UserOrdersPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-red-500/10 border border-red-500/20 text-red-300 px-4 py-3 rounded-[3px]">
+          <div className="flex items-start gap-3">
+            <XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-red-200">
+                No pudimos actualizar tu historial
+              </p>
+              <p className="text-xs text-red-200/80 mt-1">{error}</p>
+            </div>
+          </div>
+          <button
+            onClick={fetchOrders}
+            disabled={loading}
+            className="h-9 px-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-[3px] text-[10px] font-black uppercase tracking-wider text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {/* Main Content Area */}
-      {loading ? (
+      {loading && orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 bg-[#110f1e]/20 border border-white/5 rounded-[3px] backdrop-blur-md">
           <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
           <p className="text-xs text-[#84849b] font-bold uppercase tracking-widest">Cargando tu historial...</p>

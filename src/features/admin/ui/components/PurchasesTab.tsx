@@ -6,6 +6,20 @@ import { BACKEND_URL } from '@/shared/lib/api';
 import { OrderDetailRow } from './OrderDetailRow';
 import { AdminSelect } from '@/shared/components/AdminSelect';
 
+const STATUS_UPDATE_TIMEOUT_MS = 15000;
+
+function getStatusUpdateErrorMessage(err: unknown) {
+  if (err instanceof DOMException && err.name === 'AbortError') {
+    return 'El cambio de estado tardó demasiado. Revisá la conexión con el backend/devtunnel e intentá nuevamente.';
+  }
+
+  if (err instanceof TypeError && err.message === 'Failed to fetch') {
+    return 'No pudimos conectar con el backend para cambiar el estado. Si estás usando DevTunnel, verificá que siga activo.';
+  }
+
+  return err instanceof Error ? err.message : 'Error actualizando estado.';
+}
+
 export function PurchasesTab() {
   const router = useRouter();
   const updatingStatusRef = useRef<Set<string>>(new Set());
@@ -126,6 +140,11 @@ export function PurchasesTab() {
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
     );
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, STATUS_UPDATE_TIMEOUT_MS);
+
     try {
       const response = await fetch(`${BACKEND_URL}/orders/${orderId}/status`, {
         method: 'PATCH',
@@ -134,6 +153,7 @@ export function PurchasesTab() {
           'X-Tunnel-Skip-AntiPhishing-Page': 'true',
         },
         credentials: 'include',
+        signal: controller.signal,
         body: JSON.stringify({ status: newStatus })
       });
       if (response.status === 401 || response.status === 403) {
@@ -160,11 +180,11 @@ export function PurchasesTab() {
         ),
       );
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error actualizando estado.';
-      alert(message);
+      alert(getStatusUpdateErrorMessage(err));
       // Revertir si falla
       setOrders(originalOrders);
     } finally {
+      window.clearTimeout(timeoutId);
       updatingStatusRef.current.delete(orderId);
     }
   };

@@ -53,6 +53,9 @@ export interface Order {
     accountHolder?: string | null;
     walletAddress?: string | null;
     network?: string | null;
+    mpPaymentId?: string | null;
+    nowpaymentsPaymentId?: string | null;
+    paypalPaymentId?: string | null;
   } | null;
 }
 

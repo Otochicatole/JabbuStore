@@ -137,6 +137,8 @@ export function SellOrderDetailRow({
   };
 
   const currentStep = getWorkflowStep();
+  const isCancelled = order.status === "CANCELLED";
+  const canCancel = order.status === "PENDING_PAYMENT" || order.status === "CANCELLED";
 
   return (
     <div
@@ -352,9 +354,17 @@ export function SellOrderDetailRow({
           <div className="flex flex-wrap items-center gap-1.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px]">
             {/* Paso 1: Aprobar Venta */}
             <button
-              onClick={() => onUpdateStatus(order.id, "TRADE_PENDING")}
+              onClick={() => {
+                if (!isCancelled) {
+                  onUpdateStatus(order.id, "TRADE_PENDING");
+                }
+              }}
+              disabled={isCancelled}
+              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Aprobar venta"}
               className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
-                order.status === "TRADE_PENDING"
+                isCancelled
+                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
+                  : order.status === "TRADE_PENDING"
                   ? "bg-orange-500/20 border-orange-500/40 text-orange-400 font-extrabold shadow-[0_0_10px_rgba(249,115,22,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
@@ -365,9 +375,17 @@ export function SellOrderDetailRow({
 
             {/* Paso 2: Confirmar Trade Recibido */}
             <button
-              onClick={() => onUpdateStatus(order.id, "PAID")}
+              onClick={() => {
+                if (!isCancelled) {
+                  onUpdateStatus(order.id, "PAID");
+                }
+              }}
+              disabled={isCancelled}
+              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Confirmar trade recibido"}
               className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
-                order.status === "PAID"
+                isCancelled
+                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
+                  : order.status === "PAID"
                   ? "bg-blue-500/20 border-blue-500/40 text-blue-400 font-extrabold shadow-[0_0_10px_rgba(59,130,246,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
@@ -378,9 +396,17 @@ export function SellOrderDetailRow({
 
             {/* Paso 3: Pago al Usuario / Completar */}
             <button
-              onClick={() => onUpdateStatus(order.id, "COMPLETED")}
+              onClick={() => {
+                if (!isCancelled) {
+                  onUpdateStatus(order.id, "COMPLETED");
+                }
+              }}
+              disabled={isCancelled}
+              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Completar venta"}
               className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
-                order.status === "COMPLETED"
+                isCancelled
+                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
+                  : order.status === "COMPLETED"
                   ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 font-extrabold shadow-[0_0_10px_rgba(16,185,129,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
@@ -404,10 +430,22 @@ export function SellOrderDetailRow({
 
             {/* Rechazar/Cancelar */}
             <button
-              onClick={() => onUpdateStatus(order.id, "CANCELLED")}
+              onClick={() => {
+                if (canCancel) {
+                  onUpdateStatus(order.id, "CANCELLED");
+                }
+              }}
+              disabled={!canCancel}
+              title={
+                canCancel
+                  ? "Cancelar esta venta"
+                  : "Volvé primero a Pendiente para cancelar esta venta"
+              }
               className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 order.status === "CANCELLED"
                   ? "bg-red-500/20 border-red-500/40 text-red-400"
+                  : !canCancel
+                    ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : "bg-white/5 border-white/5 text-red-500/40 hover:text-red-400 hover:bg-red-500/5"
               }`}
             >

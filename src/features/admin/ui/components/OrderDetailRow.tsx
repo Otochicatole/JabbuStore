@@ -110,6 +110,8 @@ export function OrderDetailRow({
   };
 
   const currentStep = getWorkflowStep();
+  const isCancelled = order.status === "CANCELLED";
+  const canCancel = order.status === "PENDING_PAYMENT" || order.status === "CANCELLED";
 
   return (
     <div
@@ -336,9 +338,17 @@ export function OrderDetailRow({
               Pendiente
             </button>
             <button
-              onClick={() => onUpdateStatus(order.id, "PAID")}
+              onClick={() => {
+                if (!isCancelled) {
+                  onUpdateStatus(order.id, "PAID");
+                }
+              }}
+              disabled={isCancelled}
+              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Marcar como pagado"}
               className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
-                order.status === "PAID"
+                isCancelled
+                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
+                  : order.status === "PAID"
                   ? "bg-blue-500/20 border-blue-500/40 text-blue-400"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
@@ -346,9 +356,17 @@ export function OrderDetailRow({
               Pagado
             </button>
             <button
-              onClick={() => onUpdateStatus(order.id, "TRADE_PENDING")}
+              onClick={() => {
+                if (!isCancelled) {
+                  onUpdateStatus(order.id, "TRADE_PENDING");
+                }
+              }}
+              disabled={isCancelled}
+              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Marcar como trade pendiente"}
               className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
-                order.status === "TRADE_PENDING"
+                isCancelled
+                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
+                  : order.status === "TRADE_PENDING"
                   ? "bg-purple-500/20 border-purple-500/40 text-purple-400"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
@@ -356,9 +374,17 @@ export function OrderDetailRow({
               Trade
             </button>
             <button
-              onClick={() => onUpdateStatus(order.id, "COMPLETED")}
+              onClick={() => {
+                if (!isCancelled) {
+                  onUpdateStatus(order.id, "COMPLETED");
+                }
+              }}
+              disabled={isCancelled}
+              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Completar orden"}
               className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
-                order.status === "COMPLETED"
+                isCancelled
+                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
+                  : order.status === "COMPLETED"
                   ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
@@ -366,10 +392,22 @@ export function OrderDetailRow({
               Completar
             </button>
             <button
-              onClick={() => onUpdateStatus(order.id, "CANCELLED")}
+              onClick={() => {
+                if (canCancel) {
+                  onUpdateStatus(order.id, "CANCELLED");
+                }
+              }}
+              disabled={!canCancel}
+              title={
+                canCancel
+                  ? "Cancelar esta orden"
+                  : "Volvé primero a Pendiente para cancelar esta orden"
+              }
               className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 order.status === "CANCELLED"
                   ? "bg-red-500/20 border-red-500/40 text-red-400"
+                  : !canCancel
+                    ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
             >
@@ -467,13 +505,13 @@ export function OrderDetailRow({
 
               {order.paymentMethod === "nowpayments" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
-                  {(order.metadata as any)?.nowpaymentsPaymentId && (
+                  {order.metadata?.nowpaymentsPaymentId && (
                     <div className="mb-2">
                       <span className="text-[8.5px] text-[#84849b] block">
                         ID de Pago NOWPayments
                       </span>
                       <span className="font-bold font-mono text-purple-400 block select-all bg-purple-500/10 p-1.5 rounded-[3px] border border-purple-500/20 mt-0.5 shadow-[0_0_10px_rgba(168,85,247,0.05)]">
-                        {(order.metadata as any).nowpaymentsPaymentId}
+                        {order.metadata.nowpaymentsPaymentId}
                       </span>
                     </div>
                   )}
@@ -506,13 +544,13 @@ export function OrderDetailRow({
 
               {order.paymentMethod === "mercado_pago" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
-                  {(order.metadata as any)?.mpPaymentId && (
+                  {order.metadata?.mpPaymentId && (
                     <div className="mb-2">
                       <span className="text-[8.5px] text-[#84849b] block">
                         ID de Operación MP
                       </span>
                       <span className="font-bold font-mono text-emerald-400 block select-all bg-emerald-500/10 p-1.5 rounded-[3px] border border-emerald-500/20 mt-0.5 shadow-[0_0_10px_rgba(16,185,129,0.05)]">
-                        {(order.metadata as any).mpPaymentId}
+                        {order.metadata.mpPaymentId}
                       </span>
                     </div>
                   )}
@@ -555,13 +593,13 @@ export function OrderDetailRow({
 
               {order.paymentMethod === "paypal" && (
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
-                  {(order.metadata as any)?.paypalPaymentId && (
+                  {order.metadata?.paypalPaymentId && (
                     <div className="mb-2">
                       <span className="text-[8.5px] text-[#84849b] block">
                         ID de Captura PayPal
                       </span>
                       <span className="font-bold font-mono text-indigo-400 block select-all bg-indigo-500/10 p-1.5 rounded-[3px] border border-indigo-500/20 mt-0.5 shadow-[0_0_10px_rgba(99,102,241,0.05)]">
-                        {(order.metadata as any).paypalPaymentId}
+                        {order.metadata.paypalPaymentId}
                       </span>
                     </div>
                   )}

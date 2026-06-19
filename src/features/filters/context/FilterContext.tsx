@@ -20,6 +20,7 @@ export interface FilterState {
   selectedConditions: string[];
   sortOption: SortOption;
   immediateTradeOnly: boolean;
+  groupSameItems: boolean;
 }
 
 interface FilterContextType extends FilterState {
@@ -30,6 +31,7 @@ interface FilterContextType extends FilterState {
   toggleCondition: (cond: string) => void;
   setSortOption: (opt: SortOption) => void;
   setImmediateTradeOnly: (v: boolean) => void;
+  setGroupSameItems: (v: boolean) => void;
   clearFilters: () => void;
 }
 
@@ -41,10 +43,11 @@ const defaultState: FilterState = {
   selectedConditions: [],
   sortOption: "Precio: Mayor a Menor",
   immediateTradeOnly: false,
+  groupSameItems: false,
 };
 
 const FILTER_ROUTES = new Set(["/buy", "/sell"]);
-const FILTER_QUERY_KEYS = ["q", "min", "max", "cat", "cond", "sort", "instant"];
+const FILTER_QUERY_KEYS = ["q", "min", "max", "cat", "cond", "sort", "instant", "group"];
 const SORT_OPTIONS: SortOption[] = [
   "Precio: Mayor a Menor",
   "Precio: Menor a Mayor",
@@ -76,6 +79,7 @@ function filterStateFromSearchParams(params: URLSearchParams): FilterState {
     selectedConditions: parseListParam(params.get("cond")),
     sortOption: parseSortOption(params.get("sort")),
     immediateTradeOnly: params.get("instant") === "1",
+    groupSameItems: params.get("group") === "1",
   };
 }
 
@@ -101,6 +105,7 @@ function writeFilterStateToSearchParams(
     next.set("sort", state.sortOption);
   }
   if (state.immediateTradeOnly) next.set("instant", "1");
+  if (state.groupSameItems) next.set("group", "1");
 
   return next;
 }
@@ -120,6 +125,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>("Precio: Mayor a Menor");
   const [immediateTradeOnly, setImmediateTradeOnly] = useState(false);
+  const [groupSameItems, setGroupSameItems] = useState(false);
   const [urlHydrated, setUrlHydrated] = useState(false);
 
   const applyFilterState = useCallback((state: FilterState) => {
@@ -130,6 +136,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
     setSelectedConditions(state.selectedConditions);
     setSortOption(state.sortOption);
     setImmediateTradeOnly(state.immediateTradeOnly);
+    setGroupSameItems(state.groupSameItems);
   }, []);
 
   useEffect(() => {
@@ -187,6 +194,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
       selectedConditions,
       sortOption,
       immediateTradeOnly,
+      groupSameItems,
     });
 
     const currentQuery = currentParams.toString();
@@ -204,6 +212,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
     selectedConditions,
     sortOption,
     immediateTradeOnly,
+    groupSameItems,
     pathname,
     router,
     searchParams,
@@ -221,6 +230,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
         selectedConditions, toggleCondition,
         sortOption, setSortOption,
         immediateTradeOnly, setImmediateTradeOnly,
+        groupSameItems, setGroupSameItems,
         clearFilters,
       }}
     >

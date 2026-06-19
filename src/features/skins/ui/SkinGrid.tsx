@@ -175,9 +175,54 @@ export const SkinGrid = ({ skins, loading, error, onRetry }: SkinGridProps) => {
     );
   }
 
+  const getNormalizedCondition = (skin: Skin) => {
+    if (skin.exterior) {
+      const ext = skin.exterior.toLowerCase().trim();
+      if (ext.includes('recién') || ext.includes('factory') || ext.includes('fn')) return 'fn';
+      if (ext.includes('casi') || ext.includes('minimal') || ext.includes('mw')) return 'mw';
+      if (ext.includes('algo') || ext.includes('field') || ext.includes('ft')) return 'ft';
+      if (ext.includes('bastante') || ext.includes('well') || ext.includes('ww')) return 'ww';
+      if (ext.includes('deplorable') || ext.includes('battle') || ext.includes('bs')) return 'bs';
+      return ext;
+    }
+    if (skin.float === undefined) return 'fn';
+    if (skin.float < 0.07) return 'fn';
+    if (skin.float < 0.15) return 'mw';
+    if (skin.float < 0.38) return 'ft';
+    if (skin.float < 0.45) return 'ww';
+    return 'bs';
+  };
+
+  const getSkinGroupKey = (skin: Skin) => {
+    const cond = getNormalizedCondition(skin);
+    return [
+      skin.isImmediate === false ? 'market' : 'bot',
+      skin.weapon,
+      skin.name,
+      cond,
+      skin.isStatTrak ? 'st' : '',
+      skin.isSouvenir ? 'sv' : '',
+      skin.phase || '',
+    ].join('|');
+  };
+
   const groupedSkins = useMemo(() => {
-    return filteredSkins.map((skin) => [skin]);
-  }, [filteredSkins]);
+    if (!filters.groupSameItems) {
+      return filteredSkins.map((skin) => [skin]);
+    }
+
+    const groupsMap = new Map<string, Skin[]>();
+    for (const skin of filteredSkins) {
+      const key = getSkinGroupKey(skin);
+      const list = groupsMap.get(key);
+      if (list) {
+        list.push(skin);
+      } else {
+        groupsMap.set(key, [skin]);
+      }
+    }
+    return Array.from(groupsMap.values());
+  }, [filteredSkins, filters.groupSameItems]);
 
   const totalPages = Math.ceil(groupedSkins.length / ITEMS_PER_PAGE);
 

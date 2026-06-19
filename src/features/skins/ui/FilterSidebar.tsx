@@ -32,6 +32,7 @@ export const FilterSidebar = () => {
     selectedCategories, toggleCategory,
     selectedConditions, toggleCondition,
     immediateTradeOnly, setImmediateTradeOnly,
+    groupSameItems, setGroupSameItems,
     clearFilters,
   } = useFilters();
 
@@ -127,6 +128,40 @@ export const FilterSidebar = () => {
           </button>
         </div>
       )}
+
+      {/* Agrupar items iguales */}
+      <div className="border-b border-white/5 pb-5">
+        <button
+          onClick={() => setGroupSameItems(!groupSameItems)}
+          className="flex items-center gap-3 cursor-pointer group select-none w-full text-left bg-transparent border-none p-0 outline-none"
+        >
+          <div
+            className={`
+              relative flex items-center justify-center h-5 w-5 rounded-[4px] border transition-all duration-300 shrink-0
+              ${groupSameItems
+                ? 'border-accent/60 bg-accent/10 shadow-[0_0_15px_rgba(217,70,239,0.2)]'
+                : 'border-white/10 bg-background group-hover:border-white/20'
+              }
+            `}
+          >
+            <div className={`
+              h-2 w-2 rounded-full bg-accent transition-opacity duration-300
+              ${groupSameItems ? 'opacity-100 animate-pulse' : 'opacity-0'}
+            `} />
+          </div>
+          <div>
+            <span className={`
+              text-[11px] font-black uppercase tracking-wider transition-colors duration-300 flex items-center gap-1
+              ${groupSameItems ? 'text-accent' : 'text-[#84849b] group-hover:text-white/70'}
+            `}>
+              Agrupar items iguales
+            </span>
+            <span className="text-[9px] text-[#84849b]/70 font-bold block mt-0.5">
+              Elegí el float exacto desde el modal
+            </span>
+          </div>
+        </button>
+      </div>
 
       {/* Estado (Condition) */}
       <div className="border-b border-white/5 pb-5">

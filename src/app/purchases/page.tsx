@@ -14,8 +14,10 @@ import {
   Calendar, 
   Tag, 
   Layers,
+  FileText,
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
+import { PaymentProofModal, PaymentProofInfo } from "@/shared/components/PaymentProofModal";
 
 const ORDERS_FETCH_TIMEOUT_MS = 15000;
 
@@ -70,7 +72,15 @@ interface Order {
     mpPaymentId?: string | null;
     paypalPaymentId?: string | null;
     nowpaymentsPaymentId?: string | null;
+    buyerPaymentProof?: PaymentProofInfo | null;
+    adminPaymentProof?: PaymentProofInfo | null;
   } | null;
+}
+
+interface SelectedProof {
+  url: string;
+  proof: PaymentProofInfo;
+  title: string;
 }
 
 const rarityColors: Record<string, string> = {
@@ -122,6 +132,7 @@ export default function UserOrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "buy" | "sell">("all");
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
+  const [selectedProof, setSelectedProof] = useState<SelectedProof | null>(null);
 
   const fetchOrders = async () => {
     if (isFetchingRef.current) return;
@@ -340,6 +351,13 @@ export default function UserOrdersPage() {
             const isExpanded = !!expandedOrders[order.id];
             const statusConfig = getStatusConfig(order.status, order.type);
             const isBuy = order.type === "BUY";
+            const visibleProof = isBuy
+              ? order.metadata?.buyerPaymentProof
+              : order.metadata?.adminPaymentProof;
+            const visibleProofType = isBuy ? "buyer" : "admin";
+            const visibleProofUrl = visibleProof
+              ? `${BACKEND_URL}/orders/${order.id}/payment-proof/${visibleProofType}`
+              : null;
             
             // Map step sequence based on SELL vs BUY orders
             const currentStep = isBuy
@@ -644,6 +662,43 @@ export default function UserOrdersPage() {
                           </div>
                         </div>
 
+                        <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px]">
+                          <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-3">
+                            Comprobante de Pago
+                          </span>
+                          {visibleProof && visibleProofUrl ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedProof({
+                                  url: visibleProofUrl,
+                                  proof: visibleProof,
+                                  title: isBuy
+                                    ? "Tu comprobante de pago"
+                                    : "Comprobante de pago recibido",
+                                })
+                              }
+                              className="w-full sm:w-auto flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-[3px] hover:bg-emerald-500/15 transition-colors cursor-pointer"
+                            >
+                              <FileText className="w-4 h-4 shrink-0" />
+                              <span className="min-w-0 text-left">
+                                <span className="block text-[10px] font-black uppercase tracking-wider">
+                                  Ver comprobante
+                                </span>
+                                <span className="block text-[9px] text-emerald-100/70 truncate">
+                                  {visibleProof.fileName || "Archivo adjunto"}
+                                </span>
+                              </span>
+                            </button>
+                          ) : (
+                            <p className="text-xs text-white/35 font-bold">
+                              {isBuy
+                                ? "Todavía no hay comprobante adjunto para esta compra."
+                                : "El admin todavía no adjuntó comprobante de pago para esta venta."}
+                            </p>
+                          )}
+                        </div>
+
                         {/* ITEMS LIST */}
                         <div className="space-y-3">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-2 block pt-2">
@@ -788,6 +843,14 @@ export default function UserOrdersPage() {
           })}
         </div>
       )}
+
+      <PaymentProofModal
+        open={!!selectedProof}
+        onClose={() => setSelectedProof(null)}
+        proofUrl={selectedProof?.url || null}
+        proof={selectedProof?.proof || null}
+        title={selectedProof?.title || "Comprobante de pago"}
+      />
     </div>
   );
 }

@@ -7,11 +7,16 @@ import {
   ExternalLink,
   ShieldCheck,
   CreditCard,
+  FileText,
+  Loader2,
+  Upload,
   ArrowRight,
   Layers,
   XCircle,
 } from "lucide-react";
-import { Order } from "../../domain/types";
+import { Order, PaymentProofMetadata } from "../../domain/types";
+import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
+import { PaymentProofModal } from "@/shared/components/PaymentProofModal";
 import {
   rarityColors,
   getItemRarity,
@@ -90,6 +95,10 @@ export function SellOrderDetailRow({
   const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [proofError, setProofError] = useState<string | null>(null);
+  const [proofOpen, setProofOpen] = useState(false);
+  const [localAdminProof, setLocalAdminProof] = useState<PaymentProofMetadata | null>(null);
 
   // Workflow steps based on order status for SELL orders
   // 1. PENDING_PAYMENT (Pendiente de Aprobación)
@@ -139,6 +148,40 @@ export function SellOrderDetailRow({
   const currentStep = getWorkflowStep();
   const isCancelled = order.status === "CANCELLED";
   const canCancel = order.status === "PENDING_PAYMENT" || order.status === "CANCELLED";
+  const adminProof = localAdminProof || order.metadata?.adminPaymentProof || null;
+  const adminProofUrl = adminProof ? `${BACKEND_URL}/orders/${order.id}/payment-proof/admin` : null;
+  const canUploadAdminProof = order.status === "PAID" || order.status === "COMPLETED";
+
+  const handleAdminProofUpload = async (file: File | null) => {
+    if (!file) return;
+
+    setUploadingProof(true);
+    setProofError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("proof", file);
+
+      const response = await fetchWithAuth(
+        `${BACKEND_URL}/orders/${order.id}/payment-proof/admin`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error || "No pudimos subir el comprobante.");
+      }
+
+      setLocalAdminProof(data?.proof || null);
+    } catch (err: unknown) {
+      setProofError(err instanceof Error ? err.message : "No pudimos subir el comprobante.");
+    } finally {
+      setUploadingProof(false);
+    }
+  };
 
   return (
     <div
@@ -682,7 +725,69 @@ export function SellOrderDetailRow({
             </div>
           </div>
         </div>
+
+        <div className="pt-3 border-t border-white/5">
+          <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono mb-2">
+            Comprobante de Pago al Usuario
+          </h5>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            {adminProof ? (
+              <button
+                type="button"
+                onClick={() => setProofOpen(true)}
+                className="w-full sm:w-auto flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-[3px] hover:bg-emerald-500/15 transition-colors cursor-pointer"
+              >
+                <FileText className="w-4 h-4 shrink-0" />
+                <span className="min-w-0 text-left">
+                  <span className="block text-[10px] font-black uppercase tracking-wider">
+                    Ver comprobante
+                  </span>
+                  <span className="block text-[9px] text-emerald-100/70 truncate">
+                    {adminProof.fileName || "Archivo adjunto"}
+                  </span>
+                </span>
+              </button>
+            ) : (
+              <p className="text-[10px] text-white/30 font-bold">
+                Todavía no se adjuntó comprobante del pago al usuario.
+              </p>
+            )}
+
+            <label
+              className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 border rounded-[3px] text-[9.5px] font-black uppercase tracking-wider transition-colors ${
+                canUploadAdminProof && !uploadingProof
+                  ? "bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10 cursor-pointer"
+                  : "bg-white/5 border-white/5 text-white/20 cursor-not-allowed"
+              }`}
+              title={canUploadAdminProof ? "Subir comprobante" : "Disponible cuando la orden esté Pagada o Completada"}
+            >
+              {uploadingProof ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+              {adminProof ? "Reemplazar" : "Subir comprobante"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+                className="sr-only"
+                disabled={!canUploadAdminProof || uploadingProof}
+                onChange={(event) => {
+                  void handleAdminProofUpload(event.target.files?.[0] ?? null);
+                  event.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+          {proofError && (
+            <p className="text-[10px] text-red-300 font-bold mt-2">{proofError}</p>
+          )}
+        </div>
       </div>
+
+      <PaymentProofModal
+        open={proofOpen}
+        onClose={() => setProofOpen(false)}
+        proofUrl={adminProofUrl}
+        proof={adminProof}
+        title="Comprobante de pago al usuario"
+      />
 
       {/* 📦 SECCIÓN DE ÍTEMS A RECIBIR */}
       <div className="space-y-3 border-t border-white/5 pt-5 mt-5">

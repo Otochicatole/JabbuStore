@@ -33,6 +33,15 @@ export interface OrderItem {
   externalId?: string | null;
 }
 
+export interface PaymentProofMetadata {
+  id?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+  size?: number | null;
+  uploadedAt?: string | null;
+  uploadedBy?: "buyer" | "admin" | string | null;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -56,6 +65,8 @@ export interface Order {
     mpPaymentId?: string | null;
     nowpaymentsPaymentId?: string | null;
     paypalPaymentId?: string | null;
+    buyerPaymentProof?: PaymentProofMetadata | null;
+    adminPaymentProof?: PaymentProofMetadata | null;
   } | null;
 }
 

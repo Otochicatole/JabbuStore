@@ -7,6 +7,7 @@ import {
   ExternalLink,
   ShieldCheck,
   CreditCard,
+  FileText,
   ArrowRight,
   Layers,
   XCircle,
@@ -19,6 +20,8 @@ import {
   hashCode,
 } from "./utils";
 import { buildYoupinItemUrl } from "@/shared/lib/youpin";
+import { BACKEND_URL } from "@/shared/lib/api";
+import { PaymentProofModal } from "@/shared/components/PaymentProofModal";
 
 interface OrderDetailRowProps {
   order: Order;
@@ -43,6 +46,7 @@ export function OrderDetailRow({
   const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [proofOpen, setProofOpen] = useState(false);
 
   const isSellOrder = order.type === "SELL" || order.type === "sell" || order.type?.toUpperCase() === "SELL";
 
@@ -112,6 +116,8 @@ export function OrderDetailRow({
   const currentStep = getWorkflowStep();
   const isCancelled = order.status === "CANCELLED";
   const canCancel = order.status === "PENDING_PAYMENT" || order.status === "CANCELLED";
+  const buyerProof = order.metadata?.buyerPaymentProof;
+  const buyerProofUrl = buyerProof ? `${BACKEND_URL}/orders/${order.id}/payment-proof/buyer` : null;
 
   return (
     <div
@@ -715,7 +721,42 @@ export function OrderDetailRow({
             </div>
           </div>
         </div>
+
+        <div className="pt-3 border-t border-white/5">
+          <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono mb-2">
+            Comprobante del Comprador
+          </h5>
+          {buyerProof ? (
+            <button
+              type="button"
+              onClick={() => setProofOpen(true)}
+              className="w-full sm:w-auto flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-[3px] hover:bg-emerald-500/15 transition-colors cursor-pointer"
+            >
+              <FileText className="w-4 h-4 shrink-0" />
+              <span className="min-w-0 text-left">
+                <span className="block text-[10px] font-black uppercase tracking-wider">
+                  Ver comprobante
+                </span>
+                <span className="block text-[9px] text-emerald-100/70 truncate">
+                  {buyerProof.fileName || "Archivo adjunto"}
+                </span>
+              </span>
+            </button>
+          ) : (
+            <p className="text-[10px] text-white/30 font-bold">
+              El comprador todavía no adjuntó comprobante.
+            </p>
+          )}
+        </div>
       </div>
+
+      <PaymentProofModal
+        open={proofOpen}
+        onClose={() => setProofOpen(false)}
+        proofUrl={buyerProofUrl}
+        proof={buyerProof}
+        title="Comprobante del comprador"
+      />
 
       {/* 📦 SECCIÓN DE ÍTEMS PERMANENTEMENTE ABIERTA */}
       <div className="space-y-3 border-t border-white/5 pt-5 mt-5">

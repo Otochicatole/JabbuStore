@@ -28,6 +28,7 @@ export function CheckoutContent() {
     formData,
     setFormData,
     formErrors,
+    manualTransferSettings,
     handleSubmitCheckout,
     router,
   } = useCheckout();
@@ -68,6 +69,7 @@ export function CheckoutContent() {
       <SuccessScreen
         checkoutType={checkoutType}
         createdOrderId={createdOrderId}
+        paymentMethod={selectedMethod}
         onNavigateToOrders={() => router.push("/purchases")}
         onNavigateToHome={() => router.push("/")}
       />
@@ -106,6 +108,7 @@ export function CheckoutContent() {
           <PaymentMethodsSelector
             selectedMethod={selectedMethod}
             onSelectMethod={setSelectedMethod}
+            checkoutType={checkoutType}
           />
 
           {selectedMethod && (
@@ -115,6 +118,7 @@ export function CheckoutContent() {
               formData={formData}
               onFormChange={setFormData}
               formErrors={formErrors}
+              manualTransferSettings={manualTransferSettings}
             />
           )}
 

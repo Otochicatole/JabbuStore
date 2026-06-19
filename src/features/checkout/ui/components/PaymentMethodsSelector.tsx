@@ -4,9 +4,14 @@ import { PAYMENT_METHODS } from '../../domain/constants';
 interface PaymentMethodsSelectorProps {
   selectedMethod: string | null;
   onSelectMethod: (method: string) => void;
+  checkoutType: "buy" | "sell";
 }
 
-export function PaymentMethodsSelector({ selectedMethod, onSelectMethod }: PaymentMethodsSelectorProps) {
+export function PaymentMethodsSelector({ selectedMethod, onSelectMethod, checkoutType }: PaymentMethodsSelectorProps) {
+  const methods = PAYMENT_METHODS.filter(
+    (method) => checkoutType === "buy" || method.id !== "manual_transfer",
+  );
+
   return (
     <section className="bg-card border border-white/5 rounded-3xl p-6 md:p-8">
       <h2 className="text-sm font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2">
@@ -15,7 +20,7 @@ export function PaymentMethodsSelector({ selectedMethod, onSelectMethod }: Payme
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {PAYMENT_METHODS.map((method) => {
+        {methods.map((method) => {
           const isSelected = selectedMethod === method.id;
           return (
             <button

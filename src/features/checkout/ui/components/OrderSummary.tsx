@@ -52,7 +52,11 @@ export function OrderSummary({
         disabled={!selectedMethod || isProcessingPayment}
         className="w-full h-14 bg-accent text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-[0_0_35px_rgba(217,70,239,0.35)] hover:shadow-[0_0_45px_rgba(217,70,239,0.5)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
       >
-        {checkoutType === "buy" ? "Continuar al Pago Seguro" : "Confirmar Venta"}
+        {checkoutType === "buy"
+          ? selectedMethod === "manual_transfer"
+            ? "Crear Orden Manual"
+            : "Continuar al Pago Seguro"
+          : "Confirmar Venta"}
         <ArrowRight className="w-4 h-4" />
       </button>
 

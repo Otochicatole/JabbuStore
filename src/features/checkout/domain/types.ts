@@ -28,6 +28,19 @@ export interface CheckoutFormData {
   accountHolder: string;
   walletAddress: string;
   network: string;
+  manualTransferType: "bank" | "crypto";
+  paymentProof: File | null;
 }
 
 export type FormErrors = Record<string, string>;
+
+export interface ManualTransferSettings {
+  manualTransferEnabled: boolean;
+  manualBankAlias: string | null;
+  manualBankCbu: string | null;
+  manualBankHolder: string | null;
+  manualBankInstructions: string | null;
+  manualCryptoAddress: string | null;
+  manualCryptoNetwork: string | null;
+  manualCryptoInstructions: string | null;
+}

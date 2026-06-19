@@ -1,5 +1,5 @@
 import React from "react";
-import { CreditCard, Wallet, Coins } from "lucide-react";
+import { CreditCard, Wallet, Coins, Landmark } from "lucide-react";
 import { PaymentMethod } from "./types";
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
@@ -32,5 +32,15 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     badge: "USD / PayPal",
     color:
       "from-indigo-500/10 to-indigo-500/5 hover:border-indigo-500/30 border-white/5",
+  },
+  {
+    id: "manual_transfer",
+    name: "Transferencia Manual",
+    description:
+      "Transferí por banco o cripto con los datos configurados y adjuntá comprobante",
+    icon: <Landmark className="w-5 h-5 text-emerald-400" />,
+    badge: "Banco / Crypto",
+    color:
+      "from-emerald-500/10 to-emerald-500/5 hover:border-emerald-500/30 border-white/5",
   },
 ];

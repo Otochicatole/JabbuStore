@@ -10,6 +10,7 @@ import {
   Webhook,
   Coins,
   RefreshCw,
+  Landmark,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
@@ -21,7 +22,7 @@ const MODIFIER_OPTIONS = [
   { value: "fixed_decrease", label: "Descuento Fijo (-USD)" },
 ];
 
-type Tab = "precios" | "venta" | "reventa" | "limites" | "webhook" | "sync";
+type Tab = "precios" | "venta" | "reventa" | "limites" | "transferencia" | "webhook" | "sync";
 
 type PriceCatalogStatus = {
   exists: boolean;
@@ -76,6 +77,12 @@ const TABS: {
     desc: "Notificaciones en tiempo real",
   },
   {
+    id: "transferencia",
+    label: "Transferencia",
+    icon: Landmark,
+    desc: "Datos bancarios y cripto para pagos manuales",
+  },
+  {
     id: "sync",
     label: "Sincronización",
     icon: RefreshCw,
@@ -108,6 +115,15 @@ function StyledInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className="w-full px-4 py-3 bg-white/[0.03] border border-white/8 rounded-[3px] text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all"
+    />
+  );
+}
+
+function StyledTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      {...props}
+      className="w-full min-h-28 px-4 py-3 bg-white/[0.03] border border-white/8 rounded-[3px] text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all resize-y"
     />
   );
 }
@@ -183,6 +199,14 @@ export default function AdminSettingsPage() {
     resellModifierEnabled: false,
     minimumUserSellPrice: 1.0,
     webhookUrl: "",
+    manualTransferEnabled: false,
+    manualBankAlias: "",
+    manualBankCbu: "",
+    manualBankHolder: "",
+    manualBankInstructions: "",
+    manualCryptoAddress: "",
+    manualCryptoNetwork: "",
+    manualCryptoInstructions: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -192,11 +216,13 @@ export default function AdminSettingsPage() {
   const [savingResell, setSavingResell] = useState(false);
   const [savingMinSell, setSavingMinSell] = useState(false);
   const [savingWebhook, setSavingWebhook] = useState(false);
+  const [savingManualTransfer, setSavingManualTransfer] = useState(false);
   const [savedPricing, setSavedPricing] = useState(false);
   const [savedUserSell, setSavedUserSell] = useState(false);
   const [savedResell, setSavedResell] = useState(false);
   const [savedMinSell, setSavedMinSell] = useState(false);
   const [savedWebhook, setSavedWebhook] = useState(false);
+  const [savedManualTransfer, setSavedManualTransfer] = useState(false);
 
   // --- States for Manual Sync and 3-Minute Cooldown ---
   const [syncingAll, setSyncingAll] = useState(false);
@@ -532,6 +558,47 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleManualTransferSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingManualTransfer(true);
+    try {
+      const res = await fetch(
+        `${BACKEND_URL}/admin/marketplace/settings/manual-transfer`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tunnel-Skip-AntiPhishing-Page": "true",
+          },
+          body: JSON.stringify({
+            manualTransferEnabled: settings.manualTransferEnabled,
+            manualBankAlias: settings.manualBankAlias || null,
+            manualBankCbu: settings.manualBankCbu || null,
+            manualBankHolder: settings.manualBankHolder || null,
+            manualBankInstructions: settings.manualBankInstructions || null,
+            manualCryptoAddress: settings.manualCryptoAddress || null,
+            manualCryptoNetwork: settings.manualCryptoNetwork || null,
+            manualCryptoInstructions: settings.manualCryptoInstructions || null,
+          }),
+        },
+      );
+      if (!res.ok) throw new Error();
+      const saved = await res.json();
+      setSettings((prev) => ({
+        ...prev,
+        ...saved,
+        resellModifierType: saved.resellModifierType ?? saved.marketModifierType ?? prev.resellModifierType,
+        resellModifierValue: saved.resellModifierValue ?? saved.marketModifierValue ?? prev.resellModifierValue,
+        resellModifierEnabled: saved.resellModifierEnabled ?? saved.marketModifierEnabled ?? prev.resellModifierEnabled,
+      }));
+      setSavedManualTransfer(true);
+      setTimeout(() => setSavedManualTransfer(false), 2500);
+    } finally {
+      setSavingManualTransfer(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -773,6 +840,133 @@ export default function AdminSettingsPage() {
               saving={savingMinSell}
               saved={savedMinSell}
               label="Guardar Precio Mínimo"
+            />
+          </form>
+        </div>
+      )}
+
+      {/* ── TAB: Transferencia Manual ── */}
+      {activeTab === "transferencia" && (
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
+          <SectionHeader
+            title="Transferencia Manual"
+            desc="Configurá los datos que verá el comprador para pagar manualmente por transferencia bancaria o cripto."
+          />
+          <form onSubmit={handleManualTransferSubmit} className="space-y-6 max-w-3xl">
+            <ToggleSwitch
+              checked={settings.manualTransferEnabled}
+              onChange={(v) =>
+                setSettings({ ...settings, manualTransferEnabled: v })
+              }
+              label="Habilitar Transferencia Manual en Checkout"
+            />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="space-y-4 p-4 bg-white/[0.02] border border-white/5 rounded-[3px]">
+                <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                  Transferencia Bancaria
+                </h3>
+                <div className="space-y-1.5">
+                  <FieldLabel>Alias</FieldLabel>
+                  <StyledInput
+                    value={settings.manualBankAlias || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, manualBankAlias: e.target.value })
+                    }
+                    placeholder="ej. jabbu.store.mp"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel>CBU / CVU</FieldLabel>
+                  <StyledInput
+                    value={settings.manualBankCbu || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, manualBankCbu: e.target.value })
+                    }
+                    placeholder="0000003100012345678901"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel>Titular</FieldLabel>
+                  <StyledInput
+                    value={settings.manualBankHolder || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, manualBankHolder: e.target.value })
+                    }
+                    placeholder="Nombre o razón social"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel>Instrucciones Bancarias</FieldLabel>
+                  <StyledTextarea
+                    value={settings.manualBankInstructions || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        manualBankInstructions: e.target.value,
+                      })
+                    }
+                    placeholder="Indicaciones visibles para el comprador antes de adjuntar comprobante."
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 p-4 bg-white/[0.02] border border-white/5 rounded-[3px]">
+                <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                  Transferencia Cripto
+                </h3>
+                <div className="space-y-1.5">
+                  <FieldLabel>Dirección de Wallet</FieldLabel>
+                  <StyledInput
+                    value={settings.manualCryptoAddress || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        manualCryptoAddress: e.target.value,
+                      })
+                    }
+                    placeholder="0x... / TRC20 / BTC / etc."
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel>Red</FieldLabel>
+                  <StyledInput
+                    value={settings.manualCryptoNetwork || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        manualCryptoNetwork: e.target.value,
+                      })
+                    }
+                    placeholder="USDT TRC20, ERC20, BTC..."
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel>Instrucciones Cripto</FieldLabel>
+                  <StyledTextarea
+                    value={settings.manualCryptoInstructions || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        manualCryptoInstructions: e.target.value,
+                      })
+                    }
+                    placeholder="Moneda esperada, red correcta, confirmaciones necesarias, etc."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-[3px]">
+              <p className="text-[10px] text-amber-100/80 font-bold uppercase tracking-wider leading-relaxed">
+                El checkout manual queda pendiente hasta revisión del admin. El usuario debe adjuntar comprobante para crear la orden.
+              </p>
+            </div>
+
+            <SaveButton
+              saving={savingManualTransfer}
+              saved={savedManualTransfer}
+              label="Guardar Transferencia Manual"
             />
           </form>
         </div>

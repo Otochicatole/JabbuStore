@@ -42,6 +42,21 @@ export interface PaymentProofMetadata {
   uploadedBy?: "buyer" | "admin" | string | null;
 }
 
+export interface ManualTransferSnapshot {
+  type?: "bank" | "crypto" | string | null;
+  bank?: {
+    alias?: string | null;
+    cbu?: string | null;
+    holder?: string | null;
+    instructions?: string | null;
+  } | null;
+  crypto?: {
+    address?: string | null;
+    network?: string | null;
+    instructions?: string | null;
+  } | null;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -67,6 +82,8 @@ export interface Order {
     paypalPaymentId?: string | null;
     buyerPaymentProof?: PaymentProofMetadata | null;
     adminPaymentProof?: PaymentProofMetadata | null;
+    manualTransferType?: "bank" | "crypto" | string | null;
+    manualTransferSnapshot?: ManualTransferSnapshot | null;
   } | null;
 }
 

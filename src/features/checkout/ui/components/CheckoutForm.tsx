@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckoutFormData, FormErrors } from '../../domain/types';
+import { CheckoutFormData, FormErrors, ManualTransferSettings } from '../../domain/types';
 import { PAYMENT_METHODS } from '../../domain/constants';
 
 interface CheckoutFormProps {
@@ -8,6 +8,7 @@ interface CheckoutFormProps {
   formData: CheckoutFormData;
   onFormChange: (data: CheckoutFormData) => void;
   formErrors: FormErrors;
+  manualTransferSettings: ManualTransferSettings | null;
 }
 
 export function CheckoutForm({ 
@@ -15,13 +16,28 @@ export function CheckoutForm({
   selectedMethod, 
   formData, 
   onFormChange, 
-  formErrors 
+  formErrors,
+  manualTransferSettings,
 }: CheckoutFormProps) {
   
   const updateField = (field: keyof CheckoutFormData, value: string) => {
     onFormChange({
       ...formData,
       [field]: value
+    });
+  };
+
+  const updatePaymentProof = (file: File | null) => {
+    onFormChange({
+      ...formData,
+      paymentProof: file,
+    });
+  };
+
+  const updateManualTransferType = (value: "bank" | "crypto") => {
+    onFormChange({
+      ...formData,
+      manualTransferType: value,
     });
   };
 
@@ -87,6 +103,131 @@ export function CheckoutForm({
           {formErrors.phone && <span className="text-[10px] text-red-400 font-bold uppercase">{formErrors.phone}</span>}
         </div>
       </div>
+
+      {checkoutType === "buy" && selectedMethod === "manual_transfer" && (
+        <div className="border-t border-white/5 pt-6 mt-6 space-y-5">
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-wider text-white">
+              Pago por Transferencia Manual
+            </h3>
+            <p className="text-[10px] text-[#84849b] mt-0.5">
+              Elegí banco o cripto, realizá la transferencia y adjuntá el comprobante para enviar la orden a revisión.
+            </p>
+          </div>
+
+          {!manualTransferSettings?.manualTransferEnabled && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] text-red-200 font-bold uppercase tracking-wider">
+              La transferencia manual no está habilitada por el admin.
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => updateManualTransferType("bank")}
+              className={`px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+                formData.manualTransferType === "bank"
+                  ? "border-accent bg-accent/15 text-white"
+                  : "border-white/10 bg-white/5 text-white/50 hover:text-white"
+              }`}
+            >
+              Bancaria
+            </button>
+            <button
+              type="button"
+              onClick={() => updateManualTransferType("crypto")}
+              className={`px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+                formData.manualTransferType === "crypto"
+                  ? "border-accent bg-accent/15 text-white"
+                  : "border-white/10 bg-white/5 text-white/50 hover:text-white"
+              }`}
+            >
+              Cripto
+            </button>
+          </div>
+
+          <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3">
+            {formData.manualTransferType === "bank" ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-[9px] text-[#84849b] uppercase font-black block">Alias</span>
+                    <span className="font-bold text-white break-all">{manualTransferSettings?.manualBankAlias || "No configurado"}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-[#84849b] uppercase font-black block">CBU / CVU</span>
+                    <span className="font-mono font-bold text-white break-all">{manualTransferSettings?.manualBankCbu || "No configurado"}</span>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-[9px] text-[#84849b] uppercase font-black block">Titular</span>
+                    <span className="font-bold text-white break-all">{manualTransferSettings?.manualBankHolder || "No configurado"}</span>
+                  </div>
+                </div>
+                {manualTransferSettings?.manualBankInstructions && (
+                  <p className="text-[10px] text-[#84849b] leading-relaxed whitespace-pre-line">
+                    {manualTransferSettings.manualBankInstructions}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="sm:col-span-2">
+                    <span className="text-[9px] text-[#84849b] uppercase font-black block">Wallet</span>
+                    <span className="font-mono font-bold text-white break-all">{manualTransferSettings?.manualCryptoAddress || "No configurado"}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-[#84849b] uppercase font-black block">Red</span>
+                    <span className="font-bold text-white break-all">{manualTransferSettings?.manualCryptoNetwork || "No configurado"}</span>
+                  </div>
+                </div>
+                {manualTransferSettings?.manualCryptoInstructions && (
+                  <p className="text-[10px] text-[#84849b] leading-relaxed whitespace-pre-line">
+                    {manualTransferSettings.manualCryptoInstructions}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          <label className={`block rounded-xl border border-dashed p-4 transition-colors cursor-pointer ${
+            formErrors.paymentProof
+              ? "border-red-500/50 bg-red-500/5"
+              : "border-white/10 bg-white/[0.02] hover:border-accent/40"
+          }`}>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+              className="sr-only"
+              onChange={(event) => updatePaymentProof(event.target.files?.[0] ?? null)}
+            />
+            <span className="text-[10px] font-black uppercase tracking-widest text-accent">
+              Adjuntar comprobante obligatorio
+            </span>
+            <span className="block mt-1 text-xs font-bold text-white/80 truncate">
+              {formData.paymentProof
+                ? `${formData.paymentProof.name} (${(formData.paymentProof.size / 1024 / 1024).toFixed(2)} MB)`
+                : "JPG, PNG, WEBP, GIF o PDF hasta 10 MB"}
+            </span>
+          </label>
+
+          {formData.paymentProof && (
+            <button
+              type="button"
+              onClick={() => updatePaymentProof(null)}
+              className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors cursor-pointer"
+            >
+              Quitar comprobante
+            </button>
+          )}
+
+          {formErrors.paymentProof && (
+            <span className="block text-[10px] text-red-400 font-bold uppercase">
+              {formErrors.paymentProof}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Dynamic payout inputs for Sell orders */}
       {checkoutType === "sell" && (

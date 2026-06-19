@@ -74,6 +74,21 @@ interface Order {
     nowpaymentsPaymentId?: string | null;
     buyerPaymentProof?: PaymentProofInfo | null;
     adminPaymentProof?: PaymentProofInfo | null;
+    manualTransferType?: "bank" | "crypto" | string | null;
+    manualTransferSnapshot?: {
+      type?: "bank" | "crypto" | string | null;
+      bank?: {
+        alias?: string | null;
+        cbu?: string | null;
+        holder?: string | null;
+        instructions?: string | null;
+      } | null;
+      crypto?: {
+        address?: string | null;
+        network?: string | null;
+        instructions?: string | null;
+      } | null;
+    } | null;
   } | null;
 }
 
@@ -358,6 +373,8 @@ export default function UserOrdersPage() {
             const visibleProofUrl = visibleProof
               ? `${BACKEND_URL}/orders/${order.id}/payment-proof/${visibleProofType}`
               : null;
+            const isManualTransfer = order.paymentMethod === "manual_transfer";
+            const manualTransferSnapshot = order.metadata?.manualTransferSnapshot;
             
             // Map step sequence based on SELL vs BUY orders
             const currentStep = isBuy
@@ -616,6 +633,7 @@ export default function UserOrdersPage() {
                                    order.paymentMethod === 'paypal' ? 'PayPal' : 
                                    order.paymentMethod === 'ethereum' ? 'Ethereum (Web3)' : 
                                    order.paymentMethod === 'nowpayments' ? 'NOWPayments (Crypto)' : 
+                                   order.paymentMethod === 'manual_transfer' ? 'Transferencia Manual' :
                                    order.paymentMethod || 'No especificado'}
                                 </span>
                               </div>
@@ -661,6 +679,56 @@ export default function UserOrdersPage() {
                             </div>
                           </div>
                         </div>
+
+                        {isBuy && isManualTransfer && (
+                          <div className="bg-emerald-500/10 p-4 border border-emerald-500/20 rounded-[3px]">
+                            <span className="text-[9px] font-black uppercase text-emerald-300 tracking-wider font-mono block mb-3">
+                              Transferencia Manual
+                            </span>
+                            <p className="text-[10px] text-emerald-100/70 font-bold uppercase tracking-wider mb-3">
+                              Tu pago queda pendiente hasta que el admin revise el comprobante.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px]">
+                              {manualTransferSnapshot?.type === "crypto" ? (
+                                <>
+                                  <div className="sm:col-span-2">
+                                    <span className="text-[#84849b] uppercase block">Wallet</span>
+                                    <span className="font-mono font-bold text-white break-all">
+                                      {manualTransferSnapshot.crypto?.address || "N/A"}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#84849b] uppercase block">Red</span>
+                                    <span className="font-bold text-white">
+                                      {manualTransferSnapshot.crypto?.network || "N/A"}
+                                    </span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div>
+                                    <span className="text-[#84849b] uppercase block">Alias</span>
+                                    <span className="font-bold text-white break-all">
+                                      {manualTransferSnapshot?.bank?.alias || "N/A"}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#84849b] uppercase block">CBU / CVU</span>
+                                    <span className="font-mono font-bold text-white break-all">
+                                      {manualTransferSnapshot?.bank?.cbu || "N/A"}
+                                    </span>
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <span className="text-[#84849b] uppercase block">Titular</span>
+                                    <span className="font-bold text-white">
+                                      {manualTransferSnapshot?.bank?.holder || "N/A"}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
                         <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px]">
                           <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-3">

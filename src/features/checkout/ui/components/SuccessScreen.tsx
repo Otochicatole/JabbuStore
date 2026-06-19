@@ -5,6 +5,7 @@ import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 interface SuccessScreenProps {
   checkoutType: "buy" | "sell";
   createdOrderId: string | null;
+  paymentMethod: string | null;
   onNavigateToOrders: () => void;
   onNavigateToHome: () => void;
 }
@@ -21,6 +22,7 @@ const PAYMENT_PROOF_ALLOWED_TYPES = new Set([
 export function SuccessScreen({
   checkoutType,
   createdOrderId,
+  paymentMethod,
   onNavigateToOrders,
   onNavigateToHome,
 }: SuccessScreenProps) {
@@ -110,11 +112,13 @@ export function SuccessScreen({
         </button>
         <p className="text-xs text-[#84849b] max-w-sm mx-auto leading-relaxed mb-8 mt-2">
           {checkoutType === "buy"
-            ? "Tu orden quedó registrada. El estado se actualizará automáticamente cuando la pasarela confirme el pago y el equipo iniciará el envío de tus skins."
+            ? paymentMethod === "manual_transfer"
+              ? "Tu orden manual quedó registrada con comprobante. El admin revisará el pago y actualizará el estado para iniciar el envío de tus skins."
+              : "Tu orden quedó registrada. El estado se actualizará automáticamente cuando la pasarela confirme el pago y el equipo iniciará el envío de tus skins."
             : "Tus skins fueron registradas correctamente y la operación quedó en seguimiento para su validación."}
         </p>
 
-        {checkoutType === "buy" && createdOrderId && (
+        {checkoutType === "buy" && createdOrderId && paymentMethod !== "manual_transfer" && (
           <div className="mb-8 text-left bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-4 space-y-3">
             <div className="flex items-start gap-2">
               <FileText className="w-4 h-4 text-accent mt-0.5 shrink-0" />

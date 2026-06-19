@@ -5,7 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/context/CartContext";
 import { useInventory } from "@/features/inventory/context/InventoryContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
-import { CheckoutItem, CheckoutFormData, FormErrors } from "../domain/types";
+import {
+  CheckoutItem,
+  CheckoutFormData,
+  FormErrors,
+  ManualTransferSettings,
+} from "../domain/types";
 
 function getErrorMessage(error: unknown, fallback = "Ocurrió un error inesperado.") {
   return error instanceof Error ? error.message : fallback;
@@ -14,6 +19,15 @@ function getErrorMessage(error: unknown, fallback = "Ocurrió un error inesperad
 function getErrorStack(error: unknown) {
   return error instanceof Error && error.stack ? `\nStack: ${error.stack}` : "";
 }
+
+const PAYMENT_PROOF_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+const PAYMENT_PROOF_ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+]);
 
 export function useCheckout() {
   const searchParams = useSearchParams();
@@ -40,6 +54,8 @@ export function useCheckout() {
   const [paymentStep, setPaymentStep] = useState<number>(0);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [manualTransferSettings, setManualTransferSettings] =
+    useState<ManualTransferSettings | null>(null);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     firstName: "",
@@ -51,6 +67,8 @@ export function useCheckout() {
     accountHolder: "",
     walletAddress: "",
     network: "ERC20",
+    manualTransferType: "bank",
+    paymentProof: null,
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
@@ -77,6 +95,33 @@ export function useCheckout() {
 
     return () => window.clearTimeout(timeoutId);
   }, [selectedMethod]);
+
+  useEffect(() => {
+    const loadPublicSettings = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/marketplace/settings/public`, {
+          credentials: "include",
+          headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        setManualTransferSettings({
+          manualTransferEnabled: Boolean(data.manualTransferEnabled),
+          manualBankAlias: data.manualBankAlias ?? null,
+          manualBankCbu: data.manualBankCbu ?? null,
+          manualBankHolder: data.manualBankHolder ?? null,
+          manualBankInstructions: data.manualBankInstructions ?? null,
+          manualCryptoAddress: data.manualCryptoAddress ?? null,
+          manualCryptoNetwork: data.manualCryptoNetwork ?? null,
+          manualCryptoInstructions: data.manualCryptoInstructions ?? null,
+        });
+      } catch (err) {
+        console.error("Manual transfer settings error:", err);
+      }
+    };
+
+    void loadPublicSettings();
+  }, []);
 
   // 1. Manejar las redirecciones de retorno
   useEffect(() => {
@@ -248,6 +293,18 @@ export function useCheckout() {
     }
     if (!formData.phone.trim()) errors.phone = "El teléfono es obligatorio.";
 
+    if (checkoutType === "buy" && selectedMethod === "manual_transfer") {
+      if (!manualTransferSettings?.manualTransferEnabled) {
+        errors.paymentProof = "La transferencia manual no está habilitada.";
+      } else if (!formData.paymentProof) {
+        errors.paymentProof = "El comprobante es obligatorio para transferencia manual.";
+      } else if (!PAYMENT_PROOF_ALLOWED_TYPES.has(formData.paymentProof.type)) {
+        errors.paymentProof = "Formato no permitido. Usá JPG, PNG, WEBP, GIF o PDF.";
+      } else if (formData.paymentProof.size > PAYMENT_PROOF_MAX_SIZE_BYTES) {
+        errors.paymentProof = "El comprobante no puede superar los 10 MB.";
+      }
+    }
+
     if (checkoutType === "sell" && selectedMethod) {
       if (selectedMethod === "mercado_pago") {
         if (!formData.cbu.trim())
@@ -277,6 +334,24 @@ export function useCheckout() {
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const uploadBuyerPaymentProof = async (orderId: string, file: File) => {
+    const proofData = new FormData();
+    proofData.append("proof", file);
+
+    const response = await fetchWithAuth(
+      `${BACKEND_URL}/orders/${orderId}/payment-proof/buyer`,
+      {
+        method: "POST",
+        body: proofData,
+      },
+    );
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      throw new Error(data?.error || "No pudimos subir el comprobante de pago.");
+    }
   };
 
   const handleSubmitCheckout = () => {
@@ -426,6 +501,31 @@ export function useCheckout() {
               accountHolder: formData.accountHolder || null,
               walletAddress: formData.walletAddress || null,
               network: formData.network || null,
+              manualTransferType:
+                selectedMethod === "manual_transfer" ? formData.manualTransferType : null,
+              manualTransferSnapshot:
+                selectedMethod === "manual_transfer" && manualTransferSettings
+                  ? {
+                      type: formData.manualTransferType,
+                      bank:
+                        formData.manualTransferType === "bank"
+                          ? {
+                              alias: manualTransferSettings.manualBankAlias,
+                              cbu: manualTransferSettings.manualBankCbu,
+                              holder: manualTransferSettings.manualBankHolder,
+                              instructions: manualTransferSettings.manualBankInstructions,
+                            }
+                          : null,
+                      crypto:
+                        formData.manualTransferType === "crypto"
+                          ? {
+                              address: manualTransferSettings.manualCryptoAddress,
+                              network: manualTransferSettings.manualCryptoNetwork,
+                              instructions: manualTransferSettings.manualCryptoInstructions,
+                            }
+                          : null,
+                    }
+                  : null,
             };
 
             if (checkoutType === "buy") {
@@ -478,7 +578,22 @@ export function useCheckout() {
               );
             }
 
-            if (checkoutType === "buy") {
+            if (checkoutType === "buy" && selectedMethod === "manual_transfer") {
+              if (!formData.paymentProof) {
+                throw new Error("El comprobante es obligatorio para transferencia manual.");
+              }
+              try {
+                await uploadBuyerPaymentProof(data.id, formData.paymentProof);
+              } catch (uploadErr) {
+                await fetchWithAuth(`${BACKEND_URL}/orders/${data.id}/cancel-payment`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                }).catch(() => {});
+                throw uploadErr;
+              }
+            }
+
+            if (checkoutType === "buy" && selectedMethod !== "manual_transfer") {
               await fetchWithAuth(`${BACKEND_URL}/orders/${data.id}/status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -521,6 +636,7 @@ export function useCheckout() {
     formData,
     setFormData,
     formErrors,
+    manualTransferSettings,
     handleSubmitCheckout,
     router,
   };

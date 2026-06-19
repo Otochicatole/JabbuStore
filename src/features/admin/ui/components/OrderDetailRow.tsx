@@ -118,6 +118,8 @@ export function OrderDetailRow({
   const canCancel = order.status === "PENDING_PAYMENT" || order.status === "CANCELLED";
   const buyerProof = order.metadata?.buyerPaymentProof;
   const buyerProofUrl = buyerProof ? `${BACKEND_URL}/orders/${order.id}/payment-proof/buyer` : null;
+  const manualTransferSnapshot = order.metadata?.manualTransferSnapshot;
+  const isManualTransfer = order.paymentMethod === "manual_transfer";
 
   return (
     <div
@@ -501,6 +503,8 @@ export function OrderDetailRow({
                     ? "Mercado Pago"
                     : order.paymentMethod === "paypal"
                       ? "PayPal"
+                      : order.paymentMethod === "manual_transfer"
+                        ? "Transferencia Manual"
                       : order.paymentMethod === "ethereum"
                         ? "Ethereum (Web3)"
                         : order.paymentMethod === "binance"
@@ -723,6 +727,53 @@ export function OrderDetailRow({
         </div>
 
         <div className="pt-3 border-t border-white/5">
+          {isManualTransfer && (
+            <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[3px]">
+              <h5 className="text-[9px] font-black uppercase text-emerald-300 tracking-wider font-mono mb-2">
+                Transferencia Manual
+              </h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px]">
+                {manualTransferSnapshot?.type === "crypto" ? (
+                  <>
+                    <div className="sm:col-span-2">
+                      <span className="text-[#84849b] uppercase block">Wallet</span>
+                      <span className="font-mono font-bold text-white break-all">
+                        {manualTransferSnapshot.crypto?.address || "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#84849b] uppercase block">Red</span>
+                      <span className="font-bold text-white">
+                        {manualTransferSnapshot.crypto?.network || "N/A"}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span className="text-[#84849b] uppercase block">Alias</span>
+                      <span className="font-bold text-white break-all">
+                        {manualTransferSnapshot?.bank?.alias || "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#84849b] uppercase block">CBU / CVU</span>
+                      <span className="font-mono font-bold text-white break-all">
+                        {manualTransferSnapshot?.bank?.cbu || "N/A"}
+                      </span>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <span className="text-[#84849b] uppercase block">Titular</span>
+                      <span className="font-bold text-white">
+                        {manualTransferSnapshot?.bank?.holder || "N/A"}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono mb-2">
             Comprobante del Comprador
           </h5>

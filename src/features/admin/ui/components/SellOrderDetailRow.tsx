@@ -351,7 +351,7 @@ export function SellOrderDetailRow({
           <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
             Acción del Flujo Correcto de Venta
           </span>
-          <div className="flex flex-wrap items-center gap-1.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px]">
+          <div className="grid grid-cols-1 gap-1.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] sm:flex sm:flex-wrap sm:items-center">
             {/* Paso 1: Aprobar Venta */}
             <button
               onClick={() => {
@@ -361,7 +361,7 @@ export function SellOrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Aprobar venta"}
-              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "TRADE_PENDING"
@@ -382,7 +382,7 @@ export function SellOrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Confirmar trade recibido"}
-              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "PAID"
@@ -403,7 +403,7 @@ export function SellOrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Completar venta"}
-              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "COMPLETED"
@@ -418,7 +418,7 @@ export function SellOrderDetailRow({
             {/* Volver a Pendiente por si dio mal click */}
             <button
               onClick={() => onUpdateStatus(order.id, "PENDING_PAYMENT")}
-              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 order.status === "PENDING_PAYMENT"
                   ? "bg-[#110f1e] border-[#84849b]/40 text-[#84849b]"
                   : "bg-white/5 border-white/5 text-white/30 hover:text-white"
@@ -441,7 +441,7 @@ export function SellOrderDetailRow({
                   ? "Cancelar esta venta"
                   : "Volvé primero a Pendiente para cancelar esta venta"
               }
-              className={`px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 order.status === "CANCELLED"
                   ? "bg-red-500/20 border-red-500/40 text-red-400"
                   : !canCancel

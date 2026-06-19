@@ -20,7 +20,7 @@ function SellPageContent() {
         <FilterSidebar />
 
         {/* Main Content: Inventory */}
-        <section className="flex-1">
+        <section className="w-full min-w-0 flex-1">
           <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter">
@@ -68,7 +68,7 @@ function SellPageContent() {
         </section>
 
         {/* Right Panel: Sell List */}
-        <aside className="w-full lg:w-80 flex-shrink-0 sticky top-24">
+        <aside className="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-24">
           <SellBasket />
         </aside>
       </div>

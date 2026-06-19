@@ -96,8 +96,8 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
 
   return (
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-full items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2 text-white no-underline cursor-pointer group">
+      <div className="mx-auto flex h-16 max-w-full items-center justify-between gap-2 px-3 sm:px-6">
+        <Link href="/" className="flex min-w-0 items-center gap-2 text-white no-underline cursor-pointer group">
           <div className="h-8 w-8 rounded-sm bg-accent flex items-center justify-center font-black text-white text-xs transition-transform group-hover:scale-110">
             JS
           </div>
@@ -135,8 +135,8 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           })}
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative mr-2 cursor-pointer text-white/70 hover:text-white group" onClick={onOpenCart}>
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+          <div className="relative mr-1 sm:mr-2 cursor-pointer text-white/70 hover:text-white group" onClick={onOpenCart}>
             <ShoppingCart className="h-5 w-5 transition-colors group-hover:text-accent" />
             {itemCount > 0 && (
               <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[8px] font-bold text-white">
@@ -147,11 +147,11 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
 
           {/* Auth Button */}
           {isLoggedIn ? (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative min-w-0" ref={dropdownRef}>
               {/* Avatar Button */}
               <button 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2.5 rounded-full border border-white/5 hover:border-accent/40 bg-white/[0.01] hover:bg-white/[0.03] p-1.5 pr-4 transition-all duration-300 shadow-lg cursor-pointer focus:outline-none"
+                className="flex min-w-0 items-center gap-2 sm:gap-2.5 rounded-full border border-white/5 hover:border-accent/40 bg-white/[0.01] hover:bg-white/[0.03] p-1.5 sm:pr-4 transition-all duration-300 shadow-lg cursor-pointer focus:outline-none"
               >
                 <div className="relative h-7 w-7 overflow-hidden rounded-full border border-accent/20">
                   {profile?.avatar ? (
@@ -166,7 +166,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                     </div>
                   )}
                 </div>
-                <span className="hidden sm:inline text-[9px] font-black uppercase tracking-[0.15em] text-white/90 leading-none">
+                <span className="hidden max-w-[120px] truncate sm:inline text-[9px] font-black uppercase tracking-[0.15em] text-white/90 leading-none">
                   {profile?.name || "Cargando..."}
                 </span>
                 <svg className={`w-3 h-3 text-white/40 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -176,7 +176,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
 
               {/* Floating Dropdown Card */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 rounded-2xl border border-white/5 bg-card p-4 shadow-2xl shadow-black/80 z-50 flex flex-col gap-3 font-sans animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 mt-3 w-[calc(100vw-1.5rem)] max-w-64 rounded-2xl border border-white/5 bg-card p-4 shadow-2xl shadow-black/80 z-50 flex flex-col gap-3 font-sans animate-in fade-in slide-in-from-top-2 duration-200">
                   
                   {/* User Info Header */}
                   <div className="flex items-center gap-3 border-b border-white/5 pb-3">
@@ -281,7 +281,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           {/* Mobile Hamburguer Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex items-center justify-center p-2 rounded-[3px] border border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/70 hover:text-white transition-all md:hidden cursor-pointer focus:outline-none"
+            className="flex shrink-0 items-center justify-center p-2 rounded-[3px] border border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/70 hover:text-white transition-all md:hidden cursor-pointer focus:outline-none"
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>

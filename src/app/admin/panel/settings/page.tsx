@@ -541,7 +541,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 w-full space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 w-full min-w-0 space-y-6">
       {/* Page header */}
       <div>
         <h1 className="text-xl font-black uppercase tracking-wider text-white">
@@ -579,14 +579,14 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Tab description strip */}
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-accent/5 border border-accent/15 rounded-[3px]">
+      <div className="flex items-start sm:items-center gap-2 px-4 py-2.5 bg-accent/5 border border-accent/15 rounded-[3px]">
         {(() => {
           const t = TABS.find((t) => t.id === activeTab)!;
           const Icon = t.icon;
           return (
             <>
               <Icon className="w-3.5 h-3.5 text-accent flex-shrink-0" />
-              <span className="text-xs text-accent/80 font-semibold">
+              <span className="text-xs text-accent/80 font-semibold min-w-0">
                 {t.desc}
               </span>
             </>
@@ -839,13 +839,13 @@ export default function AdminSettingsPage() {
             desc="Fuerza una sincronización en tiempo real de todo el sistema. Esto actualizará el catálogo de mercado de YouPin y el inventario en stock de todos los bots conectados."
           />
           
-          <div className="max-w-xl space-y-6">
-            <div className="p-4 bg-white/[0.01] border border-white/5 rounded-[3px] space-y-3">
+          <div className="max-w-xl w-full space-y-6">
+            <div className="p-4 bg-white/[0.01] border border-white/5 rounded-[3px] space-y-3 min-w-0">
               <h3 className="text-xs font-black uppercase tracking-wider text-white">
                 Procesos Ejecutados:
               </h3>
               <ul className="text-xs text-[#84849b] list-disc list-inside space-y-1.5 font-medium">
-                <li>Catálogo YouPin vía <span className="text-white">/steam/api/float/assets</span> (assets con float).</li>
+                <li>Catálogo YouPin vía <span className="text-white break-all">/steam/api/float/assets</span> (assets con float).</li>
                 <li>Persistencia de <span className="text-white">FloatItem</span> + listings agrupados.</li>
                 <li>Inventario de bots Steam + inspect links + precios YouPin.</li>
               </ul>
@@ -870,7 +870,7 @@ export default function AdminSettingsPage() {
                 type="button"
                 onClick={handleFullSync}
                 disabled={syncingAll || cooldownLeft > 0}
-                className="px-6 py-3.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(217,70,239,0.25)] cursor-pointer select-none"
+                className="w-full sm:w-auto px-6 py-3.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(217,70,239,0.25)] cursor-pointer select-none"
               >
                 {syncingAll ? (
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -954,12 +954,12 @@ export default function AdminSettingsPage() {
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={handleRefreshPriceCatalog}
                   disabled={refreshingCatalog || Boolean(catalogStatus?.running)}
-                  className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(16,185,129,0.2)] cursor-pointer select-none"
+                  className="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(16,185,129,0.2)] cursor-pointer select-none"
                 >
                   {refreshingCatalog || catalogStatus?.running ? (
                     <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -975,7 +975,7 @@ export default function AdminSettingsPage() {
                   type="button"
                   onClick={handleSyncPrices}
                   disabled={syncingPrices || !catalogStatus?.exists}
-                  className="px-6 py-3.5 bg-white/10 hover:bg-white/15 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
+                  className="w-full sm:w-auto px-6 py-3.5 bg-white/10 hover:bg-white/15 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
                 >
                   {syncingPrices ? (
                     <Loader2 className="w-4 h-4 animate-spin text-white" />

@@ -39,16 +39,16 @@ export function AdminSelect({
   }, []);
 
   return (
-    <div className={`${className || "w-full sm:w-auto min-w-[140px] sm:min-w-[180px]"} ${isOpen ? 'relative z-50' : 'relative z-20'}`} ref={containerRef}>
+    <div className={`${className || "w-full sm:w-auto min-w-0 sm:min-w-[180px]"} min-w-0 ${isOpen ? 'relative z-50' : 'relative z-20'}`} ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center justify-between gap-2 px-3 py-2 bg-[#110f1e]/80 border transition-all duration-300 rounded-lg max-w-full group cursor-pointer flex-1 sm:flex-initial w-full
+          flex min-w-0 items-center justify-between gap-2 px-3 py-2 bg-[#110f1e]/80 border transition-all duration-300 rounded-lg max-w-full group cursor-pointer flex-1 sm:flex-initial w-full
           ${isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : 'border-white/5 hover:border-white/10'}
         `}
       >
-        <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-tight truncate max-w-[150px]">
+        <span className="min-w-0 text-[10px] sm:text-xs font-black text-white uppercase tracking-tight truncate max-w-[150px]">
           {selectedLabel}
         </span>
         <ChevronDown className={`h-3.5 w-3.5 text-white/40 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180 text-accent' : 'group-hover:text-white'}`} />
@@ -61,7 +61,7 @@ export function AdminSelect({
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute right-0 top-full mt-2 w-full min-w-[160px] bg-card border border-white/10 rounded-xl overflow-hidden shadow-2xl z-40 backdrop-blur-xl"
+              className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-full min-w-0 sm:min-w-[160px] bg-card border border-white/10 rounded-xl overflow-hidden shadow-2xl z-40 backdrop-blur-xl"
             >
               <div className="py-2 max-h-64 overflow-y-auto custom-scrollbar">
                 {options.map((option) => (

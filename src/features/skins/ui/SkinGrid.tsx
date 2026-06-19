@@ -113,8 +113,8 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 w-full">
-        {[...Array(10)].map((_, i) => (
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5">
+        {[...Array(20)].map((_, i) => (
           <div key={i} className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 animate-pulse w-full">
             
             {/* 1. Item Name Skeleton at the very top */}
@@ -249,8 +249,8 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
   const pageNumbers = getPageNumbers(currentPage, totalPages);
 
   return (
-    <div ref={gridRef} className="flex flex-col gap-10 w-full overflow-hidden">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 w-full">
+    <div ref={gridRef} className="flex flex-col gap-8 sm:gap-10 w-full overflow-hidden">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 w-full">
         {visibleGroups.map((group, index) => (
           <SkinCard
             key={group[0].id}
@@ -260,15 +260,15 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
         ))}
       </div>
 
-      <div className="flex flex-col items-center gap-6 mt-12 mb-6">
+      <div className="flex flex-col items-center gap-6 mt-8 sm:mt-12 mb-6 min-w-0">
         {/* Contador de progreso ultra-estético */}
-        <div className="text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-white/[0.02] border border-white/5 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-inner">
+        <div className="text-center text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-white/[0.02] border border-white/5 px-4 py-1.5 rounded-full flex flex-wrap items-center justify-center gap-2 shadow-inner">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
           Mostrando skins <span className="text-white">{startIndex} - {endIndex}</span> de <span className="text-white">{pagination.total}</span>
         </div>
 
         {totalPages > 1 && (
-          <nav className="flex items-center gap-2" aria-label="Paginación de skins">
+          <nav className="flex w-full max-w-full items-center gap-2 overflow-x-auto px-1 pb-2 sm:w-auto sm:overflow-visible sm:px-0 sm:pb-0" aria-label="Paginación de skins">
             {/* Botón Anterior */}
             <button
               onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}

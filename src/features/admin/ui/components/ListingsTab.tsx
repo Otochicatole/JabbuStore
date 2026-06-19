@@ -227,8 +227,8 @@ export function ListingsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 min-w-0">
+        <div className="min-w-0">
           <h2 className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-3">
             <Tag className="w-5 h-5 text-accent shrink-0" />
             Órdenes de Venta
@@ -257,9 +257,9 @@ export function ListingsTab() {
       )}
 
       {/* 🔍 BARRA DE FILTROS PREMIUM */}
-      <div className="bg-[#110f1e]/30 border border-white/5 p-4 rounded-[3px] flex flex-col md:flex-row items-center gap-4">
+      <div className="bg-[#110f1e]/30 border border-white/5 p-3 sm:p-4 rounded-[3px] flex flex-col md:flex-row items-stretch md:items-center gap-3 sm:gap-4 min-w-0">
         {/* Búsqueda por Texto */}
-        <div className="relative flex-1 w-full">
+        <div className="relative flex-1 w-full min-w-0">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#84849b]" />
           <input
             type="text"

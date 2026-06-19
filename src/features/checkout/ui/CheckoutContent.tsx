@@ -45,8 +45,8 @@ export function CheckoutContent() {
 
   if (error && !isProcessingPayment) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center pt-24 bg-[#070510] px-6">
-        <div className="p-8 rounded-3xl bg-red-500/5 border border-red-500/10 text-center max-w-md">
+      <div className="min-h-screen flex flex-col items-center justify-center pt-24 bg-[#070510] px-4 sm:px-6">
+        <div className="p-6 sm:p-8 rounded-3xl bg-red-500/5 border border-red-500/10 text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-lg font-black text-white uppercase tracking-wider mb-2">
             Error de Validación
@@ -79,7 +79,7 @@ export function CheckoutContent() {
   );
 
   return (
-    <main className="mx-auto max-w-7xl px-6 pt-28 pb-20 text-white min-h-screen font-sans">
+    <main className="mx-auto max-w-7xl px-4 sm:px-6 pt-24 sm:pt-28 pb-20 text-white min-h-screen font-sans">
       {/* Header */}
       <div className="mb-10">
         <Link
@@ -89,7 +89,7 @@ export function CheckoutContent() {
           <ArrowLeft className="w-3.5 h-3.5" /> Volver a{" "}
           {checkoutType === "buy" ? "Comprar" : "Vender"}
         </Link>
-        <h1 className="text-3xl font-black uppercase tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
           Checkout de{" "}
           <span className="text-accent">
             {checkoutType === "buy" ? "Compra" : "Venta"}
@@ -100,9 +100,9 @@ export function CheckoutContent() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
         {/* Left Side: Selector & Forms */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-5 sm:space-y-8 min-w-0">
           <PaymentMethodsSelector
             selectedMethod={selectedMethod}
             onSelectMethod={setSelectedMethod}
@@ -122,7 +122,7 @@ export function CheckoutContent() {
         </div>
 
         {/* Right Side: Order Summary */}
-        <div className="lg:col-span-4 sticky top-28">
+        <div className="lg:col-span-4 lg:sticky lg:top-28 min-w-0">
           <OrderSummary
             itemsCount={items.length}
             totalPrice={totalPrice}

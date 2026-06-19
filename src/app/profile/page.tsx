@@ -109,9 +109,9 @@ export default function UserProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 pt-28 pb-20 text-white min-h-screen font-sans">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-20 text-white min-h-screen font-sans">
       <div className="mb-10">
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+        <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
           Mi <span className="text-accent">Perfil</span>
         </h1>
         <p className="text-sm text-[#84849b] mt-1.5 font-medium">
@@ -134,9 +134,9 @@ export default function UserProfilePage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
           {/* Left Column: Steam Card */}
-          <div className="bg-[#110f1e]/40 border border-white/5 rounded-2xl p-6 h-fit flex flex-col items-center text-center backdrop-blur-sm">
+          <div className="bg-[#110f1e]/40 border border-white/5 rounded-2xl p-4 sm:p-6 h-fit flex flex-col items-center text-center backdrop-blur-sm">
             <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-accent/40 shadow-xl shadow-accent/5 mb-4 group">
               {profile.avatar ? (
                 <img
@@ -196,7 +196,7 @@ export default function UserProfilePage() {
           </div>
 
           {/* Right Column: Edit Profile Form */}
-          <div className="lg:col-span-2 bg-[#110f1e]/40 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="lg:col-span-2 bg-[#110f1e]/40 border border-white/5 rounded-2xl p-4 sm:p-6 backdrop-blur-sm min-w-0">
             <h2 className="text-lg font-black uppercase tracking-tight text-white mb-6">
               Editar Datos de Perfil
             </h2>
@@ -234,8 +234,8 @@ export default function UserProfilePage() {
 
               {/* Trade Offer URL */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] flex items-center gap-1.5 justify-between">
-                  <span className="flex items-center gap-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="flex items-center gap-1.5 min-w-0">
                     <Link2 className="w-3.5 h-3.5" />
                     Steam Trade Offer URL (Trade Link)
                   </span>
@@ -273,8 +273,8 @@ export default function UserProfilePage() {
               </div>
 
               {/* Actions Footer */}
-              <div className="border-t border-white/5 pt-6 flex items-center justify-between gap-4">
-                <div>
+              <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="min-h-5">
                   {success && (
                     <motion.span
                       initial={{ opacity: 0, x: -10 }}
@@ -290,7 +290,7 @@ export default function UserProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-3 bg-accent cursor-pointer hover:bg-accent/90 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.25)] flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-6 py-3 bg-accent cursor-pointer hover:bg-accent/90 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.25)] flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <>

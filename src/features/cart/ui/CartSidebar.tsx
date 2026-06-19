@@ -54,9 +54,9 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
       onClose();
       router.push("/checkout?type=buy");
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error initiating checkout:", err);
-      setError(err.message || 'Ocurrió un error inesperado');
+      setError(err instanceof Error ? err.message : 'Ocurrió un error inesperado');
     } finally {
       setIsCheckingOut(false);
     }
@@ -73,12 +73,12 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
       )}
 
       {/* Sidebar */}
-      <div className={`fixed right-0 top-0 z-[70] h-full w-full max-w-md border-l border-white/5 bg-card p-8 transition-transform duration-500 ease-out shadow-2xl ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed right-0 top-0 z-[70] h-full w-full max-w-md border-l border-white/5 bg-card p-4 sm:p-8 transition-transform duration-500 ease-out shadow-2xl ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex h-full flex-col">
-          <div className="mb-10 flex items-center justify-between">
+          <div className="mb-6 sm:mb-10 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <ShoppingBag className="w-6 h-6 text-accent" />
-              <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Tu <span className="text-accent">Carrito</span></h2>
+              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter">Tu <span className="text-accent">Carrito</span></h2>
             </div>
             <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/40 hover:text-white cursor-pointer transition-all">
               <X className="w-5 h-5" />
@@ -97,22 +97,22 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
             ) : (
               <div className="flex flex-col gap-4">
                 {items.map((item) => (
-                  <div key={item.skin.id} className="group relative flex items-center gap-4 p-4 rounded-xl bg-background/50 border border-white/5 hover:border-white/10 transition-all">
-                    <div className="relative h-20 w-20 flex-shrink-0 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center p-2">
+                  <div key={item.skin.id} className="group relative flex items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-background/50 border border-white/5 hover:border-white/10 transition-all">
+                    <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center p-2">
                       <Image src={item.skin.imageUrl} alt={item.skin.name} fill className="object-contain p-2" />
                     </div>
-                    <div className="flex flex-1 items-center justify-between">
-                      <div>
-                        <h4 className="text-[11px] font-black uppercase text-white leading-tight">
+                    <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <h4 className="text-[11px] font-black uppercase text-white leading-tight line-clamp-2 sm:line-clamp-none">
                           {item.skin.weapon} | <span className="text-[#aaaaff]">{item.skin.name}</span>
                         </h4>
-                        <p className="text-[9px] font-bold text-[#84849b] uppercase">
+                        <p className="text-[9px] font-bold text-[#84849b] uppercase break-words">
                           {item.skin.exterior || 'Recién fabricado'}
                           {item.skin.float !== undefined && ` • Float: ${item.skin.float.toFixed(5)}`}
                         </p>
                         
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right shrink-0">
                         <p className="text-sm font-black text-white tracking-tighter">${(item.skin.price * item.quantity).toLocaleString()}</p>
                         <button 
                           onClick={() => removeFromCart(item.skin.id)}
@@ -128,7 +128,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
             )}
           </div>
 
-          <div className="mt-8 pt-8 border-t border-white/5">
+          <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/5">
             <div className="mb-6 flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-muted uppercase tracking-widest">Total Estimado</span>

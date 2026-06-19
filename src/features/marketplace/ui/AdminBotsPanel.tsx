@@ -382,7 +382,7 @@ export function AdminBotsPanel() {
       )}
 
       {catalogStatus && (
-        <div className="rounded-[3px] border border-white/10 bg-white/3 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
+        <div className="rounded-[3px] border border-white/10 bg-white/3 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-[#84849b] break-words">
           Catálogo precios:{" "}
           <span className="text-white">
             {catalogStatus.itemCount.toLocaleString()} items
@@ -484,7 +484,7 @@ export function AdminBotsPanel() {
             return (
               <div
                 key={b.id}
-                className="bg-[#110f1e]/30 border border-white/5 rounded-[3px] p-5 space-y-5 relative overflow-hidden group"
+                className="bg-[#110f1e]/30 border border-white/5 rounded-[3px] p-4 sm:p-5 space-y-5 relative overflow-hidden group min-w-0"
               >
                 {/* Status Indicator Bar */}
                 <div
@@ -492,7 +492,7 @@ export function AdminBotsPanel() {
                 />
 
                 {/* Card Header */}
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-3 min-w-0">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-9 h-9 rounded-[3px] bg-white/[0.02] border border-white/8 flex items-center justify-center shrink-0">
                       <Cpu className="w-4 h-4 text-white/50 group-hover:text-accent transition-colors" />
@@ -521,7 +521,7 @@ export function AdminBotsPanel() {
                     <span className="text-[8px] font-black uppercase text-[#84849b] tracking-wider block">
                       SteamID64 del Bot
                     </span>
-                    <span className="text-[10px] font-mono text-white/70 block mt-0.5">
+                    <span className="text-[10px] font-mono text-white/70 block mt-0.5 break-all">
                       {b.steamId}
                     </span>
                   </div>
@@ -544,7 +544,7 @@ export function AdminBotsPanel() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-between pt-3 border-t border-white/[0.03] gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-white/[0.03] gap-2">
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => openEdit(b)}
@@ -576,7 +576,7 @@ export function AdminBotsPanel() {
                   <button
                     onClick={() => handleToggle(b)}
                     disabled={actionLoading === b.id}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-[9px] font-black uppercase tracking-wider rounded-[3px] transition-all cursor-pointer select-none border disabled:opacity-45 ${
+                    className={`flex w-full items-center justify-center gap-1.5 px-3 py-2 text-[9px] font-black uppercase tracking-wider rounded-[3px] transition-all cursor-pointer select-none border disabled:opacity-45 sm:w-auto ${
                       b.isActive
                         ? "bg-red-500/10 hover:bg-red-500/20 border-red-500/20 text-red-400"
                         : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400"

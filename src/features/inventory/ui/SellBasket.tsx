@@ -26,16 +26,16 @@ export const SellBasket = () => {
     try {
       // Redirigir a la página de checkout de venta
       router.push("/checkout?type=sell");
-    } catch (e: any) {
-      setSellError(e.message || 'Error desconocido al iniciar el checkout de venta.');
+    } catch (e: unknown) {
+      setSellError(e instanceof Error ? e.message : 'Error desconocido al iniciar el checkout de venta.');
     } finally {
       setSelling(false);
     }
   };
 
   return (
-    <div className="bg-card rounded-2xl p-6 border border-white/5 sticky top-24">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-card rounded-2xl p-4 sm:p-6 border border-white/5 lg:sticky lg:top-24">
+      <div className="flex items-center justify-between gap-3 mb-6">
         <h3 className="text-sm font-black text-white uppercase tracking-widest">
           Resumen de <span className="text-accent">Venta</span>
         </h3>
@@ -51,8 +51,8 @@ export const SellBasket = () => {
 
       {/* Min price info badge */}
       {minSellPrice > 0 && (
-        <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-accent/5 border border-accent/10">
-          <Info className="w-3 h-3 text-accent flex-shrink-0" />
+        <div className="flex items-start gap-2 mb-4 px-3 py-2 rounded-lg bg-accent/5 border border-accent/10">
+          <Info className="w-3 h-3 text-accent shrink-0 mt-0.5" />
           <p className="text-[10px] font-bold text-accent/80">
             Precio mínimo de venta: <span className="text-accent">${minSellPrice.toFixed(2)} USD</span>
           </p>
@@ -75,13 +75,13 @@ export const SellBasket = () => {
             return (
               <div
                 key={item.id}
-                className={`flex items-center gap-3 p-3 rounded-xl border group transition-colors ${
+                className={`flex items-start sm:items-center gap-3 p-3 rounded-xl border group transition-colors ${
                   meetsMinimum
                     ? 'bg-background/50 border-white/5'
                     : 'bg-red-500/5 border-red-500/15'
                 }`}
               >
-                <div className="relative w-12 h-12 flex-shrink-0 bg-white/5 rounded-lg flex items-center justify-center p-1">
+                <div className="relative w-12 h-12 shrink-0 bg-white/5 rounded-lg flex items-center justify-center p-1">
                   <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-1" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -100,7 +100,7 @@ export const SellBasket = () => {
                 </div>
                 <button
                   onClick={() => removeFromSellList(item.id)}
-                  className="p-1.5 text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                  className="p-1.5 text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -120,7 +120,7 @@ export const SellBasket = () => {
       )}
 
       <div className="pt-6 border-t border-white/5">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex flex-col">
             <span className="text-[10px] font-black text-muted uppercase tracking-widest">Recibirás</span>
             <span className="text-2xl font-black text-white tracking-tighter">

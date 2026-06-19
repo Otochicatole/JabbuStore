@@ -267,8 +267,8 @@ export function OrderDetailRow({
       </div>
 
       {/* Cabecera de Datos Generales y Cambio de Estado Manual */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4 min-w-0">
+        <div className="flex min-w-0 items-center gap-3">
           {order.user?.avatar && (
             <img
               src={order.user.avatar}
@@ -284,7 +284,7 @@ export function OrderDetailRow({
               <span className="font-extrabold text-white text-sm truncate max-w-[150px]">
                 {order.user?.name || "Usuario desconocido"}
               </span>
-              <span className="text-[9.5px] text-accent font-mono truncate">
+              <span className="text-[9.5px] text-accent font-mono break-all">
                 ({order.user?.steamId})
               </span>
             </div>
@@ -326,10 +326,10 @@ export function OrderDetailRow({
           <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
             Cambio Manual de Estado
           </span>
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:items-center">
             <button
               onClick={() => onUpdateStatus(order.id, "PENDING_PAYMENT")}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 order.status === "PENDING_PAYMENT"
                   ? "bg-orange-500/20 border-orange-500/40 text-orange-400"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
@@ -345,7 +345,7 @@ export function OrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Marcar como pagado"}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "PAID"
@@ -363,7 +363,7 @@ export function OrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Marcar como trade pendiente"}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "TRADE_PENDING"
@@ -381,7 +381,7 @@ export function OrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Completar orden"}
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "COMPLETED"
@@ -403,7 +403,7 @@ export function OrderDetailRow({
                   ? "Cancelar esta orden"
                   : "Volvé primero a Pendiente para cancelar esta orden"
               }
-              className={`px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 order.status === "CANCELLED"
                   ? "bg-red-500/20 border-red-500/40 text-red-400"
                   : !canCancel

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { SkinImage } from "@/shared/components/SkinImage";
 import { Skin } from "../../domain/skin";
 import { useCart } from "../../../cart/context/CartContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
-import { X, Search, ArrowUpDown, ExternalLink, AlertCircle, Check, RefreshCw, Eye } from "lucide-react";
+import { X, Search, ArrowUpDown, AlertCircle, Check, RefreshCw, Eye } from "lucide-react";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 
 interface FloatItem {
@@ -61,6 +61,13 @@ const sortOptions = [
   { value: "float_desc", label: "Mayor Wear (Float)" },
 ];
 
+type FloatSortOption = "price_asc" | "price_desc" | "float_asc" | "float_desc";
+
+const getErrorMessage = (err: unknown) => {
+  if (err instanceof Error) return err.message;
+  return "Error al cargar los floats. Por favor intenta de nuevo.";
+};
+
 export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   const { addToCart, removeFromCart, items: cartItems } = useCart();
   const [mounted, setMounted] = useState(false);
@@ -70,10 +77,11 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
 
   // Filtros y ordenamiento
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "float_asc" | "float_desc">("price_asc");
+  const [sortBy, setSortBy] = useState<FloatSortOption>("price_asc");
 
   useEffect(() => {
-    setMounted(true);
+    const timeoutId = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -87,7 +95,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
     };
   }, [isOpen]);
 
-  const fetchFloats = async () => {
+  const fetchFloats = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -99,19 +107,22 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
       }
       const data = await response.json();
       setFloats(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[Floats Modal] Error fetching floats:", err);
-      setError(err.message || "Error al cargar los floats. Por favor intenta de nuevo.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  };
+  }, [skin.id]);
 
   useEffect(() => {
     if (isOpen) {
-      fetchFloats();
+      const timeoutId = window.setTimeout(() => {
+        void fetchFloats();
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
-  }, [isOpen, skin.id]);
+  }, [fetchFloats, isOpen]);
 
   // Encontrar si este listado (o un asset youpin del mismo skin) está en el carrito
   const cartItemForThisListing = useMemo(() => {
@@ -197,16 +208,16 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl bg-[#0b0a11]/95 border border-white/10 rounded-2xl p-6 shadow-[0_0_60px_rgba(217,70,239,0.15)] flex flex-col h-[85vh] max-h-[750px] animate-scale-up overflow-hidden"
+        className="relative w-full max-w-2xl bg-[#0b0a11]/95 border border-white/10 rounded-2xl p-4 sm:p-6 shadow-[0_0_60px_rgba(217,70,239,0.15)] flex flex-col h-[88vh] sm:h-[85vh] max-h-[750px] animate-scale-up overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-white/5 mb-4">
-          <div className="flex items-center gap-4">
+        <div className="flex items-start justify-between gap-3 pb-4 border-b border-white/5 mb-4">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <div className="relative w-16 h-16 bg-white/5 border border-white/10 rounded-xl p-1 flex items-center justify-center shrink-0">
               <SkinImage
                 src={skin.imageUrl}
@@ -218,15 +229,15 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                 className="drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-[10px] font-black uppercase text-accent tracking-widest font-mono">
                 {skin.weapon}
               </span>
-              <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight mt-0.5">
+              <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight leading-tight mt-0.5 line-clamp-2">
                 {skin.name}
                 {skin.phase && <span className="text-accent ml-1">| {skin.phase}</span>}
               </h3>
-              <div className="flex items-center gap-2 mt-1.5">
+              <div className="flex flex-wrap items-center gap-2 mt-1.5">
                 <span className="bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full select-none font-mono tracking-wider">
                   ⏳ Bajo Pedido
                 </span>
@@ -261,11 +272,11 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
           </div>
 
           {/* Ordenamiento */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 min-w-0 sm:min-w-[180px]">
             <ArrowUpDown className="w-3.5 h-3.5 text-white/40 animate-pulse" />
             <AdminSelect
               value={sortBy}
-              onChange={(val: any) => setSortBy(val)}
+              onChange={(val) => setSortBy(val as FloatSortOption)}
               options={sortOptions}
             />
           </div>
@@ -365,7 +376,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                   </div>
 
                   {/* Right: Price & Selection Actions */}
-                  <div className="flex items-center justify-between sm:justify-end gap-5 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 sm:gap-5 shrink-0">
                     <div className="text-left sm:text-right">
                       <span className="text-[#84849b] uppercase font-bold text-[8px] block tracking-widest font-mono">
                         Precio final
@@ -376,7 +387,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {f.inspectLink && !/%[a-z0-9_:]+%/i.test(f.inspectLink) && (
                         <a
                           href={f.inspectLink}
@@ -411,14 +422,14 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
         </div>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-white/5 mt-4 flex items-center justify-between shrink-0">
-          <div className="flex flex-col gap-0.5">
+        <div className="pt-4 border-t border-white/5 mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <span className="text-[9px] font-bold text-[#84849b] uppercase tracking-wider font-mono">
               Estado en Carrito
             </span>
             <span className="text-[10px] font-black text-white">
               {cartItemForThisListing ? (
-                <span className="text-emerald-400 flex items-center gap-1">
+                <span className="text-emerald-400 flex items-center gap-1 break-words">
                   <Check className="w-3.5 h-3.5" /> 1 variant en carro (Float: {cartItemForThisListing.skin.float?.toFixed(4)})
                 </span>
               ) : (
@@ -428,7 +439,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
           </div>
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-secondary hover:bg-secondary/80 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer border-none font-mono"
+            className="w-full sm:w-auto px-5 py-2.5 bg-secondary hover:bg-secondary/80 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer border-none font-mono"
           >
             Aceptar
           </button>

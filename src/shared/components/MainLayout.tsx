@@ -18,7 +18,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
       <CartProvider>
         <FilterProvider>
           <InventoryProvider>
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen min-w-0 bg-background overflow-x-hidden">
               {children}
             </div>
           </InventoryProvider>
@@ -31,7 +31,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
     <CartProvider>
       <FilterProvider>
         <InventoryProvider>
-          <div className="min-h-screen">
+          <div className="min-h-screen min-w-0 overflow-x-hidden">
             <Navbar onOpenCart={() => setIsCartOpen(true)} />
             <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
             {children}

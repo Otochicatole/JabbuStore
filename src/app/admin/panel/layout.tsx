@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Tag,
   Globe,
+  type LucideIcon,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 
@@ -26,7 +27,7 @@ interface AdminUser {
 interface NavItem {
   name: string;
   href: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
 }
 
 function SidebarNav({
@@ -144,7 +145,7 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-[#0b0818] text-white flex flex-col md:flex-row">
+    <div className="min-h-screen min-w-0 bg-[#0b0818] text-white flex flex-col md:flex-row overflow-x-hidden">
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0f0d1e] border-b border-white/5 shrink-0 z-50 fixed top-0 left-0 w-full h-14 shadow-lg shadow-[#000]/40">
         <div className="flex flex-col">
@@ -231,7 +232,7 @@ export default function AdminLayout({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-x-hidden md:pl-64 pt-14 md:pt-0 flex flex-col">{children}</div>
+      <div className="flex-1 min-w-0 overflow-x-hidden md:pl-64 pt-14 md:pt-0 flex flex-col">{children}</div>
 
       {/* Overlay for mobile */}
       {isSidebarOpen && (

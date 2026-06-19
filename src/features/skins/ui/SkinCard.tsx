@@ -109,7 +109,8 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timeoutId = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   if (!skinsInGroup || skinsInGroup.length === 0) return null;
@@ -352,7 +353,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
       <div className="relative aspect-[4/3] w-full flex items-center justify-center mt-2 mb-0 bg-transparent overflow-hidden">
         {/* Immediate Trade or Resell Status Badge */}
         {skin.isImmediate !== false ? (
-          <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full px-2 py-0.5 text-[8px] font-black uppercase text-emerald-400 tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.15)] flex items-center gap-1 z-10 select-none">
+          <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full px-2 py-0.5 text-[7px] font-black uppercase text-emerald-400 tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.15)] flex items-center gap-1 z-10 select-none">
             <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
             ⚡ Trade Inmediato
           </div>

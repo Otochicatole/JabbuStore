@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Tag,
   Globe,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
@@ -138,6 +139,11 @@ export default function AdminLayout({
       name: t("admin.sellRequests"),
       href: "/admin/panel/dashboard?tab=listings",
       icon: Tag,
+    },
+    {
+      name: t("tickets.adminNav"),
+      href: "/admin/panel/dashboard?tab=tickets",
+      icon: MessageSquare,
     },
     { name: t("admin.botManagement"), href: "/admin/panel/bots", icon: Bot },
     {

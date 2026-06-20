@@ -139,9 +139,11 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
         </div>
 
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          <div className="hidden sm:block">
-            <LanguageSwitcher compact />
-          </div>
+          {!isLoggedIn && (
+            <div className="hidden sm:block">
+              <LanguageSwitcher compact />
+            </div>
+          )}
 
           <button
             type="button"
@@ -209,6 +211,13 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                         ID: {profile?.steamId || t("nav.notLinked")}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-white/40">
+                      {t("language.label")}
+                    </span>
+                    <LanguageSwitcher compact />
                   </div>
 
                   {/* Links and Options */}
@@ -311,9 +320,11 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
             className="border-t border-white/5 bg-background/95 backdrop-blur-lg md:hidden overflow-hidden"
           >
             <div className="flex flex-col p-4 space-y-2">
-              <div className="flex justify-center pb-2">
-                <LanguageSwitcher compact />
-              </div>
+              {!isLoggedIn && (
+                <div className="flex justify-center pb-2">
+                  <LanguageSwitcher compact />
+                </div>
+              )}
               {NAV_LINKS.map((link) => {
                 const isActive = pathname === link.path;
                 return (

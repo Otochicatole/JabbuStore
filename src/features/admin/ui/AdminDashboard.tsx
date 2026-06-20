@@ -8,10 +8,11 @@ import { PurchasesTab } from './components/PurchasesTab';
 import { ListingsTab } from './components/ListingsTab';
 import { BotsTab } from './components/BotsTab';
 import { MarketCatalog } from '@/features/market/ui/MarketCatalog';
+import { AdminTicketsTab } from '@/features/tickets/ui/AdminTicketsTab';
 
 export function AdminDashboard({ initialItems }: AdminDashboardProps) {
   const searchParams = useSearchParams();
-  const currentTab = (searchParams.get('tab') as 'inventory' | 'market' | 'purchases' | 'listings' | 'bots' | 'settings') || 'inventory';
+  const currentTab = (searchParams.get('tab') as 'inventory' | 'market' | 'purchases' | 'listings' | 'tickets' | 'bots' | 'settings') || 'inventory';
 
   return (
     <div className="min-h-screen bg-[#070510] text-white">
@@ -31,6 +32,10 @@ export function AdminDashboard({ initialItems }: AdminDashboardProps) {
 
         {currentTab === 'listings' && (
           <ListingsTab />
+        )}
+
+        {currentTab === 'tickets' && (
+          <AdminTicketsTab />
         )}
 
         {currentTab === 'settings' && (

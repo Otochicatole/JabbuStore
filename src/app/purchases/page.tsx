@@ -20,6 +20,7 @@ import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { PaymentProofModal, PaymentProofInfo } from "@/shared/components/PaymentProofModal";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import type { TranslationParams } from "@/shared/i18n/types";
+import { UserOrderTickets } from "@/features/tickets/ui/UserOrderTickets";
 
 const ORDERS_FETCH_TIMEOUT_MS = 15000;
 
@@ -771,6 +772,8 @@ export default function UserOrdersPage() {
                             </p>
                           )}
                         </div>
+
+                        <UserOrderTickets orderId={order.id} />
 
                         {/* ITEMS LIST */}
                         <div className="space-y-3">

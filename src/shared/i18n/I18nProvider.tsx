@@ -6,7 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import { en } from "./dictionaries/en";
 import { es } from "./dictionaries/es";
@@ -14,6 +14,7 @@ import type { Locale, TranslationParams } from "./types";
 
 const dictionaries = { en, es } as const;
 const STORAGE_KEY = "jabbustore-locale";
+const LOCALE_CHANGE_EVENT = "jabbustore-locale-change";
 const DEFAULT_LOCALE: Locale = "en";
 
 type DictionaryKey = keyof typeof en;
@@ -39,20 +40,38 @@ function isLocale(value: string | null): value is Locale {
   return value === "en" || value === "es";
 }
 
+function subscribeToLocale(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(LOCALE_CHANGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(LOCALE_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function getClientLocale(): Locale {
+  const storedLocale = window.localStorage.getItem(STORAGE_KEY);
+  return isLocale(storedLocale) ? storedLocale : DEFAULT_LOCALE;
+}
+
+function getServerLocale(): Locale {
+  return DEFAULT_LOCALE;
+}
+
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window === "undefined") return DEFAULT_LOCALE;
-    const storedLocale = window.localStorage.getItem(STORAGE_KEY);
-    return isLocale(storedLocale) ? storedLocale : DEFAULT_LOCALE;
-  });
+  const locale = useSyncExternalStore(
+    subscribeToLocale,
+    getClientLocale,
+    getServerLocale,
+  );
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    window.localStorage.setItem(STORAGE_KEY, locale);
   }, [locale]);
 
   const setLocale = useCallback((nextLocale: Locale) => {
-    setLocaleState(nextLocale);
+    window.localStorage.setItem(STORAGE_KEY, nextLocale);
+    window.dispatchEvent(new Event(LOCALE_CHANGE_EVENT));
   }, []);
 
   const t = useCallback(
@@ -83,4 +102,3 @@ export function useI18n() {
   }
   return context;
 }
-

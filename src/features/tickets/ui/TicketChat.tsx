@@ -6,6 +6,7 @@ import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import type { OrderTicket, TicketActor, TicketMessage } from "../domain/types";
 import { getTicketSocket } from "../infrastructure/ticketSocket";
+import { useTicketNotificationContext } from "./TicketNotificationProvider";
 
 interface SocketAck {
   ok: boolean;
@@ -34,6 +35,7 @@ function TicketChatSession({
   fullscreen?: boolean;
 }) {
   const { locale, t } = useI18n();
+  const { setActiveTicketId } = useTicketNotificationContext();
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
@@ -103,6 +105,11 @@ function TicketChatSession({
       document.body.style.overflow = previousOverflow;
     };
   }, [fullscreen]);
+
+  useEffect(() => {
+    setActiveTicketId(ticket.id);
+    return () => setActiveTicketId(null);
+  }, [setActiveTicketId, ticket.id]);
 
   const send = async () => {
     const cleanBody = body.trim();

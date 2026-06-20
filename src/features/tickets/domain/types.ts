@@ -36,3 +36,14 @@ export interface OrderTicket {
     avatar?: string | null;
   };
 }
+
+export interface TicketNotificationPayload {
+  messageId: string;
+  ticketId: string;
+  orderId: string;
+  subject: string;
+  senderName: string;
+  senderAvatar?: string | null;
+  preview: string;
+  createdAt: string;
+}

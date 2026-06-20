@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { Loader2, MessageSquare, RefreshCw, Search, X } from "lucide-react";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
@@ -12,6 +13,7 @@ import { TicketChat } from "./TicketChat";
 
 export function AdminTicketsTab() {
   const { t } = useI18n();
+  const router = useRouter();
   const [tickets, setTickets] = useState<OrderTicket[]>([]);
   const [selected, setSelected] = useState<OrderTicket | null>(null);
   const [status, setStatus] = useState("OPEN");
@@ -33,7 +35,13 @@ export function AdminTicketsTab() {
       if (!response.ok) throw new Error(t("tickets.error.load"));
       const data: OrderTicket[] = await response.json();
       setTickets(data);
-      setSelected((current) => current ? data.find((ticket) => ticket.id === current.id) || current : null);
+      const requestedTicketId = new URLSearchParams(window.location.search).get("ticket");
+      setSelected((current) => {
+        if (requestedTicketId) {
+          return data.find((ticket) => ticket.id === requestedTicketId) || current;
+        }
+        return current ? data.find((ticket) => ticket.id === current.id) || current : null;
+      });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("tickets.error.load"));
     } finally {
@@ -80,6 +88,11 @@ export function AdminTicketsTab() {
     } finally {
       setUpdating(false);
     }
+  };
+
+  const closeTicket = () => {
+    setSelected(null);
+    router.replace("/admin/panel/dashboard?tab=tickets");
   };
 
   return (
@@ -142,7 +155,7 @@ export function AdminTicketsTab() {
               <button type="button" disabled={updating} onClick={() => changeStatus(selected.status === "OPEN" ? "CLOSED" : "OPEN")} className="cursor-pointer rounded-[3px] border border-white/10 bg-white/5 px-3 py-2.5 text-[9px] font-black uppercase text-white disabled:cursor-not-allowed disabled:opacity-40">
                 {selected.status === "OPEN" ? t("tickets.close") : t("tickets.reopen")}
               </button>
-              <button type="button" onClick={() => setSelected(null)} className="cursor-pointer rounded-full bg-white/10 p-2.5 text-white hover:bg-white/15" aria-label={t("common.close")}><X className="h-5 w-5" /></button>
+              <button type="button" onClick={closeTicket} className="cursor-pointer rounded-full bg-white/10 p-2.5 text-white hover:bg-white/15" aria-label={t("common.close")}><X className="h-5 w-5" /></button>
             </div>
           </div>
           <div className="min-h-0 flex-1">

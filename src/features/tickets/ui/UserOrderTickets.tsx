@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { Loader2, MessageSquarePlus, X } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -10,6 +11,7 @@ import { TicketChat } from "./TicketChat";
 
 export function UserOrderTickets({ orderId }: { orderId: string }) {
   const { t } = useI18n();
+  const router = useRouter();
   const [tickets, setTickets] = useState<OrderTicket[]>([]);
   const [selected, setSelected] = useState<OrderTicket | null>(null);
   const [creating, setCreating] = useState(false);
@@ -25,7 +27,14 @@ export function UserOrderTickets({ orderId }: { orderId: string }) {
     if (!response.ok) throw new Error(t("tickets.error.load"));
     const data: OrderTicket[] = await response.json();
     setTickets(data);
-    setSelected((current) => current ? data.find((ticket) => ticket.id === current.id) || current : null);
+    const params = new URLSearchParams(window.location.search);
+    const requestedTicketId = params.get("order") === orderId ? params.get("ticket") : null;
+    setSelected((current) => {
+      if (requestedTicketId) {
+        return data.find((ticket) => ticket.id === requestedTicketId) || current;
+      }
+      return current ? data.find((ticket) => ticket.id === current.id) || current : null;
+    });
   }, [orderId, t]);
 
   useEffect(() => {
@@ -60,6 +69,11 @@ export function UserOrderTickets({ orderId }: { orderId: string }) {
   };
 
   const openCount = tickets.filter((ticket) => ticket.status === "OPEN").length;
+
+  const closeTicket = () => {
+    setSelected(null);
+    router.replace("/purchases");
+  };
 
   return (
     <div className="space-y-3 border-t border-white/5 pt-5">
@@ -128,7 +142,7 @@ export function UserOrderTickets({ orderId }: { orderId: string }) {
               <p className="text-[9px] font-black uppercase tracking-widest text-accent">{t("tickets.support")}</p>
               <h2 className="truncate text-sm font-black text-white sm:text-base">{selected.subject}</h2>
             </div>
-            <button type="button" onClick={() => setSelected(null)} className="shrink-0 cursor-pointer rounded-full bg-white/10 p-2.5 text-white hover:bg-white/15" aria-label={t("common.close")}><X className="h-5 w-5" /></button>
+            <button type="button" onClick={closeTicket} className="shrink-0 cursor-pointer rounded-full bg-white/10 p-2.5 text-white hover:bg-white/15" aria-label={t("common.close")}><X className="h-5 w-5" /></button>
           </div>
           <div className="min-h-0 flex-1">
             <TicketChat ticket={selected} actor="USER" onTicketUpdated={loadTickets} fullscreen />

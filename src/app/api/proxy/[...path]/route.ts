@@ -25,14 +25,8 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
   const path = resolvedParams.path.join('/');
 
   if (path === 'debug') {
-    try {
-      const body = await req.json();
-      const fs = require('fs');
-      const pathModule = require('path');
-      const logFilePath = pathModule.join(process.cwd(), 'proxy-log.txt');
-      const logMsg = `[CLIENT DEBUG] [${new Date().toISOString()}] ${body.message}\n`;
-      fs.appendFileSync(logFilePath, logMsg);
-    } catch (e) {}
+    // Avoid synchronous filesystem writes in the request path. They can stall
+    // every proxied request when checkout emits several diagnostics at once.
     return NextResponse.json({ ok: true });
   }
 
@@ -77,13 +71,7 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
   }
 
   try {
-    console.log(`[Proxy] Forwarding ${req.method} request for: ${path}`);
-    console.log(`[Proxy] Target URL: ${targetUrl}`);
-    console.log(`[Proxy] Cookies present in proxy: admin_token=${!!adminToken}, auth_token=${!!authToken}`);
-
     const response = await fetch(targetUrl, fetchOptions);
-
-    console.log(`[Proxy] Response status from backend: ${response.status}`);
 
     // Manejo inteligente de redirects
     if (response.status >= 300 && response.status < 400) {
@@ -116,34 +104,13 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
     responseHeaders.delete('content-encoding');
     responseHeaders.delete('transfer-encoding');
 
-    // Leer el cuerpo completo para evitar errores de streaming
-    const body = await response.arrayBuffer();
-
-    // Log a un archivo local
-    try {
-      const fs = require('fs');
-      const pathModule = require('path');
-      const logFilePath = pathModule.join(process.cwd(), 'proxy-log.txt');
-      const logMsg = `[${new Date().toISOString()}] ${req.method} /api/proxy/${path} -> ${response.status} (Target: ${targetUrl})\n`;
-      fs.appendFileSync(logFilePath, logMsg);
-    } catch (fsErr) {
-      // Ignorar errores al escribir archivo de logs
-    }
-
-    return new NextResponse(body, {
+    return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Proxy Error:', error);
-    try {
-      const fs = require('fs');
-      const pathModule = require('path');
-      const logFilePath = pathModule.join(process.cwd(), 'proxy-log.txt');
-      const logMsg = `[${new Date().toISOString()}] ERROR ${req.method} /api/proxy/${path} -> ${error.message || error}\n`;
-      fs.appendFileSync(logFilePath, logMsg);
-    } catch (fsErr) {}
     return NextResponse.json(
       { error: 'No se pudo conectar con el backend. Asegúrate de que está corriendo en ' + BACKEND_INTERNAL_URL },
       { status: 502 }

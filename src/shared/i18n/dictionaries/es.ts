@@ -875,4 +875,6 @@ export const es = {
   "admin.bots.catalogDownloadError": "Error al descargar catálogo de precios",
   "admin.bots.catalogDownloadStarted": "Descarga del catálogo iniciada en segundo plano.",
   "admin.bots.syncStarted": "Sincronización iniciada en segundo plano. Esperá 1-3 minutos y refrescá la lista.",
+  "tickets.notification.newMessage": "Nuevo mensaje",
+  "tickets.notification.dismiss": "Cerrar notificación",
 } as const;

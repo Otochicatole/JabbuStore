@@ -19,6 +19,7 @@ import {
 import { BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
+import { TicketNotificationProvider } from "@/features/tickets/ui/TicketNotificationProvider";
 
 interface AdminUser {
   id: string;
@@ -154,7 +155,8 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen min-w-0 bg-[#0b0818] text-white flex flex-col md:flex-row overflow-x-hidden">
+    <TicketNotificationProvider actor="ADMIN" enabled={!!adminUser}>
+      <div className="min-h-screen min-w-0 bg-[#0b0818] text-white flex flex-col md:flex-row overflow-x-hidden">
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0f0d1e] border-b border-white/5 shrink-0 z-50 fixed top-0 left-0 w-full h-14 shadow-lg shadow-[#000]/40">
         <div className="flex flex-col">
@@ -256,6 +258,7 @@ export default function AdminLayout({
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
-    </div>
+      </div>
+    </TicketNotificationProvider>
   );
 }

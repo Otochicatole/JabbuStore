@@ -9,6 +9,7 @@ import {
 import { rarityColors } from "@/features/admin/ui/components/utils";
 import { useMarketCatalog } from "./useMarketCatalog";
 import { AdminSelect } from "@/shared/components/AdminSelect";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 function getCleanSearchName(fullName: string): string {
   if (!fullName) return "";
@@ -77,6 +78,7 @@ function getPageNumbers(currentPage: number, totalPages: number) {
 }
 
 export function MarketCatalog() {
+  const { t } = useI18n();
   const {
     listings,
     loading,
@@ -85,8 +87,6 @@ export function MarketCatalog() {
     syncMessage,
     search,
     setSearch,
-    rarityFilter,
-    setRarityFilter,
     sortBy,
     setSortBy,
     filtered,
@@ -110,11 +110,12 @@ export function MarketCatalog() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-black uppercase tracking-wider text-white">
-            Catálogo de Mercado (YouPin)
+            {t("admin.market.title")}
           </h2>
           <p className="text-[10px] text-[#84849b] font-mono mt-0.5 uppercase tracking-wider">
-            Mismo catálogo que /buy (reventa) —{" "}
-            {listings.length.toLocaleString()} assets YouPin indexados
+            {t("admin.market.description", {
+              count: listings.length.toLocaleString(),
+            })}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -124,7 +125,7 @@ export function MarketCatalog() {
             disabled={loading}
             className="px-4 py-2.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 text-[10px] font-black uppercase tracking-wider text-white rounded-[3px] transition-all cursor-pointer disabled:opacity-50"
           >
-            Refrescar
+            {t("common.refresh")}
           </button>
           <button
             type="button"
@@ -133,7 +134,7 @@ export function MarketCatalog() {
             className="px-4 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-[10px] font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Sincronizando..." : "Sincronizar catálogo"}
+            {syncing ? t("admin.market.syncing") : t("admin.market.sync")}
           </button>
         </div>
       </div>
@@ -154,7 +155,7 @@ export function MarketCatalog() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-4 flex flex-col justify-center">
           <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
-            Total assets en catálogo
+            {t("admin.market.totalAssets")}
           </div>
           <div className="text-2xl font-black mt-1 text-white">
             {listings.length.toLocaleString()}
@@ -162,7 +163,7 @@ export function MarketCatalog() {
         </div>
         <div className="bg-[#110f1e] border border-white/5 rounded-[3px] p-4 flex flex-col justify-center">
           <div className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
-            Assets visibles en tienda
+            {t("admin.market.visibleAssets")}
           </div>
           <div className="text-2xl font-black mt-1 text-emerald-400">
             {youpinCount.toLocaleString()}
@@ -179,35 +180,22 @@ export function MarketCatalog() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar listings de YouPin..."
+              placeholder={t("admin.market.searchPlaceholder")}
               className="w-full bg-[#110f1e]/80 border border-white/5 pl-9 pr-3 py-2 text-xs font-bold text-white placeholder-[#84849b] rounded-[3px] outline-none focus:border-accent/40 transition-colors"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Rarity */}
-            <AdminSelect
-              value={rarityFilter}
-              onChange={setRarityFilter}
-              options={[
-                { value: "all", label: "Todas las rarezas" },
-                { value: "coverte", label: "★ Covert (Rojo)" },
-                { value: "classified", label: "Classified (Rosado)" },
-                { value: "restricted", label: "Restricted (Púrpura)" },
-                { value: "mil-spec", label: "Mil-Spec (Azul)" },
-                { value: "industrial", label: "Industrial (Celeste)" },
-                { value: "consumer", label: "Consumer (Gris)" },
-              ]}
-            />
-
             {/* Sort */}
             <AdminSelect
               value={sortBy}
-              onChange={(v) => setSortBy(v as any)}
+              onChange={(v) =>
+                setSortBy(v as "price_desc" | "price_asc" | "name")
+              }
               options={[
-                { value: "price_desc", label: "Precio: Mayor a Menor" },
-                { value: "price_asc", label: "Precio: Menor a Mayor" },
-                { value: "name", label: "Alfabético" },
+                { value: "price_desc", label: t("admin.market.sortPriceDesc") },
+                { value: "price_asc", label: t("admin.market.sortPriceAsc") },
+                { value: "name", label: t("admin.market.sortName") },
               ]}
             />
           </div>
@@ -225,12 +213,12 @@ export function MarketCatalog() {
           <div className="py-12 flex flex-col items-center justify-center">
             <RefreshCw className="w-6 h-6 animate-spin text-accent mb-2" />
             <span className="text-[10px] text-[#84849b] font-black uppercase tracking-widest">
-              Sincronizando listings...
+              {t("admin.market.loading")}
             </span>
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center text-xs text-[#84849b] font-bold">
-            No se encontraron listings para tu búsqueda.
+            {t("admin.market.noResults")}
           </div>
         ) : (
           <div className="border border-white/5 rounded-[3px] overflow-hidden">
@@ -239,12 +227,12 @@ export function MarketCatalog() {
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
                   <tr className="border-b border-white/5 bg-[#110f1e]/60 text-[#84849b] text-[9px] font-black uppercase tracking-wider font-mono">
-                    <th className="py-3 px-4">Item</th>
+                    <th className="py-3 px-4">{t("common.item")}</th>
                     <th className="py-3 px-4">Float / Pattern</th>
-                    <th className="py-3 px-4">Estado / Wear</th>
-                    <th className="py-3 px-4">Precio base (USD)</th>
-                    <th className="py-3 px-4">Precio tienda (USD)</th>
-                    <th className="py-3 px-4 text-right">Links</th>
+                    <th className="py-3 px-4">{t("admin.market.wear")}</th>
+                    <th className="py-3 px-4">{t("admin.market.basePrice")}</th>
+                    <th className="py-3 px-4">{t("admin.market.storePrice")}</th>
+                    <th className="py-3 px-4 text-right">{t("admin.market.links")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-xs">
@@ -309,7 +297,7 @@ export function MarketCatalog() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/30 transition-all cursor-pointer text-[10px] font-bold"
-                              title="Ver en YouPin"
+                              title={t("admin.market.viewYouPin")}
                             >
                               YouPin <ExternalLink className="w-3 h-3 inline-block ml-1" />
                             </a>
@@ -387,7 +375,7 @@ export function MarketCatalog() {
                       </div>
                       <div className="col-span-2 border-t border-white/[0.03] pt-2 flex items-center justify-between">
                         <div>
-                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Precio tienda</span>
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("admin.market.storePriceShort")}</span>
                           <span className="font-extrabold text-green-400 text-xs block mt-0.5">
                             ${(l.displayPrice ?? l.price).toLocaleString()}
                           </span>
@@ -413,7 +401,11 @@ export function MarketCatalog() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between p-4 bg-[#110f1e]/20 border-t border-white/5">
                 <span className="text-[10px] text-[#84849b] font-bold uppercase tracking-wider font-mono">
-                  Página {currentActivePage} de {totalPages} ({filtered.length.toLocaleString()} items)
+                  {t("admin.market.page", {
+                    current: currentActivePage,
+                    total: totalPages,
+                    count: filtered.length.toLocaleString(),
+                  })}
                 </span>
 
                 <div className="flex items-center gap-1">
@@ -422,7 +414,7 @@ export function MarketCatalog() {
                     disabled={currentActivePage === 1}
                     className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-35 text-white text-[10px] font-bold uppercase rounded-[3px] border border-white/5 cursor-pointer select-none"
                   >
-                    Anterior
+                    {t("admin.market.previous")}
                   </button>
 
                   <div className="hidden sm:flex items-center gap-1">
@@ -449,7 +441,7 @@ export function MarketCatalog() {
                     disabled={currentActivePage === totalPages}
                     className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-35 text-white text-[10px] font-bold uppercase rounded-[3px] border border-white/5 cursor-pointer select-none"
                   >
-                    Siguiente
+                    {t("common.next")}
                   </button>
                 </div>
               </div>

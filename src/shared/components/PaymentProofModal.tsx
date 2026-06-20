@@ -30,7 +30,7 @@ export function PaymentProofModal({
   onClose,
   proofUrl,
   proof,
-  title = "Comprobante de pago",
+  title,
 }: PaymentProofModalProps) {
   const { locale, t } = useI18n();
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export function PaymentProofModal({
         <div className="flex items-start justify-between gap-4 p-4 border-b border-white/10">
           <div className="min-w-0">
             <h3 className="text-sm sm:text-base font-black uppercase tracking-wider text-white">
-              {title}
+              {title || t("proof.title")}
             </h3>
             <p className="text-[10px] text-[#84849b] mt-1 truncate">
               {proof?.fileName || t("proof.title")} {formatSize(proof?.size)}
@@ -156,4 +156,3 @@ export function PaymentProofModal({
     </div>
   );
 }
-

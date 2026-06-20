@@ -25,7 +25,6 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
 
   // Filter States
   const [search, setSearchValue] = useState("");
-  const [selectedRarity, setSelectedRarityValue] = useState("all");
   const [sortBy, setSortBy] = useState<
     "price_asc" | "price_desc" | "float_asc" | "float_desc"
   >("price_desc");
@@ -38,11 +37,6 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
 
   const setSearch = useCallback((value: string) => {
     setSearchValue(value);
-    setInventoryPage(1);
-  }, []);
-
-  const setSelectedRarity = useCallback((value: string) => {
-    setSelectedRarityValue(value);
     setInventoryPage(1);
   }, []);
 
@@ -159,9 +153,7 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
         const matchesSearch =
           item.name.toLowerCase().includes(search.toLowerCase()) ||
           item.type.toLowerCase().includes(search.toLowerCase());
-        const matchesRarity =
-          selectedRarity === "all" || item.rarity === selectedRarity;
-        return matchesSearch && matchesRarity;
+        return matchesSearch;
       })
       .sort((a, b) => {
         if (sortBy === "price_asc") return a.price - b.price;
@@ -170,7 +162,7 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
         if (sortBy === "float_desc") return (b.float || 0) - (a.float || 0);
         return 0;
       });
-  }, [items, search, selectedRarity, sortBy]);
+  }, [items, search, sortBy]);
 
   const totalInventoryPages = Math.ceil(
     filteredItems.length / ITEMS_PER_INVENTORY_PAGE,
@@ -208,8 +200,6 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
     syncSuccess,
     search,
     setSearch,
-    selectedRarity,
-    setSelectedRarity,
     sortBy,
     setSortBy: setInventorySortBy,
     inventoryPage,

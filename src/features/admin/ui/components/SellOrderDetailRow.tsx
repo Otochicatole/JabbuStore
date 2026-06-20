@@ -348,7 +348,7 @@ export function SellOrderDetailRow({
           )}
           <div className="min-w-0">
             <span className="text-[10px] text-[#84849b] font-mono block">
-              Vendedor
+              {t("admin.sellOrders.seller")}
             </span>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-extrabold text-white text-sm truncate max-w-[150px]">
@@ -363,7 +363,7 @@ export function SellOrderDetailRow({
 
         <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1 border-t border-b border-white/[0.02] py-2 lg:py-0 lg:border-none">
           <span className="text-[10px] text-[#84849b] font-mono">
-            Monto a Pagar al Usuario
+            {t("admin.sellOrders.amountToPay")}
           </span>
           <span className="text-emerald-400 font-black text-xl leading-none block">
             ${order.totalPrice.toLocaleString()} USD
@@ -372,7 +372,7 @@ export function SellOrderDetailRow({
 
         <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1">
           <span className="text-[10px] text-[#84849b] font-mono">
-            Estado Real (DB)
+            {t("admin.sellOrders.currentStatus")}
           </span>
           <span
             className={`px-2.5 py-1 rounded-[3px] text-[10px] font-black uppercase tracking-widest block ${
@@ -387,7 +387,15 @@ export function SellOrderDetailRow({
                       : "bg-red-500/10 text-red-400 border border-red-500/20"
             }`}
           >
-            {order.status}
+            {order.status === "PENDING_PAYMENT"
+              ? t("purchases.status.sellPendingApproval")
+              : order.status === "TRADE_PENDING"
+                ? t("purchases.status.sellApprovedSendTrade")
+                : order.status === "PAID"
+                  ? t("purchases.status.tradeConfirmedPendingPayment")
+                  : order.status === "COMPLETED"
+                    ? t("purchases.status.sellCompletedPaid")
+                    : t("purchases.status.sellRejected")}
           </span>
         </div>
 
@@ -436,7 +444,7 @@ export function SellOrderDetailRow({
               }`}
             >
               <Check className="w-3.5 h-3.5" />
-              Paso 2: Trade Recibido
+              {t("admin.sellOrders.tradeReceivedStep")}
             </button>
 
             {/* Paso 3: Pago al Usuario / Completar */}
@@ -495,7 +503,7 @@ export function SellOrderDetailRow({
               }`}
             >
               <XCircle className="w-3.5 h-3.5" />
-              Rechazar/Cancelar
+              {t("admin.sellOrders.rejectCancel")}
             </button>
           </div>
         </div>
@@ -514,25 +522,25 @@ export function SellOrderDetailRow({
           {/* Columna 1: Datos Personales */}
           <div className="space-y-2.5">
             <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-              Datos del Cliente
+              {t("admin.orders.customerDetails")}
             </h5>
             <div className="space-y-2 bg-[#110f1e]/40 p-3 border border-white/5 rounded-[3px]">
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block">
-                  Nombre Completo
+                  {t("admin.orders.fullName")}
                 </span>
                 <span className="font-extrabold text-white block mt-0.5">
                   {order.metadata?.firstName || order.metadata?.lastName
                     ? `${order.metadata.firstName || ""} ${order.metadata.lastName || ""}`.trim()
-                    : order.user?.name || "No especificado"}
+                    : order.user?.name || t("common.notSpecified")}
                 </span>
               </div>
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block">
-                  Email
+                  {t("admin.orders.email")}
                 </span>
                 <span className="font-bold text-white block mt-0.5 break-all select-all font-mono">
-                  {order.metadata?.email || "No especificado"}
+                  {order.metadata?.email || t("common.notSpecified")}
                 </span>
               </div>
               <div>
@@ -540,7 +548,7 @@ export function SellOrderDetailRow({
                   {t("purchases.phone")}
                 </span>
                 <span className="font-bold font-mono text-[9.5px] text-white block mt-0.5 select-all">
-                  {order.metadata?.phone || "No especificado"}
+                  {order.metadata?.phone || t("common.notSpecified")}
                 </span>
               </div>
             </div>
@@ -565,7 +573,7 @@ export function SellOrderDetailRow({
                         ? "Ethereum (Web3)"
                         : order.paymentMethod === "binance"
                           ? "Binance Pay"
-                          : order.paymentMethod || "No especificado"}
+                          : order.paymentMethod || t("common.notSpecified")}
                 </span>
               </div>
 
@@ -573,7 +581,7 @@ export function SellOrderDetailRow({
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block">
-                      Billetera Destino Crypto
+                      {t("admin.orders.cryptoDestinationWallet")}
                     </span>
                     <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
                       {order.metadata?.walletAddress || "N/A"}
@@ -581,7 +589,7 @@ export function SellOrderDetailRow({
                   </div>
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block">
-                      Red Blockchain
+                      {t("admin.orders.blockchainNetwork")}
                     </span>
                     <span className="font-bold text-white block mt-0.5">
                       {order.metadata?.network || "N/A"}
@@ -594,7 +602,7 @@ export function SellOrderDetailRow({
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block">
-                      CBU / CVU / Alias de Destino
+                      {t("admin.orders.destinationBankAccount")}
                     </span>
                     <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
                       {order.metadata?.cbu || "N/A"}
@@ -603,7 +611,7 @@ export function SellOrderDetailRow({
                   <div className="flex items-center justify-between mt-1">
                     <div>
                       <span className="text-[8.5px] text-[#84849b] block">
-                        Titular
+                        {t("admin.orders.accountHolder")}
                       </span>
                       <span className="font-bold text-white block">
                         {order.metadata?.accountHolder || "N/A"}
@@ -625,7 +633,7 @@ export function SellOrderDetailRow({
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block">
-                      Correo PayPal de Destino
+                      {t("admin.orders.destinationPaypalEmail")}
                     </span>
                     <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
                       {order.metadata?.cbu || "N/A"}
@@ -633,7 +641,7 @@ export function SellOrderDetailRow({
                   </div>
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block mt-1">
-                      Titular PayPal
+                      {t("admin.orders.paypalHolder")}
                     </span>
                     <span className="font-bold text-white block">
                       {order.metadata?.accountHolder || "N/A"}
@@ -655,7 +663,7 @@ export function SellOrderDetailRow({
                   </div>
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block mt-1">
-                      Red Blockchain
+                      {t("admin.orders.blockchainNetwork")}
                     </span>
                     <span className="font-bold text-white block">
                       {order.metadata?.network || "N/A"}
@@ -666,7 +674,7 @@ export function SellOrderDetailRow({
 
               {!order.paymentMethod && (
                 <p className="text-[9.5px] text-white/30 italic mt-2">
-                  Sin especificaciones de transferencia externas.
+                  {t("admin.sellOrders.noExternalTransferDetails")}
                 </p>
               )}
             </div>
@@ -675,12 +683,12 @@ export function SellOrderDetailRow({
           {/* Columna 3: Steam Trade Link */}
           <div className="space-y-2.5">
             <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-              Consola de Trade (Skins a recibir)
+              {t("admin.sellOrders.tradeConsole")}
             </h5>
             <div className="space-y-3 bg-[#110f1e]/40 p-3 border border-white/5 min-h-[120px] flex flex-col justify-between rounded-[3px]">
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block font-semibold">
-                  Trade Link del Vendedor
+                  {t("admin.sellOrders.sellerTradeLink")}
                 </span>
                 <span className="font-mono text-[9.5px] text-white/80 block mt-1 break-all select-all leading-normal">
                   {order.user?.tradeUrl ||
@@ -697,7 +705,7 @@ export function SellOrderDetailRow({
                     className="flex-1 h-8 flex items-center justify-center gap-1.5 border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-[9.5px] font-black uppercase tracking-wider transition-all hover:scale-[1.02] cursor-pointer rounded-[3px]"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    Abrir Trade
+                    {t("admin.orders.openTrade")}
                   </a>
                   <button
                     onClick={() =>
@@ -713,12 +721,12 @@ export function SellOrderDetailRow({
                     {copied ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Copiado</span>
+                        <span>{t("admin.orders.copied")}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        <span>Copiar</span>
+                        <span>{t("admin.orders.copy")}</span>
                       </>
                     )}
                   </button>
@@ -742,10 +750,10 @@ export function SellOrderDetailRow({
                 <FileText className="w-4 h-4 shrink-0" />
                 <span className="min-w-0 text-left">
                   <span className="block text-[10px] font-black uppercase tracking-wider">
-                    Ver comprobante
+                    {t("purchases.viewProof")}
                   </span>
                   <span className="block text-[9px] text-emerald-100/70 truncate">
-                    {adminProof.fileName || "Archivo adjunto"}
+                    {adminProof.fileName || t("purchases.attachedFile")}
                   </span>
                 </span>
               </button>
@@ -811,7 +819,7 @@ export function SellOrderDetailRow({
             {copiedAllAssets ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                <span>IDs Copiados de golpe</span>
+                <span>{t("admin.orders.idsCopied")}</span>
               </>
             ) : (
               <>
@@ -936,7 +944,7 @@ export function SellOrderDetailRow({
                     {displayPattern !== null &&
                       displayPattern !== undefined && (
                         <span className="text-white/90 bg-white/5 px-2 py-0.5 rounded-sm border border-white/5 flex items-center gap-1">
-                          <span className="text-[#84849b]">Semilla:</span>
+                          <span className="text-[#84849b]">{t("admin.orders.seed")}:</span>
                           <span className="font-extrabold text-accent">{displayPattern}</span>
                         </span>
                       )}
@@ -944,7 +952,7 @@ export function SellOrderDetailRow({
                     <button
                       onClick={() => handleCopyAssetId(item.assetId)}
                       className="text-[#84849b] bg-[#141223] hover:bg-white/10 hover:text-white px-2 py-0.5 rounded-sm border border-white/5 font-mono text-[9.5px] flex items-center gap-1 transition-all cursor-pointer rounded-[3px]"
-                      title="Copiar AssetID"
+                      title={t("admin.orders.copyAssetId")}
                     >
                       <span>AssetID:</span>
                       <span className="text-white font-semibold select-all">

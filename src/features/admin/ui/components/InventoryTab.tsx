@@ -122,8 +122,6 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
     syncSuccess,
     search,
     setSearch,
-    selectedRarity,
-    setSelectedRarity,
     sortBy,
     setSortBy,
     priceModalItem,
@@ -254,21 +252,6 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            {/* Rarity Filter */}
-            <AdminSelect
-              value={selectedRarity}
-              onChange={setSelectedRarity}
-              options={[
-                { value: "all", label: t("filters.rarity") },
-                { value: "coverte", label: "★ Covert (Rojo)" },
-                { value: "classified", label: "Classified (Rosado)" },
-                { value: "restricted", label: t("admin.inventory.rarityRestricted") },
-                { value: "mil-spec", label: "Mil-Spec (Azul)" },
-                { value: "industrial", label: "Industrial Grade (Celeste)" },
-                { value: "consumer", label: "Consumer Grade (Gris)" },
-              ]}
-            />
-
             {/* Sort */}
             <AdminSelect
               value={sortBy}
@@ -330,9 +313,9 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                 <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
                     <tr className="border-b border-white/5 bg-[#110f1e]/40 text-[#84849b] text-[10px] font-black uppercase tracking-wider font-mono">
-                      <th className="py-4 px-5">Skin</th>
-                      <th className="py-4 px-5">ID de Asset</th>
-                      <th className="py-4 px-5">Float Value</th>
+                      <th className="py-4 px-5">{t("admin.inventory.skin")}</th>
+                      <th className="py-4 px-5">{t("admin.inventory.assetId")}</th>
+                      <th className="py-4 px-5">{t("admin.inventory.floatValue")}</th>
                       <th className="py-4 px-5">{t("admin.inventory.ownerBot")}</th>
                       <th className="py-4 px-5">{t("common.price")}</th>
                       <th className="py-4 px-5 text-right">{t("admin.common.actions")}</th>

@@ -3,23 +3,30 @@
 import { useState, useEffect, useCallback } from "react";
 import { MarketStoreAsset } from "../domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export function useMarketCatalog() {
+  const { t } = useI18n();
   const [listings, setListings] = useState<MarketStoreAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [rarityFilter, setRarityFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"price_desc" | "price_asc" | "name">(
     "price_desc",
   );
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
+  const updateSearch = (value: string) => {
+    setSearch(value);
     setCurrentPage(1);
-  }, [search, rarityFilter, sortBy]);
+  };
+
+  const updateSortBy = (value: "price_desc" | "price_asc" | "name") => {
+    setSortBy(value);
+    setCurrentPage(1);
+  };
 
   const fetchListings = useCallback(async () => {
     try {
@@ -34,15 +41,16 @@ export function useMarketCatalog() {
       const data = await res.json().catch(() => []);
       setListings(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError("Error al cargar el catálogo de mercado.");
+      setError(t("admin.market.loadError"));
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
-    fetchListings();
+    const timeoutId = window.setTimeout(fetchListings, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [fetchListings]);
 
   const handleSync = async () => {
@@ -60,17 +68,17 @@ export function useMarketCatalog() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || "Error al sincronizar el catálogo.");
+        throw new Error(data.error || t("admin.market.syncError"));
       }
       setSyncMessage(
         data.message ||
-          "Sincronización iniciada. Esperá ~30s y refrescá el listado.",
+          t("admin.market.syncStarted"),
       );
       setTimeout(() => {
         fetchListings();
       }, 35000);
-    } catch (err: any) {
-      setError(err.message || "Error al sincronizar el catálogo.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("admin.market.syncError"));
     } finally {
       setSyncing(false);
     }
@@ -80,7 +88,6 @@ export function useMarketCatalog() {
     .filter((l) => {
       if (search && !l.name.toLowerCase().includes(search.toLowerCase()))
         return false;
-      if (rarityFilter !== "all" && l.rarity !== rarityFilter) return false;
       return true;
     })
     .sort((a, b) => {
@@ -100,11 +107,9 @@ export function useMarketCatalog() {
     error,
     syncMessage,
     search,
-    setSearch,
-    rarityFilter,
-    setRarityFilter,
+    setSearch: updateSearch,
     sortBy,
-    setSortBy,
+    setSortBy: updateSortBy,
     filtered,
     youpinCount,
     handleSync,

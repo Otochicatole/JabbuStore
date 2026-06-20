@@ -12,6 +12,9 @@ import {
   RefreshCw,
   Landmark,
   CreditCard,
+  KeyRound,
+  Eye,
+  Trash2,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
@@ -23,7 +26,7 @@ const MODIFIER_OPTIONS = [
   { value: "fixed_decrease", label: "Descuento Fijo (-USD)" },
 ];
 
-type Tab = "precios" | "venta" | "reventa" | "limites" | "pagos" | "transferencia" | "webhook" | "sync";
+type Tab = "precios" | "venta" | "reventa" | "limites" | "pagos" | "credenciales" | "transferencia" | "webhook" | "sync";
 
 type PriceCatalogStatus = {
   exists: boolean;
@@ -40,6 +43,38 @@ type PriceCatalogStatus = {
   lastItemCount?: number | null;
   triggeredBy?: string | null;
 };
+
+type SecretStatus = {
+  key: string;
+  configured: boolean;
+  source: "database" | "env" | "missing";
+  last4: string | null;
+  updatedAt: string | null;
+};
+
+const SECRET_LABELS = [
+  { key: "STEAM_API_KEY", label: "STEAM_API_KEY" },
+  { key: "STEAMWEBAPI_API_KEY", label: "STEAMWEBAPI_API_KEY" },
+  { key: "MERCADOPAGO_ACCESS_TOKEN", label: "MERCADOPAGO_ACCESS_TOKEN" },
+  { key: "MERCADOPAGO_WEBHOOK_SECRET", label: "MERCADOPAGO_WEBHOOK_SECRET" },
+  { key: "NOWPAYMENTS_API_KEY", label: "NOWPAYMENTS_API_KEY" },
+  { key: "NOWPAYMENTS_IPN_SECRET", label: "NOWPAYMENTS_IPN_SECRET" },
+  { key: "PAYPAL_CLIENT_ID", label: "PAYPAL_CLIENT_ID" },
+  { key: "PAYPAL_CLIENT_SECRET", label: "PAYPAL_CLIENT_SECRET" },
+  { key: "PAYPAL_SANDBOX", label: "PAYPAL_SANDBOX" },
+];
+
+const RUNTIME_CONFIG_LABELS = [
+  { key: "ENABLE_SYNC", label: "ENABLE_SYNC", type: "boolean" },
+  { key: "STORE_SYNC_INTERVAL_MINUTES", label: "STORE_SYNC_INTERVAL_MINUTES", type: "number" },
+  { key: "ENABLE_ITEMS_CATALOG_SYNC", label: "ENABLE_ITEMS_CATALOG_SYNC", type: "boolean" },
+  { key: "ITEMS_CATALOG_SYNC_INTERVAL_MINUTES", label: "ITEMS_CATALOG_SYNC_INTERVAL_MINUTES", type: "number" },
+  { key: "MARKET_SYNC_PAGE_SIZE", label: "MARKET_SYNC_PAGE_SIZE", type: "number" },
+  { key: "MARKET_SYNC_MAX_PAGES", label: "MARKET_SYNC_MAX_PAGES", type: "number" },
+  { key: "MARKET_SYNC_MIN_PRICE", label: "MARKET_SYNC_MIN_PRICE", type: "number" },
+  { key: "MARKET_SYNC_SORT", label: "MARKET_SYNC_SORT", type: "text" },
+  { key: "FLOAT_SYNC_SORT", label: "FLOAT_SYNC_SORT", type: "text" },
+];
 
 const TABS: {
   id: Tab;
@@ -82,6 +117,12 @@ const TABS: {
     label: "Pagos",
     icon: CreditCard,
     desc: "Habilitar o deshabilitar pasarelas de pago",
+  },
+  {
+    id: "credenciales",
+    label: "Credenciales",
+    icon: KeyRound,
+    desc: "Secretos cifrados de APIs y pasarelas",
   },
   {
     id: "transferencia",
@@ -236,6 +277,17 @@ export default function AdminSettingsPage() {
   const [savedPaymentMethods, setSavedPaymentMethods] = useState(false);
   const [savedManualTransfer, setSavedManualTransfer] = useState(false);
 
+  const [secretStatuses, setSecretStatuses] = useState<SecretStatus[]>([]);
+  const [secretDrafts, setSecretDrafts] = useState<Record<string, string>>({});
+  const [revealedSecrets, setRevealedSecrets] = useState<Record<string, string>>({});
+  const [masterPassword, setMasterPassword] = useState("");
+  const [secretMessage, setSecretMessage] = useState<string | null>(null);
+  const [secretError, setSecretError] = useState<string | null>(null);
+  const [savingSecretKey, setSavingSecretKey] = useState<string | null>(null);
+  const [runtimeConfig, setRuntimeConfig] = useState<Record<string, string>>({});
+  const [savingRuntimeConfig, setSavingRuntimeConfig] = useState(false);
+  const [runtimeConfigMessage, setRuntimeConfigMessage] = useState<string | null>(null);
+
   // --- States for Manual Sync and 3-Minute Cooldown ---
   const [syncingAll, setSyncingAll] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
@@ -305,6 +357,155 @@ export default function AdminSettingsPage() {
   const [refreshingCatalog, setRefreshingCatalog] = useState(false);
   const [catalogStatus, setCatalogStatus] = useState<PriceCatalogStatus | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
+
+  const fetchSecretsStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/secrets/status`, {
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => []);
+      if (!response.ok) {
+        throw new Error(data.error || "Error al cargar estado de credenciales.");
+      }
+      setSecretStatuses(Array.isArray(data) ? data : []);
+    } catch (err: unknown) {
+      setSecretError(getErrorMessage(err, "Error al cargar estado de credenciales."));
+    }
+  };
+
+  const fetchRuntimeConfig = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/runtime-config`, {
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al cargar configuración runtime.");
+      }
+      setRuntimeConfig(data);
+    } catch (err: unknown) {
+      setRuntimeConfigMessage(getErrorMessage(err, "Error al cargar configuración runtime."));
+    }
+  };
+
+  const handleSaveSecret = async (key: string) => {
+    setSavingSecretKey(key);
+    setSecretError(null);
+    setSecretMessage(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/secrets/${key}`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        body: JSON.stringify({
+          value: secretDrafts[key] || "",
+          password: masterPassword,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al guardar credencial.");
+      }
+      setSecretDrafts((prev) => ({ ...prev, [key]: "" }));
+      setSecretMessage("Credencial guardada correctamente.");
+      await fetchSecretsStatus();
+    } catch (err: unknown) {
+      setSecretError(getErrorMessage(err, "Error al guardar credencial."));
+    } finally {
+      setSavingSecretKey(null);
+    }
+  };
+
+  const handleRevealSecret = async (key: string) => {
+    setSavingSecretKey(key);
+    setSecretError(null);
+    setSecretMessage(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/secrets/${key}/reveal`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        body: JSON.stringify({ password: masterPassword }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al revelar credencial.");
+      }
+      setRevealedSecrets((prev) => ({ ...prev, [key]: data.value || "" }));
+      setSecretMessage("Credencial revelada. No la compartas.");
+    } catch (err: unknown) {
+      setSecretError(getErrorMessage(err, "Error al revelar credencial."));
+    } finally {
+      setSavingSecretKey(null);
+    }
+  };
+
+  const handleDeleteSecret = async (key: string) => {
+    setSavingSecretKey(key);
+    setSecretError(null);
+    setSecretMessage(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/secrets/${key}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        body: JSON.stringify({ password: masterPassword }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al eliminar credencial.");
+      }
+      setRevealedSecrets((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+      setSecretMessage("Credencial cifrada eliminada. Si existe en .env, seguirá funcionando como fallback.");
+      await fetchSecretsStatus();
+    } catch (err: unknown) {
+      setSecretError(getErrorMessage(err, "Error al eliminar credencial."));
+    } finally {
+      setSavingSecretKey(null);
+    }
+  };
+
+  const handleRuntimeConfigSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingRuntimeConfig(true);
+    setRuntimeConfigMessage(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/runtime-config`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        body: JSON.stringify(runtimeConfig),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al guardar configuración runtime.");
+      }
+      setRuntimeConfig(data);
+      setRuntimeConfigMessage("Configuración guardada. Los cambios de scheduler aplican al reiniciar el backend.");
+    } catch (err: unknown) {
+      setRuntimeConfigMessage(getErrorMessage(err, "Error al guardar configuración runtime."));
+    } finally {
+      setSavingRuntimeConfig(false);
+    }
+  };
 
   const fetchCatalogStatus = async () => {
     try {
@@ -416,6 +617,8 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void fetchCatalogStatus();
+      void fetchSecretsStatus();
+      void fetchRuntimeConfig();
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -893,6 +1096,125 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
+      {/* ── TAB: Credenciales ── */}
+      {activeTab === "credenciales" && (
+        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
+          <SectionHeader
+            title="Credenciales Cifradas"
+            desc="Gestioná secretos de APIs. Solo SUPER_ADMIN puede guardar, revelar o eliminar credenciales usando la contraseña maestra del backend."
+          />
+
+          <div className="max-w-4xl space-y-5">
+            <div className="space-y-1.5">
+              <FieldLabel>Contraseña maestra de secretos</FieldLabel>
+              <StyledInput
+                type="password"
+                value={masterPassword}
+                onChange={(e) => setMasterPassword(e.target.value)}
+                placeholder="ADMIN_SECRETS_PASSWORD"
+                autoComplete="off"
+              />
+              <p className="text-[10px] text-[#84849b] font-mono">
+                Esta contraseña no se guarda en la DB. Vive en `.env` y se usa para autorizar acciones sensibles.
+              </p>
+            </div>
+
+            {secretError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-bold rounded-[3px]">
+                {secretError}
+              </div>
+            )}
+            {secretMessage && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-bold rounded-[3px]">
+                {secretMessage}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4">
+              {SECRET_LABELS.map(({ key, label }) => {
+                const status = secretStatuses.find((item) => item.key === key);
+                const busy = savingSecretKey === key;
+
+                return (
+                  <div key={key} className="p-4 bg-white/[0.02] border border-white/5 rounded-[3px] space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                          {label}
+                        </h3>
+                        <p className="text-[10px] text-[#84849b] font-mono">
+                          {status?.configured
+                            ? `Configurado (${status.source})${status.last4 ? ` · termina en ${status.last4}` : ""}`
+                            : "No configurado"}
+                        </p>
+                      </div>
+                      <span className={`w-fit px-2 py-1 rounded-[3px] text-[9px] font-black uppercase tracking-wider ${
+                        status?.configured
+                          ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                          : "bg-red-500/10 text-red-300 border border-red-500/20"
+                      }`}>
+                        {status?.configured ? "Activo" : "Falta"}
+                      </span>
+                    </div>
+
+                    {revealedSecrets[key] && (
+                      <div className="p-3 bg-black/20 border border-white/5 rounded-[3px]">
+                        <p className="text-[9px] text-[#84849b] uppercase font-black mb-1">
+                          Valor revelado
+                        </p>
+                        <p className="text-xs text-white font-mono break-all select-all">
+                          {revealedSecrets[key]}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-2">
+                      <StyledInput
+                        type="password"
+                        value={secretDrafts[key] || ""}
+                        onChange={(e) =>
+                          setSecretDrafts((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                        placeholder="Nuevo valor para reemplazar"
+                        autoComplete="off"
+                      />
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveSecret(key)}
+                          disabled={busy || !secretDrafts[key] || !masterPassword}
+                          className="px-3 py-2 bg-accent text-white rounded-[3px] text-[9px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer"
+                        >
+                          {busy ? "..." : "Guardar"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleRevealSecret(key)}
+                          disabled={busy || !masterPassword}
+                          className="px-3 py-2 bg-white/5 border border-white/10 text-white rounded-[3px] text-[9px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <Eye className="w-3 h-3" />
+                          Ver
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleDeleteSecret(key)}
+                          disabled={busy || !masterPassword}
+                          className="px-3 py-2 bg-red-500/10 border border-red-500/20 text-red-200 rounded-[3px] text-[9px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Borrar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── TAB: Métodos de Pago ── */}
       {activeTab === "pagos" && (
         <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
@@ -1138,6 +1460,62 @@ export default function AdminSettingsPage() {
             title="Sincronización Manual Completa"
             desc="Fuerza una sincronización en tiempo real de todo el sistema. Esto actualizará el catálogo de mercado de YouPin y el inventario en stock de todos los bots conectados."
           />
+
+          <form onSubmit={handleRuntimeConfigSubmit} className="max-w-3xl space-y-4 p-4 bg-white/[0.01] border border-white/5 rounded-[3px]">
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                Configuración Automática de Sync
+              </h3>
+              <p className="text-[10px] text-[#84849b] mt-1 font-mono">
+                Se guarda en DB y se aplica al iniciar el backend. Los intervalos requieren reiniciar el proceso.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {RUNTIME_CONFIG_LABELS.map((item) => (
+                <div key={item.key} className="space-y-1.5">
+                  <FieldLabel>{item.label}</FieldLabel>
+                  {item.type === "boolean" ? (
+                    <AdminSelect
+                      value={runtimeConfig[item.key] || ""}
+                      onChange={(value) =>
+                        setRuntimeConfig((prev) => ({ ...prev, [item.key]: value }))
+                      }
+                      options={[
+                        { value: "", label: "Usar .env" },
+                        { value: "true", label: "Habilitado" },
+                        { value: "false", label: "Deshabilitado" },
+                      ]}
+                    />
+                  ) : (
+                    <StyledInput
+                      type={item.type === "number" ? "number" : "text"}
+                      value={runtimeConfig[item.key] || ""}
+                      onChange={(event) =>
+                        setRuntimeConfig((prev) => ({ ...prev, [item.key]: event.target.value }))
+                      }
+                      placeholder="Usar .env"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {runtimeConfigMessage && (
+              <div className="p-3 bg-accent/10 border border-accent/20 text-accent text-xs font-bold rounded-[3px]">
+                {runtimeConfigMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={savingRuntimeConfig}
+              className="px-6 py-3 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-all disabled:opacity-60 cursor-pointer flex items-center gap-2"
+            >
+              {savingRuntimeConfig && <Loader2 className="w-4 h-4 animate-spin" />}
+              Guardar Configuración Sync
+            </button>
+          </form>
           
           <div className="max-w-xl w-full space-y-6">
             <div className="p-4 bg-white/[0.01] border border-white/5 rounded-[3px] space-y-3 min-w-0">

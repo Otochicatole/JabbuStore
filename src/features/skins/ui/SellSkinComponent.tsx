@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export default function SellSkinComponent({ skinId, inventoryPrice }: { skinId: string, inventoryPrice: number }) {
+  const { t } = useI18n();
   const [requestedPrice, setRequestedPrice] = useState<number>(inventoryPrice);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,20 +25,20 @@ export default function SellSkinComponent({ skinId, inventoryPrice }: { skinId: 
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Error al poner en venta");
+        setError(data.error || t("sell.listError"));
         return;
       }
       
-      alert("Skin listada para la venta con éxito!");
+      alert(t("sell.listSuccess"));
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("sell.listError"));
     }
   };
 
   return (
     <div className="bg-card border border-white/10 p-4 rounded-lg flex flex-col items-center">
-      <h3 className="text-sm text-gray-300 mb-2">Poner a la venta</h3>
+      <h3 className="text-sm text-gray-300 mb-2">{t("sell.putForSale")}</h3>
       <input 
         type="number"
         step="0.01"
@@ -50,7 +51,7 @@ export default function SellSkinComponent({ skinId, inventoryPrice }: { skinId: 
         onClick={handleSell}
         className="w-full bg-accent/20 border border-accent text-accent py-2 rounded text-sm font-bold hover:bg-accent hover:text-white transition"
       >
-        Vender Skin
+        {t("sell.sellSkin")}
       </button>
     </div>
   );

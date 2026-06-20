@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 const MODIFIER_OPTIONS = [
   { value: "percentage_increase", label: "Aumento en Porcentaje (+%)" },
@@ -233,7 +234,36 @@ function ToggleSwitch({
 
 /* ══════════════════════════════════════════════ */
 export default function AdminSettingsPage() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<Tab>("precios");
+  const getTabLabel = (tabId: Tab) => {
+    const labels: Record<Tab, string> = {
+      precios: t("admin.settings.pricing"),
+      venta: t("admin.settings.userSell"),
+      reventa: t("admin.settings.resell"),
+      limites: t("admin.settings.limits"),
+      pagos: t("admin.settings.payments"),
+      credenciales: t("admin.settings.credentials"),
+      transferencia: t("admin.settings.transfer"),
+      webhook: t("admin.settings.webhook"),
+      sync: t("admin.settings.sync"),
+    };
+    return labels[tabId];
+  };
+  const getTabDescription = (tabId: Tab) => {
+    const descriptions: Record<Tab, string> = {
+      precios: t("admin.settings.pricingDesc"),
+      venta: t("admin.settings.userSellDesc"),
+      reventa: t("admin.settings.resellDesc"),
+      limites: t("admin.settings.limitsDesc"),
+      pagos: t("admin.settings.paymentsDesc"),
+      credenciales: t("admin.settings.credentialsDesc"),
+      transferencia: t("admin.settings.transferDesc"),
+      webhook: t("admin.settings.webhookDesc"),
+      sync: t("admin.settings.syncDesc"),
+    };
+    return descriptions[tabId];
+  };
 
   const [settings, setSettings] = useState({
     globalPriceModifierType: "percentage_increase",
@@ -863,10 +893,10 @@ export default function AdminSettingsPage() {
       {/* Page header */}
       <div>
         <h1 className="text-xl font-black uppercase tracking-wider text-white">
-          Configuración Global
+          {t("admin.globalSettings")}
         </h1>
         <p className="text-xs text-[#84849b] mt-1">
-          Ajustá las reglas del marketplace desde acá.
+          {t("admin.settings.description")}
         </p>
       </div>
 
@@ -890,7 +920,7 @@ export default function AdminSettingsPage() {
               <Icon
                 className={`w-3.5 h-3.5 flex-shrink-0 ${active ? "opacity-100" : "opacity-60"}`}
               />
-              {tab.label}
+              {getTabLabel(tab.id)}
             </button>
           );
         })}
@@ -899,13 +929,13 @@ export default function AdminSettingsPage() {
       {/* Tab description strip */}
       <div className="flex items-start sm:items-center gap-2 px-4 py-2.5 bg-accent/5 border border-accent/15 rounded-[3px]">
         {(() => {
-          const t = TABS.find((t) => t.id === activeTab)!;
-          const Icon = t.icon;
+          const activeTabConfig = TABS.find((tab) => tab.id === activeTab)!;
+          const Icon = activeTabConfig.icon;
           return (
             <>
               <Icon className="w-3.5 h-3.5 text-accent flex-shrink-0" />
               <span className="text-xs text-accent/80 font-semibold min-w-0">
-                {t.desc}
+                {getTabDescription(activeTab)}
               </span>
             </>
           );
@@ -1100,13 +1130,13 @@ export default function AdminSettingsPage() {
       {activeTab === "credenciales" && (
         <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
           <SectionHeader
-            title="Credenciales Cifradas"
-            desc="Gestioná secretos de APIs. Solo SUPER_ADMIN puede guardar, revelar o eliminar credenciales usando la contraseña maestra del backend."
+            title={t("admin.settings.credentialsTitle")}
+            desc={t("admin.settings.credentialsDescription")}
           />
 
           <div className="max-w-4xl space-y-5">
             <div className="space-y-1.5">
-              <FieldLabel>Contraseña maestra de secretos</FieldLabel>
+              <FieldLabel>{t("admin.settings.masterPassword")}</FieldLabel>
               <StyledInput
                 type="password"
                 value={masterPassword}
@@ -1144,8 +1174,8 @@ export default function AdminSettingsPage() {
                         </h3>
                         <p className="text-[10px] text-[#84849b] font-mono">
                           {status?.configured
-                            ? `Configurado (${status.source})${status.last4 ? ` · termina en ${status.last4}` : ""}`
-                            : "No configurado"}
+                            ? `${t("admin.settings.configured")} (${status.source})${status.last4 ? ` · ${status.last4}` : ""}`
+                            : t("admin.settings.notConfigured")}
                         </p>
                       </div>
                       <span className={`w-fit px-2 py-1 rounded-[3px] text-[9px] font-black uppercase tracking-wider ${
@@ -1153,14 +1183,14 @@ export default function AdminSettingsPage() {
                           ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
                           : "bg-red-500/10 text-red-300 border border-red-500/20"
                       }`}>
-                        {status?.configured ? "Activo" : "Falta"}
+                        {status?.configured ? t("admin.settings.active") : t("admin.settings.missing")}
                       </span>
                     </div>
 
                     {revealedSecrets[key] && (
                       <div className="p-3 bg-black/20 border border-white/5 rounded-[3px]">
                         <p className="text-[9px] text-[#84849b] uppercase font-black mb-1">
-                          Valor revelado
+                          {t("admin.settings.revealedValue")}
                         </p>
                         <p className="text-xs text-white font-mono break-all select-all">
                           {revealedSecrets[key]}
@@ -1175,7 +1205,7 @@ export default function AdminSettingsPage() {
                         onChange={(e) =>
                           setSecretDrafts((prev) => ({ ...prev, [key]: e.target.value }))
                         }
-                        placeholder="Nuevo valor para reemplazar"
+                        placeholder={t("admin.settings.newValue")}
                         autoComplete="off"
                       />
                       <div className="grid grid-cols-3 gap-2">
@@ -1464,10 +1494,10 @@ export default function AdminSettingsPage() {
           <form onSubmit={handleRuntimeConfigSubmit} className="max-w-3xl space-y-4 p-4 bg-white/[0.01] border border-white/5 rounded-[3px]">
             <div>
               <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                Configuración Automática de Sync
+                {t("admin.settings.syncConfigTitle")}
               </h3>
               <p className="text-[10px] text-[#84849b] mt-1 font-mono">
-                Se guarda en DB y se aplica al iniciar el backend. Los intervalos requieren reiniciar el proceso.
+                {t("admin.settings.syncConfigDescription")}
               </p>
             </div>
 
@@ -1482,9 +1512,9 @@ export default function AdminSettingsPage() {
                         setRuntimeConfig((prev) => ({ ...prev, [item.key]: value }))
                       }
                       options={[
-                        { value: "", label: "Usar .env" },
-                        { value: "true", label: "Habilitado" },
-                        { value: "false", label: "Deshabilitado" },
+                        { value: "", label: t("common.useEnv") },
+                        { value: "true", label: t("common.enabled") },
+                        { value: "false", label: t("common.disabled") },
                       ]}
                     />
                   ) : (
@@ -1494,7 +1524,7 @@ export default function AdminSettingsPage() {
                       onChange={(event) =>
                         setRuntimeConfig((prev) => ({ ...prev, [item.key]: event.target.value }))
                       }
-                      placeholder="Usar .env"
+                      placeholder={t("common.useEnv")}
                     />
                   )}
                 </div>
@@ -1513,7 +1543,7 @@ export default function AdminSettingsPage() {
               className="px-6 py-3 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-all disabled:opacity-60 cursor-pointer flex items-center gap-2"
             >
               {savingRuntimeConfig && <Loader2 className="w-4 h-4 animate-spin" />}
-              Guardar Configuración Sync
+              {t("admin.settings.saveSync")}
             </button>
           </form>
           

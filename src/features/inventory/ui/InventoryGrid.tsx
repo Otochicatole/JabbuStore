@@ -6,6 +6,7 @@ import { InventoryCard } from "./InventoryCard";
 import { SteamLoginButton } from "@/shared/components/SteamLoginButton";
 import { useFilters } from "@/features/filters/context/FilterContext";
 import { applyFilters } from "@/features/filters/utils/applyFilters";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface InventoryGridProps {
   variant?: "simple" | "sell";
@@ -14,6 +15,7 @@ interface InventoryGridProps {
 export const InventoryGrid = ({ variant = "sell" }: InventoryGridProps) => {
   const { inventoryItems, loading, error, syncing, refetchInventory } =
     useInventory();
+  const { t } = useI18n();
   const filters = useFilters();
   const filteredItems = useMemo(
     () => applyFilters(inventoryItems, filters),
@@ -106,11 +108,10 @@ export const InventoryGrid = ({ variant = "sell" }: InventoryGridProps) => {
 
           <div className="relative z-10 max-w-sm flex flex-col items-center">
             <p className="text-lg font-black text-white uppercase tracking-wider mb-2">
-              Conecta tu cuenta de Steam
+              {t("inventory.connectSteam")}
             </p>
             <p className="text-xs text-[#84849b] leading-relaxed mb-8 text-center font-medium">
-              Inicia sesión de forma segura usando OpenID para visualizar,
-              valorar y vender tus skins de Counter-Strike 2 al instante.
+              {t("inventory.connectSteamDescription")}
             </p>
             <SteamLoginButton />
           </div>
@@ -144,13 +145,13 @@ export const InventoryGrid = ({ variant = "sell" }: InventoryGridProps) => {
         <div className="relative z-10 max-w-md flex flex-col items-center">
           <p className="text-lg font-black text-white uppercase tracking-wider mb-2">
             {isRateLimit
-              ? "Límite de Consultas de Steam"
-              : "Error de Conexión con Steam"}
+              ? t("inventory.steamRateLimit")
+              : t("inventory.steamConnectionError")}
           </p>
           <p className="text-xs text-[#84849b] leading-relaxed mb-8 text-center font-medium">
             {isRateLimit
-              ? "Los servidores de Steam están saturados y limitando temporalmente las consultas de inventario debido al alto tráfico general. Tu sesión sigue activa. Espera un momento y vuelve a intentarlo."
-              : `No pudimos sincronizar tu inventario: "${error}". Por favor, intenta de nuevo en unos instantes.`}
+              ? t("inventory.steamRateLimitDescription")
+              : t("inventory.syncError", { error })}
           </p>
 
           <button
@@ -172,7 +173,7 @@ export const InventoryGrid = ({ variant = "sell" }: InventoryGridProps) => {
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.89M9 11l3-3 3 3"
               />
             </svg>
-            {syncing ? "Sincronizando..." : "Reintentar Sincronización"}
+            {syncing ? t("sell.syncing") : t("inventory.retrySync")}
           </button>
         </div>
       </div>
@@ -209,21 +210,19 @@ export const InventoryGrid = ({ variant = "sell" }: InventoryGridProps) => {
         {hasActiveFilters ? (
           <>
             <p className="text-sm font-black text-white uppercase tracking-wider mb-2">
-              Sin resultados
+              {t("inventory.noResults")}
             </p>
             <p className="text-xs text-[#84849b] max-w-sm font-medium">
-              Ninguna skin de tu inventario coincide con los filtros activos.
-              Prueba ajustando los criterios.
+              {t("inventory.noResultsDescription")}
             </p>
           </>
         ) : (
           <>
             <p className="text-sm font-black text-white uppercase tracking-wider mb-2">
-              Tu inventario de Steam está vacío
+              {t("inventory.emptySteam")}
             </p>
             <p className="text-xs text-[#84849b] max-w-sm font-medium">
-              Asegúrate de que tus skins de Counter-Strike 2 sean públicas y se
-              encuentren visibles en tu cuenta de Steam.
+              {t("inventory.emptySteamDescription")}
             </p>
           </>
         )}

@@ -4,8 +4,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BACKEND_URL } from '@/shared/lib/api';
 import Image from 'next/image';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 export const SteamLoginButton = () => {
+  const { t } = useI18n();
+
   const handleLogin = () => {
     window.location.href = `${BACKEND_URL}/auth/steam`;
   };
@@ -26,7 +29,7 @@ export const SteamLoginButton = () => {
       <Image src="/steam.webp" alt="Steam Icon" width={40} height={40} className="relative z-10" />
       
       <span className="relative z-10 text-[9px] sm:text-[9.5px] tracking-[0.15em] uppercase font-black shrink-0">
-        Steam
+        {t("steam.login")}
       </span>
     </motion.button>
   );

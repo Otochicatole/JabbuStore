@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFilters, SortOption } from "@/features/filters/context/FilterContext";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 const SORT_OPTIONS: SortOption[] = [
   "Precio: Mayor a Menor",
@@ -16,11 +17,15 @@ const SORT_OPTIONS: SortOption[] = [
 export const SortDropdown = () => {
   const { sortOption, setSortOption } = useFilters();
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useI18n();
+
+  const getSortLabel = (option: SortOption) =>
+    t(`sort.${option}`);
 
   return (
     <div className="relative z-20 w-full sm:w-auto">
       <div className="flex items-center justify-between sm:justify-start gap-2 w-full">
-        <span className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest shrink-0">Ordenar por:</span>
+        <span className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest shrink-0">{t("filters.sort")}:</span>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`
@@ -28,7 +33,7 @@ export const SortDropdown = () => {
             ${isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : 'border-white/5 hover:border-white/10'}
           `}
         >
-          <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-tight truncate max-w-[150px]">{sortOption}</span>
+          <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-tight truncate max-w-[150px]">{getSortLabel(sortOption)}</span>
           <ChevronDown className={`h-3.5 w-3.5 text-white/40 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180 text-accent' : 'group-hover:text-white'}`} />
         </button>
       </div>
@@ -61,7 +66,7 @@ export const SortDropdown = () => {
                       }
                     `}
                   >
-                    {option}
+                    {getSortLabel(option)}
                   </button>
                 ))}
               </div>

@@ -7,10 +7,12 @@ import { InventoryGrid } from "@/features/inventory/ui/InventoryGrid";
 import { SellBasket } from "@/features/inventory/ui/SellBasket";
 import { RefreshCw, ShoppingBag, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 function SellPageContent() {
   const { inventoryItems, loading, syncing, refetchInventory, selectedItems } = useInventory();
   const [isSellBasketOpen, setIsSellBasketOpen] = useState(false);
+  const { t } = useI18n();
 
   const totalValue = inventoryItems.reduce((sum, item) => sum + item.price, 0);
   const selectedTotal = selectedItems.reduce((sum, item) => sum + item.price, 0);
@@ -28,23 +30,23 @@ function SellPageContent() {
           <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter">
-                Vender <span className="text-accent">Skins</span>
+                {t("sell.title")}
               </h1>
-              <p className="text-xs sm:text-sm text-[#84849b] mt-0.5">Selecciona los items de tu inventario que deseas vender al instante.</p>
+              <p className="text-xs sm:text-sm text-[#84849b] mt-0.5">{t("sell.description")}</p>
             </div>
 
             {/* Inventory Value Stats */}
             <div className="bg-card border border-white/5 p-3 px-4 sm:px-6 rounded-[3px] flex items-center gap-4 sm:gap-6 shadow-lg shadow-black/20 font-sans w-full md:w-auto justify-between sm:justify-end">
               <div className="text-left sm:text-right">
-                <p className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest mb-1">Valor Total</p>
+                <p className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest mb-1">{t("sell.totalValue")}</p>
                 <p className="text-base sm:text-lg lg:text-xl font-black text-white tracking-tighter">
-                  {loading ? "Calculando..." : `$${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  {loading ? t("sell.calculating") : `$${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   <span className="text-[9px] sm:text-[10px] text-muted ml-0.5 font-bold"> USD</span>
                 </p>
               </div>
               <div className="h-8 sm:h-10 w-[1px] bg-white/5" />
               <div className="text-right">
-                <p className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest mb-1">Items</p>
+                <p className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest mb-1">{t("common.items")}</p>
                 <p className="text-base sm:text-lg lg:text-xl font-black text-accent tracking-tighter">
                   {loading ? "..." : inventoryItems.length}
                 </p>
@@ -54,7 +56,7 @@ function SellPageContent() {
 
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-white/5 p-3 rounded-[3px]">
             <span className="text-[10px] sm:text-xs font-bold text-[#84849b] uppercase tracking-widest">
-              {loading ? "Cargando tu inventario..." : `Tu Inventario (${inventoryItems.length} items)`}
+              {loading ? t("sell.loadingInventory") : t("sell.inventoryCount", { count: inventoryItems.length })}
             </span>
             {!loading && (
               <button
@@ -63,7 +65,7 @@ function SellPageContent() {
                 className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-[3px] bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-accent/30 text-[9.5px] font-black uppercase tracking-wider text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer w-full sm:w-auto"
               >
                 <RefreshCw className={`w-3.5 h-3.5 text-accent group-hover:text-white transition-colors ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'Sincronizando...' : 'Actualizar Inventario'}
+                {syncing ? t("sell.syncing") : t("sell.refreshInventory")}
               </button>
             )}
           </div>
@@ -85,7 +87,7 @@ function SellPageContent() {
         animate={{ opacity: 1, x: 0, scale: 1 }}
         whileTap={{ scale: 0.94 }}
         className="fixed right-4 bottom-6 z-50 flex xl:hidden h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-[0_0_30px_rgba(217,70,239,0.35)]"
-        aria-label="Abrir resumen de venta"
+        aria-label={t("sell.openSummary")}
       >
         <ShoppingBag className="h-5 w-5" />
         {selectedItems.length > 0 && (
@@ -107,7 +109,7 @@ function SellPageContent() {
             <motion.button
               type="button"
               className="absolute inset-0 bg-black/75 backdrop-blur-sm"
-              aria-label="Cerrar resumen de venta"
+              aria-label={t("sell.closeSummary")}
               onClick={() => setIsSellBasketOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -124,7 +126,7 @@ function SellPageContent() {
               <div className="flex items-center justify-between gap-3 border-b border-white/5 bg-[#110f1e]/80 px-4 py-4">
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">
-                    Resumen de venta
+                    {t("sell.summary")}
                   </p>
                   <p className="truncate text-xs font-bold text-white">
                     {selectedItems.length} item{selectedItems.length === 1 ? "" : "s"} · ${selectedTotal.toLocaleString()} USD
@@ -134,7 +136,7 @@ function SellPageContent() {
                   type="button"
                   onClick={() => setIsSellBasketOpen(false)}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
-                  aria-label="Cerrar resumen de venta"
+                  aria-label={t("sell.closeSummary")}
                 >
                   <X className="h-4 w-4" />
                 </button>

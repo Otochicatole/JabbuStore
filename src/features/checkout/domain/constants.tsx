@@ -7,7 +7,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "mercado_pago",
     name: "Mercado Pago",
     description:
-      "Paga con saldo de Mercado Pago, transferencia o tarjetas compatibles",
+      "Pay with Mercado Pago balance, bank transfer, or compatible cards",
     icon: <CreditCard className="w-5 h-5 text-sky-400" />,
     badge: "ARS / CBU / Alias",
     color:
@@ -15,9 +15,9 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   },
   {
     id: "nowpayments",
-    name: "NOWPayments (Criptomonedas)",
+    name: "NOWPayments (Cryptocurrencies)",
     description:
-      "Paga con Bitcoin, USDT, Ethereum y otras criptomonedas mediante checkout seguro",
+      "Pay with Bitcoin, USDT, Ethereum, and other cryptocurrencies through secure checkout",
     icon: <Coins className="w-5 h-5 text-purple-400" />,
     badge: "Crypto / Web3",
     color:
@@ -27,7 +27,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "paypal",
     name: "PayPal",
     description:
-      "Paga con saldo de PayPal, tarjeta o cuenta bancaria internacional",
+      "Pay with PayPal balance, card, or international bank account",
     icon: <Wallet className="w-5 h-5 text-indigo-400" />,
     badge: "USD / PayPal",
     color:
@@ -35,9 +35,9 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   },
   {
     id: "manual_transfer",
-    name: "Transferencia Manual",
+    name: "Manual Transfer",
     description:
-      "Transferí por banco o cripto con los datos configurados y adjuntá comprobante",
+      "Transfer by bank or crypto using configured details and upload proof",
     icon: <Landmark className="w-5 h-5 text-emerald-400" />,
     badge: "Banco / Crypto",
     color:

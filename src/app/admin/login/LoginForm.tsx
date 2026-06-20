@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BACKEND_URL } from '@/shared/lib/api';
+import Link from 'next/link';
 import { Lock, Mail, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 export function LoginForm() {
   const router = useRouter();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +17,7 @@ export function LoginForm() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Por favor, completa todos los campos.');
+      setError(t("admin.login.requiredFields"));
       return;
     }
 
@@ -34,14 +36,14 @@ export function LoginForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Credenciales inválidas');
+        throw new Error(data.error || t("admin.login.error"));
       }
 
       // Redirigir al panel. Al cargar, el servidor validará el JWT de la cookie de forma automática.
       router.push('/admin/panel/dashboard');
       router.refresh(); // Refrescar para activar la carga del Server Component
-    } catch (err: any) {
-      setError(err.message || 'Error al conectar con el servidor.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("admin.login.serverError"));
     } finally {
       setLoading(false);
     }
@@ -59,7 +61,7 @@ export function LoginForm() {
           Jabbu<span className="text-[#d946ef]">Store</span> Admin
         </h1>
         <p className="text-xs text-[#84849b] font-medium font-mono uppercase tracking-widest">
-          ACCESO JWT POR COOKIE HTTP-ONLY
+          {t("admin.login.secureAccess")}
         </p>
       </div>
 
@@ -79,7 +81,7 @@ export function LoginForm() {
           {/* Email Field */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-[#84849b] uppercase tracking-wider block font-mono">
-              Email Corporativo
+              {t("admin.login.email")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
@@ -99,7 +101,7 @@ export function LoginForm() {
           {/* Password Field */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-[#84849b] uppercase tracking-wider block font-mono">
-              Contraseña
+              {t("admin.login.password")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
@@ -125,10 +127,10 @@ export function LoginForm() {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-black" />
-                <span>Verificando...</span>
+                <span>{t("admin.login.verifying")}</span>
               </>
             ) : (
-              <span>Iniciar Sesión</span>
+              <span>{t("admin.login.submit")}</span>
             )}
           </button>
         </form>
@@ -136,12 +138,12 @@ export function LoginForm() {
 
       {/* Back Link */}
       <div className="text-center mt-6">
-        <a
+        <Link
           href="/"
           className="text-[10px] font-black text-[#84849b] hover:text-white uppercase tracking-wider transition-colors font-mono"
         >
-          ← Volver a la Tienda
-        </a>
+          ← {t("checkout.backToStore")}
+        </Link>
       </div>
     </div>
   );

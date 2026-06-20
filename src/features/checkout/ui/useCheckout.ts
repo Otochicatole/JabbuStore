@@ -12,8 +12,9 @@ import {
   ManualTransferSettings,
 } from "../domain/types";
 import { PAYMENT_METHODS } from "../domain/constants";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
-function getErrorMessage(error: unknown, fallback = "Ocurrió un error inesperado.") {
+function getErrorMessage(error: unknown, fallback = "An unexpected error occurred.") {
   return error instanceof Error ? error.message : fallback;
 }
 
@@ -31,6 +32,7 @@ const PAYMENT_PROOF_ALLOWED_TYPES = new Set([
 ]);
 
 export function useCheckout() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { items: cartItems, clearCart } = useCart();
@@ -183,11 +185,11 @@ export function useCheckout() {
             const data = await res.json();
             console.log("[useCheckout] PayPal webhook response data:", data);
             if (!res.ok) {
-              throw new Error(data?.error || "Error al verificar la transacción de PayPal.");
+              throw new Error(data?.error || t("checkout.error.paypalVerification"));
             }
           } catch (err: unknown) {
             console.error("PayPal verification error:", err);
-            setError(getErrorMessage(err, "No se pudo procesar tu pago de PayPal de manera segura."));
+            setError(getErrorMessage(err, t("checkout.error.paypalProcessing")));
             setLoading(false);
             return;
           }
@@ -220,21 +222,21 @@ export function useCheckout() {
         }
 
         setError(
-          "El proceso de pago fue cancelado o rechazado. Por favor, intente nuevamente.",
+          t("checkout.error.paymentCancelled"),
         );
         setLoading(false);
       } else if (status === "pending") {
         setError(
-          "Su transacción se encuentra pendiente de acreditación. Procesaremos su orden apenas se apruebe de forma segura.",
+          t("checkout.paymentPending"),
         );
         setLoading(false);
       }
     };
 
     handleCallback();
-  }, [searchParams, checkoutType, clearCart, clearSellList]);
+  }, [searchParams, checkoutType, clearCart, clearSellList, t]);
 
-  // 2. Validar ítems del checkout
+  // 2. Validate checkout items
   useEffect(() => {
     const status = searchParams.get("status");
     if (status) return;
@@ -246,7 +248,7 @@ export function useCheckout() {
         let payload: Record<string, unknown> = {};
         if (checkoutType === "buy") {
           if (cartItems.length === 0) {
-            setError("Tu carrito está vacío. Agrega skins para comprar.");
+            setError(t("checkout.emptyCart"));
             setLoading(false);
             return;
           }
@@ -261,7 +263,7 @@ export function useCheckout() {
           };
         } else {
           if (sellItems.length === 0) {
-            setError("No has seleccionado skins para vender.");
+            setError(t("checkout.noSellItems"));
             setLoading(false);
             return;
           }
@@ -294,7 +296,7 @@ export function useCheckout() {
         setError(
           getErrorMessage(
             err,
-            "Ocurrió un error inesperado al validar tus productos.",
+            t("checkout.validateProductsError"),
           ),
         );
       } finally {
@@ -303,68 +305,68 @@ export function useCheckout() {
     };
 
     validateCheckout();
-  }, [checkoutType, cartItems, sellItems, searchParams]);
+  }, [checkoutType, cartItems, sellItems, searchParams, t]);
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
 
     if (!formData.firstName.trim())
-      errors.firstName = "El nombre es obligatorio.";
+      errors.firstName = t("checkout.error.firstNameRequired");
     if (!formData.lastName.trim())
-      errors.lastName = "El apellido es obligatorio.";
+      errors.lastName = t("checkout.error.lastNameRequired");
     if (!formData.email.trim()) {
-      errors.email = "El correo electrónico es obligatorio.";
+      errors.email = t("checkout.error.emailRequired");
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Correo electrónico no válido.";
+      errors.email = t("checkout.error.emailInvalid");
     }
-    if (!formData.phone.trim()) errors.phone = "El teléfono es obligatorio.";
+    if (!formData.phone.trim()) errors.phone = t("checkout.error.phoneRequired");
 
     if (checkoutType === "buy" && selectedMethod === "mercado_pago" && manualTransferSettings?.mercadoPagoEnabled === false) {
-      errors.paymentMethod = "Mercado Pago no está habilitado.";
+      errors.paymentMethod = t("checkout.error.mercadoPagoDisabled");
     }
     if (checkoutType === "buy" && selectedMethod === "paypal" && manualTransferSettings?.paypalEnabled === false) {
-      errors.paymentMethod = "PayPal no está habilitado.";
+      errors.paymentMethod = t("checkout.error.paypalDisabled");
     }
     if (checkoutType === "buy" && selectedMethod === "nowpayments" && manualTransferSettings?.nowpaymentsEnabled === false) {
-      errors.paymentMethod = "NOWPayments no está habilitado.";
+      errors.paymentMethod = t("checkout.error.nowpaymentsDisabled");
     }
 
     if (checkoutType === "buy" && selectedMethod === "manual_transfer") {
       if (!manualTransferSettings?.manualTransferEnabled) {
-        errors.paymentProof = "La transferencia manual no está habilitada.";
+        errors.paymentProof = t("checkout.manualTransferDisabled");
       } else if (!formData.paymentProof) {
-        errors.paymentProof = "El comprobante es obligatorio para transferencia manual.";
+        errors.paymentProof = t("checkout.error.proofRequired");
       } else if (!PAYMENT_PROOF_ALLOWED_TYPES.has(formData.paymentProof.type)) {
-        errors.paymentProof = "Formato no permitido. Usá JPG, PNG, WEBP, GIF o PDF.";
+        errors.paymentProof = t("checkout.error.proofFormat");
       } else if (formData.paymentProof.size > PAYMENT_PROOF_MAX_SIZE_BYTES) {
-        errors.paymentProof = "El comprobante no puede superar los 10 MB.";
+        errors.paymentProof = t("checkout.error.proofSize");
       }
     }
 
     if (checkoutType === "sell" && selectedMethod) {
       if (selectedMethod === "mercado_pago") {
         if (!formData.cbu.trim())
-          errors.cbu = "El CBU/CVU o Alias es obligatorio.";
+          errors.cbu = t("checkout.error.cbuRequired");
         if (!formData.accountHolder.trim())
-          errors.accountHolder = "El nombre del titular es obligatorio.";
-        if (!formData.cuil.trim()) errors.cuil = "El CUIL/CUIT es obligatorio.";
+          errors.accountHolder = t("checkout.error.accountHolderRequired");
+        if (!formData.cuil.trim()) errors.cuil = t("checkout.error.cuilRequired");
       } else if (selectedMethod === "paypal") {
         if (!formData.cbu.trim())
-          errors.cbu = "La dirección de correo de PayPal es obligatoria.";
+          errors.cbu = t("checkout.error.paypalEmailRequired");
         if (!formData.accountHolder.trim())
-          errors.accountHolder = "El titular de la cuenta es obligatorio.";
+          errors.accountHolder = t("checkout.error.accountHolderRequired");
       } else if (selectedMethod === "ethereum") {
         if (!formData.walletAddress.trim())
           errors.walletAddress =
-            "La dirección de billetera Ethereum (Web3) es obligatoria.";
+            t("checkout.error.ethereumWalletRequired");
       } else if (selectedMethod === "nowpayments") {
         if (!formData.walletAddress.trim())
           errors.walletAddress =
-            "La dirección de billetera de Criptomonedas es obligatoria.";
+            t("checkout.error.cryptoWalletRequired");
       } else if (selectedMethod === "binance") {
         if (!formData.walletAddress.trim())
           errors.walletAddress =
-            "El ID de Binance (Pay ID) o dirección de depósito es obligatorio.";
+            t("checkout.error.binanceRequired");
       }
     }
 
@@ -386,7 +388,7 @@ export function useCheckout() {
 
     if (!response.ok) {
       const data = await response.json().catch(() => null);
-      throw new Error(data?.error || "No pudimos subir el comprobante de pago.");
+      throw new Error(data?.error || t("checkout.error.uploadProof"));
     }
   };
 
@@ -414,12 +416,12 @@ export function useCheckout() {
 
     sendDebugLog("validateForm passed. Proceeding with checkout.");
 
-    // SI ES COMPRA Y EL MÉTODO ES MERCADO PAGO, NOWPAYMENTS O PAYPAL: FLUJO REAL
+    // Buy orders using external payment providers use the real redirect flow.
     if (checkoutType === "buy" && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments" || selectedMethod === "paypal")) {
       setIsProcessingPayment(true);
       setPaymentStep(1);
 
-      const methodLabel = selectedMethod === "mercado_pago" ? "Mercado Pago" : selectedMethod === "nowpayments" ? "NOWPayments" : "PayPal";
+      const methodLabel = t(`paymentMethod.${selectedMethod}.name`);
       sendDebugLog("Checkout flow: preparing payment order for " + methodLabel);
 
       setTimeout(async () => {
@@ -487,7 +489,7 @@ export function useCheckout() {
           
           if (!res.ok) {
             throw new Error(
-              data?.error || `Error al registrar la orden de ${methodLabel}.`,
+              data?.error || t("checkout.error.registerMethodOrder", { method: methodLabel }),
             );
           }
 
@@ -497,7 +499,7 @@ export function useCheckout() {
             window.location.href = data.paymentUrl;
           } else {
             throw new Error(
-              `El servidor no devolvió un enlace de pago de ${methodLabel} válido.`,
+              t("checkout.error.invalidPaymentLink", { method: methodLabel }),
             );
           }
         } catch (err: unknown) {
@@ -507,14 +509,14 @@ export function useCheckout() {
               getErrorStack(err),
           );
           console.error(`${methodLabel} integration error:`, err);
-          setError(getErrorMessage(err, `La conexión con ${methodLabel} falló.`));
+          setError(getErrorMessage(err, t("checkout.error.methodConnection", { method: methodLabel })));
           setIsProcessingPayment(false);
         }
       }, 1000);
       return;
     }
 
-    // Flujo de creación de orden de venta o métodos internos sin redirección externa.
+    // Sell orders and internal methods create the order without external redirects.
     setIsProcessingPayment(true);
     setPaymentStep(1);
 
@@ -610,13 +612,13 @@ export function useCheckout() {
             const data = await res.json();
             if (!res.ok) {
               throw new Error(
-                data?.error || "Error al registrar el pedido final.",
+                data?.error || t("checkout.error.finalOrder"),
               );
             }
 
             if (checkoutType === "buy" && selectedMethod === "manual_transfer") {
               if (!formData.paymentProof) {
-                throw new Error("El comprobante es obligatorio para transferencia manual.");
+                throw new Error(t("checkout.error.proofRequired"));
               }
               try {
                 await uploadBuyerPaymentProof(data.id, formData.paymentProof);
@@ -648,7 +650,7 @@ export function useCheckout() {
           } catch (err: unknown) {
             console.error("Submit order error:", err);
             setError(
-              getErrorMessage(err, "No pudimos registrar la orden."),
+              getErrorMessage(err, t("checkout.error.createOrder")),
             );
             setIsProcessingPayment(false);
           }

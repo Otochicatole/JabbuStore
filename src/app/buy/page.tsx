@@ -4,9 +4,11 @@ import { useSkins } from "@/features/skins/ui/useSkins";
 import { SkinGrid } from "@/features/skins/ui/SkinGrid";
 import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
 import { SortDropdown } from "@/features/skins/ui/SortDropdown";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export default function BuyPage() {
   const { skins, pagination, loading, error, refetch } = useSkins();
+  const { t } = useI18n();
 
   return (
     <main className="mx-auto max-w-full px-4 sm:px-6 pt-24 pb-20 overflow-x-hidden">
@@ -19,16 +21,16 @@ export default function BuyPage() {
         {/* Main Content */}
         <section className="flex flex-col w-full">
           <header className="mb-6">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter">Mercado</h1>
-            <p className="text-xs sm:text-sm text-[#84849b] mt-0.5">Explora y compra las mejores skins de CS2 disponibles.</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter">{t("buy.title")}</h1>
+            <p className="text-xs sm:text-sm text-[#84849b] mt-0.5">{t("buy.description")}</p>
           </header>
 
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-white/5 p-3 rounded-[3px]">
             <span className="text-[10px] sm:text-xs font-bold text-[#84849b] uppercase tracking-widest block sm:inline">
-              {loading ? "Cargando catálogo..." : `${pagination.total} Resultados`}
+              {loading ? t("buy.loadingCatalog") : t("buy.results", { count: pagination.total })}
             </span>
             <div className="flex items-center gap-2">
-              <span className="hidden sm:inline text-[9px] font-black uppercase text-[#84849b] tracking-wider">Ordenar por:</span>
+              <span className="hidden sm:inline text-[9px] font-black uppercase text-[#84849b] tracking-wider">{t("filters.sort")}:</span>
               <SortDropdown />
             </div>
           </div>

@@ -8,6 +8,7 @@ import { useCart } from "../../../cart/context/CartContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { X, Search, ArrowUpDown, AlertCircle, Check, RefreshCw, Eye } from "lucide-react";
 import { AdminSelect } from "@/shared/components/AdminSelect";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface FloatItem {
   id: string;
@@ -30,12 +31,12 @@ interface FloatsModalProps {
   onClose: () => void;
 }
 
-const getConditionLabel = (float: number) => {
-  if (float < 0.07) return "Recién fabricado (FN)";
-  if (float < 0.15) return "Casi nuevo (MW)";
-  if (float < 0.38) return "Algo desgastado (FT)";
-  if (float < 0.45) return "Bastante desgastado (WW)";
-  return "Deplorable (BS)";
+const getConditionLabelKey = (float: number) => {
+  if (float < 0.07) return "filters.condition.factoryNewShort";
+  if (float < 0.15) return "filters.condition.minimalWearShort";
+  if (float < 0.38) return "filters.condition.fieldTestedShort";
+  if (float < 0.45) return "filters.condition.wellWornShort";
+  return "filters.condition.battleScarredShort";
 };
 
 const getFloatColorClass = (float: number) => {
@@ -54,22 +55,44 @@ const getFloatConditionStyle = (float: number) => {
   return { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/25" }; // BS
 };
 
-const sortOptions = [
-  { value: "price_asc", label: "Menor Precio" },
-  { value: "price_desc", label: "Mayor Precio" },
-  { value: "float_asc", label: "Menor Wear (Float)" },
-  { value: "float_desc", label: "Mayor Wear (Float)" },
+const getExteriorLabelKey = (exterior: string | null | undefined) => {
+  if (!exterior) return null;
+  const ext = exterior.toLowerCase();
+  if (ext.includes("factory") || ext.includes("fn") || ext.includes("recién"))
+    return "filters.condition.factoryNew";
+  if (ext.includes("minimal") || ext.includes("mw") || ext.includes("casi"))
+    return "filters.condition.minimalWear";
+  if (ext.includes("field") || ext.includes("ft") || ext.includes("algo"))
+    return "filters.condition.fieldTested";
+  if (ext.includes("well") || ext.includes("ww") || ext.includes("bastante"))
+    return "filters.condition.wellWorn";
+  if (ext.includes("battle") || ext.includes("bs") || ext.includes("deplorable"))
+    return "filters.condition.battleScarred";
+  return null;
+};
+
+const sortOptionKeys = [
+  { value: "price_asc", labelKey: "skinCard.sort.lowestPrice" },
+  { value: "price_desc", labelKey: "skinCard.sort.highestPrice" },
+  { value: "float_asc", labelKey: "skinCard.sort.lowestWear" },
+  { value: "float_desc", labelKey: "skinCard.sort.highestWear" },
 ];
 
 type FloatSortOption = "price_asc" | "price_desc" | "float_asc" | "float_desc";
 
-const getErrorMessage = (err: unknown) => {
+const getErrorMessage = (err: unknown, fallback: string) => {
   if (err instanceof Error) return err.message;
-  return "Error al cargar los floats. Por favor intenta de nuevo.";
+  return fallback;
 };
 
 export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
+  const { t } = useI18n();
   const { addToCart, removeFromCart, items: cartItems } = useCart();
+  const sortOptions = useMemo(
+    () => sortOptionKeys.map((option) => ({ value: option.value, label: t(option.labelKey) })),
+    [t],
+  );
+
   const [mounted, setMounted] = useState(false);
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +101,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   // Filtros y ordenamiento
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<FloatSortOption>("price_asc");
+  const skinExteriorLabelKey = getExteriorLabelKey(skin.exterior);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => setMounted(true), 0);
@@ -103,17 +127,17 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
         `${BACKEND_URL}/market/listings/${encodeURIComponent(skin.id)}/floats`,
       );
       if (!response.ok) {
-        throw new Error("No se pudieron obtener los floats de la API.");
+        throw new Error(t("skinCard.floatLoadApiError"));
       }
       const data = await response.json();
       setFloats(data);
     } catch (err: unknown) {
       console.error("[Floats Modal] Error fetching floats:", err);
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t("skinCard.floatLoadError")));
     } finally {
       setLoading(false);
     }
-  }, [skin.id]);
+  }, [skin.id, t]);
 
   useEffect(() => {
     if (isOpen) {
@@ -146,7 +170,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
         (f) =>
           f.floatValue.toString().includes(query) ||
           f.paintSeed.toString().includes(query) ||
-          getConditionLabel(f.floatValue).toLowerCase().includes(query)
+          t(getConditionLabelKey(f.floatValue)).toLowerCase().includes(query)
       );
     }
 
@@ -167,7 +191,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
     });
 
     return result;
-  }, [floats, search, sortBy]);
+  }, [floats, search, sortBy, t]);
 
   if (!isOpen || !mounted) return null;
 
@@ -239,11 +263,11 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
               </h3>
               <div className="flex flex-wrap items-center gap-2 mt-1.5">
                 <span className="bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full select-none font-mono tracking-wider">
-                  ⏳ Bajo Pedido
+                  ⏳ {t("skinCard.onRequest")}
                 </span>
                 {skin.exterior && (
                   <span className="text-[#84849b] text-[9px] uppercase font-bold tracking-wider font-mono">
-                    {skin.exterior}
+                    {skinExteriorLabelKey ? t(skinExteriorLabelKey) : skin.exterior}
                   </span>
                 )}
               </div>
@@ -264,7 +288,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <input
               type="text"
-              placeholder="Buscar por float o semilla..."
+              placeholder={t("skinCard.searchFloatPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white placeholder-white/30 focus:outline-none focus:border-accent/50 transition-colors"
@@ -308,17 +332,17 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                 onClick={fetchFloats}
                 className="mt-4 flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black uppercase tracking-wider rounded-lg text-white transition-all cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5" /> Reintentar
+                <RefreshCw className="w-3.5 h-3.5" /> {t("common.retry")}
               </button>
             </div>
           ) : processedFloats.length === 0 ? (
             // Empty State
             <div className="flex flex-col items-center justify-center py-16 text-center bg-white/[0.01] border border-white/5 border-dashed rounded-2xl">
               <span className="text-white/20 font-black text-xs uppercase tracking-widest font-mono mb-2">
-                Sin resultados
+                {t("skinCard.noFloatResults")}
               </span>
               <p className="text-xs text-[#84849b] max-w-xs leading-relaxed">
-                No se encontraron floats para los filtros aplicados en este momento.
+                {t("skinCard.noFloatResultsDescription")}
               </p>
             </div>
           ) : (
@@ -347,12 +371,12 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                     <div className="flex items-center gap-2 flex-wrap">
                       {/* Condition Badge */}
                       <span className={`text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-full select-none border font-mono tracking-wider ${condStyle.bg} ${condStyle.text} ${condStyle.border}`}>
-                        {getConditionLabel(f.floatValue)}
+                        {t(getConditionLabelKey(f.floatValue))}
                       </span>
                       
                       {/* Seed Badge */}
                       <span className="bg-white/5 border border-white/10 text-white/70 text-[9.5px] font-mono px-2 py-0.5 rounded-md">
-                        Semilla: <span className="text-white font-bold">{f.paintSeed}</span>
+                        {t("checkout.seed")}: <span className="text-white font-bold">{f.paintSeed}</span>
                       </span>
                     </div>
 
@@ -379,7 +403,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 sm:gap-5 shrink-0">
                     <div className="text-left sm:text-right">
                       <span className="text-[#84849b] uppercase font-bold text-[8px] block tracking-widest font-mono">
-                        Precio final
+                        {t("skinCard.finalPrice")}
                       </span>
                       <span className="text-base font-black text-white font-mono">
                         ${f.displayPrice.toLocaleString()}{" "}
@@ -392,7 +416,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                         <a
                           href={f.inspectLink}
                           className="h-9 w-9 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg transition-all hover:scale-105 active:scale-95"
-                          title="Inspeccionar en el juego"
+                          title={t("skinCard.inspectInGame")}
                         >
                           <Eye className="w-4 h-4" />
                         </a>
@@ -403,14 +427,14 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                           onClick={handleRemoveFromCart}
                           className="h-9 px-4 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all hover:scale-[1.02] active:scale-95 text-[9.5px] font-black uppercase tracking-wider rounded-lg cursor-pointer font-mono"
                         >
-                          Quitar
+                          {t("common.remove")}
                         </button>
                       ) : (
                         <button
                           onClick={() => handleSelectFloat(f)}
                           className="h-9 px-4 flex items-center justify-center gap-1 bg-accent text-white hover:brightness-110 hover:scale-[1.02] active:scale-95 transition-all text-[9.5px] font-black uppercase tracking-wider rounded-lg cursor-pointer border-none shadow-[0_4px_15px_rgba(217,70,239,0.2)] font-mono"
                         >
-                          {cartItemForThisListing ? "Reemplazar" : "Seleccionar"}
+                          {cartItemForThisListing ? t("common.replace") : t("skinCard.select")}
                         </button>
                       )}
                     </div>
@@ -425,15 +449,15 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
         <div className="pt-4 border-t border-white/5 mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="text-[9px] font-bold text-[#84849b] uppercase tracking-wider font-mono">
-              Estado en Carrito
+              {t("skinCard.cartStatus")}
             </span>
             <span className="text-[10px] font-black text-white">
               {cartItemForThisListing ? (
                 <span className="text-emerald-400 flex items-center gap-1 break-words">
-                  <Check className="w-3.5 h-3.5" /> 1 variant en carro (Float: {cartItemForThisListing.skin.float?.toFixed(4)})
+                  <Check className="w-3.5 h-3.5" /> {t("skinCard.oneVariantInCart", { float: cartItemForThisListing.skin.float?.toFixed(4) ?? "N/A" })}
                 </span>
               ) : (
-                <span className="text-white/40">Sin seleccionar</span>
+                <span className="text-white/40">{t("skinCard.notSelected")}</span>
               )}
             </span>
           </div>
@@ -441,7 +465,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
             onClick={onClose}
             className="w-full sm:w-auto px-5 py-2.5 bg-secondary hover:bg-secondary/80 rounded-xl text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer border-none font-mono"
           >
-            Aceptar
+            {t("common.confirm")}
           </button>
         </div>
       </div>

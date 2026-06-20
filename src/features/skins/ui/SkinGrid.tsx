@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Skin, SkinPagination } from '../domain/skin';
 import { SkinCard } from './SkinCard';
 import { useFilters } from '@/features/filters/context/FilterContext';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 interface SkinGridProps {
   skins: Skin[];
@@ -58,6 +59,7 @@ function getPageNumbers(currentPage: number, totalPages: number) {
 }
 
 export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGridProps) => {
+  const { t } = useI18n();
   const filters = useFilters();
   const router = useRouter();
   const pathname = usePathname();
@@ -169,9 +171,9 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
         </div>
         
         <div className="relative z-10 max-w-md flex flex-col items-center">
-          <p className="text-lg font-black text-white uppercase tracking-wider mb-2">Error de Sincronización</p>
+          <p className="text-lg font-black text-white uppercase tracking-wider mb-2">{t("skinGrid.syncErrorTitle")}</p>
           <p className="text-xs text-[#84849b] leading-relaxed mb-8 text-center font-medium">
-            No pudimos conectar con los servidores de JabbuStore para obtener el catálogo de skins: &quot;{error}&quot;. Asegúrate de que el servidor de back-end esté en ejecución.
+            {t("skinGrid.syncErrorDescription", { error })}
           </p>
           
           {onRetry && (
@@ -182,7 +184,7 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.89M9 11l3-3 3 3" />
               </svg>
-              Reintentar Conexión
+              {t("skinGrid.retryConnection")}
             </button>
           )}
         </div>
@@ -205,13 +207,13 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
         </div>
         {hasActiveFilters ? (
           <>
-            <p className="text-sm font-black text-white uppercase tracking-wider mb-2 relative z-10">Sin resultados</p>
-            <p className="text-xs text-[#84849b] max-w-sm font-medium relative z-10">Ninguna skin coincide con los filtros activos. Prueba ajustando los criterios de búsqueda.</p>
+            <p className="text-sm font-black text-white uppercase tracking-wider mb-2 relative z-10">{t("inventory.noResults")}</p>
+            <p className="text-xs text-[#84849b] max-w-sm font-medium relative z-10">{t("skinGrid.noResultsDescription")}</p>
           </>
         ) : (
           <>
-            <p className="text-sm font-black text-white uppercase tracking-wider mb-2 relative z-10">No hay nada a la venta</p>
-            <p className="text-xs text-[#84849b] max-w-sm font-medium relative z-10">Actualmente no hay artículos disponibles en el mercado. Vuelve a consultar más tarde.</p>
+            <p className="text-sm font-black text-white uppercase tracking-wider mb-2 relative z-10">{t("skinGrid.emptyMarket")}</p>
+            <p className="text-xs text-[#84849b] max-w-sm font-medium relative z-10">{t("skinGrid.emptyMarketDescription")}</p>
           </>
         )}
       </div>
@@ -264,11 +266,11 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
         {/* Contador de progreso ultra-estético */}
         <div className="text-center text-[10px] uppercase tracking-[0.2em] font-black text-[#84849b] bg-white/[0.02] border border-white/5 px-4 py-1.5 rounded-full flex flex-wrap items-center justify-center gap-2 shadow-inner">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          Mostrando skins <span className="text-white">{startIndex} - {endIndex}</span> de <span className="text-white">{pagination.total}</span>
+          {t("skinGrid.showing")} <span className="text-white">{startIndex} - {endIndex}</span> {t("skinGrid.of")} <span className="text-white">{pagination.total}</span>
         </div>
 
         {totalPages > 1 && (
-          <nav className="flex w-full max-w-full items-center gap-2 overflow-x-auto px-1 pb-2 sm:w-auto sm:overflow-visible sm:px-0 sm:pb-0" aria-label="Paginación de skins">
+          <nav className="flex w-full max-w-full items-center gap-2 overflow-x-auto px-1 pb-2 sm:w-auto sm:overflow-visible sm:px-0 sm:pb-0" aria-label={t("skinGrid.pagination")}>
             {/* Botón Anterior */}
             <button
               onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
@@ -278,7 +280,7 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
                   ? 'opacity-40 cursor-not-allowed text-white/20'
                   : 'hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95 cursor-pointer'
               }`}
-              title="Página Anterior"
+              title={t("common.back")}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -324,7 +326,7 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
                   ? 'opacity-40 cursor-not-allowed text-white/20'
                   : 'hover:text-white hover:bg-white/5 hover:border-white/10 active:scale-95 cursor-pointer'
               }`}
-              title="Página Siguiente"
+              title={t("common.next")}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />

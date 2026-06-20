@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Loader2, 
@@ -18,23 +18,27 @@ import {
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { PaymentProofModal, PaymentProofInfo } from "@/shared/components/PaymentProofModal";
+import { useI18n } from "@/shared/i18n/I18nProvider";
+import type { TranslationParams } from "@/shared/i18n/types";
 
 const ORDERS_FETCH_TIMEOUT_MS = 15000;
 
-function getOrdersFetchErrorMessage(error: unknown) {
+type Translate = (key: string, params?: TranslationParams) => string;
+
+function getOrdersFetchErrorMessage(error: unknown, t: Translate) {
   if (error instanceof DOMException && error.name === "AbortError") {
-    return "La carga de pedidos tardó demasiado. Revisá la conexión con el backend/devtunnel e intentá nuevamente.";
+    return t("purchases.error.timeout");
   }
 
   if (error instanceof TypeError && error.message === "Failed to fetch") {
-    return "No pudimos conectar con el backend. Si estás usando DevTunnel, verificá que siga activo y reintentá.";
+    return t("purchases.error.backendConnection");
   }
 
   if (error instanceof Error) {
     return error.message;
   }
 
-  return "No pudimos cargar tus pedidos. Intentá nuevamente.";
+  return t("purchases.error.loadOrders");
 }
 
 interface OrderItem {
@@ -141,6 +145,7 @@ const getItemRarity = (item: OrderItem) => {
 };
 
 export default function UserOrdersPage() {
+  const { t, locale } = useI18n();
   const isFetchingRef = useRef(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,7 +154,7 @@ export default function UserOrdersPage() {
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
   const [selectedProof, setSelectedProof] = useState<SelectedProof | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (isFetchingRef.current) return;
 
     isFetchingRef.current = true;
@@ -172,20 +177,20 @@ export default function UserOrdersPage() {
           ? (await res.json().catch(() => null))?.error
           : await res.text().catch(() => "");
 
-        throw new Error(responseMessage || `Error ${res.status} al cargar pedidos.`);
+        throw new Error(responseMessage || t("purchases.error.statusLoadOrders", { status: res.status }));
       }
 
       const data = await res.json();
       setOrders(data);
     } catch (e) {
       console.error("Error fetching orders:", e);
-      setError(getOrdersFetchErrorMessage(e));
+      setError(getOrdersFetchErrorMessage(e, t));
     } finally {
       window.clearTimeout(timeoutId);
       isFetchingRef.current = false;
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -193,7 +198,7 @@ export default function UserOrdersPage() {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [fetchOrders]);
 
   const toggleOrderExpand = (orderId: string) => {
     setExpandedOrders(prev => ({
@@ -208,31 +213,31 @@ export default function UserOrdersPage() {
     switch (status) {
       case "PENDING_PAYMENT":
         return {
-          label: isSell ? "Pendiente Aprobación" : "Pago Pendiente",
+          label: isSell ? t("purchases.status.sellPendingApproval") : t("purchases.status.paymentPending"),
           color: "text-orange-400 bg-orange-500/10 border-orange-500/20",
           icon: <Clock className="w-3.5 h-3.5 text-orange-400" />
         };
       case "PAID":
         return {
-          label: isSell ? "Trade Confirmado / Pendiente Pago" : "Pagado",
+          label: isSell ? t("purchases.status.tradeConfirmedPendingPayment") : t("purchases.status.paid"),
           color: isSell ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20",
           icon: isSell ? <Clock className="w-3.5 h-3.5 text-purple-400 animate-pulse" /> : <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
         };
       case "TRADE_PENDING":
         return {
-          label: isSell ? "Venta Aprobada (Enviar Trade)" : "Trade Pendiente",
+          label: isSell ? t("purchases.status.sellApprovedSendTrade") : t("purchases.status.tradePending"),
           color: isSell ? "text-blue-400 bg-blue-500/10 border-blue-500/20 animate-pulse" : "text-purple-400 bg-purple-500/10 border-purple-500/20",
           icon: isSell ? <ArrowUpRight className="w-3.5 h-3.5 text-blue-400" /> : <Clock className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
         };
       case "COMPLETED":
         return {
-          label: isSell ? "Venta Completada / Pagado" : "Completado",
+          label: isSell ? t("purchases.status.sellCompletedPaid") : t("purchases.status.completed"),
           color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
           icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
         };
       case "CANCELLED":
         return {
-          label: isSell ? "Venta Rechazada" : "Cancelado",
+          label: isSell ? t("purchases.status.sellRejected") : t("purchases.status.cancelled"),
           color: "text-red-400 bg-red-500/10 border-red-500/20",
           icon: <XCircle className="w-3.5 h-3.5 text-red-400" />
         };
@@ -243,6 +248,11 @@ export default function UserOrdersPage() {
           icon: <Clock className="w-3.5 h-3.5" />
         };
     }
+  };
+
+  const getPaymentMethodLabel = (paymentMethod?: string | null) => {
+    if (!paymentMethod) return t("common.notSpecified");
+    return t(`paymentMethod.${paymentMethod}.name`);
   };
 
   const filteredOrders = orders.filter(order => {
@@ -256,10 +266,10 @@ export default function UserOrdersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
           <h1 className="text-3xl font-black uppercase tracking-tight text-white flex items-center gap-3">
-            Mis <span className="text-accent">Pedidos</span>
+            {t("purchases.title")}
           </h1>
           <p className="text-sm text-[#84849b] mt-1.5 font-medium">
-            Visualiza tus compras y ventas, haz el seguimiento y revisa los detalles y estados de tus transacciones.
+            {t("purchases.description")}
           </p>
         </div>
 
@@ -276,7 +286,7 @@ export default function UserOrdersPage() {
                     : "text-white/60 hover:text-white cursor-pointer"
                 }`}
               >
-                Todos
+                {t("purchases.all")}
               </button>
               <button
                 onClick={() => setActiveTab("buy")}
@@ -287,7 +297,7 @@ export default function UserOrdersPage() {
                 }`}
               >
                 <ArrowDownLeft className="w-3 h-3 text-emerald-400 shrink-0" />
-                Compras
+                {t("purchases.buys")}
               </button>
               <button
                 onClick={() => setActiveTab("sell")}
@@ -298,7 +308,7 @@ export default function UserOrdersPage() {
                 }`}
               >
                 <ArrowUpRight className="w-3 h-3 text-purple-400 shrink-0" />
-                Ventas
+                {t("purchases.sells")}
               </button>
             </div>
 
@@ -311,7 +321,7 @@ export default function UserOrdersPage() {
               <Loader2
                 className={`w-3.5 h-3.5 ${loading ? "animate-spin text-accent" : ""}`}
               />
-              Actualizar
+              {t("common.refresh")}
             </button>
           </div>
         </div>
@@ -323,7 +333,7 @@ export default function UserOrdersPage() {
             <XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
             <div>
               <p className="text-xs font-black uppercase tracking-wider text-red-200">
-                No pudimos actualizar tu historial
+                {t("purchases.historyError")}
               </p>
               <p className="text-xs text-red-200/80 mt-1">{error}</p>
             </div>
@@ -333,7 +343,7 @@ export default function UserOrdersPage() {
             disabled={loading}
             className="h-9 px-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-[3px] text-[10px] font-black uppercase tracking-wider text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Reintentar
+            {t("skinGrid.retryConnection")}
           </button>
         </div>
       )}
@@ -342,7 +352,7 @@ export default function UserOrdersPage() {
       {loading && orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 bg-[#110f1e]/20 border border-white/5 rounded-[3px] backdrop-blur-md">
           <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
-          <p className="text-xs text-[#84849b] font-bold uppercase tracking-widest">Cargando tu historial...</p>
+          <p className="text-xs text-[#84849b] font-bold uppercase tracking-widest">{t("purchases.loading")}</p>
         </div>
       ) : filteredOrders.length === 0 ? (
         <motion.div
@@ -351,13 +361,13 @@ export default function UserOrdersPage() {
           className="text-center py-24 bg-[#110f1e]/20 border border-white/5 rounded-[3px] backdrop-blur-md"
         >
           <ShoppingBag className="w-16 h-16 text-white/10 mx-auto mb-5" />
-          <p className="text-lg font-black text-white/50 uppercase tracking-wide">No se encontraron pedidos</p>
+          <p className="text-lg font-black text-white/50 uppercase tracking-wide">{t("purchases.noOrders")}</p>
           <p className="text-sm text-[#84849b] mt-2 max-w-md mx-auto font-medium">
             {activeTab === "all"
-              ? "Aún no has realizado ninguna compra o venta en JabbuStore."
+              ? t("purchases.empty")
               : activeTab === "buy"
-              ? "No tienes compras registradas."
-              : "No tienes ventas registradas."}
+              ? t("purchases.noBuys")
+              : t("purchases.noSells")}
           </p>
         </motion.div>
       ) : (
@@ -420,13 +430,13 @@ export default function UserOrdersPage() {
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                             : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
                         }`}>
-                          {isBuy ? "Compra" : "Venta"}
+                          {isBuy ? t("purchases.buy") : t("purchases.sell")}
                         </span>
                       </div>
                       
                       <div className="flex items-center gap-1.5 text-xs text-[#84849b] mt-1 font-medium">
                         <Calendar className="w-3 h-3" />
-                        <span>{new Date(order.createdAt).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>{new Date(order.createdAt).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     </div>
                   </div>
@@ -434,7 +444,7 @@ export default function UserOrdersPage() {
                   {/* Right Side: Total Price, Status, Expand Arrow */}
                   <div className="flex flex-row items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t border-white/5 sm:border-t-0">
                     <div className="text-left sm:text-right">
-                      <span className="text-[9px] text-[#84849b] font-mono block uppercase tracking-widest">Monto Total</span>
+                      <span className="text-[9px] text-[#84849b] font-mono block uppercase tracking-widest">{t("purchases.totalAmount")}</span>
                       <span className="text-sm sm:text-base font-black text-white">${order.totalPrice.toLocaleString()} USD</span>
                     </div>
 
@@ -469,7 +479,7 @@ export default function UserOrdersPage() {
                         <div className="bg-white/[0.01] border border-white/5 p-4 rounded-[3px]">
                           <span className="text-[10px] font-black uppercase tracking-wider font-mono text-[#84849b] mb-4 flex items-center gap-1.5">
                             <Layers className="w-3.5 h-3.5 text-accent" />
-                            Progreso de la Transacción ({isBuy ? 'Compra' : 'Venta'})
+                            {t("purchases.transactionProgress", { type: isBuy ? t("purchases.buy") : t("purchases.sell") })}
                           </span>
 
                           {isBuy ? (
@@ -484,8 +494,8 @@ export default function UserOrdersPage() {
                                   currentStep > 1 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
                                 }`}>{currentStep > 1 ? "✓" : "1"}</div>
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-black uppercase block leading-tight">Verificar Pago</span>
-                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 1 ? "Cobro pendiente" : "Pago verificado"}</span>
+                                  <span className="text-[10px] font-black uppercase block leading-tight">{t("purchases.step.verifyPayment")}</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 1 ? t("purchases.step.paymentPending") : t("purchases.step.paymentVerified")}</span>
                                 </div>
                               </div>
 
@@ -500,7 +510,7 @@ export default function UserOrdersPage() {
                                 }`}>{currentStep > 2 ? "✓" : "2"}</div>
                                 <div className="min-w-0">
                                   <span className="text-[10px] font-black uppercase block leading-tight">Sourcing Skins</span>
-                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 2 ? "Localizando skins" : "Skins listas"}</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 2 ? t("purchases.step.locatingSkins") : t("purchases.step.skinsReady")}</span>
                                 </div>
                               </div>
 
@@ -514,8 +524,8 @@ export default function UserOrdersPage() {
                                   currentStep > 3 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
                                 }`}>{currentStep > 3 ? "✓" : "3"}</div>
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-black uppercase block leading-tight">Enviar Trade</span>
-                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 3 ? "Esperando aceptación" : "Trade entregado"}</span>
+                                  <span className="text-[10px] font-black uppercase block leading-tight">{t("purchases.step.sendTrade")}</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 3 ? t("purchases.step.awaitingAcceptance") : t("purchases.step.tradeDelivered")}</span>
                                 </div>
                               </div>
 
@@ -527,8 +537,8 @@ export default function UserOrdersPage() {
                                   currentStep === 4 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
                                 }`}>4</div>
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-black uppercase block leading-tight">Completado</span>
-                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 4 ? "Skin entregada" : "En cola"}</span>
+                                  <span className="text-[10px] font-black uppercase block leading-tight">{t("purchases.step.completed")}</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 4 ? t("purchases.step.skinDelivered") : t("purchases.step.queued")}</span>
                                 </div>
                               </div>
                             </div>
@@ -544,8 +554,8 @@ export default function UserOrdersPage() {
                                   currentStep > 1 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
                                 }`}>{currentStep > 1 ? "✓" : "1"}</div>
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-black uppercase block leading-tight">Aprobar Venta</span>
-                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 1 ? "Revisión inicial" : "Aprobada"}</span>
+                                  <span className="text-[10px] font-black uppercase block leading-tight">{t("purchases.step.approveSale")}</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 1 ? t("purchases.step.initialReview") : t("purchases.step.approved")}</span>
                                 </div>
                               </div>
 
@@ -559,8 +569,8 @@ export default function UserOrdersPage() {
                                   currentStep > 2 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
                                 }`}>{currentStep > 2 ? "✓" : "2"}</div>
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-black uppercase block leading-tight">Enviar Skin (Trade)</span>
-                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 2 ? "Esperando envío" : "Recibida en Bot"}</span>
+                                  <span className="text-[10px] font-black uppercase block leading-tight">{t("purchases.step.sendSkinTrade")}</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 2 ? t("purchases.step.awaitingDelivery") : t("purchases.step.receivedByBot")}</span>
                                 </div>
                               </div>
 
@@ -574,8 +584,8 @@ export default function UserOrdersPage() {
                                   currentStep > 3 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
                                 }`}>{currentStep > 3 ? "✓" : "3"}</div>
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-black uppercase block leading-tight">Pagar a Usuario</span>
-                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 3 ? "Pago por transferir" : "Pago realizado"}</span>
+                                  <span className="text-[10px] font-black uppercase block leading-tight">{t("purchases.step.payUser")}</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 3 ? t("purchases.step.paymentToTransfer") : t("purchases.step.paymentCompleted")}</span>
                                 </div>
                               </div>
 
@@ -587,8 +597,8 @@ export default function UserOrdersPage() {
                                   currentStep === 4 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
                                 }`}>4</div>
                                 <div className="min-w-0">
-                                  <span className="text-[10px] font-black uppercase block leading-tight">Completada</span>
-                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 4 ? "Transacción lista" : "Pendiente"}</span>
+                                  <span className="text-[10px] font-black uppercase block leading-tight">{t("purchases.step.completedFemale")}</span>
+                                  <span className="text-[8.5px] font-mono opacity-60">{currentStep === 4 ? t("purchases.step.transactionReady") : t("purchases.step.pending")}</span>
                                 </div>
                               </div>
                             </div>
@@ -597,26 +607,26 @@ export default function UserOrdersPage() {
 
                         {/* 💳 DETALLES DE FACTURACION / COBRO */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Datos de contacto */}
+                          {/* Contact details */}
                           <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px] space-y-3">
-                            <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block">Datos Personales</span>
+                            <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block">{t("purchases.personalData")}</span>
                             <div className="space-y-2 text-xs">
                               <div>
-                                <span className="text-[8.5px] text-[#84849b] uppercase block">Nombre Registrado</span>
+                                  <span className="text-[8.5px] text-[#84849b] uppercase block">{t("purchases.registeredName")}</span>
                                 <span className="font-extrabold text-white block mt-0.5">
                                   {order.metadata?.firstName || order.metadata?.lastName
                                     ? `${order.metadata.firstName || ""} ${order.metadata.lastName || ""}`.trim()
-                                    : "No especificado"}
+                                    : t("common.notSpecified")}
                                 </span>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <span className="text-[8.5px] text-[#84849b] uppercase block">Email</span>
-                                  <span className="font-bold text-white block mt-0.5 truncate">{order.metadata?.email || "No especificado"}</span>
+                                  <span className="font-bold text-white block mt-0.5 truncate">{order.metadata?.email || t("common.notSpecified")}</span>
                                 </div>
                                 <div>
-                                  <span className="text-[8.5px] text-[#84849b] uppercase block">Teléfono</span>
-                                  <span className="font-bold text-white block mt-0.5 font-mono">{order.metadata?.phone || "No especificado"}</span>
+                                  <span className="text-[8.5px] text-[#84849b] uppercase block">{t("purchases.phone")}</span>
+                                  <span className="font-bold text-white block mt-0.5 font-mono">{order.metadata?.phone || t("common.notSpecified")}</span>
                                 </div>
                               </div>
                             </div>
@@ -624,17 +634,12 @@ export default function UserOrdersPage() {
 
                           {/* Payout/Payment Metadata */}
                           <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px] space-y-3">
-                            <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block">Detalle de Transacción</span>
+                            <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block">{t("purchases.transactionDetail")}</span>
                             <div className="space-y-2 text-xs">
                               <div>
-                                <span className="text-[8.5px] text-[#84849b] uppercase block">Canal Utilizado</span>
+                                <span className="text-[8.5px] text-[#84849b] uppercase block">{t("purchases.usedChannel")}</span>
                                 <span className="font-black text-accent block mt-0.5 uppercase">
-                                  {order.paymentMethod === 'mercado_pago' ? 'Mercado Pago' : 
-                                   order.paymentMethod === 'paypal' ? 'PayPal' : 
-                                   order.paymentMethod === 'ethereum' ? 'Ethereum (Web3)' : 
-                                   order.paymentMethod === 'nowpayments' ? 'NOWPayments (Crypto)' : 
-                                   order.paymentMethod === 'manual_transfer' ? 'Transferencia Manual' :
-                                   order.paymentMethod || 'No especificado'}
+                                  {getPaymentMethodLabel(order.paymentMethod)}
                                 </span>
                               </div>
 
@@ -645,7 +650,7 @@ export default function UserOrdersPage() {
                                     <span className="font-bold text-white block truncate select-all">{order.metadata?.cbu || 'N/A'}</span>
                                   </div>
                                   <div>
-                                    <span className="text-[8px] text-[#84849b] block">Titular / CUIL</span>
+                                    <span className="text-[8px] text-[#84849b] block">{t("purchases.holderTaxId")}</span>
                                     <span className="font-bold text-white block truncate select-all">{order.metadata?.accountHolder || 'N/A'}</span>
                                   </div>
                                 </div>
@@ -654,11 +659,11 @@ export default function UserOrdersPage() {
                               {order.paymentMethod === 'paypal' && (
                                 <div className="grid grid-cols-2 gap-3 mt-1 pt-1.5 border-t border-white/5 text-[9.5px]">
                                   <div>
-                                    <span className="text-[8px] text-[#84849b] block">Correo PayPal</span>
+                                    <span className="text-[8px] text-[#84849b] block">{t("purchases.paypalEmail")}</span>
                                     <span className="font-bold text-white block truncate select-all">{order.metadata?.cbu || 'N/A'}</span>
                                   </div>
                                   <div>
-                                    <span className="text-[8px] text-[#84849b] block">Titular</span>
+                                    <span className="text-[8px] text-[#84849b] block">{t("purchases.holder")}</span>
                                     <span className="font-bold text-white block truncate select-all">{order.metadata?.accountHolder || 'N/A'}</span>
                                   </div>
                                 </div>
@@ -667,11 +672,11 @@ export default function UserOrdersPage() {
                               {order.paymentMethod === 'nowpayments' && (
                                 <div className="grid grid-cols-2 gap-3 mt-1 pt-1.5 border-t border-white/5 text-[9.5px]">
                                   <div>
-                                    <span className="text-[8px] text-[#84849b] block">Billetera</span>
+                                    <span className="text-[8px] text-[#84849b] block">{t("purchases.wallet")}</span>
                                     <span className="font-bold text-white block truncate select-all break-all">{order.metadata?.walletAddress || 'N/A'}</span>
                                   </div>
                                   <div>
-                                    <span className="text-[8px] text-[#84849b] block">Red Blockchain</span>
+                                    <span className="text-[8px] text-[#84849b] block">{t("purchases.blockchainNetwork")}</span>
                                     <span className="font-bold text-white block truncate select-all">{order.metadata?.network || 'N/A'}</span>
                                   </div>
                                 </div>
@@ -683,10 +688,10 @@ export default function UserOrdersPage() {
                         {isBuy && isManualTransfer && (
                           <div className="bg-emerald-500/10 p-4 border border-emerald-500/20 rounded-[3px]">
                             <span className="text-[9px] font-black uppercase text-emerald-300 tracking-wider font-mono block mb-3">
-                              Transferencia Manual
+                              {t("paymentMethod.manual_transfer.name")}
                             </span>
                             <p className="text-[10px] text-emerald-100/70 font-bold uppercase tracking-wider mb-3">
-                              Tu pago queda pendiente hasta que el admin revise el comprobante.
+                              {t("purchases.manualTransferPending")}
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px]">
                               {manualTransferSnapshot?.type === "crypto" ? (
@@ -698,7 +703,7 @@ export default function UserOrdersPage() {
                                     </span>
                                   </div>
                                   <div>
-                                    <span className="text-[#84849b] uppercase block">Red</span>
+                                    <span className="text-[#84849b] uppercase block">{t("purchases.network")}</span>
                                     <span className="font-bold text-white">
                                       {manualTransferSnapshot.crypto?.network || "N/A"}
                                     </span>
@@ -719,7 +724,7 @@ export default function UserOrdersPage() {
                                     </span>
                                   </div>
                                   <div className="sm:col-span-2">
-                                    <span className="text-[#84849b] uppercase block">Titular</span>
+                                    <span className="text-[#84849b] uppercase block">{t("purchases.holder")}</span>
                                     <span className="font-bold text-white">
                                       {manualTransferSnapshot?.bank?.holder || "N/A"}
                                     </span>
@@ -732,7 +737,7 @@ export default function UserOrdersPage() {
 
                         <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px]">
                           <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-3">
-                            Comprobante de Pago
+                            {t("purchases.paymentProof")}
                           </span>
                           {visibleProof && visibleProofUrl ? (
                             <button
@@ -742,8 +747,8 @@ export default function UserOrdersPage() {
                                   url: visibleProofUrl,
                                   proof: visibleProof,
                                   title: isBuy
-                                    ? "Tu comprobante de pago"
-                                    : "Comprobante de pago recibido",
+                                    ? t("purchases.yourPaymentProof")
+                                    : t("purchases.receivedPaymentProof"),
                                 })
                               }
                               className="w-full sm:w-auto flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-[3px] hover:bg-emerald-500/15 transition-colors cursor-pointer"
@@ -751,18 +756,18 @@ export default function UserOrdersPage() {
                               <FileText className="w-4 h-4 shrink-0" />
                               <span className="min-w-0 text-left">
                                 <span className="block text-[10px] font-black uppercase tracking-wider">
-                                  Ver comprobante
+                                  {t("purchases.viewProof")}
                                 </span>
                                 <span className="block text-[9px] text-emerald-100/70 truncate">
-                                  {visibleProof.fileName || "Archivo adjunto"}
+                                  {visibleProof.fileName || t("purchases.attachedFile")}
                                 </span>
                               </span>
                             </button>
                           ) : (
                             <p className="text-xs text-white/35 font-bold">
                               {isBuy
-                                ? "Todavía no hay comprobante adjunto para esta compra."
-                                : "El admin todavía no adjuntó comprobante de pago para esta venta."}
+                                ? t("purchases.noBuyerProof")
+                                : t("purchases.noAdminProof")}
                             </p>
                           )}
                         </div>
@@ -770,7 +775,7 @@ export default function UserOrdersPage() {
                         {/* ITEMS LIST */}
                         <div className="space-y-3">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-2 block pt-2">
-                            Ítems incluidos ({order.items.length})
+                            {t("purchases.includedItems", { count: order.items.length })}
                           </h4>
                           
                           <div className="grid grid-cols-1 gap-3">
@@ -865,7 +870,7 @@ export default function UserOrdersPage() {
                                         </span>
                                       )}
                                       {displayPattern !== null && (
-                                        <span>Semilla: <span className="text-white font-bold">{displayPattern}</span></span>
+                                        <span>{t("checkout.seed")}: <span className="text-white font-bold">{displayPattern}</span></span>
                                       )}
                                     </div>
                                   </div>
@@ -873,7 +878,7 @@ export default function UserOrdersPage() {
                                   {/* Float Display */}
                                   {displayFloat !== null ? (
                                     <div className="w-full md:w-36 bg-[#110f1e]/20 p-2 border border-white/5 rounded-[3px] shrink-0">
-                                      <span className="text-[8px] uppercase tracking-wider font-black text-[#84849b] block">Float Registrado</span>
+                                      <span className="text-[8px] uppercase tracking-wider font-black text-[#84849b] block">{t("purchases.registeredFloat")}</span>
                                       <span className="text-[10px] font-bold font-mono text-white block mt-0.5">{displayFloat.toFixed(8)}</span>
                                       <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
                                         <div 
@@ -887,15 +892,15 @@ export default function UserOrdersPage() {
                                     </div>
                                   ) : (
                                     <div className="w-full md:w-36 bg-[#110f1e]/20 p-2 border border-white/5 rounded-[3px] shrink-0">
-                                      <span className="text-[8px] uppercase tracking-wider font-black text-[#84849b] block">Float Registrado</span>
-                                      <span className="text-[10px] text-white/30 font-mono block mt-0.5">N/A (Entrega activa)</span>
+                                      <span className="text-[8px] uppercase tracking-wider font-black text-[#84849b] block">{t("purchases.registeredFloat")}</span>
+                                      <span className="text-[10px] text-white/30 font-mono block mt-0.5">{t("purchases.activeDeliveryFallback")}</span>
                                     </div>
                                   )}
 
                                   {/* Item Price */}
                                   <div className="text-right ml-auto">
                                     <span className="text-xs font-black text-accent block">${item.price.toLocaleString()} USD</span>
-                                    <span className="text-[8px] text-[#84849b] font-mono uppercase">Precio Unitario</span>
+                                    <span className="text-[8px] text-[#84849b] font-mono uppercase">{t("purchases.unitPrice")}</span>
                                   </div>
                                 </div>
                               );
@@ -917,7 +922,7 @@ export default function UserOrdersPage() {
         onClose={() => setSelectedProof(null)}
         proofUrl={selectedProof?.url || null}
         proof={selectedProof?.proof || null}
-        title={selectedProof?.title || "Comprobante de pago"}
+        title={selectedProof?.title || t("purchases.paymentProof")}
       />
     </div>
   );

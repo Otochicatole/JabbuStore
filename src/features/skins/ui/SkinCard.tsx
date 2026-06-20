@@ -7,6 +7,7 @@ import { useCart } from "../../cart/context/CartContext";
 import { ShoppingCart, Plus, Minus, X, Eye, Check, Trash2 } from "lucide-react";
 import { FloatsModal } from "./components/FloatsModal";
 import { SkinImage } from "@/shared/components/SkinImage";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface SkinCardProps {
   skinsInGroup: Skin[];
@@ -34,13 +35,13 @@ const rarityHexColors: Record<string, string> = {
   immortal: "#e4ae39",
 };
 
-const getConditionLabel = (float?: number) => {
-  if (float === undefined) return "Recién fabricado";
-  if (float < 0.07) return "Recién fabricado";
-  if (float < 0.15) return "Casi nuevo";
-  if (float < 0.38) return "Algo desgastado";
-  if (float < 0.45) return "Bastante desgastado";
-  return "Deplorable";
+const getConditionLabelKey = (float?: number) => {
+  if (float === undefined) return "filters.condition.factoryNew";
+  if (float < 0.07) return "filters.condition.factoryNew";
+  if (float < 0.15) return "filters.condition.minimalWear";
+  if (float < 0.38) return "filters.condition.fieldTested";
+  if (float < 0.45) return "filters.condition.wellWorn";
+  return "filters.condition.battleScarred";
 };
 
 /** Devuelve el rango de float [min, max] según el exterior (para market listings sin float individual) */
@@ -83,11 +84,29 @@ const getRangeColorClass = (min: number): string => {
   return "bg-[#ef4444]";
 };
 
+const getExteriorLabelKey = (exterior: string | null | undefined) => {
+  if (!exterior) return null;
+  const ext = exterior.toLowerCase();
+  if (ext.includes("factory") || ext.includes("fn") || ext.includes("recién"))
+    return "filters.condition.factoryNew";
+  if (ext.includes("minimal") || ext.includes("mw") || ext.includes("casi"))
+    return "filters.condition.minimalWear";
+  if (ext.includes("field") || ext.includes("ft") || ext.includes("algo"))
+    return "filters.condition.fieldTested";
+  if (ext.includes("well") || ext.includes("ww") || ext.includes("bastante"))
+    return "filters.condition.wellWorn";
+  if (ext.includes("battle") || ext.includes("bs") || ext.includes("deplorable"))
+    return "filters.condition.battleScarred";
+  return null;
+};
+
 const InspectInGameButton = ({
   href,
+  title,
   className = "h-9 w-9",
 }: {
   href: string;
+  title: string;
   className?: string;
 }) => {
   if (!href || /%[a-z0-9_:]+%/i.test(href)) return null;
@@ -95,7 +114,7 @@ const InspectInGameButton = ({
   <a
     href={href}
     className={`${className} flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white rounded-lg transition-all hover:scale-105 active:scale-95 shrink-0`}
-    title="Inspeccionar en el juego"
+    title={title}
   >
     <Eye className="w-4 h-4" />
   </a>
@@ -104,6 +123,7 @@ const InspectInGameButton = ({
 
 export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   const { addToCart, items, removeFromCart } = useCart();
+  const { t } = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFloatsModalOpen, setIsFloatsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -117,7 +137,11 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
 
   // Representative skin is the first one in the sorted group
   const skin = skinsInGroup[0]!;
-  const conditionLabel = getConditionLabel(skin.float);
+  const conditionLabel = t(getConditionLabelKey(skin.float));
+  const translateExterior = (exterior: string | null | undefined, fallback: string) => {
+    const labelKey = getExteriorLabelKey(exterior);
+    return labelKey ? t(labelKey) : fallback;
+  };
   const isMultiple = skinsInGroup.length >= 2;
 
   // Determine if this item can have floats or is a non-float item like stickers, music kits, keys, etc.
@@ -143,12 +167,6 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
     skin.isImmediate === false &&
     !isStickerOrOther &&
     skin.float === undefined;
-
-  // Calculate prices
-  const prices = skinsInGroup.map((s) => s.price);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-  const hasDifferentPrices = minPrice !== maxPrice;
 
   // Determine cart states for this group
   const cartItemsInGroup = items.filter((item) =>
@@ -254,18 +272,18 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                 {/* Exterior + seed/seed-range */}
                 <div className="flex items-center justify-between">
                   <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">
-                    {skin.exterior || conditionLabel}
+                    {translateExterior(skin.exterior, conditionLabel)}
                   </span>
                   {skin.pattern !== undefined ? (
                     <span className="text-[#84849b] text-[8px]">
-                      Semilla:{" "}
+                      {t("checkout.seed")}:{" "}
                       <span className="text-white font-bold">
                         {skin.pattern}
                       </span>
                     </span>
                   ) : skin.isImmediate === false ? (
                     <span className="text-[#84849b] text-[8px]">
-                      Semilla:{" "}
+                      {t("checkout.seed")}:{" "}
                       <span className="text-white/60 font-bold">0 - 999</span>
                     </span>
                   ) : null}
@@ -329,16 +347,16 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
         >
           <div className="flex items-center justify-between">
             <span className="font-sans font-black text-white/80 uppercase text-[8px] tracking-wider">
-              {skin.exterior || conditionLabel}
+              {translateExterior(skin.exterior, conditionLabel)}
             </span>
             <span className="text-[#84849b] text-[8px] font-bold uppercase tracking-wider text-accent">
-              Múltiples Floats
+              {t("skinCard.multipleFloats")}
             </span>
           </div>
 
           <div className="flex flex-col gap-1 mt-1 text-[8px] text-[#84849b]">
             <div className="flex items-center justify-between">
-              <span>Rango Floats:</span>
+              <span>{t("skinCard.floatRange")}:</span>
               <span className="text-white font-bold">
                 {Math.min(...skinsInGroup.map((s) => s.float || 0)).toFixed(4)}{" "}
                 -{" "}
@@ -355,12 +373,11 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
         {skin.isImmediate !== false ? (
           <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full px-2 py-0.5 text-[7px] font-black uppercase text-emerald-400 tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.15)] flex items-center gap-1 z-10 select-none">
             <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
-            ⚡ Trade Inmediato
+            ⚡ {t("filters.instantTrade")}
           </div>
         ) : (
           <div className="absolute top-2 left-2 bg-indigo-500/20 border border-indigo-500/40 rounded-full px-2 py-0.5 text-[8px] font-black uppercase text-indigo-400 tracking-wider flex items-center gap-1 z-10 select-none">
-            <span className="w-1 h-1 rounded-full bg-indigo-400"></span>⏳ Bajo
-            Pedido
+            <span className="w-1 h-1 rounded-full bg-indigo-400"></span>⏳ {t("skinCard.onRequest")}
           </div>
         )}
 
@@ -424,11 +441,12 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                 className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-accent rounded-lg text-white text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer border-none animate-fade-in shrink-0 min-w-0"
               >
                 <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-                Comprar
+                {t("nav.buy")}
               </button>
               {skin.inspectLink && (
                 <InspectInGameButton
                   href={skin.inspectLink}
+                  title={t("skinCard.inspectInGame")}
                   className="w-8 sm:w-10 h-10"
                 />
               )}
@@ -450,11 +468,12 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                 className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest transition-all active:scale-95 cursor-pointer animate-fade-in shrink-0 min-w-0"
               >
                 <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-emerald-400" />
-                Carrito
+                {t("cart.title")}
               </button>
               {skin.inspectLink && (
                 <InspectInGameButton
                   href={skin.inspectLink}
+                  title={t("skinCard.inspectInGame")}
                   className="w-8 sm:w-10 h-10"
                 />
               )}
@@ -474,7 +493,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
               className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-accent rounded-lg text-white text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer border-none shrink-0 min-w-0"
             >
               <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-              Elegir
+              {t("skinCard.choose")}
             </button>
             <button
               onClick={handleIncrement}
@@ -494,7 +513,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                 <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
               </button>
               <span className="text-[8.5px] sm:text-[10px] font-black text-white truncate px-1 shrink-0">
-                {totalQuantityInCart} en carro
+                {t("skinCard.inCartCount", { count: totalQuantityInCart })}
               </span>
               <button
                 onClick={handleIncrement}
@@ -509,7 +528,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
             <button
               onClick={() => setIsModalOpen(true)}
               className="w-8 sm:w-10 flex items-center justify-center bg-secondary hover:bg-white/10 text-white hover:text-accent border border-white/5 rounded-lg active:scale-95 transition-all cursor-pointer shrink-0"
-              title="Ver todas las opciones"
+              title={t("skinCard.viewOptions")}
             >
               <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             </button>
@@ -544,15 +563,15 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                   <div className="flex items-center gap-2 mt-1.5">
                     {skin.isImmediate !== false ? (
                       <span className="bg-emerald-500/20 border border-emerald-500/35 text-emerald-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">
-                        ⚡ Trade Inmediato
+                        ⚡ {t("filters.instantTrade")}
                       </span>
                     ) : (
                       <span className="bg-indigo-500/20 border border-indigo-500/35 text-indigo-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">
-                        ⏳ Bajo Pedido
+                        ⏳ {t("skinCard.onRequest")}
                       </span>
                     )}
                     <span className="text-[#84849b] text-[8px] uppercase font-bold tracking-wider">
-                      {skinsInGroup.length} variantes
+                      {t("skinCard.variantsCount", { count: skinsInGroup.length })}
                     </span>
                   </div>
                 </div>
@@ -583,11 +602,11 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                       <div className="flex flex-col gap-1 flex-1 min-w-0 pr-4">
                         <div className="flex items-center gap-2">
                           <span className="text-[9px] font-black uppercase tracking-wider text-white">
-                            {s.exterior || "Recién fabricado"}
+                            {translateExterior(s.exterior, t("filters.condition.factoryNew"))}
                           </span>
                           {s.pattern !== undefined && (
                             <span className="text-[#84849b] text-[9px] font-mono">
-                              Semilla:{" "}
+                              {t("checkout.seed")}:{" "}
                               <span className="text-white font-bold">
                                 {s.pattern}
                               </span>
@@ -625,7 +644,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                       <div className="flex items-center gap-2 sm:gap-4">
                         <div className="text-right">
                           <span className="text-[#84849b] uppercase font-bold text-[8px] block">
-                            Precio
+                            {t("common.price")}
                           </span>
                           <span className="text-sm font-black text-white">
                             ${s.price.toLocaleString()}
@@ -633,7 +652,10 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                         </div>
 
                         {s.inspectLink && (
-                          <InspectInGameButton href={s.inspectLink} />
+                          <InspectInGameButton
+                            href={s.inspectLink}
+                            title={t("skinCard.inspectInGame")}
+                          />
                         )}
 
                         {!isThisInCart ? (
@@ -641,14 +663,14 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
                             onClick={() => addToCart(s)}
                             className="h-8 px-4 flex items-center justify-center bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[9px] font-black uppercase tracking-wider rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)]"
                           >
-                            Agregar
+                            {t("common.add")}
                           </button>
                         ) : (
                           <button
                             onClick={() => removeFromCart(s.id)}
                             className="h-8 px-4 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-[9px] font-black uppercase tracking-wider rounded-lg cursor-pointer"
                           >
-                            Quitar
+                            {t("common.remove")}
                           </button>
                         )}
                       </div>
@@ -660,13 +682,13 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
               {/* Footer */}
               <div className="pt-4 border-t border-white/5 mt-4 flex items-center justify-between">
                 <span className="text-[9px] font-bold text-[#84849b] uppercase tracking-wider">
-                  Seleccionados: {totalQuantityInCart} variantes en el carrito
+                  {t("skinCard.selectedVariants", { count: totalQuantityInCart })}
                 </span>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="px-5 py-2.5 bg-secondary hover:bg-secondary/80 rounded-xl text-white text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 cursor-pointer border-none"
                 >
-                  Listo
+                  {t("skinCard.done")}
                 </button>
               </div>
             </div>

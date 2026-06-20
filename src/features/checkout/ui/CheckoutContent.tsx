@@ -11,8 +11,10 @@ import { OrderSummary } from "./components/OrderSummary";
 import { SuccessScreen } from "./components/SuccessScreen";
 import { PaymentProcessingOverlay } from "./components/PaymentProcessingOverlay";
 import { useCheckout } from "./useCheckout";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export function CheckoutContent() {
+  const { t } = useI18n();
   const {
     checkoutType,
     items,
@@ -38,7 +40,7 @@ export function CheckoutContent() {
       <div className="min-h-screen flex flex-col items-center justify-center pt-24 bg-[#070510]">
         <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
         <p className="text-xs text-[#84849b] font-bold uppercase tracking-widest">
-          Validando precios con el servidor...
+          {t("checkout.validatingPrices")}
         </p>
       </div>
     );
@@ -50,14 +52,14 @@ export function CheckoutContent() {
         <div className="p-6 sm:p-8 rounded-3xl bg-red-500/5 border border-red-500/10 text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-lg font-black text-white uppercase tracking-wider mb-2">
-            Error de Validación
+            {t("checkout.validationError")}
           </h2>
           <p className="text-sm text-[#84849b] mb-6">{error}</p>
           <Link
             href={checkoutType === "buy" ? "/buy" : "/sell"}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent/90 text-xs font-black uppercase text-white tracking-widest transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Volver a la Tienda
+            <ArrowLeft className="w-4 h-4" /> {t("checkout.backToStore")}
           </Link>
         </div>
       </div>
@@ -88,17 +90,17 @@ export function CheckoutContent() {
           href={checkoutType === "buy" ? "/buy" : "/sell"}
           className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-white transition-colors uppercase tracking-widest mb-4"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Volver a{" "}
-          {checkoutType === "buy" ? "Comprar" : "Vender"}
+          <ArrowLeft className="w-3.5 h-3.5" /> {t("common.back")}{" "}
+          {checkoutType === "buy" ? t("nav.buy") : t("nav.sell")}
         </Link>
         <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
-          Checkout de{" "}
+          {t("checkout.title")}{" "}
           <span className="text-accent">
-            {checkoutType === "buy" ? "Compra" : "Venta"}
+            {checkoutType === "buy" ? t("nav.buy") : t("nav.sell")}
           </span>
         </h1>
         <p className="text-sm text-[#84849b] mt-1">
-          Verifica tus artículos y completa la operación con una pasarela de pago segura.
+          {t("checkout.description")}
         </p>
       </div>
 
@@ -138,7 +140,7 @@ export function CheckoutContent() {
           />
           {checkoutType === "buy" && !selectedMethod && (
             <p className="mt-3 text-[10px] text-red-300 font-bold uppercase tracking-wider text-center">
-              No hay métodos de pago habilitados.
+              {t("checkout.noPaymentMethods")}
             </p>
           )}
         </div>
@@ -147,7 +149,7 @@ export function CheckoutContent() {
       {/* Secure payment processing overlay */}
       {isProcessingPayment && selectedMethodObj && (
         <PaymentProcessingOverlay
-          selectedMethodName={selectedMethodObj.name}
+          selectedMethodName={t(`paymentMethod.${selectedMethodObj.id}.name`)}
           paymentStep={paymentStep}
           checkoutType={checkoutType}
         />

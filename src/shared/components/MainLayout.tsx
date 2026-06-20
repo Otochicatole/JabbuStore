@@ -7,6 +7,7 @@ import { InventoryProvider } from "@/features/inventory/context/InventoryContext
 import { FilterProvider } from "@/features/filters/context/FilterContext";
 import { CartSidebar } from "@/features/cart/ui/CartSidebar";
 import { usePathname } from "next/navigation";
+import { I18nProvider } from "@/shared/i18n/I18nProvider";
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -15,29 +16,33 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   if (isAdminRoute) {
     return (
+      <I18nProvider>
+        <CartProvider>
+          <FilterProvider>
+            <InventoryProvider>
+              <div className="min-h-screen min-w-0 bg-background overflow-x-hidden">
+                {children}
+              </div>
+            </InventoryProvider>
+          </FilterProvider>
+        </CartProvider>
+      </I18nProvider>
+    );
+  }
+
+  return (
+    <I18nProvider>
       <CartProvider>
         <FilterProvider>
           <InventoryProvider>
-            <div className="min-h-screen min-w-0 bg-background overflow-x-hidden">
+            <div className="min-h-screen min-w-0 overflow-x-hidden">
+              <Navbar onOpenCart={() => setIsCartOpen(true)} />
+              <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
               {children}
             </div>
           </InventoryProvider>
         </FilterProvider>
       </CartProvider>
-    );
-  }
-
-  return (
-    <CartProvider>
-      <FilterProvider>
-        <InventoryProvider>
-          <div className="min-h-screen min-w-0 overflow-x-hidden">
-            <Navbar onOpenCart={() => setIsCartOpen(true)} />
-            <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-            {children}
-          </div>
-        </InventoryProvider>
-      </FilterProvider>
-    </CartProvider>
+    </I18nProvider>
   );
 };

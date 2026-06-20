@@ -10,15 +10,18 @@ import {
   Zap,
   TrendingUp,
 } from "lucide-react";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 const stats = [
-  { label: "Usuarios Activos", value: "150K+" },
-  { label: "Skins Disponibles", value: "45K+" },
-  { label: "Transacciones", value: "2.5M+" },
-  { label: "Soporte Online", value: "24/7" },
+  { labelKey: "home.stats.activeUsers", value: "150K+" },
+  { labelKey: "home.stats.availableSkins", value: "45K+" },
+  { labelKey: "home.stats.transactions", value: "2.5M+" },
+  { labelKey: "home.stats.onlineSupport", value: "24/7" },
 ];
 
 export default function Home() {
+  const { t } = useI18n();
+
   return (
     <div className="relative min-h-screen w-full bg-[#191527] overflow-hidden text-white flex flex-col pt-16 font-sans">
       {/* Tech Grid Overlay */}
@@ -40,7 +43,7 @@ export default function Home() {
         <div className="self-center md:self-start mb-6">
           <div className="inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-[0.2em] text-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]">
             <span className="inline-block w-1.5 h-1.5 bg-accent animate-pulse" />
-            CS2 Trading Hub Oficial
+            {t("home.badge")}
           </div>
         </div>
 
@@ -49,30 +52,28 @@ export default function Home() {
           {/* Hero text Left */}
           <div className="lg:col-span-7 flex flex-col text-center lg:text-left">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-[0.9] text-white">
-              Intercambia
+              {t("home.hero.title")}
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-fuchsia-500 to-purple-400 drop-shadow-[0_2px_20px_rgba(217,70,239,0.2)]">
-                Skins de CS2
+                {t("home.hero.highlight")}
               </span>
             </h1>
             <p className="mt-6 max-w-xl text-white/60 text-base md:text-lg font-medium leading-relaxed self-center lg:self-start">
-              La forma más rápida y segura de renovar tu inventario o retirar
-              efectivo de inmediato. Sin tarifas ocultas, con tecnología de
-              punta.
+              {t("home.hero.description")}
             </p>
 
             {/* Stats row integrated into Hero */}
             <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/5 pt-8">
               {stats.map((s) => (
                 <div
-                  key={s.label}
+                  key={s.labelKey}
                   className="border-l-2 border-accent pl-4 text-left"
                 >
                   <div className="text-2xl md:text-3xl font-black text-white tracking-tight">
                     {s.value}
                   </div>
                   <div className="text-[9px] font-bold uppercase tracking-wider text-white/40 mt-1">
-                    {s.label}
+                    {t(s.labelKey)}
                   </div>
                 </div>
               ))}
@@ -89,16 +90,15 @@ export default function Home() {
                   <ShoppingBag className="w-5 h-5" />
                 </div>
                 <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-2">
-                  Comprar Skins
+                  {t("home.buy.title")}
                 </h3>
                 <p className="text-xs text-white/55 leading-relaxed font-medium mb-8">
-                  Explora nuestro catálogo masivo de skins verificadas. Los
-                  mejores precios e instant delivery.
+                  {t("home.buy.description")}
                 </p>
               </div>
               <Link href="/buy" className="w-full">
                 <Button className="w-full h-12 bg-accent text-white font-bold uppercase tracking-widest text-xs border border-accent hover:bg-white hover:text-accent hover:border-white transition-all duration-300 rounded-none flex items-center justify-center gap-2">
-                  Explorar Tienda
+                  {t("home.buy.cta")}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -112,16 +112,15 @@ export default function Home() {
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-2">
-                  Vender por Cash
+                  {t("home.sell.title")}
                 </h3>
                 <p className="text-xs text-white/55 leading-relaxed font-medium mb-8">
-                  Convierte tus skins de CS2 en dinero real. Pagos directos e
-                  instantáneos a tu cuenta favorita.
+                  {t("home.sell.description")}
                 </p>
               </div>
               <Link href="/sell" className="w-full">
                 <Button className="w-full h-12 bg-transparent text-white font-bold uppercase tracking-widest text-xs border border-white/20 hover:border-accent hover:bg-accent transition-all duration-300 rounded-none flex items-center justify-center gap-2">
-                  Retirar Efectivo
+                  {t("home.sell.cashout")}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -137,10 +136,10 @@ export default function Home() {
             </div>
             <div>
               <h4 className="text-sm font-black uppercase tracking-wider text-white mb-1">
-                Garantía de Seguridad
+                {t("home.feature.secure.title")}
               </h4>
               <p className="text-xs text-white/50 leading-relaxed font-medium">
-                Todas las operaciones protegidas y automatizadas vía Steam API.
+                {t("home.feature.secure.description")}
               </p>
             </div>
           </div>
@@ -150,10 +149,10 @@ export default function Home() {
             </div>
             <div>
               <h4 className="text-sm font-black uppercase tracking-wider text-white mb-1">
-                Procesamiento Ultra Veloz
+                {t("home.feature.fast.title")}
               </h4>
               <p className="text-xs text-white/50 leading-relaxed font-medium">
-                Skins y dinero acreditados en menos de un minuto.
+                {t("home.feature.fast.description")}
               </p>
             </div>
           </div>
@@ -163,10 +162,10 @@ export default function Home() {
             </div>
             <div>
               <h4 className="text-sm font-black uppercase tracking-wider text-white mb-1">
-                Tarifas Justas
+                {t("home.feature.market.title")}
               </h4>
               <p className="text-xs text-white/50 leading-relaxed font-medium">
-                Cálculo en base a mercados reales globales (Youpin/Steam).
+                {t("home.feature.market.description")}
               </p>
             </div>
           </div>
@@ -185,8 +184,7 @@ export default function Home() {
             </span>
           </div>
           <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 text-center md:text-right">
-            © 2026 JabbuStore · No afiliado a Valve Corporation · CS2 es marca
-            registrada
+            {t("home.footer.disclaimer")}
           </div>
         </div>
       </footer>

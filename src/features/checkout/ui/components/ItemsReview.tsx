@@ -1,6 +1,7 @@
 import React from 'react';
 import { Coins } from 'lucide-react';
 import { CheckoutItem } from '../../domain/types';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 interface ItemsReviewProps {
   items: CheckoutItem[];
@@ -8,6 +9,7 @@ interface ItemsReviewProps {
 }
 
 function ItemSpecs({ item }: { item: CheckoutItem }) {
+  const { t } = useI18n();
   const hasFloat = item.float !== null && item.float !== undefined;
   const hasPattern = item.pattern !== null && item.pattern !== undefined;
   const hasExterior = Boolean(item.exterior);
@@ -16,7 +18,7 @@ function ItemSpecs({ item }: { item: CheckoutItem }) {
   if (!hasSpecs) {
     return (
       <p className="text-[9px] text-[#84849b]/70 font-mono mt-1 uppercase">
-        Sin especificaciones individuales
+        {t("checkout.noItemSpecs")}
       </p>
     );
   }
@@ -35,7 +37,7 @@ function ItemSpecs({ item }: { item: CheckoutItem }) {
       )}
       {hasPattern && (
         <span className="text-[8px] font-mono text-white/80 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-sm">
-          Semilla: {item.pattern}
+          {t("checkout.seed")}: {item.pattern}
         </span>
       )}
     </div>
@@ -43,11 +45,13 @@ function ItemSpecs({ item }: { item: CheckoutItem }) {
 }
 
 export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
+  const { t } = useI18n();
+
   return (
     <section className="bg-card border border-white/5 rounded-3xl p-4 sm:p-6 md:p-8">
       <h2 className="text-sm font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2">
         <span className="w-1.5 h-4 bg-accent rounded-full" />
-        {selectedMethod ? "3." : "2."} Revisa tus Artículos ({items.length})
+        {selectedMethod ? "3." : "2."} {t("checkout.reviewItems")} ({items.length})
       </h2>
 
       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
@@ -71,7 +75,7 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
             </div>
             <div className="text-left sm:text-right shrink-0">
               <p className="text-xs font-black text-white">${item.price.toFixed(2)}</p>
-              <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">Listo</p>
+              <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">{t("checkout.ready")}</p>
             </div>
           </div>
         ))}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { PAYMENT_METHODS } from '../../domain/constants';
 import { ManualTransferSettings } from '../../domain/types';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 interface PaymentMethodsSelectorProps {
   selectedMethod: string | null;
@@ -15,6 +16,7 @@ export function PaymentMethodsSelector({
   checkoutType,
   manualTransferSettings,
 }: PaymentMethodsSelectorProps) {
+  const { t } = useI18n();
   const methods = PAYMENT_METHODS.filter((method) => {
     if (checkoutType !== "buy") return method.id !== "manual_transfer";
     if (!manualTransferSettings) return method.id !== "manual_transfer";
@@ -26,13 +28,20 @@ export function PaymentMethodsSelector({
   });
 
   const getDisplayMethod = (method: (typeof PAYMENT_METHODS)[number]) => {
-    if (checkoutType !== "sell") return method;
+    if (checkoutType !== "sell") {
+      return {
+        ...method,
+        name: t(`paymentMethod.${method.id}.name`),
+        description: t(`paymentMethod.${method.id}.description`),
+        badge: t(`paymentMethod.${method.id}.badge`),
+      };
+    }
 
     if (method.id === "mercado_pago") {
       return {
         ...method,
-        name: "Transferencia Bancaria",
-        description: "Indica CBU, CVU o alias donde querés recibir el pago de tu venta",
+        name: t("checkout.bankTransfer"),
+        description: t("paymentMethod.sell.bank.description"),
         badge: "ARS / CBU / Alias",
       };
     }
@@ -40,8 +49,8 @@ export function PaymentMethodsSelector({
     if (method.id === "nowpayments") {
       return {
         ...method,
-        name: "Criptomonedas",
-        description: "Indica la wallet y red donde querés recibir el pago de tu venta",
+        name: t("checkout.crypto"),
+        description: t("paymentMethod.sell.crypto.description"),
         badge: "Wallet / Red",
       };
     }
@@ -49,7 +58,8 @@ export function PaymentMethodsSelector({
     if (method.id === "paypal") {
       return {
         ...method,
-        description: "Indica tu correo PayPal para recibir el pago de tu venta",
+        name: t("checkout.paypal"),
+        description: t("paymentMethod.sell.paypal.description"),
       };
     }
 
@@ -60,14 +70,14 @@ export function PaymentMethodsSelector({
     <section className="bg-card border border-white/5 rounded-3xl p-6 md:p-8">
       <h2 className="text-sm font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2">
         <span className="w-1.5 h-4 bg-accent rounded-full" />
-        1. {checkoutType === "sell" ? "Selecciona Método de Cobro" : "Selecciona Método de Pago"}
+        1. {checkoutType === "sell" ? t("checkout.selectPayoutMethod") : t("checkout.selectPaymentMethod")}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {methods.length === 0 && (
           <div className="md:col-span-2 p-4 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-200">
             <p className="text-[10px] font-black uppercase tracking-wider">
-              No hay métodos de pago habilitados. Contactá al soporte o intentá más tarde.
+              {t("checkout.noPaymentMethodsSupport")}
             </p>
           </div>
         )}

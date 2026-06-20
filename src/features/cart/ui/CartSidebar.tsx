@@ -7,10 +7,12 @@ import { X, ShoppingBag, Trash2, Minus, Plus, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { items, total, removeFromCart, clearCart } = useCart();
   const router = useRouter();
+  const { t } = useI18n();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -46,7 +48,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
       const meRes = await fetchWithAuth(`${BACKEND_URL}/users/me`);
       if (!meRes.ok) {
         setIsLoggedIn(false);
-        setError('Debes iniciar sesión con Steam para finalizar tu compra.');
+        setError(t("cart.loginRequired"));
         return;
       }
       
@@ -56,7 +58,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
       
     } catch (err: unknown) {
       console.error("Error initiating checkout:", err);
-      setError(err instanceof Error ? err.message : 'Ocurrió un error inesperado');
+      setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
       setIsCheckingOut(false);
     }
@@ -78,7 +80,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
           <div className="mb-6 sm:mb-10 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <ShoppingBag className="w-6 h-6 text-accent" />
-              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter">Tu <span className="text-accent">Carrito</span></h2>
+              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter">{t("cart.title")}</h2>
             </div>
             <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/40 hover:text-white cursor-pointer transition-all">
               <X className="w-5 h-5" />
@@ -91,8 +93,8 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                 <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
                   <ShoppingBag className="w-10 h-10 text-white/10" />
                 </div>
-                <p className="text-muted font-bold">Tu carrito está vacío</p>
-                <button onClick={onClose} className="mt-4 text-xs font-black uppercase tracking-widest text-accent hover:underline underline-offset-4">Explorar Skins</button>
+                <p className="text-muted font-bold">{t("cart.empty")}</p>
+                <button onClick={onClose} className="mt-4 text-xs font-black uppercase tracking-widest text-accent hover:underline underline-offset-4">{t("cart.continueShopping")}</button>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
@@ -107,7 +109,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                           {item.skin.weapon} | <span className="text-[#aaaaff]">{item.skin.name}</span>
                         </h4>
                         <p className="text-[9px] font-bold text-[#84849b] uppercase break-words">
-                          {item.skin.exterior || 'Recién fabricado'}
+                          {item.skin.exterior || "Factory New"}
                           {item.skin.float !== undefined && ` • Float: ${item.skin.float.toFixed(5)}`}
                         </p>
                         
@@ -118,7 +120,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                           onClick={() => removeFromCart(item.skin.id)}
                           className="mt-1 text-[10px] font-bold text-red-400/50 hover:text-red-400 transition-colors cursor-pointer"
                         >
-                          Eliminar
+                          {t("common.delete")}
                         </button>
                       </div>
                     </div>
@@ -131,7 +133,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
           <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/5">
             <div className="mb-6 flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-[10px] font-black text-muted uppercase tracking-widest">Total Estimado</span>
+                <span className="text-[10px] font-black text-muted uppercase tracking-widest">{t("cart.estimatedTotal")}</span>
                 <span className="text-3xl font-black text-white tracking-tighter">${total.toLocaleString()} <span className="text-sm text-muted">USDT</span></span>
               </div>
             </div>
@@ -151,10 +153,10 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                 {isCheckingOut ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Procesando...
+                    {t("checkout.processing")}
                   </>
                 ) : (
-                  'Finalizar Compra'
+                  t("cart.checkout")
                 )}
               </button>
             ) : (
@@ -171,10 +173,10 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                 <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current text-white/80 group-hover:text-white transition-colors duration-300" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 .002C5.372.002 0 5.374 0 12c0 1.034.133 2.036.381 2.991l5.483 2.27c.224-.134.484-.216.761-.216.14 0 .272.023.398.061l2.508-3.66a3.11 3.11 0 0 1-.035-3.136c.038-.07.078-.139.123-.205.81-1.18 2.39-1.488 3.528-.688 1.139.8 1.436 2.36.626 3.539-.374.545-.929.89-1.54.996l-1.077 4.195c.002.016.006.03.006.046 0 1.258-1.018 2.278-2.275 2.278-.293 0-.57-.058-.823-.16L2.35 20.916C4.832 22.84 7.95 24 11.34 24 18.332 24 24 18.332 24 11.34S18.332-.002 11.34-.002h.66zm-.92 14.507c.803 0 1.453.651 1.453 1.454a1.454 1.454 0 1 1-1.453-1.454zm1.378-4.577a1.64 1.64 0 1 0-3.279.002 1.64 1.64 0 0 0 3.279-.002z" />
                 </svg>
-                <span>Inicia sesión para comprar</span>
+                <span>{t("cart.loginToBuy")}</span>
               </button>
             )}
-            <p className="text-[9px] text-center text-muted mt-4 font-bold uppercase tracking-widest">Pago seguro garantizado</p>
+            <p className="text-[9px] text-center text-muted mt-4 font-bold uppercase tracking-widest">{t("cart.securePayment")}</p>
           </div>
         </div>
       </div>

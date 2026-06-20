@@ -16,6 +16,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
+import { useI18n } from "@/shared/i18n/I18nProvider";
+import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 
 interface AdminUser {
   id: string;
@@ -84,6 +86,7 @@ export default function AdminLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const pathname = usePathname();
+  const { t } = useI18n();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -110,35 +113,35 @@ export default function AdminLayout({
         method: "POST",
       });
     } catch (err) {
-      console.error("Error al cerrar sesión:", err);
+      console.error("Logout error:", err);
     }
     window.location.href = "/admin/login";
   };
 
   const navItems = [
     {
-      name: "Inventario Bots",
+      name: t("admin.inventoryBots"),
       href: "/admin/panel/dashboard?tab=inventory",
       icon: Database,
     },
     {
-      name: "Catálogo de Mercado",
+      name: t("admin.marketCatalog"),
       href: "/admin/panel/dashboard?tab=market",
       icon: Globe,
     },
     {
-      name: "Solicitudes de Compra",
+      name: t("admin.purchaseRequests"),
       href: "/admin/panel/dashboard?tab=purchases",
       icon: ShoppingBag,
     },
     {
-      name: "Solicitudes de Venta",
+      name: t("admin.sellRequests"),
       href: "/admin/panel/dashboard?tab=listings",
       icon: Tag,
     },
-    { name: "Gestión de Bots", href: "/admin/panel/bots", icon: Bot },
+    { name: t("admin.botManagement"), href: "/admin/panel/bots", icon: Bot },
     {
-      name: "Configuración Global",
+      name: t("admin.globalSettings"),
       href: "/admin/panel/settings",
       icon: Settings,
     },
@@ -150,13 +153,16 @@ export default function AdminLayout({
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0f0d1e] border-b border-white/5 shrink-0 z-50 fixed top-0 left-0 w-full h-14 shadow-lg shadow-[#000]/40">
         <div className="flex flex-col">
           <h1 className="text-xs font-black uppercase tracking-wider text-white">
-            Jabbu Admin
+            {t("admin.brand")}
           </h1>
           {adminUser && (
             <span className="text-[9px] text-[#84849b] font-mono">
               @{adminUser.username}
             </span>
           )}
+        </div>
+        <div className="shrink-0 px-2">
+          <LanguageSwitcher compact />
         </div>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
@@ -186,8 +192,11 @@ export default function AdminLayout({
               Jabbu Store
             </h1>
             <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-widest mt-0.5">
-              Panel de Control
+              {t("admin.controlPanel")}
             </p>
+            <div className="mt-4">
+              <LanguageSwitcher compact />
+            </div>
           </div>
 
           <Suspense fallback={
@@ -224,7 +233,7 @@ export default function AdminLayout({
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[3px] text-xs font-bold text-red-400 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 transition-colors cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                Cerrar Sesión
+                {t("admin.logout")}
               </button>
             </div>
           )}

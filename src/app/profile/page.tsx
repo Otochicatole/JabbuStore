@@ -14,6 +14,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface UserProfile {
   id: string;
@@ -26,6 +27,7 @@ interface UserProfile {
 }
 
 export default function UserProfilePage() {
+  const { t } = useI18n();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -93,14 +95,14 @@ export default function UserProfilePage() {
         setTimeout(() => setSuccess(false), 3000);
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || "Ocurrió un error al actualizar el perfil.");
+        alert(data.error || t("profile.updateError"));
       }
     } catch (err) {
       console.error("Error saving profile:", err);
       alert(
         err instanceof DOMException && err.name === "AbortError"
-          ? "El guardado tardó demasiado. Revisá que el backend esté corriendo y volvé a intentar."
-          : "Error de conexión al guardar el perfil.",
+          ? t("profile.timeoutError")
+          : t("profile.connectionError"),
       );
     } finally {
       window.clearTimeout(timeout);
@@ -112,11 +114,10 @@ export default function UserProfilePage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-20 text-white min-h-screen font-sans">
       <div className="mb-10">
         <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
-          Mi <span className="text-accent">Perfil</span>
+          {t("profile.title")}
         </h1>
         <p className="text-sm text-[#84849b] mt-1.5 font-medium">
-          Personaliza tu información de contacto y configura tu Trade Link de
-          Steam para poder recibir y vender tus skins.
+          {t("profile.description")}
         </p>
       </div>
 
@@ -124,13 +125,13 @@ export default function UserProfilePage() {
         <div className="flex flex-col items-center justify-center py-32 bg-[#110f1e]/20 border border-white/5 rounded-3xl backdrop-blur-md">
           <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
           <p className="text-xs text-[#84849b] font-bold uppercase tracking-widest">
-            Cargando perfil...
+            {t("profile.loading")}
           </p>
         </div>
       ) : !profile ? (
         <div className="text-center py-20 bg-[#110f1e]/20 border border-white/5 rounded-3xl">
           <p className="text-[#84849b] font-bold">
-            Por favor, inicia sesión para ver tu perfil.
+            {t("profile.loginRequired")}
           </p>
         </div>
       ) : (
@@ -152,7 +153,7 @@ export default function UserProfilePage() {
             </div>
 
             <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest mb-3">
-              Cuenta Vinculada
+              {t("profile.linkedAccount")}
             </span>
 
             <h3 className="text-lg font-black text-white truncate max-w-full">
@@ -166,7 +167,7 @@ export default function UserProfilePage() {
                 rel="noreferrer"
                 className="text-xs font-semibold text-accent/80 hover:text-accent flex items-center gap-1.5 mt-1 transition-colors group"
               >
-                <span>Perfil de Steam</span>
+                <span>{t("profile.steamProfile")}</span>
                 <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
               </a>
             )}
@@ -175,7 +176,7 @@ export default function UserProfilePage() {
 
             <div className="w-full text-left">
               <span className="text-[9px] text-[#84849b] font-mono block uppercase tracking-widest mb-1.5">
-                Steam ID de la Cuenta
+                Steam ID
               </span>
               <div className="flex items-center justify-between gap-3 bg-[#0d0b16] border border-white/5 rounded-xl px-3.5 py-2.5">
                 <span className="font-mono text-xs text-white/90 truncate">
@@ -198,7 +199,7 @@ export default function UserProfilePage() {
           {/* Right Column: Edit Profile Form */}
           <div className="lg:col-span-2 bg-[#110f1e]/40 border border-white/5 rounded-2xl p-4 sm:p-6 backdrop-blur-sm min-w-0">
             <h2 className="text-lg font-black uppercase tracking-tight text-white mb-6">
-              Editar Datos de Perfil
+              {t("profile.editData")}
             </h2>
 
             <form onSubmit={handleSave} className="space-y-6">
@@ -206,7 +207,7 @@ export default function UserProfilePage() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5" />
-                  Nombre / Alias
+                  {t("profile.nameAlias")}
                 </label>
                 <input
                   type="text"
@@ -221,7 +222,7 @@ export default function UserProfilePage() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5" />
-                  Correo Electrónico de Contacto
+                  {t("profile.email")}
                 </label>
                 <input
                   type="email"
@@ -246,7 +247,7 @@ export default function UserProfilePage() {
                     rel="noreferrer"
                     className="text-[9px] font-bold text-accent/80 hover:text-accent flex items-center gap-1 normal-case tracking-normal"
                   >
-                    ¿Dónde lo encuentro?
+                    {t("profile.whereFind")}
                     <ExternalLink className="w-2.5 h-2.5" />
                   </a>
                 </label>
@@ -262,12 +263,7 @@ export default function UserProfilePage() {
                 <div className="mt-1.5 p-3.5 bg-accent/5 border border-accent/15 rounded-xl flex items-start gap-3">
                   <HelpCircle className="w-4 h-4 text-accent/80 mt-0.5 flex-shrink-0" />
                   <p className="text-[11px] text-white/70 leading-relaxed font-medium">
-                    El <strong>Trade URL</strong> es obligatorio para poder
-                    mandarte ofertas de intercambio de forma automática cuando
-                    compras o vendes skins en JabbuStore. Asegúrate de
-                    configurar tu inventario de Steam como{" "}
-                    <strong>Público</strong> para evitar cancelaciones
-                    automáticas.
+                    {t("profile.tradeUrlHelp")}
                   </p>
                 </div>
               </div>
@@ -282,7 +278,7 @@ export default function UserProfilePage() {
                       className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2"
                     >
                       <Check className="w-4 h-4" />
-                      ¡Perfil actualizado exitosamente!
+                      {t("profile.saved")}
                     </motion.span>
                   )}
                 </div>
@@ -295,12 +291,12 @@ export default function UserProfilePage() {
                   {saving ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Guardando...
+                      {t("common.saving")}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      Guardar Cambios
+                      {t("profile.saveChanges")}
                     </>
                   )}
                 </button>

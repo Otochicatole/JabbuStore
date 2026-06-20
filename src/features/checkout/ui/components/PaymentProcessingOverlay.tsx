@@ -1,5 +1,6 @@
 import React from "react";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface PaymentProcessingOverlayProps {
   selectedMethodName: string;
@@ -12,17 +13,18 @@ export function PaymentProcessingOverlay({
   paymentStep,
   checkoutType,
 }: PaymentProcessingOverlayProps) {
+  const { t } = useI18n();
   const steps =
     checkoutType === "buy"
       ? [
-          "Validando orden, stock y precios...",
-          `Creando enlace seguro con ${selectedMethodName}...`,
-          "Redirigiendo para completar el pago...",
+          t("checkout.stepValidateOrder"),
+          t("checkout.stepCreateLink", { method: selectedMethodName }),
+          t("checkout.stepRedirectPayment"),
         ]
       : [
-          "Validando artículos y datos de cobro...",
-          "Registrando la orden de venta...",
-          "Preparando seguimiento de la operación...",
+          t("checkout.stepValidateSell"),
+          t("checkout.stepRegisterSale"),
+          t("checkout.stepPrepareTracking"),
         ];
 
   return (
@@ -38,12 +40,12 @@ export function PaymentProcessingOverlay({
 
           <div>
             <h3 className="text-lg font-black uppercase tracking-wider text-white">
-              {checkoutType === "buy" ? "Preparando Pago Seguro" : "Registrando Venta"}
+              {checkoutType === "buy" ? t("checkout.preparingSecurePayment") : t("checkout.registeringSale")}
             </h3>
             <p className="text-[11px] text-[#84849b] font-semibold mt-2 leading-relaxed">
               {checkoutType === "buy"
-                ? "Estamos creando una orden real y validada por el servidor."
-                : "Estamos validando tus artículos antes de generar la orden."}
+                ? t("checkout.processingBuyDescription")
+                : t("checkout.processingSellDescription")}
             </p>
           </div>
 
@@ -77,11 +79,11 @@ export function PaymentProcessingOverlay({
           </div>
 
           <p className="text-[10px] text-[#84849b] font-bold uppercase tracking-widest leading-relaxed">
-            Por favor no cierres esta pestaña.
+            {t("checkout.doNotClose")}
             <br />
             {checkoutType === "buy"
-              ? "Te redirigiremos al proveedor de pago."
-              : "Te llevaremos al seguimiento de tus órdenes."}
+              ? t("checkout.redirectProvider")
+              : t("checkout.goToOrders")}
           </p>
         </div>
       </div>

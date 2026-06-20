@@ -9,11 +9,13 @@ import { usePathname } from "next/navigation";
 import { LayoutGroup, motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
+import { useI18n } from "@/shared/i18n/I18nProvider";
+import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 
 const NAV_LINKS = [
-  { name: 'Inicio', path: '/' },
-  { name: 'Comprar', path: '/buy' },
-  { name: 'Vender', path: '/sell' },
+  { labelKey: "nav.home", path: "/" },
+  { labelKey: "nav.buy", path: "/buy" },
+  { labelKey: "nav.sell", path: "/sell" },
 ];
 
 interface UserProfile {
@@ -27,6 +29,7 @@ interface UserProfile {
 
 export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
   const pathname = usePathname();
+  const { t } = useI18n();
   const { items } = useCart();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   
@@ -129,21 +132,30 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                   ${isActive ? 'text-white' : 'text-white/40 hover:text-white'}
                 `}
               >
-                {link.name}
+                {t(link.labelKey)}
               </Link>
             );
           })}
         </div>
 
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          <div className="relative mr-1 sm:mr-2 cursor-pointer text-white/70 hover:text-white group" onClick={onOpenCart}>
+          <div className="hidden sm:block">
+            <LanguageSwitcher compact />
+          </div>
+
+          <button
+            type="button"
+            aria-label={t("nav.cart")}
+            className="relative mr-1 sm:mr-2 cursor-pointer text-white/70 hover:text-white group"
+            onClick={onOpenCart}
+          >
             <ShoppingCart className="h-5 w-5 transition-colors group-hover:text-accent" />
             {itemCount > 0 && (
               <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[8px] font-bold text-white">
                 {itemCount}
               </span>
             )}
-          </div>
+          </button>
 
           {/* Auth Button */}
           {isLoggedIn ? (
@@ -167,7 +179,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                   )}
                 </div>
                 <span className="hidden max-w-[120px] truncate sm:inline text-[9px] font-black uppercase tracking-[0.15em] text-white/90 leading-none">
-                  {profile?.name || "Cargando..."}
+                  {profile?.name || t("nav.loading")}
                 </span>
                 <svg className={`w-3 h-3 text-white/40 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
@@ -191,10 +203,10 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                     </div>
                     <div className="flex flex-col min-w-0">
                       <p className="text-xs font-black text-white uppercase tracking-wider truncate">
-                        {profile?.name || "Usuario Steam"}
+                        {profile?.name || t("nav.steamUser")}
                       </p>
                       <p className="text-[9px] text-muted truncate font-mono">
-                        ID: {profile?.steamId || "No vinculado"}
+                        ID: {profile?.steamId || t("nav.notLinked")}
                       </p>
                     </div>
                   </div>
@@ -209,7 +221,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                       <svg className="w-4 h-4 text-accent/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                       </svg>
-                      Mi Inventario
+                      {t("nav.inventory")}
                     </Link>
 
                     <Link 
@@ -220,7 +232,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                       <svg className="w-4 h-4 text-accent/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      Mi Perfil
+                      {t("nav.profile")}
                     </Link>
 
                     <Link 
@@ -231,7 +243,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                       <svg className="w-4 h-4 text-accent/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                       </svg>
-                      Mis Pedidos
+                      {t("nav.purchases")}
                     </Link>
                     
                     <Link 
@@ -242,7 +254,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                       <svg className="w-4 h-4 text-accent/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      Vender Skins
+                      {t("nav.sell")}
                     </Link>
                     
                     {profile?.profileUrl && (
@@ -255,7 +267,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                         <svg className="w-4 h-4 text-accent/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        Perfil de Steam
+                        Steam
                       </a>
                     )}
                   </div>
@@ -268,7 +280,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    Cerrar Sesión
+                    {t("nav.logout")}
                   </button>
 
                 </div>
@@ -299,6 +311,9 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
             className="border-t border-white/5 bg-background/95 backdrop-blur-lg md:hidden overflow-hidden"
           >
             <div className="flex flex-col p-4 space-y-2">
+              <div className="flex justify-center pb-2">
+                <LanguageSwitcher compact />
+              </div>
               {NAV_LINKS.map((link) => {
                 const isActive = pathname === link.path;
                 return (
@@ -314,7 +329,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                       }
                     `}
                   >
-                    {link.name}
+                    {t(link.labelKey)}
                   </Link>
                 );
               })}

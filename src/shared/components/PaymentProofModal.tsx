@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, FileText, Loader2, X } from "lucide-react";
 import { fetchWithAuth } from "@/shared/lib/api";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export interface PaymentProofInfo {
   fileName?: string | null;
@@ -31,6 +32,7 @@ export function PaymentProofModal({
   proof,
   title = "Comprobante de pago",
 }: PaymentProofModalProps) {
+  const { locale, t } = useI18n();
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export function PaymentProofModal({
       try {
         const response = await fetchWithAuth(proofUrl);
         if (!response.ok) {
-          throw new Error("No pudimos cargar el comprobante.");
+          throw new Error(t("proof.error"));
         }
 
         const blob = await response.blob();
@@ -59,7 +61,7 @@ export function PaymentProofModal({
         setObjectUrl(createdUrl);
       } catch (err: unknown) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "No pudimos cargar el comprobante.");
+          setError(err instanceof Error ? err.message : t("proof.error"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -73,10 +75,10 @@ export function PaymentProofModal({
       if (createdUrl) URL.revokeObjectURL(createdUrl);
       setObjectUrl(null);
     };
-  }, [open, proofUrl]);
+  }, [open, proofUrl, t]);
 
   const uploadedAt = proof?.uploadedAt
-    ? new Date(proof.uploadedAt).toLocaleString("es-AR")
+    ? new Date(proof.uploadedAt).toLocaleString(locale === "es" ? "es-AR" : "en-US")
     : null;
 
   if (!open) return null;
@@ -90,7 +92,7 @@ export function PaymentProofModal({
               {title}
             </h3>
             <p className="text-[10px] text-[#84849b] mt-1 truncate">
-              {proof?.fileName || "Comprobante"} {formatSize(proof?.size)}
+              {proof?.fileName || t("proof.title")} {formatSize(proof?.size)}
               {uploadedAt ? ` · ${uploadedAt}` : ""}
             </p>
           </div>
@@ -101,7 +103,7 @@ export function PaymentProofModal({
                 target="_blank"
                 rel="noreferrer"
                 className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 transition-colors"
-                title="Abrir en nueva pestaña"
+                title={t("proof.openNewTab")}
               >
                 <ExternalLink size={18} />
               </a>
@@ -110,7 +112,7 @@ export function PaymentProofModal({
               type="button"
               onClick={onClose}
               className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 transition-colors cursor-pointer"
-              aria-label="Cerrar comprobante"
+              aria-label={t("common.close")}
             >
               <X size={18} />
             </button>
@@ -121,7 +123,7 @@ export function PaymentProofModal({
           {loading && (
             <div className="flex items-center gap-2 text-white/60 text-xs font-bold uppercase">
               <Loader2 size={16} className="animate-spin" />
-              Cargando comprobante...
+              {t("proof.loading")}
             </div>
           )}
 
@@ -130,7 +132,7 @@ export function PaymentProofModal({
           {!loading && !error && objectUrl && isImage && (
             <img
               src={objectUrl}
-              alt={proof?.fileName || "Comprobante de pago"}
+              alt={proof?.fileName || t("proof.title")}
               className="max-h-full max-w-full object-contain rounded-xl"
             />
           )}
@@ -138,7 +140,7 @@ export function PaymentProofModal({
           {!loading && !error && objectUrl && isPdf && (
             <iframe
               src={objectUrl}
-              title={proof?.fileName || "Comprobante PDF"}
+              title={proof?.fileName || t("proof.openPdf")}
               className="w-full h-full rounded-xl bg-white"
             />
           )}
@@ -146,7 +148,7 @@ export function PaymentProofModal({
           {!loading && !error && objectUrl && !isImage && !isPdf && (
             <div className="text-center text-white/60">
               <FileText className="mx-auto mb-3" size={34} />
-              <p className="text-sm font-bold">Abrí el archivo en una nueva pestaña.</p>
+              <p className="text-sm font-bold">{t("proof.openInNewTab")}</p>
             </div>
           )}
         </div>

@@ -6,22 +6,24 @@ import { BACKEND_URL } from "@/shared/lib/api";
 import { OrderDetailRow } from "./OrderDetailRow";
 import { SellOrderDetailRow } from "./SellOrderDetailRow";
 import { AdminSelect } from "@/shared/components/AdminSelect";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 const STATUS_UPDATE_TIMEOUT_MS = 15000;
 
-function getStatusUpdateErrorMessage(err: unknown) {
+function getStatusUpdateErrorMessage(err: unknown, t: (key: string) => string) {
   if (err instanceof DOMException && err.name === "AbortError") {
-    return "El cambio de estado tardó demasiado. Revisá la conexión con el backend/devtunnel e intentá nuevamente.";
+    return t("admin.common.statusUpdateTimeout");
   }
 
   if (err instanceof TypeError && err.message === "Failed to fetch") {
-    return "No pudimos conectar con el backend para cambiar el estado. Si estás usando DevTunnel, verificá que siga activo.";
+    return t("admin.common.statusUpdateConnection");
   }
 
-  return err instanceof Error ? err.message : "Error actualizando estado.";
+  return err instanceof Error ? err.message : t("admin.common.statusUpdateError");
 }
 
 export function ListingsTab() {
+  const { t } = useI18n();
   const router = useRouter();
   const updatingStatusRef = useRef<Set<string>>(new Set());
   const [orders, setOrders] = useState<Order[]>([]);
@@ -75,14 +77,14 @@ export function ListingsTab() {
         return;
       }
       if (!response.ok)
-        throw new Error("Error al cargar las órdenes de venta.");
+        throw new Error(t("admin.sellOrders.loadError"));
       const data: Order[] = await response.json();
       const filtered = data.filter((o) => o.type === "SELL");
       setOrders(filtered);
       resolveMissingItemDetails(filtered);
     } catch (err: unknown) {
       console.error(err);
-      setError(getUnknownErrorMessage(err, "Error al cargar órdenes de venta."));
+      setError(getUnknownErrorMessage(err, t("admin.sellOrders.loadError")));
     } finally {
       setLoadingOrders(false);
     }
@@ -185,13 +187,13 @@ export function ListingsTab() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (response.status === 401 || response.status === 403) {
-        const message = await getErrorMessage(response, "Tu sesión de admin expiró o no tenés permisos.");
+        const message = await getErrorMessage(response, t("admin.common.adminSessionExpired"));
         if (response.status === 401) router.push("/admin/login");
         throw new Error(message);
       }
 
       if (!response.ok) {
-        throw new Error(await getErrorMessage(response, "Error actualizando estado."));
+        throw new Error(await getErrorMessage(response, t("admin.common.statusUpdateError")));
       }
 
       const updatedOrder: Order = await response.json();
@@ -208,7 +210,7 @@ export function ListingsTab() {
         ),
       );
     } catch (err: unknown) {
-      alert(getStatusUpdateErrorMessage(err));
+      alert(getStatusUpdateErrorMessage(err, t));
       // Revertir si falla
       setOrders(originalOrders);
     } finally {
@@ -231,11 +233,10 @@ export function ListingsTab() {
         <div className="min-w-0">
           <h2 className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-3">
             <Tag className="w-5 h-5 text-accent shrink-0" />
-            Órdenes de Venta
+            {t("admin.sellOrders.title")}
           </h2>
           <p className="text-xs text-[#84849b] mt-1 font-medium">
-            Solicitudes de venta de los usuarios. Cada tarjeta agrupa todos los
-            items de una orden.
+            {t("admin.sellOrders.description")}
           </p>
         </div>
         <button
@@ -246,7 +247,7 @@ export function ListingsTab() {
           <RefreshCw
             className={`w-4 h-4 ${loadingOrders ? "animate-spin text-accent" : ""}`}
           />
-          Actualizar
+          {t("common.refresh")}
         </button>
       </div>
 
@@ -263,7 +264,7 @@ export function ListingsTab() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#84849b]" />
           <input
             type="text"
-            placeholder="Buscar por ID de Venta, vendedor, SteamID o skins..."
+            placeholder={t("admin.sellOrders.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-white/2 hover:bg-white/4 focus:bg-[#0f0d1e] border border-white/10 focus:border-accent/40 rounded-[3px] text-xs text-white placeholder-white/25 focus:outline-none transition-all font-mono"
@@ -276,12 +277,12 @@ export function ListingsTab() {
           onChange={setStatusFilter}
           className="w-full md:w-52"
           options={[
-            { value: "all", label: "Todos los Estados" },
-            { value: "PENDING_PAYMENT", label: "Pending Payment" },
-            { value: "PAID", label: "Paid" },
-            { value: "TRADE_PENDING", label: "Trade Pending" },
-            { value: "COMPLETED", label: "Completed" },
-            { value: "CANCELLED", label: "Cancelled" },
+            { value: "all", label: t("admin.common.allStatuses") },
+            { value: "PENDING_PAYMENT", label: t("purchases.status.paymentPending") },
+            { value: "PAID", label: t("purchases.status.paid") },
+            { value: "TRADE_PENDING", label: t("purchases.status.tradePending") },
+            { value: "COMPLETED", label: t("purchases.status.completed") },
+            { value: "CANCELLED", label: t("purchases.status.cancelled") },
           ]}
         />
 
@@ -291,10 +292,10 @@ export function ListingsTab() {
           onChange={setPaymentFilter}
           className="w-full md:w-56"
           options={[
-            { value: "all", label: "Todos los Métodos" },
-            { value: "mercado_pago", label: "Mercado Pago" },
+            { value: "all", label: t("admin.common.allMethods") },
+            { value: "mercado_pago", label: t("paymentMethod.mercado_pago.name") },
             { value: "paypal", label: "PayPal" },
-            { value: "nowpayments", label: "NowPayments (Crypto)" },
+            { value: "nowpayments", label: t("paymentMethod.nowpayments.name") },
           ]}
         />
       </div>
@@ -336,7 +337,7 @@ export function ListingsTab() {
         if (filteredOrders.length === 0) {
           return (
             <div className="text-center py-20 bg-[#110f1e]/40 rounded-[3px] border border-white/5">
-              <p className="text-[#84849b] font-bold">No se encontraron solicitudes de venta que coincidan con los filtros.</p>
+              <p className="text-[#84849b] font-bold">{t("purchases.noSells")}</p>
             </div>
           );
         }

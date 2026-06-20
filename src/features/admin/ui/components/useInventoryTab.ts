@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { StoreItem } from "../../domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 const ITEMS_PER_INVENTORY_PAGE = 50;
 
@@ -14,6 +15,7 @@ export interface BotBasicInfo {
 }
 
 export function useInventoryTab(initialItems: StoreItem[] = []) {
+  const { t } = useI18n();
   const router = useRouter();
   const [items, setItems] = useState<StoreItem[]>(initialItems);
   const [loading, setLoading] = useState(initialItems.length === 0);
@@ -22,8 +24,8 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
   const [botsList, setBotsList] = useState<BotBasicInfo[]>([]);
 
   // Filter States
-  const [search, setSearch] = useState("");
-  const [selectedRarity, setSelectedRarity] = useState("all");
+  const [search, setSearchValue] = useState("");
+  const [selectedRarity, setSelectedRarityValue] = useState("all");
   const [sortBy, setSortBy] = useState<
     "price_asc" | "price_desc" | "float_asc" | "float_desc"
   >("price_desc");
@@ -34,19 +36,22 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
   // Price Modal State
   const [priceModalItem, setPriceModalItem] = useState<StoreItem | null>(null);
 
-  useEffect(() => {
+  const setSearch = useCallback((value: string) => {
+    setSearchValue(value);
     setInventoryPage(1);
-  }, [search, selectedRarity, sortBy]);
+  }, []);
 
-  // Dynamic fetch on mount if initialItems is empty
-  useEffect(() => {
-    if (initialItems.length === 0) {
-      fetchStoreItems();
-    }
-    fetchBotsList();
-  }, [initialItems]);
+  const setSelectedRarity = useCallback((value: string) => {
+    setSelectedRarityValue(value);
+    setInventoryPage(1);
+  }, []);
 
-  const fetchStoreItems = async () => {
+  const setInventorySortBy = useCallback((value: "price_asc" | "price_desc" | "float_asc" | "float_desc") => {
+    setSortBy(value);
+    setInventoryPage(1);
+  }, []);
+
+  const fetchStoreItems = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -63,18 +68,18 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
       }
 
       if (!response.ok) {
-        throw new Error("Error al cargar los artículos de la tienda.");
+        throw new Error(t("admin.inventory.loadItemsError"));
       }
       const data = await response.json();
       setItems(data);
-    } catch (err: any) {
-      setError(err.message || "Error de conexión.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("admin.inventory.connectionError"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, t]);
 
-  const fetchBotsList = async () => {
+  const fetchBotsList = useCallback(async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/admin/marketplace/bots`, {
         headers: {
@@ -89,7 +94,18 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
     } catch (err) {
       console.error("Error fetching bots list for mapping:", err);
     }
-  };
+  }, []);
+
+  // Dynamic fetch on mount if initialItems is empty
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (initialItems.length === 0) {
+        void fetchStoreItems();
+      }
+      void fetchBotsList();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [initialItems.length, fetchStoreItems, fetchBotsList]);
 
   const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
 
@@ -105,17 +121,17 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data.error || "Error al sincronizar inventario de bots.");
+        throw new Error(data.error || t("admin.inventory.syncError"));
       }
       setSyncSuccess(
         data.message ||
-          "Sincronización iniciada en segundo plano. Esperá 1–3 minutos y refrescá el inventario.",
+          t("admin.inventory.syncStarted"),
       );
       setTimeout(() => {
         void Promise.all([fetchStoreItems(), fetchBotsList()]);
       }, 90000);
-    } catch (err: any) {
-      setError(err.message || "Error de conexión.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("admin.inventory.connectionError"));
     } finally {
       setSyncing(false);
     }
@@ -195,7 +211,7 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
     selectedRarity,
     setSelectedRarity,
     sortBy,
-    setSortBy,
+    setSortBy: setInventorySortBy,
     inventoryPage,
     setInventoryPage,
     priceModalItem,

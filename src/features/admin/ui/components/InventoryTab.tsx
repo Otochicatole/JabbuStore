@@ -18,6 +18,7 @@ import { rarityColors, hashCode } from "./utils";
 import { PriceEditModal } from "./PriceEditModal";
 import { useInventoryTab } from "./useInventoryTab";
 import { AdminSelect } from "@/shared/components/AdminSelect";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 function getCleanSearchName(fullName: string): string {
   if (!fullName) return "";
@@ -113,6 +114,7 @@ function getPageNumbers(currentPage: number, totalPages: number) {
 }
 
 export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
+  const { t } = useI18n();
   const {
     loading,
     syncing,
@@ -147,7 +149,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[10px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-                Stock Total
+                {t("admin.inventory.totalStock")}
               </span>
               <span className="text-3xl font-black block mt-2 tracking-tight">
                 {loading ? (
@@ -157,7 +159,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                 )}
               </span>
               <span className="text-[10px] text-[#84849b] block mt-1">
-                Artículos Sincronizados
+                {t("admin.inventory.syncedItems")}
               </span>
             </div>
             <div className="w-10 h-10 rounded-[3px] bg-white/[0.02] border border-white/10 flex items-center justify-center text-accent shadow-[0_0_15px_rgba(217,70,239,0.05)]">
@@ -172,7 +174,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[10px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-                Valor Total
+                {t("admin.inventory.totalValue")}
               </span>
               <span className="text-3xl font-black block mt-2 text-green-400 tracking-tight">
                 {loading ? (
@@ -182,7 +184,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                 )}
               </span>
               <span className="text-[10px] text-[#84849b] block mt-1">
-                USD Estimados en stock
+                {t("admin.inventory.estimatedUsdStock")}
               </span>
             </div>
             <div className="w-10 h-10 rounded-[3px] bg-white/[0.02] border border-white/10 flex items-center justify-center text-green-400 shadow-[0_0_15px_rgba(74,222,128,0.05)]">
@@ -197,13 +199,13 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[10px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-                Bots de Steam
+                {t("admin.inventory.steamBots")}
               </span>
               <span className="text-3xl font-black block mt-2 text-blue-400 tracking-tight">
                 {stats.botsConnected}
               </span>
               <span className="text-[10px] text-[#84849b] block mt-1">
-                Sincronizadores activos
+                {t("admin.inventory.activeSyncers")}
               </span>
             </div>
             <div className="w-10 h-10 rounded-[3px] bg-white/[0.02] border border-white/10 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.05)]">
@@ -222,10 +224,10 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
               </span>
               <span className="text-lg font-black block mt-3 text-yellow-400 tracking-tight flex items-center gap-1.5 uppercase font-sans">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                Activo
+                {t("admin.settings.active")}
               </span>
               <span className="text-[10px] text-[#84849b] block mt-2">
-                Próxima sincronización en ~5m
+                {t("admin.inventory.automaticSync")}
               </span>
             </div>
             <div className="w-10 h-10 rounded-[3px] bg-white/[0.02] border border-white/10 flex items-center justify-center text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.05)]">
@@ -246,7 +248,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre o tipo..."
+              placeholder={t("admin.inventory.searchPlaceholder")}
               className="w-full bg-[#110f1e]/40 border border-white/5 pl-10 pr-4 py-2.5 text-xs font-bold text-white placeholder-[#84849b] rounded-[3px] outline-none focus:border-accent/40 transition-colors"
             />
           </div>
@@ -257,10 +259,10 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
               value={selectedRarity}
               onChange={setSelectedRarity}
               options={[
-                { value: "all", label: "Todas las rarezas" },
+                { value: "all", label: t("filters.rarity") },
                 { value: "coverte", label: "★ Covert (Rojo)" },
                 { value: "classified", label: "Classified (Rosado)" },
-                { value: "restricted", label: "Restricted (Púrpura)" },
+                { value: "restricted", label: t("admin.inventory.rarityRestricted") },
                 { value: "mil-spec", label: "Mil-Spec (Azul)" },
                 { value: "industrial", label: "Industrial Grade (Celeste)" },
                 { value: "consumer", label: "Consumer Grade (Gris)" },
@@ -272,10 +274,10 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
               value={sortBy}
               onChange={(v) => setSortBy(v as InventorySortBy)}
               options={[
-                { value: "price_desc", label: "Precio: Mayor a Menor" },
-                { value: "price_asc", label: "Precio: Menor a Mayor" },
-                { value: "float_asc", label: "Float: Menor a Mayor" },
-                { value: "float_desc", label: "Float: Mayor a Menor" },
+                { value: "price_desc", label: t("admin.inventory.sortPriceDesc") },
+                { value: "price_asc", label: t("admin.inventory.sortPriceAsc") },
+                { value: "float_asc", label: t("sort.Float: Menor a Mayor") },
+                { value: "float_desc", label: t("sort.Float: Mayor a Menor") },
               ]}
             />
 
@@ -286,7 +288,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
               className="w-full sm:w-auto px-4 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-[10px] font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-              {syncing ? "Sincronizando inventario..." : "Sincronizar inventario bots"}
+              {syncing ? t("admin.inventory.syncingInventory") : t("admin.inventory.syncInventoryBots")}
             </button>
           </div>
         </div>
@@ -310,14 +312,14 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
           <div className="h-64 flex flex-col items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-accent mb-3" />
             <p className="text-[10px] text-[#84849b] font-black uppercase tracking-widest">
-              Cargando catálogo del servidor...
+              {t("buy.loadingCatalog")}
             </p>
           </div>
         ) : visibleInventoryItems.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center text-center">
             <Database className="w-8 h-8 text-[#84849b] mb-3" />
             <p className="text-xs text-[#84849b] font-bold">
-              No se encontraron artículos con los filtros aplicados.
+              {t("skinGrid.noResultsDescription")}
             </p>
           </div>
         ) : (
@@ -331,9 +333,9 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                       <th className="py-4 px-5">Skin</th>
                       <th className="py-4 px-5">ID de Asset</th>
                       <th className="py-4 px-5">Float Value</th>
-                      <th className="py-4 px-5">Bot Dueño</th>
-                      <th className="py-4 px-5">Precio</th>
-                      <th className="py-4 px-5 text-right">Acciones</th>
+                      <th className="py-4 px-5">{t("admin.inventory.ownerBot")}</th>
+                      <th className="py-4 px-5">{t("common.price")}</th>
+                      <th className="py-4 px-5 text-right">{t("admin.common.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-xs">
@@ -413,7 +415,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                               <button
                                 onClick={() => setPriceModalItem(item)}
                                 className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/60 hover:text-accent hover:border-accent/40 transition-all cursor-pointer"
-                                title="Editar Precio"
+                                title={t("admin.inventory.editPrice")}
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
@@ -422,7 +424,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-[#84849b] hover:text-white transition-all cursor-pointer"
-                                title="Ver Inventario del Bot"
+                                title={t("admin.inventory.viewBotInventory")}
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
                               </a>
@@ -491,7 +493,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                           <span className="text-white/95 truncate block select-all mt-0.5">{item.assetId}</span>
                         </div>
                         <div className="min-w-0">
-                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Bot Dueño</span>
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("admin.inventory.steamBots")}</span>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                             <span className="text-white font-black text-[9.5px] uppercase tracking-wide truncate">{botName}</span>
@@ -512,7 +514,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                       {/* Pricing and Action Buttons */}
                       <div className="flex items-center justify-between mt-0.5">
                         <div>
-                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Precio</span>
+                          <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("common.price")}</span>
                           <span className="font-black text-green-400 font-mono text-sm block mt-0.5">
                             ${item.price.toLocaleString()}
                           </span>
@@ -524,14 +526,14 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                             className="flex items-center gap-1.5 px-3 py-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/80 hover:text-accent hover:border-accent/40 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer min-h-[34px]"
                           >
                             <Pencil className="w-3 h-3 text-accent" />
-                            <span>Editar</span>
+                            <span>{t("common.edit")}</span>
                           </button>
                           <a
                             href={`https://steamcommunity.com/profiles/${item.botSteamId}/inventory/#730`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center w-8 h-8 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-[#84849b] hover:text-white transition-all cursor-pointer"
-                            title="Ver Inventario del Bot"
+                            title={t("admin.inventory.viewBotInventory")}
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
@@ -547,7 +549,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
             {totalInventoryPages > 1 && (
               <div className="flex items-center justify-between pt-4">
                 <span className="text-[10px] text-[#84849b] font-bold uppercase tracking-wider font-mono">
-                  Página {currentInventoryPage} de {totalInventoryPages}
+                  {t("skinGrid.pagination")} {currentInventoryPage} / {totalInventoryPages}
                 </span>
 
                 <div className="flex items-center gap-1">
@@ -558,7 +560,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                     disabled={currentInventoryPage === 1}
                     className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-35 text-white text-[10px] font-bold uppercase rounded-[3px] border border-white/5 cursor-pointer select-none"
                   >
-                    Anterior
+                    {t("skinGrid.previous")}
                   </button>
 
                   <div className="hidden sm:flex items-center gap-1">
@@ -592,7 +594,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
                     disabled={currentInventoryPage === totalInventoryPages}
                     className="px-3 py-1.5 bg-white/[0.02] hover:bg-white/[0.05] disabled:opacity-35 text-white text-[10px] font-bold uppercase rounded-[3px] border border-white/5 cursor-pointer select-none"
                   >
-                    Siguiente
+                    {t("skinGrid.next")}
                   </button>
                 </div>
               </div>

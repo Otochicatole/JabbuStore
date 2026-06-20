@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { StoreItem } from "../../domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface PriceEditModalProps {
   item: StoreItem;
@@ -22,6 +23,7 @@ export function PriceEditModal({
   onClose,
   onSuccess,
 }: PriceEditModalProps) {
+  const { t } = useI18n();
   const [manualEnabled, setManualEnabled] = useState(
     item.isPriceManual ?? false,
   );
@@ -32,7 +34,7 @@ export function PriceEditModal({
   const handleSave = async () => {
     const parsedPrice = parseFloat(priceValue);
     if (isNaN(parsedPrice) || parsedPrice < 0) {
-      setError("Ingresá un precio numérico válido mayor o igual a 0.");
+      setError(t("admin.priceModal.invalidPrice"));
       return;
     }
 
@@ -57,7 +59,7 @@ export function PriceEditModal({
       );
 
       if (!response.ok) {
-        throw new Error("Error al actualizar el precio del artículo.");
+        throw new Error(t("admin.priceModal.updateError"));
       }
 
       onSuccess({
@@ -66,8 +68,8 @@ export function PriceEditModal({
         isPriceManual: manualEnabled,
       });
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Error de conexión al actualizar el precio.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("admin.priceModal.connectionError"));
     } finally {
       setSaving(false);
     }
@@ -120,17 +122,17 @@ export function PriceEditModal({
           {/* Switch de precio manual */}
           <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.06] rounded-[3px]">
             <div>
-              <p className="text-sm font-bold text-white">Precio Manual</p>
+              <p className="text-sm font-bold text-white">{t("admin.priceModal.manualPrice")}</p>
               <p className="text-[11px] text-[#84849b] mt-0.5 leading-snug">
                 {manualEnabled
-                  ? "Activo — la sincronización automática no sobreescribirá este precio."
-                  : "Desactivado — el precio se actualiza automáticamente con el mercado."}
+                  ? t("admin.priceModal.manualActiveDescription")
+                  : t("admin.priceModal.manualInactiveDescription")}
               </p>
             </div>
             <button
               onClick={() => setManualEnabled((v) => !v)}
               className="ml-4 flex-shrink-0 cursor-pointer transition-all"
-              aria-label="Toggle precio manual"
+              aria-label={t("admin.priceModal.toggleManualPrice")}
             >
               {manualEnabled ? (
                 <ToggleRight className="w-12 h-12 text-accent drop-shadow-[0_0_8px_rgba(217,70,239,0.6)]" />
@@ -145,7 +147,7 @@ export function PriceEditModal({
             className={`space-y-2 transition-opacity duration-200 ${manualEnabled ? "opacity-100" : "opacity-30 pointer-events-none"}`}
           >
             <label className="text-xs font-black uppercase tracking-widest text-[#84849b] font-mono">
-              Precio en USD
+              {t("admin.priceModal.priceUsd")}
             </label>
             <div className="relative">
               <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
@@ -164,7 +166,7 @@ export function PriceEditModal({
               />
             </div>
             <p className="text-[10px] text-[#84849b] font-mono">
-              Precio actual del mercado:{" "}
+              {t("admin.priceModal.currentMarketPrice")}:{" "}
               <span className="text-white font-bold">
                 ${item.price.toLocaleString()}
               </span>
@@ -186,7 +188,7 @@ export function PriceEditModal({
             onClick={onClose}
             className="flex-1 py-3 border border-white/10 text-white/60 text-sm font-bold hover:bg-white/5 transition-all cursor-pointer rounded-[3px]"
           >
-            Cancelar
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -195,11 +197,11 @@ export function PriceEditModal({
           >
             {saving ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Guardando...
+                <Loader2 className="w-4 h-4 animate-spin" /> {t("common.saving")}
               </>
             ) : (
               <>
-                <CheckCircle2 className="w-4 h-4" /> Guardar Precio
+                <CheckCircle2 className="w-4 h-4" /> {t("common.save")}
               </>
             )}
           </button>

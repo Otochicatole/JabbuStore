@@ -22,6 +22,7 @@ import {
 import { buildYoupinItemUrl } from "@/shared/lib/youpin";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { PaymentProofModal } from "@/shared/components/PaymentProofModal";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface OrderDetailRowProps {
   order: Order;
@@ -42,6 +43,7 @@ export function OrderDetailRow({
   onUpdateStatus,
   resolvedItemsMap,
 }: OrderDetailRowProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
@@ -138,9 +140,9 @@ export function OrderDetailRow({
         <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider font-mono text-[#84849b] mb-4">
           <span className="flex items-center gap-1">
             <Layers className="w-3.5 h-3.5 text-accent" />
-            Flujo de Operación de Compra
+            {t("purchases.transactionProgress", { type: t("purchases.buy") })}
           </span>
-          <span className="text-white/40 font-mono">Orden ID: {order.id}</span>
+          <span className="text-white/40 font-mono">{t("purchases.order")} ID: {order.id}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -167,10 +169,10 @@ export function OrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Revisar Pago
+                {t("admin.orders.reviewPayment")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 1 ? "Cobro pendiente" : "Pago verificado"}
+                {currentStep === 1 ? t("admin.orders.paymentPending") : t("admin.orders.paymentVerified")}
               </span>
             </div>
           </div>
@@ -198,14 +200,14 @@ export function OrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Sourcing Ítems
+                {t("admin.orders.sourcingItems")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
                 {currentStep === 2
-                  ? "Buscar en YouPin"
+                  ? t("admin.orders.searchYouPin")
                   : currentStep > 2
-                    ? "Skins listas"
-                    : "En cola"}
+                    ? t("admin.orders.skinsReady")
+                    : t("admin.orders.queued")}
               </span>
             </div>
           </div>
@@ -233,14 +235,14 @@ export function OrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Enviar Trade
+                {t("admin.orders.sendTrade")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
                 {currentStep === 3
-                  ? "Intercambio activo"
+                  ? t("admin.orders.activeTrade")
                   : currentStep > 3
-                    ? "Trade aceptado"
-                    : "En cola"}
+                    ? t("admin.orders.tradeAccepted")
+                    : t("admin.orders.queued")}
               </span>
             </div>
           </div>
@@ -267,7 +269,7 @@ export function OrderDetailRow({
                 Completado
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 4 ? "Skin entregada" : "En cola"}
+                {currentStep === 4 ? t("purchases.step.skinDelivered") : t("admin.orders.queued")}
               </span>
             </div>
           </div>
@@ -286,11 +288,11 @@ export function OrderDetailRow({
           )}
           <div className="min-w-0">
             <span className="text-[10px] text-[#84849b] font-mono block">
-              Comprador
+              {t("admin.orders.buyer")}
             </span>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-extrabold text-white text-sm truncate max-w-[150px]">
-                {order.user?.name || "Usuario desconocido"}
+                {order.user?.name || t("admin.common.unknownUser")}
               </span>
               <span className="text-[9.5px] text-accent font-mono break-all">
                 ({order.user?.steamId})
@@ -352,7 +354,7 @@ export function OrderDetailRow({
                 }
               }}
               disabled={isCancelled}
-              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Marcar como pagado"}
+              title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.markPaid")}
               className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
@@ -370,7 +372,7 @@ export function OrderDetailRow({
                 }
               }}
               disabled={isCancelled}
-              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Marcar como trade pendiente"}
+              title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.markTradePending")}
               className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
@@ -388,7 +390,7 @@ export function OrderDetailRow({
                 }
               }}
               disabled={isCancelled}
-              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Completar orden"}
+              title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.completeOrder")}
               className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
@@ -397,7 +399,7 @@ export function OrderDetailRow({
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
             >
-              Completar
+              {t("admin.orders.complete")}
             </button>
             <button
               onClick={() => {
@@ -408,8 +410,8 @@ export function OrderDetailRow({
               disabled={!canCancel}
               title={
                 canCancel
-                  ? "Cancelar esta orden"
-                  : "Volvé primero a Pendiente para cancelar esta orden"
+                  ? t("admin.orders.cancelOrder")
+                  : t("admin.orders.cancelFromPending")
               }
               className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 order.status === "CANCELLED"
@@ -428,7 +430,7 @@ export function OrderDetailRow({
         {order.status === "PENDING_PAYMENT" && (
           <div className="w-full lg:w-auto">
             <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
-              Acción Express Automática
+              {t("admin.orders.expressAction")}
             </span>
             <button
               onClick={handleAutoApproveAndTrade}
@@ -448,7 +450,7 @@ export function OrderDetailRow({
         <div className="flex items-center gap-2 pb-3 border-b border-white/5">
           <CreditCard className="w-4 h-4 text-[#84849b]" />
           <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] font-mono">
-            Detalles de Facturación y Cobros
+            {t("admin.orders.billingDetails")}
           </h4>
         </div>
 
@@ -479,7 +481,7 @@ export function OrderDetailRow({
               </div>
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block">
-                  Teléfono
+                  {t("purchases.phone")}
                 </span>
                 <span className="font-bold font-mono text-[9.5px] text-white block mt-0.5 select-all">
                   {order.metadata?.phone || "No especificado"}
@@ -496,15 +498,15 @@ export function OrderDetailRow({
             <div className="space-y-2 bg-[#110f1e]/40 p-3 border border-white/5 min-h-[120px] rounded-[3px]">
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block">
-                  Método de Pago
+                  {t("admin.orders.paymentMethod")}
                 </span>
                 <span className="font-black text-accent block mt-0.5 uppercase tracking-wide">
                   {order.paymentMethod === "mercado_pago"
-                    ? "Mercado Pago"
+                    ? t("paymentMethod.mercado_pago.name")
                     : order.paymentMethod === "paypal"
                       ? "PayPal"
                       : order.paymentMethod === "manual_transfer"
-                        ? "Transferencia Manual"
+                        ? t("paymentMethod.manual_transfer.name")
                       : order.paymentMethod === "ethereum"
                         ? "Ethereum (Web3)"
                         : order.paymentMethod === "binance"
@@ -518,7 +520,7 @@ export function OrderDetailRow({
                   {order.metadata?.nowpaymentsPaymentId && (
                     <div className="mb-2">
                       <span className="text-[8.5px] text-[#84849b] block">
-                        ID de Pago NOWPayments
+                        {t("admin.orders.nowpaymentsPaymentId")}
                       </span>
                       <span className="font-bold font-mono text-purple-400 block select-all bg-purple-500/10 p-1.5 rounded-[3px] border border-purple-500/20 mt-0.5 shadow-[0_0_10px_rgba(168,85,247,0.05)]">
                         {order.metadata.nowpaymentsPaymentId}
@@ -546,7 +548,7 @@ export function OrderDetailRow({
                     </>
                   ) : (
                     <div>
-                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado y capturado vía NOWPayments API.</p>
+                      <p className="text-[9.5px] text-[#84849b] italic">{t("admin.orders.nowpaymentsCaptured")}</p>
                     </div>
                   )}
                 </div>
@@ -557,7 +559,7 @@ export function OrderDetailRow({
                   {order.metadata?.mpPaymentId && (
                     <div className="mb-2">
                       <span className="text-[8.5px] text-[#84849b] block">
-                        ID de Operación MP
+                        {t("admin.orders.mpOperationId")}
                       </span>
                       <span className="font-bold font-mono text-emerald-400 block select-all bg-emerald-500/10 p-1.5 rounded-[3px] border border-emerald-500/20 mt-0.5 shadow-[0_0_10px_rgba(16,185,129,0.05)]">
                         {order.metadata.mpPaymentId}
@@ -595,7 +597,7 @@ export function OrderDetailRow({
                     </>
                   ) : (
                     <div>
-                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado vía Mercado Pago Checkout Pro.</p>
+                      <p className="text-[9.5px] text-[#84849b] italic">{t("admin.orders.mercadoPagoCaptured")}</p>
                     </div>
                   )}
                 </div>
@@ -634,7 +636,7 @@ export function OrderDetailRow({
                     </>
                   ) : (
                     <div>
-                      <p className="text-[9.5px] text-[#84849b] italic">Pago completado y capturado vía PayPal API.</p>
+                      <p className="text-[9.5px] text-[#84849b] italic">{t("admin.orders.paypalCaptured")}</p>
                     </div>
                   )}
                 </div>
@@ -645,7 +647,7 @@ export function OrderDetailRow({
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block">
-                      Dirección / Wallet de Destino
+                      {t("admin.orders.destinationWallet")}
                     </span>
                     <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1 border border-white/5 mt-0.5 rounded-[3px]">
                       {order.metadata?.walletAddress || "N/A"}
@@ -682,7 +684,7 @@ export function OrderDetailRow({
                 </span>
                 <span className="font-mono text-[9.5px] text-white/80 block mt-1 break-all select-all leading-normal">
                   {order.user?.tradeUrl ||
-                    "Sin Trade URL registrado en el perfil"}
+                    t("admin.common.noTradeUrl")}
                 </span>
               </div>
 
@@ -730,7 +732,7 @@ export function OrderDetailRow({
           {isManualTransfer && (
             <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[3px]">
               <h5 className="text-[9px] font-black uppercase text-emerald-300 tracking-wider font-mono mb-2">
-                Transferencia Manual
+                {t("paymentMethod.manual_transfer.name")}
               </h5>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px]">
                 {manualTransferSnapshot?.type === "crypto" ? (
@@ -775,7 +777,7 @@ export function OrderDetailRow({
           )}
 
           <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono mb-2">
-            Comprobante del Comprador
+            {t("admin.orders.buyerProofTitle")}
           </h5>
           {buyerProof ? (
             <button
@@ -795,7 +797,7 @@ export function OrderDetailRow({
             </button>
           ) : (
             <p className="text-[10px] text-white/30 font-bold">
-              El comprador todavía no adjuntó comprobante.
+              {t("admin.orders.noBuyerProof")}
             </p>
           )}
         </div>
@@ -806,14 +808,14 @@ export function OrderDetailRow({
         onClose={() => setProofOpen(false)}
         proofUrl={buyerProofUrl}
         proof={buyerProof}
-        title="Comprobante del comprador"
+        title={t("admin.orders.buyerProof")}
       />
 
       {/* 📦 SECCIÓN DE ÍTEMS PERMANENTEMENTE ABIERTA */}
       <div className="space-y-3 border-t border-white/5 pt-5 mt-5">
         <div className="flex items-center justify-between font-sans mb-3 text-[10px] text-[#84849b] font-black uppercase tracking-widest">
           <span className="flex items-center gap-1.5">
-            Artículos en esta orden ({order.items.length})
+            {t("admin.orders.itemsInOrder", { count: order.items.length })}
           </span>
 
           {/* AUTOMATION BUTTON: Copia todos los Asset IDs de golpe */}
@@ -824,7 +826,7 @@ export function OrderDetailRow({
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
                 : "bg-[#110f1e] border-white/5 text-[#84849b] hover:text-white hover:bg-white/5"
             }`}
-            title="Copiar todos los IDs para el buscador de Steam"
+            title={t("admin.orders.copySteamIds")}
           >
             {copiedAllAssets ? (
               <>
@@ -834,7 +836,7 @@ export function OrderDetailRow({
             ) : (
               <>
                 <Copy className="w-3 h-3" />
-                <span>Copiar todos los Asset IDs</span>
+                <span>{t("admin.orders.copySteamIds")}</span>
               </>
             )}
           </button>
@@ -1025,7 +1027,7 @@ export function OrderDetailRow({
                         className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105 shadow-[0_0_10px_rgba(16,185,129,0.05)]"
                       >
                         <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-0.5 animate-pulse" />
-                        <span>Bot (Stock Físico)</span>
+                        <span>{t("admin.orders.physicalStockBot")}</span>
                         <ExternalLink className="w-2.5 h-2.5" />
                       </a>
                     )}
@@ -1041,7 +1043,7 @@ export function OrderDetailRow({
                         className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105 shadow-[0_0_10px_rgba(244,63,94,0.05)]"
                       >
                         <span className="w-1.5 h-1.5 bg-rose-400 rounded-full mr-0.5 animate-pulse" />
-                        <span>Inventario Cliente (Venta)</span>
+                        <span>{t("admin.orders.clientInventorySale")}</span>
                         <ExternalLink className="w-2.5 h-2.5" />
                       </a>
                     )}
@@ -1049,11 +1051,11 @@ export function OrderDetailRow({
                     {/* PHYSICAL VS RESELL BADGES */}
                     {isPhysical ? (
                       <span className="text-[8.5px] font-black uppercase bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-[2px] font-sans tracking-wide">
-                        Skins Físicas
+                        {t("admin.orders.physicalSkins")}
                       </span>
                     ) : (
                       <span className="text-[8.5px] font-black uppercase bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-[2px] font-sans tracking-wide">
-                        Orden de Reventa
+                        {t("admin.orders.resellOrder")}
                       </span>
                     )}
                   </div>
@@ -1078,7 +1080,7 @@ export function OrderDetailRow({
                           <span className="font-extrabold text-accent">{displayPattern}</span>
                           {isPhysical && (
                             <span className="text-[8px] bg-emerald-500/10 text-emerald-400 px-1 rounded-[2px] ml-1 uppercase font-black font-sans tracking-wide">
-                              Físico
+                              {t("admin.orders.physical")}
                             </span>
                           )}
                         </span>
@@ -1157,12 +1159,12 @@ export function OrderDetailRow({
                       className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 hover:text-indigo-200 rounded-[3px] text-[10px] font-black uppercase tracking-wider transition-all hover:scale-[1.02] shadow-[0_0_16px_rgba(99,102,241,0.08)]"
                       title={
                         item.externalId
-                          ? "Abrir el listing exacto en YouPin"
-                          : "Buscar el ítem en YouPin"
+                          ? t("admin.orders.openExactYouPin")
+                          : t("admin.orders.searchItemYouPin")
                       }
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
-                      {item.externalId ? "Ver ítem en YouPin" : "Buscar en YouPin"}
+                      {item.externalId ? t("admin.orders.viewItemYouPin") : t("admin.orders.searchYouPin")}
                     </a>
                   </div>
                 )}

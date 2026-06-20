@@ -17,6 +17,7 @@ import {
 import { Order, PaymentProofMetadata } from "../../domain/types";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { PaymentProofModal } from "@/shared/components/PaymentProofModal";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 import {
   rarityColors,
   getItemRarity,
@@ -91,6 +92,7 @@ export function SellOrderDetailRow({
   onUpdateStatus,
   resolvedItemsMap,
 }: SellOrderDetailRowProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
@@ -200,9 +202,9 @@ export function SellOrderDetailRow({
         <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider font-mono text-[#84849b] mb-4">
           <span className="flex items-center gap-1">
             <Layers className="w-3.5 h-3.5 text-accent" />
-            Flujo de Operación de Venta
+            {t("admin.sellOrders.operationFlow")}
           </span>
-          <span className="text-white/40 font-mono">Orden ID: {order.id}</span>
+          <span className="text-white/40 font-mono">{t("purchases.order")} ID: {order.id}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -229,10 +231,10 @@ export function SellOrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Aprobar Venta
+                {t("admin.sellOrders.approveSale")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 1 ? "Pendiente" : "Aprobada"}
+                {currentStep === 1 ? t("purchases.step.pending") : t("admin.sellOrders.approved")}
               </span>
             </div>
           </div>
@@ -260,14 +262,14 @@ export function SellOrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Recibir Trade
+                {t("admin.sellOrders.receiveTrade")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
                 {currentStep === 2
-                  ? "Esperando ítem"
+                  ? t("admin.sellOrders.waitingItem")
                   : currentStep > 2
-                    ? "Ítem en bot"
-                    : "En cola"}
+                    ? t("admin.sellOrders.itemInBot")
+                    : t("admin.orders.queued")}
               </span>
             </div>
           </div>
@@ -295,14 +297,14 @@ export function SellOrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Pagar a Usuario
+                {t("admin.sellOrders.payUser")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
                 {currentStep === 3
-                  ? "Por transferir"
+                  ? t("admin.sellOrders.toTransfer")
                   : currentStep > 3
-                    ? "Pago enviado"
-                    : "En cola"}
+                    ? t("admin.sellOrders.paymentSent")
+                    : t("admin.orders.queued")}
               </span>
             </div>
           </div>
@@ -324,10 +326,10 @@ export function SellOrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Completada
+                {t("admin.sellOrders.completed")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 4 ? "Listo" : "Pendiente"}
+                {currentStep === 4 ? t("admin.sellOrders.ready") : t("purchases.step.pending")}
               </span>
             </div>
           </div>
@@ -350,7 +352,7 @@ export function SellOrderDetailRow({
             </span>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-extrabold text-white text-sm truncate max-w-[150px]">
-                {order.user?.name || "Usuario desconocido"}
+                {order.user?.name || t("admin.common.unknownUser")}
               </span>
               <span className="text-[9.5px] text-accent font-mono truncate">
                 ({order.user?.steamId})
@@ -392,7 +394,7 @@ export function SellOrderDetailRow({
         {/* 🛠️ MANUAL / PASO A PASO ACTION BUTTONS */}
         <div className="space-y-1.5 w-full lg:w-auto">
           <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
-            Acción del Flujo Correcto de Venta
+            {t("admin.sellOrders.correctFlowAction")}
           </span>
           <div className="grid grid-cols-1 gap-1.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] sm:flex sm:flex-wrap sm:items-center">
             {/* Paso 1: Aprobar Venta */}
@@ -403,7 +405,7 @@ export function SellOrderDetailRow({
                 }
               }}
               disabled={isCancelled}
-              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Aprobar venta"}
+              title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.sellOrders.approveSaleTitle")}
               className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
@@ -413,7 +415,7 @@ export function SellOrderDetailRow({
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              Paso 1: Venta Aprobada
+              {t("admin.sellOrders.approveSale")}
             </button>
 
             {/* Paso 2: Confirmar Trade Recibido */}
@@ -424,7 +426,7 @@ export function SellOrderDetailRow({
                 }
               }}
               disabled={isCancelled}
-              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Confirmar trade recibido"}
+              title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.sellOrders.confirmTradeReceived")}
               className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
@@ -445,7 +447,7 @@ export function SellOrderDetailRow({
                 }
               }}
               disabled={isCancelled}
-              title={isCancelled ? "Desde Cancelado solo podés volver a Pendiente" : "Completar venta"}
+              title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.sellOrders.completeSale")}
               className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
@@ -455,7 +457,7 @@ export function SellOrderDetailRow({
               }`}
             >
               <CreditCard className="w-3.5 h-3.5" />
-              Paso 3: Pago Enviado
+              {t("admin.sellOrders.paymentSentStep")}
             </button>
 
             {/* Volver a Pendiente por si dio mal click */}
@@ -466,9 +468,9 @@ export function SellOrderDetailRow({
                   ? "bg-[#110f1e] border-[#84849b]/40 text-[#84849b]"
                   : "bg-white/5 border-white/5 text-white/30 hover:text-white"
               }`}
-              title="Volver al estado inicial de Pendiente"
+              title={t("admin.sellOrders.resetToPending")}
             >
-              Volver a Pendiente
+              {t("admin.sellOrders.resetToPending")}
             </button>
 
             {/* Rechazar/Cancelar */}
@@ -481,8 +483,8 @@ export function SellOrderDetailRow({
               disabled={!canCancel}
               title={
                 canCancel
-                  ? "Cancelar esta venta"
-                  : "Volvé primero a Pendiente para cancelar esta venta"
+                  ? t("admin.sellOrders.cancelSale")
+                  : t("admin.sellOrders.cancelFromPending")
               }
               className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 order.status === "CANCELLED"
@@ -504,7 +506,7 @@ export function SellOrderDetailRow({
         <div className="flex items-center gap-2 pb-3 border-b border-white/5">
           <CreditCard className="w-4 h-4 text-[#84849b]" />
           <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] font-mono">
-            Datos de Destino del Pago al Usuario
+            {t("admin.sellOrders.paymentDestinationData")}
           </h4>
         </div>
 
@@ -535,7 +537,7 @@ export function SellOrderDetailRow({
               </div>
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block">
-                  Teléfono
+                  {t("purchases.phone")}
                 </span>
                 <span className="font-bold font-mono text-[9.5px] text-white block mt-0.5 select-all">
                   {order.metadata?.phone || "No especificado"}
@@ -547,16 +549,16 @@ export function SellOrderDetailRow({
           {/* Columna 2: Método de Cobro */}
           <div className="space-y-2.5">
             <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-              Detalle del Cobro / Destino del Pago
+              {t("admin.sellOrders.payoutDetail")}
             </h5>
             <div className="space-y-2 bg-[#110f1e]/40 p-3 border border-white/5 min-h-[120px] rounded-[3px]">
               <div>
                 <span className="text-[8.5px] text-[#84849b] uppercase block">
-                  Vía de Transferencia
+                  {t("admin.sellOrders.transferRoute")}
                 </span>
                 <span className="font-black text-accent block mt-0.5 uppercase tracking-wide">
                   {order.paymentMethod === "mercado_pago"
-                    ? "Mercado Pago"
+                    ? t("paymentMethod.mercado_pago.name")
                     : order.paymentMethod === "paypal"
                       ? "PayPal"
                       : order.paymentMethod === "ethereum"
@@ -645,7 +647,7 @@ export function SellOrderDetailRow({
                 <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
                   <div>
                     <span className="text-[8.5px] text-[#84849b] block">
-                      Dirección / Wallet de Destino
+                      {t("admin.orders.destinationWallet")}
                     </span>
                     <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
                       {order.metadata?.walletAddress || "N/A"}
@@ -682,7 +684,7 @@ export function SellOrderDetailRow({
                 </span>
                 <span className="font-mono text-[9.5px] text-white/80 block mt-1 break-all select-all leading-normal">
                   {order.user?.tradeUrl ||
-                    "Sin Trade URL registrado en el perfil"}
+                    t("admin.common.noTradeUrl")}
                 </span>
               </div>
 
@@ -728,7 +730,7 @@ export function SellOrderDetailRow({
 
         <div className="pt-3 border-t border-white/5">
           <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono mb-2">
-            Comprobante de Pago al Usuario
+            {t("admin.sellOrders.paymentProofTitle")}
           </h5>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             {adminProof ? (
@@ -749,7 +751,7 @@ export function SellOrderDetailRow({
               </button>
             ) : (
               <p className="text-[10px] text-white/30 font-bold">
-                Todavía no se adjuntó comprobante del pago al usuario.
+                {t("admin.sellOrders.noAdminProof")}
               </p>
             )}
 
@@ -759,10 +761,10 @@ export function SellOrderDetailRow({
                   ? "bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10 cursor-pointer"
                   : "bg-white/5 border-white/5 text-white/20 cursor-not-allowed"
               }`}
-              title={canUploadAdminProof ? "Subir comprobante" : "Disponible cuando la orden esté Pagada o Completada"}
+              title={canUploadAdminProof ? t("admin.sellOrders.uploadProof") : t("admin.sellOrders.proofAvailableWhenPaid")}
             >
               {uploadingProof ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-              {adminProof ? "Reemplazar" : "Subir comprobante"}
+              {adminProof ? t("common.replace") : t("admin.sellOrders.uploadProof")}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
@@ -786,14 +788,14 @@ export function SellOrderDetailRow({
         onClose={() => setProofOpen(false)}
         proofUrl={adminProofUrl}
         proof={adminProof}
-        title="Comprobante de pago al usuario"
+        title={t("admin.sellOrders.userPaymentProof")}
       />
 
       {/* 📦 SECCIÓN DE ÍTEMS A RECIBIR */}
       <div className="space-y-3 border-t border-white/5 pt-5 mt-5">
         <div className="flex items-center justify-between font-sans mb-3 text-[10px] text-[#84849b] font-black uppercase tracking-widest">
           <span className="flex items-center gap-1.5">
-            Skins que se recibirán en esta venta ({order.items.length})
+            {t("admin.sellOrders.itemsToReceive", { count: order.items.length })}
           </span>
 
           {/* AUTOMATION BUTTON: Copia todos los Asset IDs de golpe */}
@@ -804,7 +806,7 @@ export function SellOrderDetailRow({
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
                 : "bg-[#110f1e] border-white/5 text-[#84849b] hover:text-white hover:bg-white/5"
             }`}
-            title="Copiar todos los IDs para buscar las skins del vendedor"
+            title={t("admin.sellOrders.copySellerSkinIds")}
           >
             {copiedAllAssets ? (
               <>
@@ -814,7 +816,7 @@ export function SellOrderDetailRow({
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5" />
-                <span>Copiar todos los Asset IDs</span>
+                <span>{t("admin.sellOrders.copySellerSkinIds")}</span>
               </>
             )}
           </button>
@@ -909,7 +911,7 @@ export function SellOrderDetailRow({
                       className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105 shadow-[0_0_10px_rgba(244,63,94,0.05)]"
                     >
                       <span className="w-1.5 h-1.5 bg-rose-400 rounded-full mr-0.5 animate-pulse" />
-                      <span>Inventario Cliente (Venta)</span>
+                      <span>{t("admin.orders.clientInventorySale")}</span>
                       <ExternalLink className="w-2.5 h-2.5" />
                     </a>
 

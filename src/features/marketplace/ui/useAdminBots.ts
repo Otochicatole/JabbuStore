@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { BACKEND_URL } from "@/shared/lib/api";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export interface Bot {
   id: string;
@@ -37,6 +38,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export function useAdminBots() {
+  const { t } = useI18n();
   const [bots, setBots] = useState<Bot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,15 +61,15 @@ export function useAdminBots() {
         cache: "no-store",
         headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
       });
-      if (!res.ok) throw new Error("Error al cargar los bots");
+      if (!res.ok) throw new Error(t("admin.bots.loadError"));
       const data = await res.json();
       setBots(data);
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Error al cargar los bots"));
+      setError(getErrorMessage(e, t("admin.bots.loadError")));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -87,10 +89,10 @@ export function useAdminBots() {
           credentials: "include",
         },
       );
-      if (!res.ok) throw new Error("Error al cambiar estado del bot");
+      if (!res.ok) throw new Error(t("admin.bots.toggleError"));
       fetchBots();
     } catch (e: unknown) {
-      alert(getErrorMessage(e, "Error al cambiar estado del bot"));
+      alert(getErrorMessage(e, t("admin.bots.toggleError")));
     } finally {
       setActionLoading(null);
     }
@@ -107,11 +109,11 @@ export function useAdminBots() {
         },
       );
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Error al eliminar el bot");
+      if (!res.ok) throw new Error(data.error || t("admin.bots.deleteError"));
       await fetchBots();
       setBotToDelete(null);
     } catch (e: unknown) {
-      alert(getErrorMessage(e, "Error al eliminar el bot"));
+      alert(getErrorMessage(e, t("admin.bots.deleteError")));
     } finally {
       setActionLoading(null);
     }
@@ -142,13 +144,13 @@ export function useAdminBots() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || "Error al obtener estado del catálogo");
+        throw new Error(data.error || t("admin.bots.catalogStatusError"));
       }
       setCatalogStatus(data);
     } catch (e: unknown) {
-      setSyncError(getErrorMessage(e, "Error al obtener estado del catálogo"));
+      setSyncError(getErrorMessage(e, t("admin.bots.catalogStatusError")));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -173,16 +175,16 @@ export function useAdminBots() {
       const data = await res.json().catch(() => ({}));
       if (res.status === 409) {
         setCatalogStatus(data.catalog ?? null);
-        setSyncError(data.message || "Ya hay una descarga del catálogo en curso.");
+        setSyncError(data.message || t("admin.bots.catalogInProgress"));
         return;
       }
       if (!res.ok) {
-        throw new Error(data.error || "Error al descargar catálogo de precios");
+        throw new Error(data.error || t("admin.bots.catalogDownloadError"));
       }
       setCatalogStatus(data.catalog ?? null);
-      setSyncMessage(data.message || "Descarga del catálogo iniciada en segundo plano.");
+      setSyncMessage(data.message || t("admin.bots.catalogDownloadStarted"));
     } catch (e: unknown) {
-      setSyncError(getErrorMessage(e, "Error al descargar catálogo de precios"));
+      setSyncError(getErrorMessage(e, t("admin.bots.catalogDownloadError")));
     } finally {
       setRefreshingCatalog(false);
     }
@@ -200,17 +202,17 @@ export function useAdminBots() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || "Error al sincronizar inventario de bots");
+        throw new Error(data.error || t("admin.inventory.syncError"));
       }
       setSyncMessage(
         data.message ||
-          "Sincronización iniciada en segundo plano. Esperá 1–3 minutos y refrescá la lista.",
+          t("admin.bots.syncStarted"),
       );
       setTimeout(() => {
         fetchBots();
       }, 90000);
     } catch (e: unknown) {
-      setSyncError(getErrorMessage(e, "Error al sincronizar inventario de bots"));
+      setSyncError(getErrorMessage(e, t("admin.inventory.syncError")));
     } finally {
       setSyncingInventory(false);
     }

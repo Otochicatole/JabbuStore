@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { useAdminBots, Bot } from "./useAdminBots";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface BotModalProps {
   bot?: Bot | null;
@@ -28,34 +29,34 @@ interface BotModalProps {
 
 const statusConfig: Record<
   string,
-  { label: string; color: string; bg: string; dot: string }
+  { labelKey: string; color: string; bg: string; dot: string }
 > = {
   active: {
-    label: "Activo",
+    labelKey: "admin.bots.status.active",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10 border-emerald-500/20",
     dot: "bg-emerald-500",
   },
   inactive: {
-    label: "Inactivo",
+    labelKey: "admin.bots.status.inactive",
     color: "text-slate-400",
     bg: "bg-slate-500/10 border-slate-500/20",
     dot: "bg-slate-500",
   },
   maintenance: {
-    label: "Mantenimiento",
+    labelKey: "admin.bots.status.maintenance",
     color: "text-yellow-400",
     bg: "bg-yellow-500/10 border-yellow-500/20",
     dot: "bg-yellow-500",
   },
   full: {
-    label: "Lleno",
+    labelKey: "admin.bots.status.full",
     color: "text-orange-400",
     bg: "bg-orange-500/10 border-orange-500/20",
     dot: "bg-orange-500",
   },
   error: {
-    label: "Error",
+    labelKey: "admin.bots.status.error",
     color: "text-red-400",
     bg: "bg-red-500/10 border-red-500/20",
     dot: "bg-red-500",
@@ -67,6 +68,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 function BotModal({ bot, onClose, onSaved }: BotModalProps) {
+  const { t } = useI18n();
   const [name, setName] = useState(bot ? bot.name : "");
   const [steamId, setSteamId] = useState(bot ? bot.steamId : "");
   const [tradeUrl, setTradeUrl] = useState(bot ? bot.tradeUrl || "" : "");
@@ -99,12 +101,12 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
 
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || "Error al guardar el bot");
+        throw new Error(d.error || t("admin.bots.saveError"));
       }
 
       onSaved();
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Error al guardar el bot"));
+      setError(getErrorMessage(e, t("admin.bots.saveError")));
     } finally {
       setSaving(false);
     }
@@ -122,7 +124,7 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-base font-black uppercase tracking-wider">
-            {bot ? "Editar Bot" : "Agregar Nuevo Bot"}
+            {bot ? t("admin.bots.editBot") : t("admin.bots.addBot")}
           </h2>
           <button
             onClick={onClose}
@@ -135,7 +137,7 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] block mb-1.5">
-              Nombre del Bot *
+              {t("admin.bots.botName")}
             </label>
             <input
               type="text"
@@ -161,13 +163,13 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
             />
             {bot && (
               <p className="text-[10px] text-[#84849b] mt-1">
-                El SteamID no se puede modificar.
+                {t("admin.bots.steamIdLocked")}
               </p>
             )}
           </div>
           <div>
             <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] block mb-1.5">
-              URL de Intercambio (Trade URL)
+              {t("admin.bots.tradeUrl")}
             </label>
             <input
               type="url"
@@ -179,7 +181,7 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
           </div>
           <div>
             <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] block mb-1.5">
-              Capacidad Máxima de Items
+              {t("admin.bots.maxItems")}
             </label>
             <input
               type="number"
@@ -204,7 +206,7 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
               onClick={onClose}
               className="flex-1 h-11 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-sm font-bold text-white transition-colors"
             >
-              Cancelar
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -216,7 +218,7 @@ function BotModal({ bot, onClose, onSaved }: BotModalProps) {
               ) : (
                 <Check className="w-4 h-4" />
               )}
-              {saving ? "Guardando..." : bot ? "Actualizar" : "Crear Bot"}
+              {saving ? t("admin.bots.saving") : bot ? t("admin.bots.update") : t("admin.bots.create")}
             </button>
           </div>
         </form>
@@ -238,6 +240,7 @@ function DeleteConfirmModal({
   onConfirm,
   loading,
 }: DeleteConfirmModalProps) {
+  const { t } = useI18n();
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -251,14 +254,12 @@ function DeleteConfirmModal({
         <div className="flex items-center gap-3 mb-4 text-red-400">
           <AlertTriangle className="w-6 h-6" />
           <h2 className="text-base font-black uppercase tracking-wider">
-            ¿Eliminar Bot?
+            {t("admin.bots.deleteBot")}?
           </h2>
         </div>
 
         <p className="text-sm text-[#84849b] mb-6">
-          ¿Estás seguro de que deseas eliminar permanentemente el bot{" "}
-          <span className="text-white font-bold">{bot.name}</span>? Esta acción
-          no se puede deshacer.
+          {t("admin.bots.deleteConfirm", { name: bot.name })}
         </p>
 
         <div className="flex gap-3">
@@ -266,7 +267,7 @@ function DeleteConfirmModal({
             onClick={onClose}
             className="flex-1 h-11 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-sm font-bold text-white transition-colors"
           >
-            Cancelar
+            {t("common.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -278,7 +279,7 @@ function DeleteConfirmModal({
             ) : (
               <Trash2 className="w-4 h-4" />
             )}
-            {loading ? "Eliminando..." : "Eliminar"}
+            {loading ? t("admin.bots.deleting") : t("admin.bots.delete")}
           </button>
         </div>
       </div>
@@ -287,6 +288,7 @@ function DeleteConfirmModal({
 }
 
 export function AdminBotsPanel() {
+  const { t } = useI18n();
   const {
     bots,
     loading,
@@ -319,11 +321,10 @@ export function AdminBotsPanel() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-black uppercase tracking-wider text-white">
-            Gestión de Bots de Steam
+            {t("admin.botManagement")}
           </h2>
           <p className="text-xs text-[#84849b] mt-0.5">
-            Administra las cuentas de bot que procesan los trades del
-            marketplace.
+            {t("admin.bots.description")}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -339,8 +340,8 @@ export function AdminBotsPanel() {
             )}
             <span>
               {refreshingCatalog || catalogStatus?.running
-                ? "Descargando precios..."
-                : "Descargar catálogo precios"}
+                ? t("admin.bots.downloadingCatalog")
+                : t("admin.bots.downloadCatalog")}
             </span>
           </button>
           <button
@@ -355,8 +356,8 @@ export function AdminBotsPanel() {
             )}
             <span>
               {syncingInventory
-                ? "Sincronizando inventario..."
-                : "Sincronizar inventario bots"}
+                ? t("admin.bots.syncingInventory")
+                : t("admin.bots.syncInventory")}
             </span>
           </button>
           <button
@@ -364,7 +365,7 @@ export function AdminBotsPanel() {
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors shadow-[0_0_20px_rgba(217,70,239,0.2)] w-full sm:w-auto cursor-pointer min-h-[38px]"
           >
             <Plus className="w-4 h-4 shrink-0" />
-            <span>Nuevo Bot</span>
+            <span>{t("admin.bots.newBot")}</span>
           </button>
         </div>
       </div>
@@ -383,23 +384,23 @@ export function AdminBotsPanel() {
 
       {catalogStatus && (
         <div className="rounded-[3px] border border-white/10 bg-white/3 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-[#84849b] break-words">
-          Catálogo precios:{" "}
+          {t("admin.bots.priceCatalog")}:{" "}
           <span className="text-white">
             {catalogStatus.itemCount.toLocaleString()} items
           </span>
           {" · "}
           <span className={catalogStatus.running ? "text-sky-400" : catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}>
             {catalogStatus.running
-              ? "descargando"
+              ? t("admin.bots.catalogDownloading")
               : catalogStatus.exists
               ? catalogStatus.stale
-                ? "desactualizado"
-                : "listo"
-              : "no descargado"}
+                ? t("admin.bots.catalogStale")
+                : t("admin.bots.catalogReady")
+              : t("admin.bots.catalogNotDownloaded")}
           </span>
           {catalogStatus.fetchedAt && (
             <>
-              {" · actualizado "}
+              {" · "}{t("admin.bots.updated")}{" "}
               <span className="text-white">
                 {new Date(catalogStatus.fetchedAt).toLocaleString()}
               </span>
@@ -416,7 +417,7 @@ export function AdminBotsPanel() {
           </div>
           <div>
             <p className="text-[10px] font-black uppercase text-[#84849b] tracking-wider">
-              Total Bots
+              {t("admin.bots.totalBots")}
             </p>
             <p className="text-xl font-black">{bots.length}</p>
           </div>
@@ -427,7 +428,7 @@ export function AdminBotsPanel() {
           </div>
           <div>
             <p className="text-[10px] font-black uppercase text-[#84849b] tracking-wider">
-              Activos
+              {t("admin.bots.active")}
             </p>
             <p className="text-xl font-black text-emerald-400">{activeBots}</p>
           </div>
@@ -442,31 +443,30 @@ export function AdminBotsPanel() {
       ) : error ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <AlertTriangle className="w-10 h-10 text-red-500/80" />
-          <p className="text-sm font-black text-white">Error al cargar bots</p>
+          <p className="text-sm font-black text-white">{t("admin.bots.loadError")}</p>
           <p className="text-xs text-[#84849b]">{error}</p>
           <button
             onClick={fetchBots}
             className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-[3px] text-xs font-bold uppercase tracking-wider transition-colors mt-1"
           >
-            Reintentar
+            {t("common.retry")}
           </button>
         </div>
       ) : bots.length === 0 ? (
         <div className="bg-[#110f1e]/20 border border-white/5 rounded-[3px] p-12 text-center">
           <BotIcon className="w-12 h-12 text-[#84849b] mx-auto mb-3" />
           <h3 className="text-sm font-black uppercase tracking-wider mb-1">
-            No hay bots registrados
+            {t("admin.bots.emptyTitle")}
           </h3>
           <p className="text-xs text-[#84849b] max-w-sm mx-auto leading-relaxed mb-6">
-            Agrega tu primera cuenta de bot de Steam para empezar a depositar y
-            procesar inventario en la tienda.
+            {t("admin.bots.emptyDescription")}
           </p>
           <button
             onClick={openCreate}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Registrar Primer Bot
+            {t("admin.bots.registerFirst")}
           </button>
         </div>
       ) : (
@@ -502,7 +502,7 @@ export function AdminBotsPanel() {
                         {b.name}
                       </h3>
                       <p className="text-[9px] text-[#84849b] font-mono mt-0.5 uppercase tracking-wider">
-                        Steam Bot Account
+                        {t("admin.bots.steamBotAccount")}
                       </p>
                     </div>
                   </div>
@@ -511,7 +511,7 @@ export function AdminBotsPanel() {
                     className={`px-2 py-0.5 rounded-[3px] text-[8px] font-black uppercase tracking-wider border flex items-center gap-1 shrink-0 ${status.bg} ${status.color}`}
                   >
                     <span className={`w-1 h-1 rounded-full ${status.dot}`} />
-                    {status.label}
+                    {t(status.labelKey)}
                   </span>
                 </div>
 
@@ -528,7 +528,7 @@ export function AdminBotsPanel() {
 
                   <div>
                     <div className="flex justify-between items-center text-[8px] font-black uppercase text-[#84849b] tracking-wider mb-1">
-                      <span>Capacidad de Almacenamiento</span>
+                      <span>{t("admin.bots.storageCapacity")}</span>
                       <span className="text-white/80">
                         {b.currentItems} / {b.maxItems} items ({pct.toFixed(0)}
                         %)
@@ -549,14 +549,14 @@ export function AdminBotsPanel() {
                     <button
                       onClick={() => openEdit(b)}
                       className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/60 hover:text-white transition-all cursor-pointer"
-                      title="Editar Configuración"
+                      title={t("admin.bots.editConfig")}
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => setBotToDelete(b)}
                       className="p-2 bg-white/[0.02] hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 rounded-[3px] text-white/40 hover:text-red-400 transition-all cursor-pointer"
-                      title="Eliminar Bot"
+                      title={t("admin.bots.deleteBot")}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -566,7 +566,7 @@ export function AdminBotsPanel() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-[#84849b] hover:text-white transition-all cursor-pointer"
-                        title="Ver Enlace de Oferta de Intercambio"
+                        title={t("admin.bots.viewTradeOffer")}
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
@@ -589,7 +589,7 @@ export function AdminBotsPanel() {
                     ) : (
                       <Power className="w-3 h-3" />
                     )}
-                    {b.isActive ? "Desactivar" : "Activar"}
+                    {b.isActive ? t("admin.bots.deactivate") : t("admin.bots.activate")}
                   </button>
                 </div>
               </div>

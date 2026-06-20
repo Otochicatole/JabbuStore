@@ -25,11 +25,42 @@ export function PaymentMethodsSelector({
     return true;
   });
 
+  const getDisplayMethod = (method: (typeof PAYMENT_METHODS)[number]) => {
+    if (checkoutType !== "sell") return method;
+
+    if (method.id === "mercado_pago") {
+      return {
+        ...method,
+        name: "Transferencia Bancaria",
+        description: "Indica CBU, CVU o alias donde querés recibir el pago de tu venta",
+        badge: "ARS / CBU / Alias",
+      };
+    }
+
+    if (method.id === "nowpayments") {
+      return {
+        ...method,
+        name: "Criptomonedas",
+        description: "Indica la wallet y red donde querés recibir el pago de tu venta",
+        badge: "Wallet / Red",
+      };
+    }
+
+    if (method.id === "paypal") {
+      return {
+        ...method,
+        description: "Indica tu correo PayPal para recibir el pago de tu venta",
+      };
+    }
+
+    return method;
+  };
+
   return (
     <section className="bg-card border border-white/5 rounded-3xl p-6 md:p-8">
       <h2 className="text-sm font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2">
         <span className="w-1.5 h-4 bg-accent rounded-full" />
-        1. Selecciona Método de Pago / Cobro
+        1. {checkoutType === "sell" ? "Selecciona Método de Cobro" : "Selecciona Método de Pago"}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -42,6 +73,7 @@ export function PaymentMethodsSelector({
         )}
 
         {methods.map((method) => {
+          const displayMethod = getDisplayMethod(method);
           const isSelected = selectedMethod === method.id;
           return (
             <button
@@ -55,15 +87,15 @@ export function PaymentMethodsSelector({
             >
               <div className="flex items-center justify-between w-full mb-3">
                 <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/5 group-hover:border-white/10 transition-colors">
-                  {method.icon}
+                  {displayMethod.icon}
                 </div>
                 <span className="text-[9px] font-black tracking-widest bg-white/5 px-2 py-0.5 rounded text-white/60">
-                  {method.badge}
+                  {displayMethod.badge}
                 </span>
               </div>
               <div>
-                <h3 className="text-xs font-black uppercase text-white tracking-wider mb-1">{method.name}</h3>
-                <p className="text-[10px] text-[#84849b] font-medium leading-relaxed">{method.description}</p>
+                <h3 className="text-xs font-black uppercase text-white tracking-wider mb-1">{displayMethod.name}</h3>
+                <p className="text-[10px] text-[#84849b] font-medium leading-relaxed">{displayMethod.description}</p>
               </div>
               
               {/* Selected Indicator */}

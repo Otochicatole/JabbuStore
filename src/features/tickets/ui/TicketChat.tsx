@@ -114,6 +114,23 @@ function TicketChatSession({
   }, [messages]);
 
   useEffect(() => {
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    const isOpponentMsg = lastMsg.senderType !== actor;
+    if (isOpponentMsg) {
+      const notifyRead = async () => {
+        try {
+          const socket = await getTicketSocket(actor);
+          socket.emit("ticket:read", { ticketId: ticket.id });
+        } catch (e) {
+          console.error("Failed to emit ticket:read", e);
+        }
+      };
+      void notifyRead();
+    }
+  }, [messages, actor, ticket.id]);
+
+  useEffect(() => {
     if (!fullscreen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";

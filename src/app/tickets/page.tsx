@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,8 +30,12 @@ interface Order {
   totalPrice: number;
 }
 
-export default function UserTicketsPage() {
+function UserTicketsPageContent() {
   const { t, locale } = useI18n();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedTicketId = searchParams.get("ticket");
+  const requestedOrderId = searchParams.get("orderId");
 
   // Auth and profile state
   const [profile, setProfile] = useState<any>(null);
@@ -101,25 +106,6 @@ export default function UserTicketsPage() {
       const data: OrderTicket[] = await response.json();
       setTickets(data);
 
-      // Read query parameters
-      const params = new URLSearchParams(window.location.search);
-      const requestedTicketId = params.get("ticket");
-      const requestedOrderId = params.get("orderId");
-      
-      // Auto-open chat if `ticket={id}` search parameter is present
-      setSelected((current) => {
-        if (requestedTicketId) {
-          const found = data.find((t) => t.id === requestedTicketId);
-          if (found) return found;
-        }
-        return current ? data.find((t) => t.id === current.id) || current : null;
-      });
-
-      // Auto-open creation form if `orderId={id}` search parameter is present
-      if (requestedOrderId && !requestedTicketId) {
-        setSelectedOrderId(requestedOrderId);
-        setShowCreateForm(true);
-      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("tickets.error.load"));
     } finally {
@@ -133,6 +119,26 @@ export default function UserTicketsPage() {
       loadOrders();
     }
   }, [profile, loadTickets, loadOrders]);
+
+  // Effect to select ticket from query params
+  useEffect(() => {
+    if (requestedTicketId && tickets.length > 0) {
+      const found = tickets.find((t) => t.id === requestedTicketId);
+      if (found) {
+        setSelected(found);
+      }
+    } else if (!requestedTicketId) {
+      setSelected(null);
+    }
+  }, [requestedTicketId, tickets]);
+
+  // Effect to open create form if orderId is in query params
+  useEffect(() => {
+    if (requestedOrderId) {
+      setShowCreateForm(true);
+      setSelectedOrderId(requestedOrderId);
+    }
+  }, [requestedOrderId]);
 
   // Socket integration for ticket updates
   const loadTicketsRef = useRef(loadTickets);
@@ -172,20 +178,18 @@ export default function UserTicketsPage() {
   // Handle ticket selection
   const handleSelectTicket = (ticket: OrderTicket) => {
     setSelected(ticket);
-    // Update query param without full page reload
-    const url = new URL(window.location.href);
-    url.searchParams.set("ticket", ticket.id);
-    url.searchParams.delete("orderId");
-    window.history.pushState({}, "", url.toString());
+    const params = new URLSearchParams(window.location.search);
+    params.set("ticket", ticket.id);
+    params.delete("orderId");
+    router.replace(`/tickets?${params.toString()}`);
   };
 
   // Close ticket chat modal
   const handleCloseChat = () => {
     setSelected(null);
-    // Clear query param from URL
-    const url = new URL(window.location.href);
-    url.searchParams.delete("ticket");
-    window.history.pushState({}, "", url.toString());
+    const params = new URLSearchParams(window.location.search);
+    params.delete("ticket");
+    router.replace(`/tickets?${params.toString()}`);
   };
 
   // Open ticket creation form
@@ -236,9 +240,9 @@ export default function UserTicketsPage() {
       setShowCreateForm(false);
       
       // Clear orderId from query params
-      const url = new URL(window.location.href);
-      url.searchParams.delete("orderId");
-      window.history.pushState({}, "", url.toString());
+      const params = new URLSearchParams(window.location.search);
+      params.delete("orderId");
+      router.replace(`/tickets?${params.toString()}`);
 
       await loadTickets(true);
       if (data) {
@@ -467,9 +471,9 @@ export default function UserTicketsPage() {
                   onClick={() => {
                     setShowCreateForm(false);
                     // Clear query param
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete("orderId");
-                    window.history.pushState({}, "", url.toString());
+                    const params = new URLSearchParams(window.location.search);
+                    params.delete("orderId");
+                    router.replace(`/tickets?${params.toString()}`);
                   }}
                   className="p-1.5 hover:bg-white/10 rounded-full text-white/40 hover:text-white transition-colors cursor-pointer"
                 >
@@ -589,5 +593,18 @@ export default function UserTicketsPage() {
         document.body,
       )}
     </div>
+  );
+}
+
+export default function UserTicketsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen pt-28 text-white font-sans">
+        <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
+        <p className="text-xs text-[#8984a1] font-bold uppercase tracking-widest">Cargando...</p>
+      </div>
+    }>
+      <UserTicketsPageContent />
+    </Suspense>
   );
 }

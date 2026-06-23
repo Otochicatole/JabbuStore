@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, MessageSquare, RefreshCw, Search, X } from "lucide-react";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
@@ -14,6 +14,9 @@ import { TicketChat } from "./TicketChat";
 export function AdminTicketsTab() {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedTicketId = searchParams.get("ticket");
+
   const [tickets, setTickets] = useState<OrderTicket[]>([]);
   const [selected, setSelected] = useState<OrderTicket | null>(null);
   const [status, setStatus] = useState("OPEN");
@@ -35,13 +38,6 @@ export function AdminTicketsTab() {
       if (!response.ok) throw new Error(t("tickets.error.load"));
       const data: OrderTicket[] = await response.json();
       setTickets(data);
-      const requestedTicketId = new URLSearchParams(window.location.search).get("ticket");
-      setSelected((current) => {
-        if (requestedTicketId) {
-          return data.find((ticket) => ticket.id === requestedTicketId) || current;
-        }
-        return current ? data.find((ticket) => ticket.id === current.id) || current : null;
-      });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("tickets.error.load"));
     } finally {
@@ -106,9 +102,54 @@ export function AdminTicketsTab() {
     }
   };
 
+  // Sync selection based on requestedTicketId in URL reactively
+  useEffect(() => {
+    const syncSelectedTicket = async () => {
+      if (!requestedTicketId) {
+        setSelected(null);
+        return;
+      }
+
+      const found = tickets.find((t) => t.id === requestedTicketId);
+      if (found) {
+        if (selected !== found) {
+          setSelected(found);
+        }
+        return;
+      }
+
+      if (selected?.id === requestedTicketId) {
+        return;
+      }
+
+      try {
+        const response = await fetchWithAuth(`${BACKEND_URL}/tickets/${requestedTicketId}`, {
+          headers: { "X-Ticket-Actor": "ADMIN" },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSelected(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch requested ticket:", err);
+      }
+    };
+
+    void syncSelectedTicket();
+  }, [requestedTicketId, tickets, selected]);
+
+  const handleSelectTicket = (ticket: OrderTicket) => {
+    setSelected(ticket);
+    const params = new URLSearchParams(window.location.search);
+    params.set("ticket", ticket.id);
+    router.replace(`/admin/panel/dashboard?${params.toString()}`);
+  };
+
   const closeTicket = () => {
     setSelected(null);
-    router.replace("/admin/panel/dashboard?tab=tickets");
+    const params = new URLSearchParams(window.location.search);
+    params.delete("ticket");
+    router.replace(`/admin/panel/dashboard?${params.toString()}`);
   };
 
   return (
@@ -141,7 +182,7 @@ export function AdminTicketsTab() {
         ) : (
           <div className="max-h-[680px] divide-y divide-white/5 overflow-y-auto">
             {tickets.map((ticket) => (
-              <button key={ticket.id} type="button" onClick={() => setSelected(ticket)} className="w-full cursor-pointer p-4 text-left transition-colors hover:bg-white/[0.03] sm:px-5 sm:py-4">
+              <button key={ticket.id} type="button" onClick={() => handleSelectTicket(ticket)} className="w-full cursor-pointer p-4 text-left transition-colors hover:bg-white/[0.03] sm:px-5 sm:py-4">
                 <div className="flex items-start justify-between gap-2">
                   <span className="truncate text-xs font-black text-white">{ticket.subject}</span>
                   {ticket.unreadCount > 0 && <span className="rounded-full bg-accent px-1.5 py-0.5 text-[8px] font-black text-white">{ticket.unreadCount}</span>}

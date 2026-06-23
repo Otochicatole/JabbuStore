@@ -340,7 +340,7 @@ function UserTicketsPageContent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
         {/* LEFT/MAIN SPAN: Tickets List */}
-        <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[#110f1e]/40 overflow-hidden min-h-[380px] flex flex-col backdrop-blur-md shadow-2xl relative">
+        <div className="order-2 lg:order-1 lg:col-span-2 rounded-2xl border border-white/5 bg-[#110f1e]/40 overflow-hidden min-h-[380px] flex flex-col backdrop-blur-md shadow-2xl relative">
           <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
           
           {/* Ticket List Filter */}
@@ -457,7 +457,7 @@ function UserTicketsPageContent() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.98 }}
               transition={{ duration: 0.25 }}
-              className="lg:col-span-1 rounded-2xl border border-white/10 bg-[#211c33]/40 p-6 space-y-5 shadow-2xl backdrop-blur-md relative overflow-hidden"
+              className="order-1 lg:order-2 lg:col-span-1 rounded-2xl border border-white/10 bg-[#211c33]/40 p-6 space-y-5 shadow-2xl backdrop-blur-md relative overflow-hidden"
             >
               {/* Form border accent lines */}
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent/0 via-accent/40 to-accent/0" />

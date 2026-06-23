@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/context/CartContext";
 import { useInventory } from "@/features/inventory/context/InventoryContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import {
   CheckoutItem,
   CheckoutFormData,
@@ -35,7 +36,8 @@ export function useCheckout() {
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { items: cartItems, clearCart } = useCart();
+  const localizePath = useLocalizedPath();
+  const { items: cartItems, clearCart, removeFromCart } = useCart();
   const {
     selectedItems: sellItems,
     clearSellList,
@@ -300,6 +302,38 @@ export function useCheckout() {
 
         const data = await res.json();
         if (!res.ok) {
+          if (checkoutType === "buy") {
+            try {
+              const validateRes = await fetch(`${BACKEND_URL}/orders/validate-cart`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ itemIds: cartItems.map((i) => i.skin.id) }),
+              });
+              if (validateRes.ok) {
+                const validateData = await validateRes.json();
+                if (validateData.invalidIds && validateData.invalidIds.length > 0) {
+                  const removedItems = cartItems.filter((item) => validateData.invalidIds.includes(item.skin.id));
+                  const removedNames = removedItems.map((item) => `${item.skin.weapon} | ${item.skin.name}`).join("\n");
+
+                  validateData.invalidIds.forEach((id: string) => {
+                    removeFromCart(id);
+                  });
+
+                  const alertTemplate = t("cart.itemsRemoved");
+                  const alertMessage = alertTemplate && alertTemplate.includes("{names}")
+                    ? alertTemplate.replace("{names}", removedNames)
+                    : alertTemplate || `Algunos artículos de tu carrito ya no están disponibles en la tienda y fueron removidos:\n\n${removedNames}`;
+
+                  alert(alertMessage);
+                  router.push(localizePath("/buy"));
+                  return;
+                }
+              }
+            } catch (validateErr) {
+              console.error("Error doing auto-recovery of cart items in checkout:", validateErr);
+            }
+          }
+
           throw new Error(
             data?.error || `Error ${res.status} al validar productos.`,
           );

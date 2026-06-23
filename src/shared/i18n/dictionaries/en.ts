@@ -87,6 +87,7 @@ export const en = {
   "cart.loginRequired": "You must sign in with Steam to complete your purchase.",
   "cart.loginToBuy": "Sign in to buy",
   "cart.securePayment": "Secure payment guaranteed",
+  "cart.itemsRemoved": "Some items in your cart are no longer available in the store and have been removed:\n\n{names}",
 
   "buy.title": "Buy CS2 Skins",
   "buy.description": "Browse verified skins and complete your purchase securely.",

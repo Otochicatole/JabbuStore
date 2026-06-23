@@ -11,7 +11,7 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  const { items, total, removeFromCart, clearCart } = useCart();
+  const { items, total, removeFromCart, clearCart, validateCartItems } = useCart();
   const router = useRouter();
   const { t } = useI18n();
   const localizePath = useLocalizedPath();
@@ -45,6 +45,12 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
     try {
       setIsCheckingOut(true);
       setError(null);
+
+      // Validate items in cart exist in DB
+      const isValid = await validateCartItems(items);
+      if (!isValid) {
+        return; // Validation failed, items removed, checkout aborted
+      }
 
       // Prevent checkout if not logged in
       const meRes = await fetchWithAuth(`${BACKEND_URL}/users/me`);

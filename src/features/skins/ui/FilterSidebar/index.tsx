@@ -242,10 +242,10 @@ export const FilterSidebar = () => {
                 key={category.value}
                 onClick={() => toggleCategory(category.value)}
                 className={`
-                  relative h-20 w-full flex flex-col items-center justify-center p-2 rounded-[4px] border transition-all duration-300 group active:scale-95 cursor-pointer overflow-visible
+                  relative h-[100px] w-full flex flex-col items-center justify-center p-2 rounded-[4px] border transition-all duration-300 group active:scale-95 cursor-pointer overflow-visible
                   ${isSelected
                     ? 'bg-accent/10 border-accent'
-                    : 'bg-card border-white/5 hover:border-accent/40'
+                    : 'bg-card border-transparent hover:border-accent/40'
                   }
                 `}
               >
@@ -266,14 +266,14 @@ export const FilterSidebar = () => {
                 )}
 
                 {category.icon && (
-                  <div className="relative w-12 h-12 flex items-center justify-center mb-1 transition-all duration-500 group-hover:-translate-y-5 group-hover:scale-[1.8] z-10 pointer-events-none">
+                  <div className="relative w-[66px] h-[66px] flex items-center justify-center mb-1 transition-all duration-500 group-hover:-translate-y-5 group-hover:scale-[1.8] z-10 pointer-events-none">
                     <Image 
                       src={`/category-images/${category.icon}`} 
                       alt={t(category.labelKey)} 
                       width={256} 
                       height={256} 
                       unoptimized
-                      className={`w-12 h-12 object-contain transition-all duration-500 ${
+                      className={`w-[66px] h-[66px] object-contain transition-all duration-500 ${
                         isSelected 
                           ? 'opacity-100 drop-shadow-[0_0_8px_rgba(217,70,239,0.5)] animate-hologram-flicker' 
                           : 'opacity-60 group-hover:opacity-100 group-hover:animate-hologram-flicker'

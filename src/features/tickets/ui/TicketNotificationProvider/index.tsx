@@ -12,6 +12,7 @@ import {
 import { MessageSquare, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import type {
   TicketActor,
   TicketNotificationPayload,
@@ -40,6 +41,7 @@ export function TicketNotificationProvider({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const localizePath = useLocalizedPath();
   const { t } = useI18n();
   const [toasts, setToasts] = useState<TicketNotificationPayload[]>([]);
   const activeTicketRef = useRef<string | null>(null);
@@ -142,9 +144,9 @@ export function TicketNotificationProvider({
   const openNotification = (notification: TicketNotificationPayload) => {
     removeToast(notification.messageId);
     if (actor === "ADMIN") {
-      router.push(`/admin/panel/dashboard?tab=tickets&ticket=${encodeURIComponent(notification.ticketId)}`);
+      router.push(`${localizePath("/admin/panel/dashboard")}?tab=tickets&ticket=${encodeURIComponent(notification.ticketId)}`);
     } else {
-      router.push(`/tickets?ticket=${encodeURIComponent(notification.ticketId)}`);
+      router.push(`${localizePath("/tickets")}?ticket=${encodeURIComponent(notification.ticketId)}`);
     }
   };
 

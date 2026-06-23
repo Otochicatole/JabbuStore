@@ -6,6 +6,8 @@ import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { AlertCircle, ArrowRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { stripLocaleFromPathname } from "@/shared/i18n/routing";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 interface UserProfile {
   id: string;
@@ -17,6 +19,7 @@ export function ProfileCompletionModal() {
   const { t } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
+  const localizePath = useLocalizedPath();
 
   const [isOpen, setIsOpen] = useState(false);
   const dismissedThisPageLoadRef = useRef(false);
@@ -24,8 +27,9 @@ export function ProfileCompletionModal() {
   useEffect(() => {
     let cancelled = false;
 
+    const normalizedPathname = stripLocaleFromPathname(pathname);
     const shouldSkipRoute =
-      pathname?.startsWith("/admin") || pathname === "/profile";
+      normalizedPathname.startsWith("/admin") || normalizedPathname === "/profile";
     const checkProfile = async () => {
       if (shouldSkipRoute) {
         setIsOpen(false);
@@ -76,7 +80,7 @@ export function ProfileCompletionModal() {
 
   const handleGoToProfile = () => {
     setIsOpen(false);
-    router.push("/profile");
+    router.push(localizePath("/profile"));
   };
 
   return (

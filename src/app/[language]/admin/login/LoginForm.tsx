@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Mail, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/shared/i18n/I18nProvider';
+import { useLocalizedPath } from '@/shared/i18n/useLocalizedPath';
 
 export function LoginForm() {
   const router = useRouter();
+  const localizePath = useLocalizedPath();
   const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,7 +42,7 @@ export function LoginForm() {
       }
 
       // Redirigir al panel. Al cargar, el servidor validará el JWT de la cookie de forma automática.
-      router.push('/admin/panel/dashboard');
+      router.push(localizePath('/admin/panel/dashboard'));
       router.refresh(); // Refrescar para activar la carga del Server Component
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("admin.login.serverError"));

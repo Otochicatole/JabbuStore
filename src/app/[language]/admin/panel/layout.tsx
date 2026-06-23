@@ -20,6 +20,8 @@ import { BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 import { TicketNotificationProvider } from "@/features/tickets/ui/TicketNotificationProvider";
+import { stripLocaleFromPathname } from "@/shared/i18n/routing";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 import type { AdminUser, NavItem } from "@/features/admin/types";
 
@@ -34,6 +36,8 @@ function SidebarNav({
 }) {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || "inventory";
+  const localizePath = useLocalizedPath();
+  const normalizedPathname = stripLocaleFromPathname(pathname);
 
   return (
     <nav className="space-y-1">
@@ -44,12 +48,12 @@ function SidebarNav({
         );
 
         const isActive =
-          pathname === itemPath && (!itemTab || currentTab === itemTab);
+          normalizedPathname === itemPath && (!itemTab || currentTab === itemTab);
 
         return (
           <Link
             key={item.href}
-            href={item.href}
+            href={localizePath(item.href)}
             onClick={() => setIsSidebarOpen(false)}
             className={`
               flex items-center gap-3 px-3 py-3 rounded-[3px] text-xs font-bold transition-all
@@ -78,6 +82,7 @@ export default function AdminLayout({
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const pathname = usePathname();
   const { t } = useI18n();
+  const localizePath = useLocalizedPath();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -106,7 +111,7 @@ export default function AdminLayout({
     } catch (err) {
       console.error("Logout error:", err);
     }
-    window.location.href = "/admin/login";
+    window.location.href = localizePath("/admin/login");
   };
 
   const navItems = [

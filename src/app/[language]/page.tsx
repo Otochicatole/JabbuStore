@@ -11,6 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 const stats = [
   { labelKey: "home.stats.activeUsers", value: "150K+" },
@@ -21,6 +22,7 @@ const stats = [
 
 export default function Home() {
   const { t } = useI18n();
+  const localizePath = useLocalizedPath();
 
   return (
     <div className="relative min-h-screen w-full bg-[#191527] overflow-hidden text-white flex flex-col pt-16 font-sans">
@@ -96,7 +98,7 @@ export default function Home() {
                   {t("home.buy.description")}
                 </p>
               </div>
-              <Link href="/buy" className="w-full">
+              <Link href={localizePath("/buy")} className="w-full">
                 <Button className="w-full h-12 bg-accent text-white font-bold uppercase tracking-widest text-xs border border-accent hover:bg-white hover:text-accent hover:border-white transition-all duration-300 rounded-none flex items-center justify-center gap-2">
                   {t("home.buy.cta")}
                   <ArrowRight className="w-4 h-4" />
@@ -118,7 +120,7 @@ export default function Home() {
                   {t("home.sell.description")}
                 </p>
               </div>
-              <Link href="/sell" className="w-full">
+              <Link href={localizePath("/sell")} className="w-full">
                 <Button className="w-full h-12 bg-transparent text-white font-bold uppercase tracking-widest text-xs border border-white/20 hover:border-accent hover:bg-accent transition-all duration-300 rounded-none flex items-center justify-center gap-2">
                   {t("home.sell.cashout")}
                   <ArrowRight className="w-4 h-4" />

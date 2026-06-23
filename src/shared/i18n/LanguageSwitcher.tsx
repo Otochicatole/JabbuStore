@@ -1,12 +1,24 @@
 "use client";
 
-import { useI18n } from "./I18nProvider";
-import type { Locale } from "./types";
+import { usePathname, useRouter } from "next/navigation";
 
-const LOCALES: Locale[] = ["en", "es"];
+import { useI18n } from "./I18nProvider";
+import { LOCALES, withLocalePath } from "./routing";
+import type { Locale } from "./types";
 
 export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
   const { locale, setLocale, t } = useI18n();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLocaleChange = (nextLocale: Locale) => {
+    setLocale(nextLocale);
+    const localizedPath = withLocalePath(pathname || "/", nextLocale);
+    const query = window.location.search.replace(/^\?/, "");
+    router.replace(query ? `${localizedPath}?${query}` : localizedPath, {
+      scroll: false,
+    });
+  };
 
   return (
     <div
@@ -19,7 +31,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
         <button
           key={item}
           type="button"
-          onClick={() => setLocale(item)}
+          onClick={() => handleLocaleChange(item)}
           className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
             locale === item
               ? "bg-accent text-white shadow-[0_0_14px_rgba(217,70,239,0.25)]"
@@ -32,4 +44,3 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
     </div>
   );
 }
-

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MainLayout } from "@/shared/components/MainLayout";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,8 +17,6 @@ export const metadata: Metadata = {
   title: "JabbuStore - El Futuro del Skin Trading",
   description: "Intercambia tus skins de CS2 de forma rápida y segura con JabbuStore. Mercado instantáneo de skins.",
 };
-
-import { MainLayout } from "@/shared/components/MainLayout";
 
 export default function RootLayout({
   children,

@@ -10,6 +10,7 @@ import React, {
   Suspense,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 
 export type SortOption = "Precio: Mayor a Menor" | "Precio: Menor a Mayor" | "Float: Menor a Mayor" | "Float: Mayor a Menor" | "Más recientes";
 
@@ -305,7 +306,7 @@ const FilterUrlSync = ({
 export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const shouldSyncUrl = FILTER_ROUTES.has(pathname ?? "");
+  const shouldSyncUrl = FILTER_ROUTES.has(stripLocaleFromPathname(pathname));
 
   const [searchQuery, setSearchQuery] = useState("");
   const [minPrice, setMinPrice] = useState("");

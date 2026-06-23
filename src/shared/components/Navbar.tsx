@@ -10,6 +10,8 @@ import { useState, useRef, useEffect } from "react";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
+import { stripLocaleFromPathname } from "@/shared/i18n/routing";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 const NAV_LINKS = [
   { labelKey: "nav.home", path: "/" },
@@ -28,6 +30,8 @@ interface UserProfile {
 
 export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
   const pathname = usePathname();
+  const localizePath = useLocalizedPath();
+  const normalizedPathname = stripLocaleFromPathname(pathname);
   const { t } = useI18n();
   const { items } = useCart();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -88,7 +92,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-full items-center justify-between gap-2 px-3 sm:px-6">
         <Link
-          href="/"
+          href={localizePath("/")}
           className="flex min-w-0 items-center gap-2 text-white no-underline cursor-pointer group"
         >
           <div className="h-8 w-8 rounded-sm bg-accent flex items-center justify-center font-black text-white text-xs transition-transform group-hover:scale-110">
@@ -101,11 +105,11 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
 
         <div className="hidden relative items-center md:flex gap-1">
           {NAV_LINKS.map((link) => {
-            const isActive = pathname === link.path;
+            const isActive = normalizedPathname === link.path;
             return (
               <Link
                 key={link.path}
-                href={link.path}
+                href={localizePath(link.path)}
                 className={`
                   relative rounded-full px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 cursor-pointer
                   ${isActive ? "bg-accent text-white shadow-[0_0_20px_rgba(217,70,239,0.3)]" : "text-white/40 hover:text-white"}
@@ -216,7 +220,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                   {/* Links and Options */}
                   <div className="flex flex-col gap-0.5">
                     <Link
-                      href="/profile"
+                      href={localizePath("/profile")}
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] text-xs font-semibold text-white/60 hover:text-white transition-all duration-300"
                     >
@@ -238,7 +242,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                     </Link>
 
                     <Link
-                      href="/purchases"
+                      href={localizePath("/purchases")}
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] text-xs font-semibold text-white/60 hover:text-white transition-all duration-300"
                     >
@@ -260,7 +264,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                     </Link>
 
                     <Link
-                      href="/tickets"
+                      href={localizePath("/tickets")}
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] text-xs font-semibold text-white/60 hover:text-white transition-all duration-300"
                     >
@@ -366,11 +370,11 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                 </div>
               )}
               {NAV_LINKS.map((link) => {
-                const isActive = pathname === link.path;
+                const isActive = normalizedPathname === link.path;
                 return (
                   <Link
                     key={link.path}
-                    href={link.path}
+                    href={localizePath(link.path)}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`
                       w-full py-3.5 px-4 text-center rounded-[3px] text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer border

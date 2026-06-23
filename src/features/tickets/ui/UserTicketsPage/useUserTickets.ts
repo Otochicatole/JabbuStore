@@ -8,12 +8,14 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { getTicketSocket } from "@/features/tickets/infrastructure/ticketSocket";
 import type { OrderTicket } from "@/features/tickets/domain/types";
 import type { Order } from "@/features/tickets/types";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 export type TicketStatusFilter = "ALL" | "OPEN" | "CLOSED";
 
 export function useUserTickets() {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const localizePath = useLocalizedPath();
   const searchParams = useSearchParams();
   const requestedTicketId = searchParams.get("ticket");
   const requestedOrderId = searchParams.get("orderId");
@@ -154,14 +156,14 @@ export function useUserTickets() {
     const params = new URLSearchParams(window.location.search);
     params.set("ticket", ticket.id);
     params.delete("orderId");
-    router.replace(`/tickets?${params.toString()}`);
+    router.replace(`${localizePath("/tickets")}?${params.toString()}`);
   };
 
   const handleCloseChat = () => {
     setSelected(null);
     const params = new URLSearchParams(window.location.search);
     params.delete("ticket");
-    router.replace(`/tickets?${params.toString()}`);
+    router.replace(`${localizePath("/tickets")}?${params.toString()}`);
   };
 
   const handleNewTicketClick = () => {
@@ -176,7 +178,7 @@ export function useUserTickets() {
     setShowCreateForm(false);
     const params = new URLSearchParams(window.location.search);
     params.delete("orderId");
-    router.replace(`/tickets?${params.toString()}`);
+    router.replace(`${localizePath("/tickets")}?${params.toString()}`);
   };
 
   const handleCreateTicket = async (e: React.FormEvent) => {

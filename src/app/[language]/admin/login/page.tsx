@@ -2,13 +2,18 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { LoginForm } from './LoginForm';
 
-export default async function AdminLoginPage() {
+export default async function AdminLoginPage({
+  params,
+}: {
+  params: Promise<{ language: string }>;
+}) {
+  const { language } = await params;
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_token')?.value;
 
   if (token) {
     // Si ya existe la cookie con el JWT, redirigimos al dashboard directamente en el servidor sin destello de cliente
-    redirect('/admin/panel/dashboard');
+    redirect(`/${language}/admin/panel/dashboard`);
   }
 
   return (

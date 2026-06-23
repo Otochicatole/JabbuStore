@@ -7,6 +7,7 @@ import { Loader2, MessageSquare, RefreshCw, Search, X } from "lucide-react";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import type { OrderTicket, TicketStatus } from "../../domain/types";
 import { getTicketSocket } from "../../infrastructure/ticketSocket";
 import { TicketChat } from "../TicketChat";
@@ -14,6 +15,7 @@ import { TicketChat } from "../TicketChat";
 export function AdminTicketsTab() {
   const { t } = useI18n();
   const router = useRouter();
+  const localizePath = useLocalizedPath();
   const searchParams = useSearchParams();
   const requestedTicketId = searchParams.get("ticket");
 
@@ -142,14 +144,14 @@ export function AdminTicketsTab() {
     setSelected(ticket);
     const params = new URLSearchParams(window.location.search);
     params.set("ticket", ticket.id);
-    router.replace(`/admin/panel/dashboard?${params.toString()}`);
+    router.replace(`${localizePath("/admin/panel/dashboard")}?${params.toString()}`);
   };
 
   const closeTicket = () => {
     setSelected(null);
     const params = new URLSearchParams(window.location.search);
     params.delete("ticket");
-    router.replace(`/admin/panel/dashboard?${params.toString()}`);
+    router.replace(`${localizePath("/admin/panel/dashboard")}?${params.toString()}`);
   };
 
   return (

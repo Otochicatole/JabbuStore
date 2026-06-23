@@ -6,6 +6,7 @@ import { useFilters } from "@/features/filters/context/FilterContext";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 
 const CATEGORIES = [
   { value: "Cuchillos", labelKey: "filters.category.knives" },
@@ -34,7 +35,7 @@ const CONDITIONS = [
 export const FilterSidebar = () => {
   const pathname = usePathname();
   const { t } = useI18n();
-  const isSellPage = pathname === "/sell";
+  const isSellPage = stripLocaleFromPathname(pathname) === "/sell";
   const [isOpenMobile, setIsMobileOpen] = useState(false);
 
   const {

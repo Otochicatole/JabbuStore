@@ -6,16 +6,13 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useSyncExternalStore,
 } from "react";
 import { en } from "./dictionaries/en";
 import { es } from "./dictionaries/es";
 import type { Locale, TranslationParams } from "./types";
+import { DEFAULT_LOCALE, isLocale } from "./routing";
 
 const dictionaries = { en, es } as const;
-const STORAGE_KEY = "jabbustore-locale";
-const LOCALE_CHANGE_EVENT = "jabbustore-locale-change";
-const DEFAULT_LOCALE: Locale = "en";
 
 type DictionaryKey = keyof typeof en;
 
@@ -36,42 +33,22 @@ function interpolate(value: string, params?: TranslationParams) {
   );
 }
 
-function isLocale(value: string | null): value is Locale {
-  return value === "en" || value === "es";
-}
-
-function subscribeToLocale(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(LOCALE_CHANGE_EVENT, onStoreChange);
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(LOCALE_CHANGE_EVENT, onStoreChange);
-  };
-}
-
-function getClientLocale(): Locale {
-  const storedLocale = window.localStorage.getItem(STORAGE_KEY);
-  return isLocale(storedLocale) ? storedLocale : DEFAULT_LOCALE;
-}
-
-function getServerLocale(): Locale {
-  return DEFAULT_LOCALE;
-}
-
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const locale = useSyncExternalStore(
-    subscribeToLocale,
-    getClientLocale,
-    getServerLocale,
-  );
+export function I18nProvider({
+  children,
+  initialLocale = DEFAULT_LOCALE,
+}: {
+  children: React.ReactNode;
+  initialLocale?: Locale | string | null;
+}) {
+  const normalizedInitialLocale = isLocale(initialLocale) ? initialLocale : DEFAULT_LOCALE;
+  const locale = normalizedInitialLocale;
 
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 
   const setLocale = useCallback((nextLocale: Locale) => {
-    window.localStorage.setItem(STORAGE_KEY, nextLocale);
-    window.dispatchEvent(new Event(LOCALE_CHANGE_EVENT));
+    void nextLocale;
   }, []);
 
   const t = useCallback(

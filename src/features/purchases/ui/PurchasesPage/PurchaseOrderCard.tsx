@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight, Calendar, ChevronDown } from "lucide-react
 import { useRouter } from "next/navigation";
 
 import type { Order, SelectedProof } from "@/features/purchases/types";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 import { getStatusConfig, type Translate } from "./helpers";
 import { PurchaseDetailsPanels } from "./PurchaseDetailsPanels";
@@ -29,6 +30,7 @@ export function PurchaseOrderCard({
   t,
 }: PurchaseOrderCardProps) {
   const router = useRouter();
+  const localizePath = useLocalizedPath();
   const isBuy = order.type === "BUY";
   const statusConfig = getStatusConfig(order.status, order.type, t);
 
@@ -125,7 +127,7 @@ export function PurchaseOrderCard({
                 isBuy={isBuy}
                 order={order}
                 onOpenProof={onOpenProof}
-                onOpenSupport={() => router.push(`/tickets?orderId=${order.id}`)}
+                onOpenSupport={() => router.push(`${localizePath("/tickets")}?orderId=${order.id}`)}
                 t={t}
               />
               <PurchaseItemsList items={order.items} t={t} />

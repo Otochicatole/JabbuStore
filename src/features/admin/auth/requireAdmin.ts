@@ -7,6 +7,7 @@ export async function requireAdmin(language: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get("admin_token")?.value;
   const loginPath = `/${language}/admin/login`;
+  const clearSessionPath = `/api/auth/logout?next=${encodeURIComponent(loginPath)}`;
 
   if (!token) {
     redirect(loginPath);
@@ -22,17 +23,17 @@ export async function requireAdmin(language: string) {
     });
 
     if (!response.ok) {
-      redirect(loginPath);
+      redirect(clearSessionPath);
     }
 
     const data = await response.json();
     if (!data.admin) {
-      redirect(loginPath);
+      redirect(clearSessionPath);
     }
 
     return data.admin;
   } catch (err) {
     console.error("Error validating admin session:", err);
-    redirect(loginPath);
+    redirect(clearSessionPath);
   }
 }

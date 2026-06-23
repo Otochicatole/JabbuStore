@@ -395,6 +395,10 @@ export const es = {
   "profile.nameAlias": "Nombre / Alias",
   "profile.whereFind": "¿Dónde lo encuentro?",
   "profile.tradeUrlHelp": "El Trade URL es obligatorio para poder mandarte ofertas de intercambio de forma automática cuando compras o vendes skins en JabbuStore. Asegúrate de configurar tu inventario de Steam como público para evitar cancelaciones automáticas.",
+  "profile.incomplete.title": "Completa tu perfil",
+  "profile.incomplete.description": "Para poder comprar o vender skins en JabbuStore, debes registrar tu Email y tu Steam Trade Offer URL (Trade Link) en tu perfil.",
+  "profile.incomplete.proceed": "Ir a mi perfil",
+  "profile.incomplete.later": "Quizás más tarde",
 
   "purchases.title": "Compras",
   "purchases.description": "Revisa tus órdenes de compra y venta.",

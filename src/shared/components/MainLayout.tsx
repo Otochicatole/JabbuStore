@@ -9,6 +9,7 @@ import { CartSidebar } from "@/features/cart/ui/CartSidebar";
 import { usePathname } from "next/navigation";
 import { I18nProvider } from "@/shared/i18n/I18nProvider";
 import { TicketNotificationProvider } from "@/features/tickets/ui/TicketNotificationProvider";
+import { ProfileCompletionModal } from "@/shared/components/ProfileCompletionModal";
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -40,6 +41,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
               <div className="min-h-screen min-w-0 overflow-x-hidden">
                 <Navbar onOpenCart={() => setIsCartOpen(true)} />
                 <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+                <ProfileCompletionModal />
                 {children}
               </div>
             </TicketNotificationProvider>

@@ -7,21 +7,22 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { stripLocaleFromPathname } from "@/shared/i18n/routing";
+import Image from "next/image";
 
 const CATEGORIES = [
-  { value: "Cuchillos", labelKey: "filters.category.knives" },
-  { value: "Guantes", labelKey: "filters.category.gloves" },
-  { value: "Pistolas", labelKey: "filters.category.pistols" },
-  { value: "Subfusiles", labelKey: "filters.category.smgs" },
-  { value: "Rifles de asalto", labelKey: "filters.category.assaultRifles" },
-  { value: "Rifles de francotirador", labelKey: "filters.category.sniperRifles" },
-  { value: "Escopetas", labelKey: "filters.category.shotguns" },
-  { value: "Ametralladoras", labelKey: "filters.category.machineGuns" },
-  { value: "Agentes", labelKey: "filters.category.agents" },
+  { value: "Cuchillos", labelKey: "filters.category.knives", icon: "knives.webp" },
+  { value: "Guantes", labelKey: "filters.category.gloves", icon: "gloves.webp" },
+  { value: "Pistolas", labelKey: "filters.category.pistols", icon: "pistols.webp" },
+  { value: "Subfusiles", labelKey: "filters.category.smgs", icon: "smgs.webp" },
+  { value: "Rifles de asalto", labelKey: "filters.category.assaultRifles", icon: "asault-rifles.webp" },
+  { value: "Rifles de francotirador", labelKey: "filters.category.sniperRifles", icon: "snipers.webp" },
+  { value: "Escopetas", labelKey: "filters.category.shotguns", icon: "shotguns.webp" },
+  { value: "Ametralladoras", labelKey: "filters.category.machineGuns", icon: "machine-guns.webp" },
+  { value: "Agentes", labelKey: "filters.category.agents", icon: "agents.webp" },
   { value: "Contenedores", labelKey: "filters.category.containers" },
   { value: "Kits musicales", labelKey: "filters.category.musicKits" },
   { value: "Parches", labelKey: "filters.category.patches" },
-  { value: "Pegatinas", labelKey: "filters.category.stickers" },
+  { value: "Pegatinas", labelKey: "filters.category.stickers", icon: "stickers.webp" },
 ];
 
 const CONDITIONS = [
@@ -241,19 +242,48 @@ export const FilterSidebar = () => {
                 key={category.value}
                 onClick={() => toggleCategory(category.value)}
                 className={`
-                  relative aspect-square max-h-14 w-full flex flex-col items-center justify-center p-2 rounded-[4px] border transition-all duration-300 group active:scale-95 cursor-pointer
+                  relative h-20 w-full flex flex-col items-center justify-center p-2 rounded-[4px] border transition-all duration-300 group active:scale-95 cursor-pointer overflow-visible
                   ${isSelected
-                    ? 'bg-accent/10 border-accent shadow-[0_0_20px_rgba(217,70,239,0.25)]'
-                    : 'bg-card border-white/5 hover:brightness-110 hover:border-white/10 hover:-translate-y-0.5'
+                    ? 'bg-accent/10 border-accent'
+                    : 'bg-card border-white/5 hover:border-accent/40'
                   }
                 `}
               >
+                {/* Spotlight/Glow beam coming from below (matching SkinCard style) */}
+                <div
+                  className={`absolute bottom-0 left-0 right-0 mx-auto w-full h-full transition-all duration-500 ease-out pointer-events-none rounded-[4px] ${
+                    isSelected 
+                      ? 'opacity-30' 
+                      : 'opacity-0 translate-y-2 group-hover:opacity-30 group-hover:translate-y-0'
+                  }`}
+                  style={{
+                    background: 'radial-gradient(ellipse at bottom, var(--accent) 0%, transparent 70%)',
+                  }}
+                />
+
                 {isSelected && (
                   <div className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#ff4b4b] animate-pulse shadow-[0_0_8px_rgba(255,75,75,0.8)]" />
                 )}
+
+                {category.icon && (
+                  <div className="relative w-12 h-12 flex items-center justify-center mb-1 transition-all duration-500 group-hover:-translate-y-5 group-hover:scale-[1.8] z-10 pointer-events-none">
+                    <Image 
+                      src={`/category-images/${category.icon}`} 
+                      alt={t(category.labelKey)} 
+                      width={256} 
+                      height={256} 
+                      unoptimized
+                      className={`w-12 h-12 object-contain transition-all duration-500 ${
+                        isSelected 
+                          ? 'opacity-100 drop-shadow-[0_0_8px_rgba(217,70,239,0.5)] animate-hologram-flicker' 
+                          : 'opacity-60 group-hover:opacity-100 group-hover:animate-hologram-flicker'
+                      }`}
+                    />
+                  </div>
+                )}
                 <span className={`
-                  text-[9px] font-black uppercase text-center leading-tight tracking-tight
-                  ${isSelected ? 'text-white' : 'text-[#84849b] group-hover:text-white/70'}
+                  text-[9px] font-black uppercase text-center leading-tight tracking-tight mt-1 transition-all duration-300 z-10
+                  ${isSelected ? 'text-white' : 'text-[#84849b] group-hover:text-accent/80'}
                 `}>
                   {t(category.labelKey)}
                 </span>

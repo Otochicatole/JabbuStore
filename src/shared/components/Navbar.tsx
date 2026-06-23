@@ -3,7 +3,8 @@
 import { useCart } from "@/features/cart/context/CartContext";
 import { SteamLoginButton } from "./SteamLoginButton";
 import Link from "next/link";
-import { ShoppingCart, User, Menu, X } from "lucide-react";
+import Image from "next/image";
+import { ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
@@ -38,6 +39,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -57,6 +59,9 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
       .catch((err) => {
         console.error("Error fetching user profile:", err);
         setIsLoggedIn(false);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }, []);
 
@@ -122,7 +127,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
         </div>
 
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          {!isLoggedIn && (
+          {!isLoading && !isLoggedIn && (
             <div className="hidden sm:block">
               <LanguageSwitcher compact />
             </div>
@@ -143,19 +148,23 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           </button>
 
           {/* Auth Button */}
-          {isLoggedIn ? (
+          {isLoading ? (
+            <div className="h-10 w-[60px] sm:w-[140px] rounded-full bg-white/[0.03] border border-white/5 animate-pulse shrink-0" />
+          ) : isLoggedIn ? (
             <div className="relative min-w-0" ref={dropdownRef}>
               {/* Avatar Button */}
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex min-w-0 items-center gap-2 sm:gap-2.5 rounded-full border border-white/5 hover:border-accent/40 bg-white/[0.01] hover:bg-white/[0.03] p-1.5 sm:pr-4 transition-all duration-300 shadow-lg cursor-pointer focus:outline-none"
+                className="flex h-10 w-[60px] sm:w-[140px] items-center justify-between gap-1 lg:gap-3 rounded-full border border-white/5 hover:border-accent/40 bg-white/[0.01] hover:bg-white/[0.03] p-2 transition-all duration-300 shadow-lg cursor-pointer focus:outline-none shrink-0"
               >
-                <div className="relative h-7 w-7 overflow-hidden rounded-full border border-accent/20">
+                <div className="relative h-7 w-7 overflow-hidden rounded-full border border-accent/20 flex-shrink-0">
                   {profile?.avatar ? (
-                    <img
+                    <Image
                       src={profile.avatar}
                       alt={profile.name || "Steam User"}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="28px"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="h-full w-full bg-accent/15 flex items-center justify-center">
@@ -163,23 +172,10 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                     </div>
                   )}
                 </div>
-                <span className="hidden max-w-[120px] truncate sm:inline text-[9px] font-black uppercase tracking-[0.15em] text-white/90 leading-none">
+                <span className="hidden max-w-[45px] truncate sm:inline text-[9px] font-black uppercase tracking-[0.15em] text-white/90 leading-none">
                   {profile?.name || t("nav.loading")}
                 </span>
-                <svg
-                  className={`w-3 h-3 text-white/40 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`} />
               </button>
 
               {/* Floating Dropdown Card */}
@@ -187,12 +183,14 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                 <div className="absolute right-0 mt-3 w-[calc(100vw-1.5rem)] max-w-64 rounded-2xl border border-white/5 bg-card p-4 shadow-2xl shadow-black/80 z-50 flex flex-col gap-3 font-sans animate-in fade-in slide-in-from-top-2 duration-200">
                   {/* User Info Header */}
                   <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                    <div className="h-10 w-10 overflow-hidden rounded-full border border-accent/30 flex-shrink-0">
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full border border-accent/30 flex-shrink-0">
                       {profile?.avatar ? (
-                        <img
+                        <Image
                           src={profile.avatar}
                           alt="User Avatar"
-                          className="h-full w-full object-cover"
+                          fill
+                          sizes="40px"
+                          className="object-cover"
                         />
                       ) : (
                         <div className="h-full w-full bg-accent/10 flex items-center justify-center">
@@ -364,7 +362,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
             className="border-t border-white/5 bg-background/95 backdrop-blur-lg md:hidden overflow-hidden"
           >
             <div className="flex flex-col p-4 space-y-2">
-              {!isLoggedIn && (
+              {!isLoading && !isLoggedIn && (
                 <div className="flex justify-center pb-2">
                   <LanguageSwitcher compact />
                 </div>

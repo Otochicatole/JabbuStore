@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { AlertCircle, ArrowRight, X } from "lucide-react";
@@ -20,6 +20,8 @@ export function ProfileCompletionModal() {
   const pathname = usePathname();
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const searchParams = useSearchParams();
+  const checkoutType = searchParams.get("type") === "sell" ? "sell" : "buy";
 
   const [isOpen, setIsOpen] = useState(false);
   const dismissedThisPageLoadRef = useRef(false);
@@ -36,7 +38,9 @@ export function ProfileCompletionModal() {
         return;
       }
 
-      if (dismissedThisPageLoadRef.current) {
+      const isCheckoutRoute = normalizedPathname === "/checkout";
+
+      if (dismissedThisPageLoadRef.current && !isCheckoutRoute) {
         setIsOpen(false);
         return;
       }
@@ -65,17 +69,29 @@ export function ProfileCompletionModal() {
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleFocus);
 
+    const handleTrigger = () => {
+      dismissedThisPageLoadRef.current = false;
+      void checkProfile();
+    };
+    window.addEventListener("showProfileCompletionModal", handleTrigger);
+
     return () => {
       cancelled = true;
       window.clearTimeout(timeoutId);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleFocus);
+      window.removeEventListener("showProfileCompletionModal", handleTrigger);
     };
   }, [pathname]);
 
   const handleClose = () => {
-    dismissedThisPageLoadRef.current = true;
-    setIsOpen(false);
+    const normalizedPathname = stripLocaleFromPathname(pathname);
+    if (normalizedPathname === "/checkout") {
+      router.push(localizePath(checkoutType === "sell" ? "/sell" : "/buy"));
+    } else {
+      dismissedThisPageLoadRef.current = true;
+      setIsOpen(false);
+    }
   };
 
   const handleGoToProfile = () => {
@@ -148,7 +164,7 @@ export function ProfileCompletionModal() {
                   onClick={handleClose}
                   className="w-full py-3 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-xs font-black uppercase tracking-wider rounded-xl border border-white/5 transition-all cursor-pointer"
                 >
-                  {t("profile.incomplete.later")}
+                  {stripLocaleFromPathname(pathname) === "/checkout" ? t("checkout.backToStore") : t("profile.incomplete.later")}
                 </button>
               </div>
             </div>

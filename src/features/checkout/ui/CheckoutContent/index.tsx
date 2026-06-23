@@ -12,9 +12,11 @@ import { SuccessScreen } from "./SuccessScreen";
 import { PaymentProcessingOverlay } from "./PaymentProcessingOverlay";
 import { useCheckout } from "./useCheckout";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 export function CheckoutContent() {
   const { t } = useI18n();
+  const localizePath = useLocalizedPath();
   const {
     checkoutType,
     items,
@@ -56,7 +58,7 @@ export function CheckoutContent() {
           </h2>
           <p className="text-sm text-[#84849b] mb-6">{error}</p>
           <Link
-            href={checkoutType === "buy" ? "/buy" : "/sell"}
+            href={localizePath(checkoutType === "buy" ? "/buy" : "/sell")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent/90 text-xs font-black uppercase text-white tracking-widest transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> {t("checkout.backToStore")}
@@ -72,8 +74,8 @@ export function CheckoutContent() {
         checkoutType={checkoutType}
         createdOrderId={createdOrderId}
         paymentMethod={selectedMethod}
-        onNavigateToOrders={() => router.push("/purchases")}
-        onNavigateToHome={() => router.push("/")}
+        onNavigateToOrders={() => router.push(localizePath("/purchases"))}
+        onNavigateToHome={() => router.push(localizePath("/"))}
       />
     );
   }
@@ -87,7 +89,7 @@ export function CheckoutContent() {
       {/* Header */}
       <div className="mb-10">
         <Link
-          href={checkoutType === "buy" ? "/buy" : "/sell"}
+          href={localizePath(checkoutType === "buy" ? "/buy" : "/sell")}
           className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-white transition-colors uppercase tracking-widest mb-4"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> {t("common.back")}{" "}

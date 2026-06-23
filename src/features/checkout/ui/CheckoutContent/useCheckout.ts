@@ -245,6 +245,22 @@ export function useCheckout() {
       setLoading(true);
       setError(null);
       try {
+        // Fetch user profile to check completeness
+        const meRes = await fetchWithAuth(`${BACKEND_URL}/users/me`);
+        if (!meRes.ok) {
+          setError(t("cart.loginRequired"));
+          setLoading(false);
+          return;
+        }
+        const meData = await meRes.json();
+        if (!meData.email?.trim() || !meData.tradeUrl?.trim()) {
+          setError(t("profile.incomplete.description"));
+          setLoading(false);
+          // Dispatch custom event to trigger ProfileCompletionModal
+          window.dispatchEvent(new CustomEvent("showProfileCompletionModal"));
+          return;
+        }
+
         let payload: Record<string, unknown> = {};
         if (checkoutType === "buy") {
           if (cartItems.length === 0) {

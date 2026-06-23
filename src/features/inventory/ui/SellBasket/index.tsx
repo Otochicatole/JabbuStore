@@ -5,6 +5,7 @@ import { Trash2, TrendingUp, DollarSign, Loader2, AlertTriangle, Info } from 'lu
 import { BACKEND_URL, fetchWithAuth } from '@/shared/lib/api';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/shared/i18n/I18nProvider';
+import { useLocalizedPath } from '@/shared/i18n/useLocalizedPath';
 
 interface SellBasketProps {
   embedded?: boolean;
@@ -14,6 +15,7 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
   const { selectedItems, removeFromSellList, totalValue, clearSellList, minSellPrice } = useInventory();
   const router = useRouter();
   const { t } = useI18n();
+  const localizePath = useLocalizedPath();
   const [selling, setSelling] = useState(false);
   const [sellError, setSellError] = useState<string | null>(null);
   const [sellSuccess, setSellSuccess] = useState(false);
@@ -31,7 +33,7 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
 
     try {
       // Redirigir a la página de checkout de venta
-      router.push("/checkout?type=sell");
+      router.push(localizePath("/checkout?type=sell"));
     } catch (e: unknown) {
       setSellError(e instanceof Error ? e.message : t("sell.checkoutStartError"));
     } finally {

@@ -8,11 +8,13 @@ import { useState } from "react";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { items, total, removeFromCart, clearCart } = useCart();
   const router = useRouter();
   const { t } = useI18n();
+  const localizePath = useLocalizedPath();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -54,7 +56,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
       
       // Cerrar sidebar y navegar a la página de checkout
       onClose();
-      router.push("/checkout?type=buy");
+      router.push(localizePath("/checkout?type=buy"));
       
     } catch (err: unknown) {
       console.error("Error initiating checkout:", err);

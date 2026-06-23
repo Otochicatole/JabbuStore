@@ -88,6 +88,8 @@ export const en = {
   "cart.loginToBuy": "Sign in to buy",
   "cart.securePayment": "Secure payment guaranteed",
   "cart.itemsRemoved": "Some items in your cart are no longer available in the store and have been removed:\n\n{names}",
+  "cart.itemsRemovedTitle": "Items No Longer Available",
+  "cart.itemsRemovedDescription": "The following items are no longer available in the store and have been removed from your cart:",
 
   "buy.title": "Buy CS2 Skins",
   "buy.description": "Browse verified skins and complete your purchase securely.",

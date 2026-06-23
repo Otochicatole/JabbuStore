@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckoutFormData, FormErrors, ManualTransferSettings } from '../../domain/types';
 import { PAYMENT_METHODS } from '../../domain/constants';
 import { useI18n } from '@/shared/i18n/I18nProvider';
+import { AdminSelect } from '@/shared/components/AdminSelect';
 
 interface CheckoutFormProps {
   checkoutType: "buy" | "sell";
@@ -21,6 +22,44 @@ export function CheckoutForm({
   manualTransferSettings,
 }: CheckoutFormProps) {
   const { t } = useI18n();
+
+  const getNetworkOptions = React.useCallback(() => {
+    if (selectedMethod === "ethereum") {
+      return [
+        { value: "ERC20", label: t("checkout.network.ethereumMainnet") },
+        { value: "BSC", label: t("checkout.network.bnbSmartChain") },
+        { value: "Polygon", label: t("checkout.network.polygonPos") },
+        { value: "Arbitrum", label: t("checkout.network.arbitrumOne") },
+      ];
+    } else if (selectedMethod === "nowpayments") {
+      return [
+        { value: "TRC20", label: t("checkout.network.usdtTrc20Recommended") },
+        { value: "BSC", label: t("checkout.network.usdtBnbSmartChain") },
+        { value: "ERC20", label: t("checkout.network.usdtEthereum") },
+        { value: "BTC", label: t("checkout.network.bitcoin") },
+        { value: "LTC", label: t("checkout.network.litecoin") },
+      ];
+    } else {
+      return [
+        { value: "BinancePay", label: t("checkout.network.binancePayInstant") },
+        { value: "TRC20", label: t("checkout.network.tron") },
+        { value: "BSC", label: t("checkout.network.bnbSmartChain") },
+        { value: "ERC20", label: t("checkout.network.ethereum") },
+      ];
+    }
+  }, [selectedMethod, t]);
+
+  const networkOptions = getNetworkOptions();
+
+  React.useEffect(() => {
+    const opts = getNetworkOptions();
+    if (opts.length > 0 && !opts.some(o => o.value === formData.network)) {
+      onFormChange({
+        ...formData,
+        network: opts[0].value
+      });
+    }
+  }, [selectedMethod]);
   
   const updateField = (field: keyof CheckoutFormData, value: string) => {
     onFormChange({
@@ -316,35 +355,15 @@ export function CheckoutForm({
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">{t("checkout.blockchainNetwork")}</label>
-                <select
+                <AdminSelect
                   value={formData.network}
-                  onChange={(e) => updateField("network", e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white/[0.03] border border-white/8 rounded-xl text-sm text-white focus:outline-none focus:border-accent/50 transition-colors [&>option]:bg-[#0c0a15] [&>option]:text-white cursor-pointer"
-                >
-                  {selectedMethod === "ethereum" ? (
-                    <>
-                      <option value="ERC20">{t("checkout.network.ethereumMainnet")}</option>
-                      <option value="BSC">{t("checkout.network.bnbSmartChain")}</option>
-                      <option value="Polygon">{t("checkout.network.polygonPos")}</option>
-                      <option value="Arbitrum">{t("checkout.network.arbitrumOne")}</option>
-                    </>
-                  ) : selectedMethod === "nowpayments" ? (
-                    <>
-                      <option value="TRC20">{t("checkout.network.usdtTrc20Recommended")}</option>
-                      <option value="BSC">{t("checkout.network.usdtBnbSmartChain")}</option>
-                      <option value="ERC20">{t("checkout.network.usdtEthereum")}</option>
-                      <option value="BTC">{t("checkout.network.bitcoin")}</option>
-                      <option value="LTC">{t("checkout.network.litecoin")}</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="BinancePay">{t("checkout.network.binancePayInstant")}</option>
-                      <option value="TRC20">{t("checkout.network.tron")}</option>
-                      <option value="BSC">{t("checkout.network.bnbSmartChain")}</option>
-                      <option value="ERC20">{t("checkout.network.ethereum")}</option>
-                    </>
-                  )}
-                </select>
+                  onChange={(val) => updateField("network", val)}
+                  options={networkOptions}
+                  className="w-full"
+                  buttonClassName="w-full px-3.5 py-2.5 bg-white/[0.03] border border-white/8 rounded-xl text-sm text-white focus:outline-none focus:border-accent/50 transition-colors flex items-center justify-between gap-2 cursor-pointer font-medium"
+                  menuClassName="absolute left-0 top-full mt-2 w-full bg-[#110f1e] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-40 backdrop-blur-xl"
+                  optionClassName="w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                />
               </div>
             </div>
           )}

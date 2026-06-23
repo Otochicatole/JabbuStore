@@ -1,4 +1,4 @@
-import { Skin, SkinRepository } from "../domain/skin";
+import { Skin, SkinRepository, SkinCatalogResult } from "../domain/skin";
 
 const MOCK_SKINS: Skin[] = [
   {
@@ -108,8 +108,16 @@ const MOCK_SKINS: Skin[] = [
 ];
 
 export class MockSkinRepository implements SkinRepository {
-  async getSkins(): Promise<Skin[]> {
-    return MOCK_SKINS;
+  async getSkins(): Promise<SkinCatalogResult> {
+    return {
+      items: MOCK_SKINS,
+      pagination: {
+        page: 1,
+        limit: MOCK_SKINS.length,
+        total: MOCK_SKINS.length,
+        totalPages: 1,
+      },
+    };
   }
 
   async getSkinById(id: string): Promise<Skin | null> {

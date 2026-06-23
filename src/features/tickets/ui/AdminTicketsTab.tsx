@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Loader2, MessageSquare, RefreshCw, Search, X } from "lucide-react";
@@ -54,22 +54,38 @@ export function AdminTicketsTab() {
     return () => window.clearTimeout(timeoutId);
   }, [loadTickets]);
 
+  const loadTicketsRef = useRef(loadTickets);
+  useEffect(() => {
+    loadTicketsRef.current = loadTickets;
+  }, [loadTickets]);
+
   useEffect(() => {
     let socketRef: Awaited<ReturnType<typeof getTicketSocket>> | null = null;
+    let cancelled = false;
+
+    const handleUpdate = () => {
+      loadTicketsRef.current();
+    };
+
     const connect = async () => {
       try {
         const socket = await getTicketSocket("ADMIN");
+        if (cancelled) return;
         socketRef = socket;
-        socket.on("ticket:updated", loadTickets);
+        socket.on("ticket:updated", handleUpdate);
       } catch {
         setError(t("tickets.error.connection"));
       }
     };
     connect();
+
     return () => {
-      socketRef?.off("ticket:updated", loadTickets);
+      cancelled = true;
+      if (socketRef) {
+        socketRef.off("ticket:updated", handleUpdate);
+      }
     };
-  }, [loadTickets, t]);
+  }, [t]);
 
   const changeStatus = async (nextStatus: TicketStatus) => {
     if (!selected) return;

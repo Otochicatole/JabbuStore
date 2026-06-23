@@ -49,6 +49,18 @@ function TicketChatSession({
     );
   }, []);
 
+  // Use refs to store the callbacks. This allows event listeners to use the latest
+  // references without requiring the useEffect hook to re-run and reconnect the socket.
+  const addMessageRef = useRef(addMessage);
+  useEffect(() => {
+    addMessageRef.current = addMessage;
+  }, [addMessage]);
+
+  const onTicketUpdatedRef = useRef(onTicketUpdated);
+  useEffect(() => {
+    onTicketUpdatedRef.current = onTicketUpdated;
+  }, [onTicketUpdated]);
+
   useEffect(() => {
     let cancelled = false;
     fetchWithAuth(`${BACKEND_URL}/tickets/${ticket.id}/messages`, {
@@ -69,14 +81,18 @@ function TicketChatSession({
       });
 
     let activeSocket: Awaited<ReturnType<typeof getTicketSocket>> | null = null;
+    
+    const handleNewMessage = (msg: TicketMessage) => addMessageRef.current(msg);
+    const handleStatusUpdate = () => onTicketUpdatedRef.current?.();
+
     const connect = async () => {
       try {
         const socket = await getTicketSocket(actor);
         if (cancelled) return;
         activeSocket = socket;
         socket.emit("ticket:join", { ticketId: ticket.id });
-        socket.on("message:new", addMessage);
-        socket.on("ticket:status", onTicketUpdated || (() => undefined));
+        socket.on("message:new", handleNewMessage);
+        socket.on("ticket:status", handleStatusUpdate);
       } catch {
         if (!cancelled) setError(t("tickets.error.connection"));
       }
@@ -87,11 +103,11 @@ function TicketChatSession({
       cancelled = true;
       if (activeSocket) {
         activeSocket.emit("ticket:leave", { ticketId: ticket.id });
-        activeSocket.off("message:new", addMessage);
-        if (onTicketUpdated) activeSocket.off("ticket:status", onTicketUpdated);
+        activeSocket.off("message:new", handleNewMessage);
+        activeSocket.off("ticket:status", handleStatusUpdate);
       }
     };
-  }, [actor, addMessage, onTicketUpdated, t, ticket.id]);
+  }, [actor, t, ticket.id]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });

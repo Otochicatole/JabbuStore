@@ -144,7 +144,7 @@ export function TicketNotificationProvider({
     if (actor === "ADMIN") {
       router.push(`/admin/panel/dashboard?tab=tickets&ticket=${encodeURIComponent(notification.ticketId)}`);
     } else {
-      router.push(`/purchases?order=${encodeURIComponent(notification.orderId)}&ticket=${encodeURIComponent(notification.ticketId)}`);
+      router.push(`/tickets?ticket=${encodeURIComponent(notification.ticketId)}`);
     }
   };
 

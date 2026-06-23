@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Loader2, 
@@ -15,12 +16,12 @@ import {
   Tag, 
   Layers,
   FileText,
+  MessageSquare,
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { PaymentProofModal, PaymentProofInfo } from "@/shared/components/PaymentProofModal";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import type { TranslationParams } from "@/shared/i18n/types";
-import { UserOrderTickets } from "@/features/tickets/ui/UserOrderTickets";
 
 const ORDERS_FETCH_TIMEOUT_MS = 15000;
 
@@ -147,6 +148,7 @@ const getItemRarity = (item: OrderItem) => {
 
 export default function UserOrdersPage() {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const isFetchingRef = useRef(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -773,7 +775,24 @@ export default function UserOrdersPage() {
                           )}
                         </div>
 
-                        <UserOrderTickets orderId={order.id} />
+                        <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div>
+                            <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-1">
+                              {t("tickets.support")}
+                            </span>
+                            <p className="text-xs text-white/35 font-bold">
+                              {t("tickets.orderHelp")}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/tickets?orderId=${order.id}`)}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-accent/10 hover:bg-accent/15 border border-accent/20 text-accent rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer shrink-0"
+                          >
+                            <MessageSquare className="w-4 h-4 text-accent shrink-0" />
+                            <span>{t("tickets.openTicket")}</span>
+                          </button>
+                        </div>
 
                         {/* ITEMS LIST */}
                         <div className="space-y-3">

@@ -5,6 +5,7 @@ export const en = {
   "nav.inventory": "My Inventory",
   "nav.profile": "Profile",
   "nav.purchases": "Purchases",
+  "nav.tickets": "My Tickets",
   "nav.logout": "Log out",
   "nav.loading": "Loading...",
   "nav.steamUser": "Steam User",

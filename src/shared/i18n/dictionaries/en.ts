@@ -882,7 +882,8 @@ export const en = {
   "admin.bots.catalogInProgress": "A catalog download is already in progress.",
   "admin.bots.catalogDownloadError": "Error downloading price catalog",
   "admin.bots.catalogDownloadStarted": "Catalog download started in the background.",
-  "admin.bots.syncStarted": "Synchronization started in the background. Wait 1-3 minutes and refresh the list.",
+  "admin.bots.syncStarted": "Inventory synchronization started in the background...",
+  "admin.bots.syncCompleted": "Bot inventory synchronization completed successfully.",
   "tickets.notification.newMessage": "New message",
   "tickets.notification.dismiss": "Dismiss notification",
 } as const;

@@ -78,6 +78,26 @@ export function useAdminBots() {
     return () => window.clearTimeout(timer);
   }, [fetchBots]);
 
+  useEffect(() => {
+    const checkInitialSyncStatus = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/admin/marketplace/bots/sync/status`, {
+          credentials: "include",
+          headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.running) {
+            setSyncingInventory(true);
+          }
+        }
+      } catch (e) {
+        console.error("Error checking initial sync status:", e);
+      }
+    };
+    void checkInitialSyncStatus();
+  }, []);
+
   const handleToggle = async (bot: Bot) => {
     setActionLoading(bot.id);
     try {
@@ -208,15 +228,47 @@ export function useAdminBots() {
         data.message ||
           t("admin.bots.syncStarted"),
       );
-      setTimeout(() => {
-        fetchBots();
-      }, 90000);
     } catch (e: unknown) {
       setSyncError(getErrorMessage(e, t("admin.inventory.syncError")));
-    } finally {
       setSyncingInventory(false);
     }
   };
+
+  // Poll inventory sync status and updated counts in real-time
+  useEffect(() => {
+    if (!syncingInventory) return;
+
+    const interval = window.setInterval(async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/admin/marketplace/bots/sync/status`, {
+          credentials: "include",
+          headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.running) {
+            setSyncingInventory(false);
+            setSyncMessage(t("admin.bots.syncCompleted") || "Sincronización de inventario completada.");
+            void fetchBots();
+            return;
+          }
+        }
+        // Fetch bots list to update item counts in real-time
+        const botsRes = await fetch(`${BACKEND_URL}/admin/marketplace/bots`, {
+          credentials: "include",
+          headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+        });
+        if (botsRes.ok) {
+          const botsData = await botsRes.json();
+          setBots(botsData);
+        }
+      } catch (e) {
+        console.error("Error polling sync status:", e);
+      }
+    }, 4000);
+
+    return () => window.clearInterval(interval);
+  }, [syncingInventory, fetchBots, t]);
 
   const totalItems = bots.reduce((sum, b) => sum + b.currentItems, 0);
   const activeBots = bots.filter((b) => b.isActive).length;

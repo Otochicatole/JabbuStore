@@ -266,20 +266,27 @@ export const FilterSidebar = () => {
                 )}
 
                 {category.icon && (
-                  <div className="relative w-[66px] h-[66px] flex items-center justify-center mb-1 transition-all duration-500 group-hover:-translate-y-5 group-hover:scale-[1.8] z-10 pointer-events-none">
-                    <Image 
-                      src={`/category-images/${category.icon}`} 
-                      alt={t(category.labelKey)} 
-                      width={256} 
-                      height={256} 
-                      unoptimized
-                      className={`w-[66px] h-[66px] object-contain transition-all duration-500 ${
-                        isSelected 
-                          ? 'opacity-100 drop-shadow-[0_0_8px_rgba(217,70,239,0.5)] animate-hologram-flicker' 
-                          : 'opacity-60 group-hover:opacity-100 group-hover:animate-hologram-flicker'
-                      }`}
-                    />
-                  </div>
+                  <>
+                    {/* Hologram Projector Emitter Base & Light Beam */}
+                    <div className={`hologram-emitter ${isSelected ? 'hologram-selected-emitter' : ''}`} />
+                    <div className={`hologram-beam ${isSelected ? 'hologram-selected-beam' : ''}`} />
+
+                    {/* Image Container with hologram FX overlay classes */}
+                    <div className={`hologram-container ${isSelected ? 'hologram-selected-container' : ''} relative w-[66px] h-[66px] flex items-center justify-center mb-1 transition-all duration-500 group-hover:-translate-y-5 group-hover:scale-[1.8] z-10 pointer-events-none`}>
+                      <Image 
+                        src={`/category-images/${category.icon}`} 
+                        alt={t(category.labelKey)} 
+                        width={256} 
+                        height={256} 
+                        unoptimized
+                        className={`w-[66px] h-[66px] object-contain transition-all duration-500 ${
+                          isSelected 
+                            ? 'opacity-100 drop-shadow-[0_0_8px_rgba(217,70,239,0.5)] animate-hologram-flicker' 
+                            : 'opacity-60 group-hover:opacity-100 group-hover:animate-hologram-flicker'
+                        }`}
+                      />
+                    </div>
+                  </>
                 )}
                 <span className={`
                   text-[9px] font-black uppercase text-center leading-tight tracking-tight mt-1 transition-all duration-300 z-10

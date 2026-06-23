@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -19,53 +19,70 @@ export function ProfileCompletionModal() {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [profileIncomplete, setProfileIncomplete] = useState(false);
+  const dismissedThisPageLoadRef = useRef(false);
 
   useEffect(() => {
-    // Only check if user is not in admin routes and not in profile page
-    if (pathname?.startsWith("/admin") || pathname === "/profile") {
-      setIsOpen(false);
-      return;
-    }
+    let cancelled = false;
 
+    const shouldSkipRoute =
+      pathname?.startsWith("/admin") || pathname === "/profile";
     const checkProfile = async () => {
-      // Check sessionStorage to see if user already dismissed the modal in this session
-      const dismissed = sessionStorage.getItem("profile_modal_dismissed") === "true";
-      if (dismissed) return;
+      if (shouldSkipRoute) {
+        setIsOpen(false);
+        return;
+      }
+
+      if (dismissedThisPageLoadRef.current) {
+        setIsOpen(false);
+        return;
+      }
 
       try {
         const res = await fetchWithAuth(`${BACKEND_URL}/users/me`);
-        if (res.ok) {
-          const data = (await res.json()) as UserProfile;
-          const isIncomplete = !data.email?.trim() || !data.tradeUrl?.trim();
-          setProfileIncomplete(isIncomplete);
-          if (isIncomplete) {
-            setIsOpen(true);
-          }
+        if (!res.ok || cancelled) return;
+
+        const data = (await res.json()) as UserProfile;
+        const isIncomplete = !data.email?.trim() || !data.tradeUrl?.trim();
+        if (!cancelled) {
+          setIsOpen(isIncomplete);
         }
       } catch (err) {
         console.error("Error checking profile completion:", err);
       }
     };
 
-    void checkProfile();
+    const timeoutId = window.setTimeout(() => {
+      void checkProfile();
+    }, 0);
+
+    const handleFocus = () => {
+      void checkProfile();
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
+    };
   }, [pathname]);
 
   const handleClose = () => {
+    dismissedThisPageLoadRef.current = true;
     setIsOpen(false);
-    sessionStorage.setItem("profile_modal_dismissed", "true");
   };
 
   const handleGoToProfile = () => {
     setIsOpen(false);
-    sessionStorage.setItem("profile_modal_dismissed", "true");
     router.push("/profile");
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           {/* Backdrop click closes modal */}
           <motion.div
             initial={{ opacity: 0 }}

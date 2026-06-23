@@ -16,15 +16,7 @@ import {
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 
-interface UserProfile {
-  id: string;
-  name: string | null;
-  email: string | null;
-  steamId: string | null;
-  avatar: string | null;
-  profileUrl: string | null;
-  tradeUrl: string | null;
-}
+import type { UserProfile } from "@/features/users/types";
 
 export default function UserProfilePage() {
   const { t } = useI18n();

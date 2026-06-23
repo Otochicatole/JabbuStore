@@ -1,12 +1,14 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSkins } from "@/features/skins/ui/useSkins";
 import { SkinGrid } from "@/features/skins/ui/SkinGrid";
 import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
 import { SortDropdown } from "@/features/skins/ui/SortDropdown";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { Loader2 } from "lucide-react";
 
-export default function BuyPage() {
+function BuyPageContent() {
   const { skins, pagination, loading, error, refetch } = useSkins();
   const { t } = useI18n();
 
@@ -39,5 +41,18 @@ export default function BuyPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function BuyPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen pt-28 text-white font-sans">
+        <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
+        <p className="text-xs text-[#8984a1] font-bold uppercase tracking-widest">Cargando...</p>
+      </div>
+    }>
+      <BuyPageContent />
+    </Suspense>
   );
 }

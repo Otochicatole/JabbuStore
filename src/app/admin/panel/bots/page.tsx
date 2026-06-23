@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminBotsPanel } from "@/features/marketplace/ui/AdminBotsPanel";
+import { AdminBotsPanel } from "@/features/admin/ui/AdminBotsPanel";
 
 export default function AdminBotsPage() {
   return (

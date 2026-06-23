@@ -6,10 +6,7 @@ import { StoreItem, AdminUser } from '@/features/admin/domain/types';
 import { Loader2 } from 'lucide-react';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 
-interface AdminDashboardClientProps {
-  initialItems: StoreItem[];
-  adminUser: AdminUser;
-}
+import type { AdminDashboardClientProps } from "@/features/admin/types";
 
 export function AdminDashboardClient({ initialItems, adminUser }: AdminDashboardClientProps) {
   const { t } = useI18n();

@@ -21,18 +21,7 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 import { TicketNotificationProvider } from "@/features/tickets/ui/TicketNotificationProvider";
 
-interface AdminUser {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-}
-
-interface NavItem {
-  name: string;
-  href: string;
-  icon: LucideIcon;
-}
+import type { AdminUser, NavItem } from "@/features/admin/types";
 
 function SidebarNav({
   pathname,

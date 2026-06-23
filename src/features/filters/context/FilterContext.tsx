@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useCallback,
   useEffect,
+  Suspense,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -200,32 +201,38 @@ function writeFilterStateToSearchParams(
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
-export const FilterProvider = ({ children }: { children: ReactNode }) => {
-  const router = useRouter();
-  const pathname = usePathname();
+const FilterUrlSync = ({
+  urlHydrated,
+  setUrlHydrated,
+  applyFilterState,
+  shouldSyncUrl,
+  pathname,
+  router,
+  searchQuery,
+  minPrice,
+  maxPrice,
+  selectedCategories,
+  selectedConditions,
+  sortOption,
+  immediateTradeOnly,
+  groupSameItems,
+}: {
+  urlHydrated: boolean;
+  setUrlHydrated: (v: boolean) => void;
+  applyFilterState: (s: FilterState) => void;
+  shouldSyncUrl: boolean;
+  pathname: string | null;
+  router: any;
+  searchQuery: string;
+  minPrice: string;
+  maxPrice: string;
+  selectedCategories: string[];
+  selectedConditions: string[];
+  sortOption: SortOption;
+  immediateTradeOnly: boolean;
+  groupSameItems: boolean;
+}) => {
   const searchParams = useSearchParams();
-  const shouldSyncUrl = FILTER_ROUTES.has(pathname ?? "");
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState<SortOption>("Precio: Mayor a Menor");
-  const [immediateTradeOnly, setImmediateTradeOnly] = useState(false);
-  const [groupSameItems, setGroupSameItems] = useState(false);
-  const [urlHydrated, setUrlHydrated] = useState(false);
-
-  const applyFilterState = useCallback((state: FilterState) => {
-    setSearchQuery(state.searchQuery);
-    setMinPrice(state.minPrice);
-    setMaxPrice(state.maxPrice);
-    setSelectedCategories(state.selectedCategories);
-    setSelectedConditions(state.selectedConditions);
-    setSortOption(state.sortOption);
-    setImmediateTradeOnly(state.immediateTradeOnly);
-    setGroupSameItems(state.groupSameItems);
-  }, []);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -253,22 +260,6 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
       if (timer) clearTimeout(timer);
     };
   }, [applyFilterState, pathname, searchParams, shouldSyncUrl]);
-
-  const toggleCategory = useCallback((cat: string) => {
-    setSelectedCategories(prev =>
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    );
-  }, []);
-
-  const toggleCondition = useCallback((cond: string) => {
-    setSelectedConditions(prev =>
-      prev.includes(cond) ? prev.filter(c => c !== cond) : [...prev, cond]
-    );
-  }, []);
-
-  const clearFilters = useCallback(() => {
-    applyFilterState(defaultState);
-  }, [applyFilterState]);
 
   useEffect(() => {
     if (!shouldSyncUrl || !urlHydrated || !pathname) return;
@@ -308,6 +299,51 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
     urlHydrated,
   ]);
 
+  return null;
+};
+
+export const FilterProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const shouldSyncUrl = FILTER_ROUTES.has(pathname ?? "");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<SortOption>("Precio: Mayor a Menor");
+  const [immediateTradeOnly, setImmediateTradeOnly] = useState(false);
+  const [groupSameItems, setGroupSameItems] = useState(false);
+  const [urlHydrated, setUrlHydrated] = useState(false);
+
+  const applyFilterState = useCallback((state: FilterState) => {
+    setSearchQuery(state.searchQuery);
+    setMinPrice(state.minPrice);
+    setMaxPrice(state.maxPrice);
+    setSelectedCategories(state.selectedCategories);
+    setSelectedConditions(state.selectedConditions);
+    setSortOption(state.sortOption);
+    setImmediateTradeOnly(state.immediateTradeOnly);
+    setGroupSameItems(state.groupSameItems);
+  }, []);
+
+  const toggleCategory = useCallback((cat: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  }, []);
+
+  const toggleCondition = useCallback((cond: string) => {
+    setSelectedConditions(prev =>
+      prev.includes(cond) ? prev.filter(c => c !== cond) : [...prev, cond]
+    );
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    applyFilterState(defaultState);
+  }, [applyFilterState]);
+
   return (
     <FilterContext.Provider
       value={{
@@ -322,6 +358,24 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
         clearFilters,
       }}
     >
+      <Suspense fallback={null}>
+        <FilterUrlSync
+          urlHydrated={urlHydrated}
+          setUrlHydrated={setUrlHydrated}
+          applyFilterState={applyFilterState}
+          shouldSyncUrl={shouldSyncUrl}
+          pathname={pathname}
+          router={router}
+          searchQuery={searchQuery}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          selectedCategories={selectedCategories}
+          selectedConditions={selectedConditions}
+          sortOption={sortOption}
+          immediateTradeOnly={immediateTradeOnly}
+          groupSameItems={groupSameItems}
+        />
+      </Suspense>
       {children}
     </FilterContext.Provider>
   );

@@ -162,7 +162,7 @@ export const SkinCardModal = ({
           </div>
         ) : (
           /* STOCK TAB (List of all specific items in stock with floats & buy buttons) */
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar bg-[#151322]/20 min-h-[350px]">
+          <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar bg-[#151322]/20 min-h-[350px]">
             {skinsInGroup.map((s) => {
               const isThisInCart = !!items.find(
                 (item) => item.skin.id === s.id,
@@ -174,22 +174,22 @@ export const SkinCardModal = ({
                     isThisInCart ? "border-accent" : "border-white/10"
                   }`}
                 >
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="flex sm:flex-row flex-col items-center gap-10 flex-1 min-w-0">
                     {/* Thumbnail Image (No border box, larger) */}
                     <div className="relative w-16 h-12 flex items-center justify-center shrink-0">
                       <SkinImage
                         src={s.imageUrl}
                         alt={s.name}
-                        width={52}
-                        height={52}
-                        maxWidth={52}
-                        maxHeight={52}
+                        width={80}
+                        height={80}
+                        maxWidth={80}
+                        maxHeight={80}
                         className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
                       />
                     </div>
 
                     {/* Left side details */}
-                    <div className="flex flex-col gap-1.5 flex-1 min-w-0 pr-2">
+                    <div className="flex flex-col gap-1.5 w-full min-w-0 pr-2">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <span className="text-[10px] font-black uppercase tracking-wider text-white">
                           {translateExterior(s.exterior, "Factory New")}
@@ -213,7 +213,7 @@ export const SkinCardModal = ({
                       </div>
 
                       {s.float !== undefined && (
-                        <div className="flex flex-col gap-1 w-full max-w-md">
+                        <div className="flex flex-col gap-1 w-full">
                           <div className="flex items-center justify-between text-[9px] font-mono text-[#84849b]">
                             <span>Float:</span>
                             <span className="text-white font-bold">

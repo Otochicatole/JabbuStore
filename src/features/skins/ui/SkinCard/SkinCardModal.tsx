@@ -153,7 +153,9 @@ export const SkinCardModal = ({
                 <SkinImage
                   src={skin.imageUrl}
                   alt={skin.name}
-                  className="max-w-[85%] max-h-[85%] object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.6)] animate-fade-in"
+                  width={350}
+                  height={230}
+                  className="w-full h-auto drop-shadow-[0_20px_40px_rgba(0,0,0,0.7)] animate-fade-in"
                 />
               </div>
             </div>

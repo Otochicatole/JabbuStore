@@ -70,11 +70,11 @@ export const SkinCardModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Navigation Bar */}
-        <div className="flex items-center justify-between border-b border-white/5 px-6">
-          <div className="flex gap-8 h-[60px]">
+        <div className="flex items-center justify-between border-b border-white/5 px-4 sm:px-6">
+          <div className="flex gap-4 sm:gap-8 h-[60px]">
             <button
               onClick={() => setActiveTab("details")}
-              className={`h-full border-b-2 text-xs sm:text-sm font-black uppercase tracking-widest bg-transparent transition-all cursor-pointer border-none ${
+              className={`h-full border-b-2 text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-wider sm:tracking-widest bg-transparent transition-all cursor-pointer border-none ${
                 activeTab === "details"
                   ? "border-accent text-accent"
                   : "border-transparent text-white/40 hover:text-white/60"
@@ -84,7 +84,7 @@ export const SkinCardModal = ({
             </button>
             <button
               onClick={() => setActiveTab("stock")}
-              className={`h-full border-b-2 text-xs sm:text-sm font-black uppercase tracking-widest bg-transparent transition-all cursor-pointer border-none ${
+              className={`h-full border-b-2 text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-wider sm:tracking-widest bg-transparent transition-all cursor-pointer border-none ${
                 activeTab === "stock"
                   ? "border-accent text-accent"
                   : "border-transparent text-white/40 hover:text-white/60"
@@ -103,7 +103,7 @@ export const SkinCardModal = ({
 
         {activeTab === "details" ? (
           /* DETAILS TAB (2-Column general info, no specific float, average price) */
-          <div className="flex flex-col md:flex-row flex-1 min-h-0">
+          <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
             {/* Left Column: Image */}
             <div className="w-full md:w-[55%] border-b md:border-b-0 md:border-r border-white/5 p-6 flex flex-col justify-center items-center bg-[#151322]/20">
               <div className="flex-1 flex items-center justify-center min-h-[250px] md:min-h-[300px]">
@@ -116,7 +116,7 @@ export const SkinCardModal = ({
             </div>
 
             {/* Right Column: General Info */}
-            <div className="w-full md:w-[45%] bg-[#151322]/40 p-6 lg:p-8 flex flex-col gap-6 overflow-y-auto custom-scrollbar justify-between">
+            <div className="w-full md:w-[45%] bg-[#151322]/40 p-6 lg:p-8 flex flex-col gap-6 md:overflow-y-auto custom-scrollbar justify-between shrink-0 md:shrink">
               <div className="flex flex-col gap-6">
                 <div>
                   <span className="text-[10px] font-black uppercase text-accent tracking-widest font-mono">
@@ -170,98 +170,98 @@ export const SkinCardModal = ({
               return (
                 <div
                   key={s.id}
-                  className={`flex items-center justify-between py-4 pb-10 transition-all gap-4 border-b ${
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between py-5 gap-4 border-b ${
                     isThisInCart ? "border-accent" : "border-white/10"
                   }`}
                 >
-                  {/* Thumbnail Image (No border box, larger) */}
-                  <div className="relative w-20 h-16 flex items-center justify-center shrink-0">
-                    <SkinImage
-                      src={s.imageUrl}
-                      alt={s.name}
-                      width={64}
-                      height={64}
-                      maxWidth={64}
-                      maxHeight={64}
-                      className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
-                    />
-                  </div>
-
-                  {/* Left side details */}
-                  <div className="flex flex-col gap-2 flex-1 min-w-0 pr-4 pl-2">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-white">
-                        {translateExterior(s.exterior, "Factory New")}
-                      </span>
-                      {s.pattern !== undefined && (
-                        <span className="text-[#84849b] text-[10px] font-mono">
-                          {t("checkout.seed")}:{" "}
-                          <span className="text-white font-bold">
-                            {s.pattern}
-                          </span>
-                        </span>
-                      )}
-                      <div className="flex gap-2 items-center justify-center text-left sm:text-right font-mono">
-                        <span className="text-[#84849b] uppercase font-bold text-[9px] block">
-                          {t("common.price")}:
-                        </span>
-                        <span className="text-lg font-black text-white">
-                          ${s.price.toLocaleString()}
-                        </span>
-                      </div>
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    {/* Thumbnail Image (No border box, larger) */}
+                    <div className="relative w-16 h-12 flex items-center justify-center shrink-0">
+                      <SkinImage
+                        src={s.imageUrl}
+                        alt={s.name}
+                        width={52}
+                        height={52}
+                        maxWidth={52}
+                        maxHeight={52}
+                        className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+                      />
                     </div>
 
-                    {s.float !== undefined && (
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <div className="flex items-center justify-between text-[10px] font-mono text-[#84849b]">
-                          <span>Float:</span>
-                          <span className="text-white font-bold">
-                            {s.float.toFixed(8)}
+                    {/* Left side details */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-0 pr-2">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-white">
+                          {translateExterior(s.exterior, "Factory New")}
+                        </span>
+                        {s.pattern !== undefined && (
+                          <span className="text-[#84849b] text-[10px] font-mono">
+                            {t("checkout.seed")}:{" "}
+                            <span className="text-white font-bold">
+                              {s.pattern}
+                            </span>
+                          </span>
+                        )}
+                        <div className="flex gap-2 items-center justify-center font-mono">
+                          <span className="text-[#84849b] uppercase font-bold text-[9px]">
+                            {t("common.price")}:
+                          </span>
+                          <span className="text-sm font-black text-white">
+                            ${s.price.toLocaleString()}
                           </span>
                         </div>
-                        {/* Progress bar */}
-                        <div className="h-1.5 w-full bg-[#151322]/80 rounded-full overflow-hidden relative border border-white/5">
-                          <div className="absolute inset-y-0 left-[7%] w-px bg-white/20" />
-                          <div className="absolute inset-y-0 left-[15%] w-px bg-white/20" />
-                          <div className="absolute inset-y-0 left-[38%] w-px bg-white/20" />
-                          <div className="absolute inset-y-0 left-[45%] w-px bg-white/20" />
-                          <div
-                            className={`h-full ${getFloatColorClass(s.float)} rounded-full`}
-                            style={{
-                              width: `${Math.min(100, s.float * 100)}%`,
-                            }}
-                          />
-                        </div>
                       </div>
-                    )}
+
+                      {s.float !== undefined && (
+                        <div className="flex flex-col gap-1 w-full max-w-md">
+                          <div className="flex items-center justify-between text-[9px] font-mono text-[#84849b]">
+                            <span>Float:</span>
+                            <span className="text-white font-bold">
+                              {s.float.toFixed(8)}
+                            </span>
+                          </div>
+                          {/* Progress bar */}
+                          <div className="h-1.5 w-full bg-[#151322]/80 rounded-full overflow-hidden relative border border-white/5">
+                            <div className="absolute inset-y-0 left-[7%] w-px bg-white/20" />
+                            <div className="absolute inset-y-0 left-[15%] w-px bg-white/20" />
+                            <div className="absolute inset-y-0 left-[38%] w-px bg-white/20" />
+                            <div className="absolute inset-y-0 left-[45%] w-px bg-white/20" />
+                            <div
+                              className={`h-full ${getFloatColorClass(s.float)} rounded-full`}
+                              style={{
+                                width: `${Math.min(100, s.float * 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Right side Price & Actions */}
-                  <div className="flex flex-col sm:items-end justify-center gap-3 mt-13">
-                    <div className="flex items-center gap-2">
-                      {s.inspectLink && (
-                        <InspectInGameButton
-                          href={s.inspectLink}
-                          title={t("skinCard.inspectInGame")}
-                        />
-                      )}
+                  <div className="flex items-center gap-2 sm:self-center self-end">
+                    {s.inspectLink && (
+                      <InspectInGameButton
+                        href={s.inspectLink}
+                        title={t("skinCard.inspectInGame")}
+                      />
+                    )}
 
-                      {!isThisInCart ? (
-                        <button
-                          onClick={() => addToCart(s)}
-                          className="h-9 px-5 flex items-center justify-center bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)]"
-                        >
-                          {t("common.add")}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => removeFromCart(s.id)}
-                          className="h-9 px-5 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer"
-                        >
-                          {t("common.remove")}
-                        </button>
-                      )}
-                    </div>
+                    {!isThisInCart ? (
+                      <button
+                        onClick={() => addToCart(s)}
+                        className="h-9 px-5 flex items-center justify-center bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)] shrink-0"
+                      >
+                        {t("common.add")}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => removeFromCart(s.id)}
+                        className="h-9 px-5 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer shrink-0"
+                      >
+                        {t("common.remove")}
+                      </button>
+                    )}
                   </div>
                 </div>
               );

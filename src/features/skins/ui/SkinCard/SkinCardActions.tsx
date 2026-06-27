@@ -46,8 +46,8 @@ export const SkinCardActions = ({
               onClick={handleActionClick}
               className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-accent rounded-lg text-white text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer border-none animate-fade-in shrink-0 min-w-0"
             >
-              <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-              {t("nav.buy")}
+              <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+              {t("common.view")}
             </button>
             {skin.inspectLink && (
               <InspectInGameButton
@@ -64,7 +64,7 @@ export const SkinCardActions = ({
               }
               className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer animate-fade-in shrink-0"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             </button>
           </>
         ) : (
@@ -98,14 +98,14 @@ export const SkinCardActions = ({
             onClick={() => setIsModalOpen(true)}
             className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-accent rounded-lg text-white text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:brightness-110 transition-all active:scale-95 cursor-pointer border-none shrink-0 min-w-0"
           >
-            <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-            {t("skinCard.choose")}
+            <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+            {t("common.view")}
           </button>
           <button
             onClick={handleIncrement}
             className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
           </button>
         </>
       ) : (

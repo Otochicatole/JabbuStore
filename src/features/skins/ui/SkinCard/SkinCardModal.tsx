@@ -15,7 +15,10 @@ interface SkinCardModalProps {
   addToCart: (skin: Skin) => void;
   removeFromCart: (id: string) => void;
   items: any[];
-  translateExterior: (exterior: string | null | undefined, fallback: string) => string;
+  translateExterior: (
+    exterior: string | null | undefined,
+    fallback: string,
+  ) => string;
   t: (key: string, params?: any) => string;
 }
 
@@ -31,11 +34,11 @@ export const SkinCardModal = ({
   translateExterior,
   t,
 }: SkinCardModalProps) => {
-  const [activeTab, setActiveTab] = useState<'details' | 'stock'>('details');
+  const [activeTab, setActiveTab] = useState<"details" | "stock">("details");
 
   useEffect(() => {
     if (isModalOpen) {
-      setActiveTab('details');
+      setActiveTab("details");
     }
   }, [isModalOpen]);
 
@@ -52,9 +55,10 @@ export const SkinCardModal = ({
 
   if (!isModalOpen) return null;
 
-  const avgPrice = skinsInGroup.length > 0
-    ? skinsInGroup.reduce((sum, s) => sum + s.price, 0) / skinsInGroup.length
-    : skin.price;
+  const avgPrice =
+    skinsInGroup.length > 0
+      ? skinsInGroup.reduce((sum, s) => sum + s.price, 0) / skinsInGroup.length
+      : skin.price;
 
   return createPortal(
     <div
@@ -69,17 +73,21 @@ export const SkinCardModal = ({
         <div className="flex items-center justify-between border-b border-white/5 px-6">
           <div className="flex gap-8 h-[60px]">
             <button
-              onClick={() => setActiveTab('details')}
+              onClick={() => setActiveTab("details")}
               className={`h-full border-b-2 text-xs sm:text-sm font-black uppercase tracking-widest bg-transparent transition-all cursor-pointer border-none ${
-                activeTab === 'details' ? 'border-accent text-accent' : 'border-transparent text-white/40 hover:text-white/60'
+                activeTab === "details"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-white/40 hover:text-white/60"
               }`}
             >
               {t("skinCard.modal.itemDetails")}
             </button>
             <button
-              onClick={() => setActiveTab('stock')}
+              onClick={() => setActiveTab("stock")}
               className={`h-full border-b-2 text-xs sm:text-sm font-black uppercase tracking-widest bg-transparent transition-all cursor-pointer border-none ${
-                activeTab === 'stock' ? 'border-accent text-accent' : 'border-transparent text-white/40 hover:text-white/60'
+                activeTab === "stock"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-white/40 hover:text-white/60"
               }`}
             >
               {t("skinCard.modal.availableStock")}
@@ -93,7 +101,7 @@ export const SkinCardModal = ({
           </button>
         </div>
 
-        {activeTab === 'details' ? (
+        {activeTab === "details" ? (
           /* DETAILS TAB (2-Column general info, no specific float, average price) */
           <div className="flex flex-col md:flex-row flex-1 min-h-0">
             {/* Left Column: Image */}
@@ -115,7 +123,10 @@ export const SkinCardModal = ({
                     {skin.weapon}
                   </span>
                   <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight leading-tight mt-0.5">
-                    {skin.name} {skin.phase && <span className="text-accent">| {skin.phase}</span>}
+                    {skin.name}{" "}
+                    {skin.phase && (
+                      <span className="text-accent">| {skin.phase}</span>
+                    )}
                   </h2>
                   <span className="text-xs font-black text-white/50 uppercase tracking-wider mt-1 block">
                     {translateExterior(skin.exterior, "Factory New")}
@@ -131,9 +142,15 @@ export const SkinCardModal = ({
                   </span>
                   <div className="flex items-baseline gap-1 font-mono">
                     <span className="text-3xl font-black text-white">
-                      ${avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      $
+                      {avgPrice.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </span>
-                    <span className="text-[10px] text-[#84849b] font-bold">USD</span>
+                    <span className="text-[10px] text-[#84849b] font-bold">
+                      USD
+                    </span>
                   </div>
                 </div>
 
@@ -147,11 +164,13 @@ export const SkinCardModal = ({
           /* STOCK TAB (List of all specific items in stock with floats & buy buttons) */
           <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar bg-[#151322]/20 min-h-[350px]">
             {skinsInGroup.map((s) => {
-              const isThisInCart = !!items.find((item) => item.skin.id === s.id);
+              const isThisInCart = !!items.find(
+                (item) => item.skin.id === s.id,
+              );
               return (
                 <div
                   key={s.id}
-                  className={`flex items-center justify-between py-4 transition-all gap-4 border-b ${
+                  className={`flex items-center justify-between py-4 pb-10 transition-all gap-4 border-b ${
                     isThisInCart ? "border-accent" : "border-white/10"
                   }`}
                 >
@@ -176,16 +195,29 @@ export const SkinCardModal = ({
                       </span>
                       {s.pattern !== undefined && (
                         <span className="text-[#84849b] text-[10px] font-mono">
-                          {t("checkout.seed")}: <span className="text-white font-bold">{s.pattern}</span>
+                          {t("checkout.seed")}:{" "}
+                          <span className="text-white font-bold">
+                            {s.pattern}
+                          </span>
                         </span>
                       )}
+                      <div className="flex gap-2 items-center justify-center text-left sm:text-right font-mono">
+                        <span className="text-[#84849b] uppercase font-bold text-[9px] block">
+                          {t("common.price")}:
+                        </span>
+                        <span className="text-lg font-black text-white">
+                          ${s.price.toLocaleString()}
+                        </span>
+                      </div>
                     </div>
 
                     {s.float !== undefined && (
                       <div className="flex flex-col gap-1.5 w-full">
                         <div className="flex items-center justify-between text-[10px] font-mono text-[#84849b]">
                           <span>Float:</span>
-                          <span className="text-white font-bold">{s.float.toFixed(8)}</span>
+                          <span className="text-white font-bold">
+                            {s.float.toFixed(8)}
+                          </span>
                         </div>
                         {/* Progress bar */}
                         <div className="h-1.5 w-full bg-[#151322]/80 rounded-full overflow-hidden relative border border-white/5">
@@ -195,7 +227,9 @@ export const SkinCardModal = ({
                           <div className="absolute inset-y-0 left-[45%] w-px bg-white/20" />
                           <div
                             className={`h-full ${getFloatColorClass(s.float)} rounded-full`}
-                            style={{ width: `${Math.min(100, s.float * 100)}%` }}
+                            style={{
+                              width: `${Math.min(100, s.float * 100)}%`,
+                            }}
                           />
                         </div>
                       </div>
@@ -203,12 +237,7 @@ export const SkinCardModal = ({
                   </div>
 
                   {/* Right side Price & Actions */}
-                  <div className="flex flex-col sm:items-end justify-center gap-3">
-                    <div className="text-left sm:text-right font-mono">
-                      <span className="text-[#84849b] uppercase font-bold text-[9px] block mb-0.5">{t("common.price")}</span>
-                      <span className="text-lg font-black text-white">${s.price.toLocaleString()}</span>
-                    </div>
-
+                  <div className="flex flex-col sm:items-end justify-center gap-3 mt-13">
                     <div className="flex items-center gap-2">
                       {s.inspectLink && (
                         <InspectInGameButton
@@ -241,7 +270,7 @@ export const SkinCardModal = ({
         )}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 export default SkinCardModal;

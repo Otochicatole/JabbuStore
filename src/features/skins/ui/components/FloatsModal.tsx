@@ -262,9 +262,6 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                 {skin.phase && <span className="text-accent ml-1">| {skin.phase}</span>}
               </h3>
               <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                <span className="bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full select-none font-mono tracking-wider">
-                  ⏳ {t("skinCard.onRequest")}
-                </span>
                 {skin.exterior && (
                   <span className="text-[#84849b] text-[9px] uppercase font-bold tracking-wider font-mono">
                     {skinExteriorLabelKey ? t(skinExteriorLabelKey) : skin.exterior}

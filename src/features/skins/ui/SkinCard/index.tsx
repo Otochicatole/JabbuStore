@@ -80,14 +80,8 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   const handleActionClick = () => {
     if (showFloatsModalTrigger) {
       setIsFloatsModalOpen(true);
-    } else if (isMultiple) {
-      setIsModalOpen(true);
     } else {
-      if (isInCart) {
-        removeFromCart(skin.id);
-      } else {
-        addToCart(skin);
-      }
+      setIsModalOpen(true);
     }
   };
 
@@ -149,7 +143,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
       <SkinCardActions
         skin={skin}
         isInCart={isInCart}
-        isMultiple={isMultiple}
+        isMultiple={true}
         showFloatsModalTrigger={showFloatsModalTrigger}
         totalQuantityInCart={totalQuantityInCart}
         skinsInGroupLength={skinsInGroup.length}

@@ -110,38 +110,7 @@ export const FilterSidebar = () => {
         </div>
       </div>
 
-      {/* Trade Inmediato (Instant Trade Only) - Solo visible en compra, no en venta (/sell) */}
-      {!isSellPage && (
-        <div className="border-b border-white/5 pb-5">
-          <button
-            onClick={() => setImmediateTradeOnly(!immediateTradeOnly)}
-            className="flex items-center gap-3 cursor-pointer group select-none w-full text-left bg-transparent border-none p-0 outline-none"
-          >
-            <div
-              className={`
-                relative flex items-center justify-center h-5 w-5 rounded-[4px] border transition-all duration-300 shrink-0
-                ${immediateTradeOnly
-                  ? 'border-emerald-500/50 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                  : 'border-white/10 bg-background group-hover:border-white/20'
-                }
-              `}
-            >
-              <div className={`
-                h-2 w-2 rounded-full bg-emerald-400 transition-opacity duration-300
-                ${immediateTradeOnly ? 'opacity-100 animate-pulse' : 'opacity-0'}
-              `} />
-            </div>
-            <div>
-              <span className={`
-                text-[11px] font-black uppercase tracking-wider transition-colors duration-300 flex items-center gap-1
-                ${immediateTradeOnly ? 'text-emerald-400' : 'text-[#84849b] group-hover:text-white/70'}
-              `}>
-                ⚡ {t("filters.instantTrade")}
-              </span>
-            </div>
-          </button>
-        </div>
-      )}
+
 
       {/* Estado (Condition) */}
       <div className="border-b border-white/5 pb-5">

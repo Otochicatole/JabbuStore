@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, ShoppingCart, Trash2 } from "lucide-react";
 import { Skin } from "../../domain/skin";
 import { InspectInGameButton } from "./InspectInGameButton";
+import { SkinImage } from "@/shared/components/SkinImage";
 import { getFloatColorClass } from "./helpers";
 
 interface SkinCardModalProps {
@@ -30,149 +31,203 @@ export const SkinCardModal = ({
   translateExterior,
   t,
 }: SkinCardModalProps) => {
+  const [activeTab, setActiveTab] = useState<'details' | 'stock'>('details');
+
+  useEffect(() => {
+    if (isModalOpen) {
+      setActiveTab('details');
+    }
+  }, [isModalOpen]);
+
+  if (!isModalOpen) return null;
+
+  const avgPrice = skinsInGroup.length > 0
+    ? skinsInGroup.reduce((sum, s) => sum + s.price, 0) / skinsInGroup.length
+    : skin.price;
+
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
       onClick={() => setIsModalOpen(false)}
     >
       <div
-        className="relative w-full max-w-lg bg-[#0e0d15]/95 border border-white/10 rounded-2xl p-6 shadow-[0_0_50px_rgba(217,70,239,0.15)] flex flex-col max-h-[85vh] animate-scale-up overflow-hidden"
+        className="relative w-full max-w-4xl bg-[#0e0d15]/95 border border-white/10 rounded-2xl flex flex-col max-h-[90vh] shadow-[0_0_50px_rgba(217,70,239,0.15)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-white/5 mb-4">
-          <div>
-            <span className="text-[10px] font-black uppercase text-accent tracking-wider">
-              {skin.weapon}
-            </span>
-            <h3 className="text-base font-black text-white uppercase tracking-tight leading-tight mt-0.5">
-              {skin.name}{" "}
-              {skin.phase && (
-                <span className="text-accent">| {skin.phase}</span>
-              )}
-            </h3>
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[#84849b] text-[8px] uppercase font-bold tracking-wider">
-                {t("skinCard.variantsCount", { count: skinsInGroup.length })}
-              </span>
-            </div>
+        {/* Top Navigation Bar */}
+        <div className="flex items-center justify-between border-b border-white/5 px-6">
+          <div className="flex gap-8 h-[60px]">
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`h-full border-b-2 text-xs sm:text-sm font-black uppercase tracking-widest bg-transparent transition-all cursor-pointer border-none ${
+                activeTab === 'details' ? 'border-accent text-accent' : 'border-transparent text-white/40 hover:text-white/60'
+              }`}
+            >
+              {t("skinCard.modal.itemDetails")}
+            </button>
+            <button
+              onClick={() => setActiveTab('stock')}
+              className={`h-full border-b-2 text-xs sm:text-sm font-black uppercase tracking-widest bg-transparent transition-all cursor-pointer border-none ${
+                activeTab === 'stock' ? 'border-accent text-accent' : 'border-transparent text-white/40 hover:text-white/60'
+              }`}
+            >
+              {t("skinCard.modal.availableStock")}
+            </button>
           </div>
           <button
             onClick={() => setIsModalOpen(false)}
-            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all cursor-pointer border-none"
+            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all cursor-pointer border-none flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Float Options List */}
-        <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 custom-scrollbar">
-          {skinsInGroup.map((s) => {
-            const cartItem = items.find((item) => item.skin.id === s.id);
-            const isThisInCart = !!cartItem;
+        {activeTab === 'details' ? (
+          /* DETAILS TAB (2-Column general info, no specific float, average price) */
+          <div className="flex flex-col md:flex-row flex-1 min-h-0">
+            {/* Left Column: Image */}
+            <div className="w-full md:w-[55%] border-b md:border-b-0 md:border-r border-white/5 p-6 flex flex-col justify-center items-center bg-[#151322]/20">
+              <div className="flex-1 flex items-center justify-center min-h-[250px] md:min-h-[300px]">
+                <SkinImage
+                  src={skin.imageUrl}
+                  alt={skin.name}
+                  className="max-w-[85%] max-h-[85%] object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.6)] animate-fade-in"
+                />
+              </div>
+            </div>
 
-            return (
-              <div
-                key={s.id}
-                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                  isThisInCart
-                    ? "bg-accent/5 border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]"
-                    : "bg-[#151322]/40 border-white/5 hover:border-white/10"
-                }`}
-              >
-                {/* Float info */}
-                <div className="flex flex-col gap-1 flex-1 min-w-0 pr-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-white">
-                      {translateExterior(s.exterior, t("filters.condition.factoryNew"))}
+            {/* Right Column: General Info */}
+            <div className="w-full md:w-[45%] bg-[#151322]/40 p-6 lg:p-8 flex flex-col gap-6 overflow-y-auto custom-scrollbar justify-between">
+              <div className="flex flex-col gap-6">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-accent tracking-widest font-mono">
+                    {skin.weapon}
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight leading-tight mt-0.5">
+                    {skin.name} {skin.phase && <span className="text-accent">| {skin.phase}</span>}
+                  </h2>
+                  <span className="text-xs font-black text-white/50 uppercase tracking-wider mt-1 block">
+                    {translateExterior(skin.exterior, "Factory New")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Price and Helper info */}
+              <div className="flex flex-col gap-4 mt-6 pt-4 border-t border-white/5">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">
+                    {t("skinCard.modal.averagePrice")}
+                  </span>
+                  <div className="flex items-baseline gap-1 font-mono">
+                    <span className="text-3xl font-black text-white">
+                      ${avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    {s.pattern !== undefined && (
-                      <span className="text-[#84849b] text-[9px] font-mono">
-                        {t("checkout.seed")}:{" "}
-                        <span className="text-white font-bold">
-                          {s.pattern}
-                        </span>
+                    <span className="text-[10px] text-[#84849b] font-bold">USD</span>
+                  </div>
+                </div>
+
+                <span className="text-[9px] text-[#84849b]/50 text-center tracking-wide">
+                  {t("skinCard.modal.syncRealTime")}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* STOCK TAB (List of all specific items in stock with floats & buy buttons) */
+          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar bg-[#151322]/20 min-h-[350px]">
+            {skinsInGroup.map((s) => {
+              const isThisInCart = !!items.find((item) => item.skin.id === s.id);
+              return (
+                <div
+                  key={s.id}
+                  className={`flex items-center justify-between py-4 transition-all gap-4 border-b ${
+                    isThisInCart ? "border-accent" : "border-white/10"
+                  }`}
+                >
+                  {/* Thumbnail Image (No border box, larger) */}
+                  <div className="relative w-20 h-16 flex items-center justify-center shrink-0">
+                    <SkinImage
+                      src={s.imageUrl}
+                      alt={s.name}
+                      width={64}
+                      height={64}
+                      maxWidth={64}
+                      maxHeight={64}
+                      className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+                    />
+                  </div>
+
+                  {/* Left side details */}
+                  <div className="flex flex-col gap-2 flex-1 min-w-0 pr-4 pl-2">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-white">
+                        {translateExterior(s.exterior, "Factory New")}
                       </span>
+                      {s.pattern !== undefined && (
+                        <span className="text-[#84849b] text-[10px] font-mono">
+                          {t("checkout.seed")}: <span className="text-white font-bold">{s.pattern}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {s.float !== undefined && (
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <div className="flex items-center justify-between text-[10px] font-mono text-[#84849b]">
+                          <span>Float:</span>
+                          <span className="text-white font-bold">{s.float.toFixed(8)}</span>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="h-1.5 w-full bg-[#151322]/80 rounded-full overflow-hidden relative border border-white/5">
+                          <div className="absolute inset-y-0 left-[7%] w-px bg-white/20" />
+                          <div className="absolute inset-y-0 left-[15%] w-px bg-white/20" />
+                          <div className="absolute inset-y-0 left-[38%] w-px bg-white/20" />
+                          <div className="absolute inset-y-0 left-[45%] w-px bg-white/20" />
+                          <div
+                            className={`h-full ${getFloatColorClass(s.float)} rounded-full`}
+                            style={{ width: `${Math.min(100, s.float * 100)}%` }}
+                          />
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  {s.float !== undefined && (
-                    <div className="flex flex-col gap-1 max-w-xs w-full">
-                      <div className="flex items-center justify-between text-[9px] font-mono text-[#84849b]">
-                        <span>Float:</span>
-                        <span className="text-white font-bold">
-                          {s.float.toFixed(8)}
-                        </span>
-                      </div>
-                      {/* Progress bar */}
-                      <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden relative">
-                        <div className="absolute top-0 bottom-0 left-[7%] w-[1px] bg-white/20" />
-                        <div className="absolute top-0 bottom-0 left-[15%] w-[1px] bg-white/20" />
-                        <div className="absolute top-0 bottom-0 left-[38%] w-[1px] bg-white/20" />
-                        <div className="absolute top-0 bottom-0 left-[45%] w-[1px] bg-white/20" />
-
-                        <div
-                          className={`h-full ${getFloatColorClass(s.float)} rounded-full transition-all duration-500`}
-                          style={{
-                            width: `${Math.min(100, s.float * 100)}%`,
-                          }}
-                        />
-                      </div>
+                  {/* Right side Price & Actions */}
+                  <div className="flex flex-col sm:items-end justify-center gap-3">
+                    <div className="text-left sm:text-right font-mono">
+                      <span className="text-[#84849b] uppercase font-bold text-[9px] block mb-0.5">{t("common.price")}</span>
+                      <span className="text-lg font-black text-white">${s.price.toLocaleString()}</span>
                     </div>
-                  )}
-                </div>
 
-                {/* Price and Button */}
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <div className="text-right">
-                    <span className="text-[#84849b] uppercase font-bold text-[8px] block">
-                      {t("common.price")}
-                    </span>
-                    <span className="text-sm font-black text-white">
-                      ${s.price.toLocaleString()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {s.inspectLink && (
+                        <InspectInGameButton
+                          href={s.inspectLink}
+                          title={t("skinCard.inspectInGame")}
+                        />
+                      )}
+
+                      {!isThisInCart ? (
+                        <button
+                          onClick={() => addToCart(s)}
+                          className="h-9 px-5 flex items-center justify-center bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)]"
+                        >
+                          {t("common.add")}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => removeFromCart(s.id)}
+                          className="h-9 px-5 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer"
+                        >
+                          {t("common.remove")}
+                        </button>
+                      )}
+                    </div>
                   </div>
-
-                  {s.inspectLink && (
-                    <InspectInGameButton
-                      href={s.inspectLink}
-                      title={t("skinCard.inspectInGame")}
-                    />
-                  )}
-
-                  {!isThisInCart ? (
-                    <button
-                      onClick={() => addToCart(s)}
-                      className="h-8 px-4 flex items-center justify-center bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[9px] font-black uppercase tracking-wider rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)]"
-                    >
-                      {t("common.add")}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => removeFromCart(s.id)}
-                      className="h-8 px-4 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-[9px] font-black uppercase tracking-wider rounded-lg cursor-pointer"
-                    >
-                      {t("common.remove")}
-                    </button>
-                  )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Footer */}
-        <div className="pt-4 border-t border-white/5 mt-4 flex items-center justify-between">
-          <span className="text-[9px] font-bold text-[#84849b] uppercase tracking-wider">
-            {t("skinCard.selectedVariants", { count: totalQuantityInCart })}
-          </span>
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="px-5 py-2.5 bg-secondary hover:bg-secondary/80 rounded-xl text-white text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 cursor-pointer border-none"
-          >
-            {t("skinCard.done")}
-          </button>
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>,
     document.body

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, ShoppingCart, Trash2 } from "lucide-react";
+import { X, ShoppingCart, Trash2, Eye } from "lucide-react";
 import { Skin } from "../../domain/skin";
 import { InspectInGameButton } from "./InspectInGameButton";
 import { SkinImage } from "@/shared/components/SkinImage";
@@ -22,6 +22,47 @@ interface SkinCardModalProps {
   t: (key: string, params?: any) => string;
 }
 
+const getRarityDetails = (rarity: string) => {
+  const r = rarity?.toLowerCase() || "";
+  switch (r) {
+    case "immortal":
+      return { label: "Contrabando", color: "text-[#e0a814]" };
+    case "ancient":
+      return { label: "Encubierto (Covert)", color: "text-[#eb4b4b]" };
+    case "legendary":
+      return { label: "Clasificado (Classified)", color: "text-[#d32ce6]" };
+    case "mythical":
+      return { label: "Restringido (Restricted)", color: "text-[#8847ff]" };
+    case "rare":
+      return { label: "Grado Militar (Mil-Spec)", color: "text-[#4b69ff]" };
+    case "uncommon":
+      return { label: "Grado Industrial", color: "text-[#5e98d9]" };
+    case "common":
+    default:
+      return { label: "Grado De Consumo", color: "text-[#b0c3d9]" };
+  }
+};
+
+const getTheoreticalFloat = (exterior: string | null | undefined): number | undefined => {
+  const ext = exterior?.toLowerCase() || "";
+  if (ext.includes("factory new") || ext === "fn") return 0.035;
+  if (ext.includes("minimal wear") || ext === "mw") return 0.11;
+  if (ext.includes("field-tested") || ext === "ft") return 0.26;
+  if (ext.includes("well-worn") || ext === "ww") return 0.415;
+  if (ext.includes("battle-scarred") || ext === "bs") return 0.72;
+  return undefined;
+};
+
+const getExteriorAbbreviation = (exterior: string | null | undefined): string => {
+  const ext = exterior?.toLowerCase() || "";
+  if (ext.includes("factory new") || ext === "fn") return "FN";
+  if (ext.includes("minimal wear") || ext === "mw") return "MW";
+  if (ext.includes("field-tested") || ext === "ft") return "FT";
+  if (ext.includes("well-worn") || ext === "ww") return "WW";
+  if (ext.includes("battle-scarred") || ext === "bs") return "BS";
+  return "";
+};
+
 export const SkinCardModal = ({
   skin,
   skinsInGroup,
@@ -35,6 +76,8 @@ export const SkinCardModal = ({
   t,
 }: SkinCardModalProps) => {
   const [activeTab, setActiveTab] = useState<"details" | "stock">("details");
+  const theoreticalFloat = getTheoreticalFloat(skin.exterior);
+  const exteriorAbbr = getExteriorAbbreviation(skin.exterior);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -132,6 +175,80 @@ export const SkinCardModal = ({
                     {translateExterior(skin.exterior, "Factory New")}
                   </span>
                 </div>
+
+                {/* StatTrak & Souvenir Badges */}
+                {(skin.isStatTrak || skin.isSouvenir) && (
+                  <div className="flex flex-wrap gap-2">
+                    {skin.isStatTrak && (
+                      <span className="bg-[#cf6a32]/10 border border-[#cf6a32]/30 text-[#cf6a32] text-[9px] font-black uppercase px-2.5 py-0.5 rounded font-mono tracking-wider shadow-[0_0_10px_rgba(207,106,50,0.1)]">
+                        StatTrak™
+                      </span>
+                    )}
+                    {skin.isSouvenir && (
+                      <span className="bg-[#ffd700]/10 border border-[#ffd700]/30 text-[#ffd700] text-[9px] font-black uppercase px-2.5 py-0.5 rounded font-mono tracking-wider shadow-[0_0_10px_rgba(255,215,0,0.1)]">
+                        Souvenir
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Technical Specifications Grid */}
+                <div className="grid grid-cols-2 gap-4 bg-[#151322]/60 rounded-xl p-4 border border-white/5 font-mono">
+                  <div>
+                    <span className="text-[9px] font-black text-[#84849b] uppercase block tracking-wider">
+                      {t("skinCard.modal.category")}
+                    </span>
+                    <span className="text-xs font-bold text-white uppercase mt-1 block truncate">
+                      {skin.category || skin.weapon}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black text-[#84849b] uppercase block tracking-wider">
+                      {t("skinCard.modal.rarity")}
+                    </span>
+                    <span className={`text-xs font-bold uppercase mt-1 block truncate ${getRarityDetails(skin.rarity).color}`}>
+                      {getRarityDetails(skin.rarity).label}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black text-[#84849b] uppercase block tracking-wider">
+                      {t("skinCard.modal.condition")}
+                    </span>
+                    <span className="text-xs font-bold text-white uppercase mt-1 block truncate">
+                      {translateExterior(skin.exterior, "Factory New")}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black text-[#84849b] uppercase block tracking-wider">
+                      {t("skinCard.modal.stock")}
+                    </span>
+                    <span className="text-xs font-bold text-accent uppercase mt-1 block font-sans">
+                      {skinsInGroup.length} {skinsInGroup.length === 1 ? "unidad" : "unidades"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Float Bar (Theoretical/Approximate, not a real item float) */}
+                {theoreticalFloat !== undefined && (
+                  <div className="flex flex-col gap-2 mt-2 bg-[#151322]/60 rounded-xl p-4 border border-white/5 font-mono">
+                    <div className="flex items-center justify-between text-[9px] font-black text-[#84849b] uppercase tracking-wider">
+                      <span>{t("skinCard.modal.floatValue")}</span>
+                      {exteriorAbbr && (
+                        <span className="text-white font-bold font-mono">{exteriorAbbr}</span>
+                      )}
+                    </div>
+                    <div className="h-1.5 w-full bg-[#151322]/80 rounded-full overflow-hidden relative border border-white/5 mt-1">
+                      <div className="absolute inset-y-0 left-[7%] w-px bg-white/20" />
+                      <div className="absolute inset-y-0 left-[15%] w-px bg-white/20" />
+                      <div className="absolute inset-y-0 left-[38%] w-px bg-white/20" />
+                      <div className="absolute inset-y-0 left-[45%] w-px bg-white/20" />
+                      <div
+                        className={`h-full ${getFloatColorClass(theoreticalFloat)} rounded-full`}
+                        style={{ width: `${Math.min(100, theoreticalFloat * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Price and Helper info */}
@@ -152,6 +269,29 @@ export const SkinCardModal = ({
                       USD
                     </span>
                   </div>
+                </div>
+
+                {/* Buy and Inspect Actions */}
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => {}}
+                    className="flex-1 h-12 bg-accent hover:brightness-110 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.3)] active:scale-95 flex items-center justify-center gap-2 cursor-pointer border-none"
+                  >
+                    <ShoppingCart className="w-4 h-4 shrink-0" />
+                    {t("nav.buy")}
+                  </button>
+
+                  {skin.inspectLink && (
+                    <a
+                      href={skin.inspectLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-12 px-6 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer no-underline"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      {t("common.view")}
+                    </a>
+                  )}
                 </div>
 
                 <span className="text-[9px] text-[#84849b]/50 text-center tracking-wide">

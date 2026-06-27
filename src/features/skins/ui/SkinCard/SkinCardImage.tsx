@@ -8,7 +8,6 @@ interface SkinCardImageProps {
   isMultiple: boolean;
   priority?: boolean;
   skinsInGroupCount: number;
-  t: (key: string) => string;
 }
 
 export const SkinCardImage = ({
@@ -16,21 +15,9 @@ export const SkinCardImage = ({
   isMultiple,
   priority,
   skinsInGroupCount,
-  t,
 }: SkinCardImageProps) => {
   return (
     <div className="relative aspect-[4/3] w-full flex items-center justify-center mt-2 mb-0 bg-transparent overflow-hidden">
-      {/* Immediate Trade or Resell Status Badge */}
-      {skin.isImmediate !== false ? (
-        <div className="absolute top-2 left-2 bg-emerald-500/20 border border-emerald-500/40 rounded-full px-2 py-0.5 text-[7px] font-black uppercase text-emerald-400 tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.15)] flex items-center gap-1 z-10 select-none">
-          <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
-          ⚡ {t("filters.instantTrade")}
-        </div>
-      ) : (
-        <div className="absolute top-2 left-2 bg-indigo-500/20 border border-indigo-500/40 rounded-full px-2 py-0.5 text-[8px] font-black uppercase text-indigo-400 tracking-wider flex items-center gap-1 z-10 select-none">
-          <span className="w-1 h-1 rounded-full bg-indigo-400"></span>⏳ {t("skinCard.onRequest")}
-        </div>
-      )}
 
       {/* Spotlight beam coming from below (from the rarity bar upwards - perfectly scaled) */}
       <div

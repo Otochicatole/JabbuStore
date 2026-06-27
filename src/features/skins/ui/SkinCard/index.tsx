@@ -137,7 +137,6 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
         isMultiple={isMultiple}
         priority={priority}
         skinsInGroupCount={skinsInGroup.length}
-        t={t}
       />
 
       {/* Rarity Divider (stuck perfectly to the bottom of the image container) */}

@@ -52,15 +52,6 @@ export const SkinCardModal = ({
               )}
             </h3>
             <div className="flex items-center gap-2 mt-1.5">
-              {skin.isImmediate !== false ? (
-                <span className="bg-emerald-500/20 border border-emerald-500/35 text-emerald-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">
-                  ⚡ {t("filters.instantTrade")}
-                </span>
-              ) : (
-                <span className="bg-indigo-500/20 border border-indigo-500/35 text-indigo-400 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">
-                  ⏳ {t("skinCard.onRequest")}
-                </span>
-              )}
               <span className="text-[#84849b] text-[8px] uppercase font-bold tracking-wider">
                 {t("skinCard.variantsCount", { count: skinsInGroup.length })}
               </span>

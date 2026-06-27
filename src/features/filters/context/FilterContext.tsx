@@ -45,7 +45,7 @@ const defaultState: FilterState = {
   selectedConditions: [],
   sortOption: "Precio: Mayor a Menor",
   immediateTradeOnly: false,
-  groupSameItems: false,
+  groupSameItems: true,
 };
 
 const FILTER_ROUTES = new Set(["/buy", "/sell"]);
@@ -163,7 +163,7 @@ function filterStateFromSearchParams(params: URLSearchParams): FilterState {
     ),
     sortOption: parseSortOption(params.get("sort")),
     immediateTradeOnly: (params.get("immediate") ?? params.get("instant")) === "1",
-    groupSameItems: params.get("group") === "1",
+    groupSameItems: params.get("group") !== "0",
   };
 }
 
@@ -195,7 +195,7 @@ function writeFilterStateToSearchParams(
     next.set("sort", SORT_LABEL_TO_TOKEN[state.sortOption]);
   }
   if (state.immediateTradeOnly) next.set("immediate", "1");
-  if (state.groupSameItems) next.set("group", "1");
+  if (!state.groupSameItems) next.set("group", "0");
 
   return next;
 }
@@ -315,7 +315,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>("Precio: Mayor a Menor");
   const [immediateTradeOnly, setImmediateTradeOnly] = useState(false);
-  const [groupSameItems, setGroupSameItems] = useState(false);
+  const [groupSameItems, setGroupSameItems] = useState(true);
   const [urlHydrated, setUrlHydrated] = useState(false);
 
   const applyFilterState = useCallback((state: FilterState) => {

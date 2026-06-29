@@ -9,6 +9,7 @@ import { CartSidebar } from "@/features/cart/ui/CartSidebar";
 import { useParams, usePathname } from "next/navigation";
 import { I18nProvider } from "@/shared/i18n/I18nProvider";
 import { TicketNotificationProvider } from "@/features/tickets/ui/TicketNotificationProvider";
+import { NotificationProvider } from "@/features/notifications/context/NotificationContext";
 import { ProfileCompletionModal } from "@/shared/components/ProfileCompletionModal";
 import { DEFAULT_LOCALE, isLocale, stripLocaleFromPathname } from "@/shared/i18n/routing";
 
@@ -41,14 +42,16 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
       <CartProvider>
         <FilterProvider>
           <InventoryProvider>
-            <TicketNotificationProvider actor="USER" enabled>
-              <div className="min-h-screen min-w-0 overflow-x-hidden">
-                <Navbar onOpenCart={() => setIsCartOpen(true)} />
-                <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-                <ProfileCompletionModal />
-                {children}
-              </div>
-            </TicketNotificationProvider>
+            <NotificationProvider actor="USER" enabled>
+              <TicketNotificationProvider actor="USER" enabled>
+                <div className="min-h-screen min-w-0 overflow-x-hidden">
+                  <Navbar onOpenCart={() => setIsCartOpen(true)} />
+                  <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+                  <ProfileCompletionModal />
+                  {children}
+                </div>
+              </TicketNotificationProvider>
+            </NotificationProvider>
           </InventoryProvider>
         </FilterProvider>
       </CartProvider>

@@ -4,7 +4,7 @@ import { useCart } from "../../context/CartContext";
 import { Button } from "@/shared/components/Button";
 import Image from "next/image";
 import { X, ShoppingBag, Trash2, Minus, Plus, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -19,8 +19,8 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check login status when sidebar opens
-  useState(() => {
+  // Check login status when sidebar mounts or opens
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       fetchWithAuth(`${BACKEND_URL}/users/me`)
         .then(res => {
@@ -28,18 +28,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
         })
         .catch(() => setIsLoggedIn(false));
     }
-  });
-
-  // Re-check on open
-  useState(() => {
-    if (isOpen) {
-      fetchWithAuth(`${BACKEND_URL}/users/me`)
-        .then(res => {
-          setIsLoggedIn(res.ok);
-        })
-        .catch(() => setIsLoggedIn(false));
-    }
-  });
+  }, [isOpen]);
 
   const handleCheckout = async () => {
     try {

@@ -917,4 +917,12 @@ export const en = {
   "skinCard.modal.rarity": "Rarity",
   "skinCard.modal.condition": "Condition",
   "skinCard.modal.stock": "Stock",
+  "notifications.title": "Notifications",
+  "notifications.bell": "Notifications",
+  "notifications.newAlert": "New Notification",
+  "notifications.badgeUnread": "new",
+  "notifications.markAllRead": "Mark all as read",
+  "notifications.emptyTitle": "No notifications",
+  "notifications.emptyDesc": "We will notify you when there are important updates about your purchases or support.",
+  "notifications.time.justNow": "Just now",
 } as const;

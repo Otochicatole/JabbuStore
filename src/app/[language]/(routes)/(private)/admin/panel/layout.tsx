@@ -20,6 +20,8 @@ import { BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 import { TicketNotificationProvider } from "@/features/tickets/ui/TicketNotificationProvider";
+import { NotificationProvider } from "@/features/notifications/context/NotificationContext";
+import { NotificationBell } from "@/features/notifications/ui/NotificationBell";
 import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
@@ -149,110 +151,114 @@ export default function AdminLayout({
   ];
 
   return (
-    <TicketNotificationProvider actor="ADMIN" enabled={!!adminUser}>
-      <div className="min-h-screen min-w-0 bg-[#0b0818] text-white flex flex-col md:flex-row overflow-x-hidden">
-      {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0f0d1e] border-b border-white/5 shrink-0 z-50 fixed top-0 left-0 w-full h-14 shadow-lg shadow-[#000]/40">
-        <div className="flex flex-col">
-          <h1 className="text-xs font-black uppercase tracking-wider text-white">
-            {t("admin.brand")}
-          </h1>
-          {adminUser && (
-            <span className="text-[9px] text-[#84849b] font-mono">
-              @{adminUser.username}
-            </span>
-          )}
-        </div>
-        <div className="shrink-0 px-2">
-          <LanguageSwitcher compact />
-        </div>
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-          className="p-2 -mr-2 cursor-pointer hover:bg-white/5 rounded-full transition-colors flex items-center justify-center min-w-[40px] min-h-[40px]"
-          aria-label="Toggle Menu"
-        >
-          {isSidebarOpen ? (
-            <X className="w-5 h-5 text-white" />
-          ) : (
-            <Menu className="w-5 h-5 text-white" />
-          )}
-        </button>
-      </div>
-
-      {/* Sidebar */}
-      <div
-        className={`
-        fixed inset-y-0 left-0 z-[60] w-64 bg-[#0f0d1e] border-r border-white/5 p-5 flex flex-col justify-between
-        transform transition-transform duration-300 ease-in-out shadow-2xl shadow-black/80
-        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0
-      `}
-      >
-        <div>
-          <div className="mb-8 hidden md:block">
-            <h1 className="text-lg font-black uppercase tracking-wider text-white">
-              Jabbu Store
+    <NotificationProvider actor="ADMIN" enabled={!!adminUser}>
+      <TicketNotificationProvider actor="ADMIN" enabled={!!adminUser}>
+        <div className="min-h-screen min-w-0 bg-[#0b0818] text-white flex flex-col md:flex-row overflow-x-hidden">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0f0d1e] border-b border-white/5 shrink-0 z-50 fixed top-0 left-0 w-full h-14 shadow-lg shadow-[#000]/40">
+          <div className="flex flex-col">
+            <h1 className="text-xs font-black uppercase tracking-wider text-white">
+              {t("admin.brand")}
             </h1>
-            <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-widest mt-0.5">
-              {t("admin.controlPanel")}
-            </p>
-            <div className="mt-4">
-              <LanguageSwitcher compact />
+            {adminUser && (
+              <span className="text-[9px] text-[#84849b] font-mono">
+                @{adminUser.username}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0 px-2">
+            {adminUser && <NotificationBell />}
+            <LanguageSwitcher compact />
+          </div>
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+            className="p-2 -mr-2 cursor-pointer hover:bg-white/5 rounded-full transition-colors flex items-center justify-center min-w-[40px] min-h-[40px]"
+            aria-label="Toggle Menu"
+          >
+            {isSidebarOpen ? (
+              <X className="w-5 h-5 text-white" />
+            ) : (
+              <Menu className="w-5 h-5 text-white" />
+            )}
+          </button>
+        </div>
+
+        {/* Sidebar */}
+        <div
+          className={`
+          fixed inset-y-0 left-0 z-[60] w-64 bg-[#0f0d1e] border-r border-white/5 p-5 flex flex-col justify-between
+          transform transition-transform duration-300 ease-in-out shadow-2xl shadow-black/80
+          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
+        `}
+        >
+          <div>
+            <div className="mb-8 hidden md:block">
+              <h1 className="text-lg font-black uppercase tracking-wider text-white">
+                Jabbu Store
+              </h1>
+              <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-widest mt-0.5">
+                {t("admin.controlPanel")}
+              </p>
+              <div className="mt-4 flex items-center justify-between gap-2">
+                <LanguageSwitcher compact />
+                {adminUser && <NotificationBell align="left" />}
+              </div>
             </div>
+
+            <Suspense fallback={
+              <div className="space-y-2.5 animate-pulse">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="h-10 bg-white/[0.02] rounded-[3px] w-full border border-white/5" />
+                ))}
+              </div>
+            }>
+              <SidebarNav pathname={pathname} navItems={navItems} setIsSidebarOpen={setIsSidebarOpen} />
+            </Suspense>
           </div>
 
-          <Suspense fallback={
-            <div className="space-y-2.5 animate-pulse">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-10 bg-white/[0.02] rounded-[3px] w-full border border-white/5" />
-              ))}
-            </div>
-          }>
-            <SidebarNav pathname={pathname} navItems={navItems} setIsSidebarOpen={setIsSidebarOpen} />
-          </Suspense>
-        </div>
+          {/* User Info & Logout */}
+          <div className="border-t border-white/5 pt-4 mt-4">
+            {adminUser && (
+              <div className="bg-white/[0.02] border border-white/5 rounded-[3px] p-3 mb-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-[3px] bg-accent/10 border border-accent/20 flex items-center justify-center font-sans font-black text-xs text-accent shrink-0">
+                    {adminUser.username?.[0]?.toUpperCase() || "A"}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-sm font-black text-white block truncate">
+                      @{adminUser.username}
+                    </span>
+                    <span className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider block truncate">
+                      {adminUser.role}
+                    </span>
+                  </div>
+                </div>
 
-        {/* User Info & Logout */}
-        <div className="border-t border-white/5 pt-4 mt-4">
-          {adminUser && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-[3px] p-3 mb-1">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-[3px] bg-accent/10 border border-accent/20 flex items-center justify-center font-sans font-black text-xs text-accent shrink-0">
-                  {adminUser.username?.[0]?.toUpperCase() || "A"}
-                </div>
-                <div className="min-w-0">
-                  <span className="text-sm font-black text-white block truncate">
-                    @{adminUser.username}
-                  </span>
-                  <span className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider block truncate">
-                    {adminUser.role}
-                  </span>
-                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[3px] text-xs font-bold text-red-400 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  {t("admin.logout")}
+                </button>
               </div>
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[3px] text-xs font-bold text-red-400 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 transition-colors cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                {t("admin.logout")}
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 min-w-0 overflow-x-hidden md:pl-64 pt-14 md:pt-0 flex flex-col">{children}</div>
+        {/* Main Content */}
+        <div className="flex-1 min-w-0 overflow-x-hidden md:pl-64 pt-14 md:pt-0 flex flex-col">{children}</div>
 
-      {/* Overlay for mobile */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[55] md:hidden transition-opacity duration-300"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-      </div>
-    </TicketNotificationProvider>
+        {/* Overlay for mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[55] md:hidden transition-opacity duration-300"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+        </div>
+      </TicketNotificationProvider>
+    </NotificationProvider>
   );
 }

@@ -13,6 +13,7 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { NotificationBell } from "@/features/notifications/ui/NotificationBell";
 
 const NAV_LINKS = [
   { labelKey: "nav.home", path: "/" },
@@ -130,6 +131,12 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           {!isLoading && !isLoggedIn && (
             <div className="hidden sm:block">
               <LanguageSwitcher compact />
+            </div>
+          )}
+
+          {isLoggedIn && (
+            <div className="mr-1 sm:mr-2">
+              <NotificationBell />
             </div>
           )}
 

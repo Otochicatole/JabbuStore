@@ -35,3 +35,12 @@ export async function markAllAsRead(): Promise<void> {
     throw new Error("FAILED_TO_MARK_ALL_NOTIFICATIONS_AS_READ");
   }
 }
+
+export async function clearAllNotifications(): Promise<void> {
+  const res = await fetchWithAuth(`${BACKEND_URL}/notifications/clear-all`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error("FAILED_TO_CLEAR_ALL_NOTIFICATIONS");
+  }
+}

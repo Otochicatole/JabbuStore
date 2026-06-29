@@ -922,6 +922,7 @@ export const en = {
   "notifications.newAlert": "New Notification",
   "notifications.badgeUnread": "new",
   "notifications.markAllRead": "Mark all as read",
+  "notifications.clearAll": "Clear all",
   "notifications.emptyTitle": "No notifications",
   "notifications.emptyDesc": "We will notify you when there are important updates about your purchases or support.",
   "notifications.time.justNow": "Just now",

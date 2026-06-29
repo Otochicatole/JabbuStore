@@ -16,7 +16,7 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 import { Notification, NotificationActor } from "../domain/types";
-import { getNotifications, markAsRead, markAllAsRead } from "../infrastructure/api";
+import { getNotifications, markAsRead, markAllAsRead, clearAllNotifications } from "../infrastructure/api";
 import { getTicketSocket } from "@/features/tickets/infrastructure/ticketSocket";
 
 interface NotificationContextValue {
@@ -25,6 +25,7 @@ interface NotificationContextValue {
   isLoading: boolean;
   markNotificationRead: (id: string) => Promise<void>;
   markAllNotificationsRead: () => Promise<void>;
+  clearNotifications: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -261,6 +262,15 @@ function NotificationProviderContent({
     }
   }, []);
 
+  const clearNotifications = useCallback(async () => {
+    try {
+      await clearAllNotifications();
+      setNotifications([]);
+    } catch (err) {
+      console.error("Failed to clear notifications:", err);
+    }
+  }, []);
+
   const handleToastClick = (toast: ToastPayload) => {
     removeToast(toast.id);
     void markNotificationRead(toast.id);
@@ -276,8 +286,9 @@ function NotificationProviderContent({
       isLoading,
       markNotificationRead,
       markAllNotificationsRead,
+      clearNotifications,
     }),
-    [notifications, unreadCount, isLoading, markNotificationRead, markAllNotificationsRead]
+    [notifications, unreadCount, isLoading, markNotificationRead, markAllNotificationsRead, clearNotifications]
   );
 
   return (

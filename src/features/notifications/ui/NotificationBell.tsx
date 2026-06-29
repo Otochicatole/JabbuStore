@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, MessageSquare, ShoppingBag, Info, CheckCircle2 } from "lucide-react";
+import { Bell, MessageSquare, ShoppingBag, Info, CheckCircle2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useNotifications } from "../context/NotificationContext";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -31,6 +31,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
     unreadCount,
     markNotificationRead,
     markAllNotificationsRead,
+    clearNotifications,
   } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -98,7 +99,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
               }`}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 bg-white/[0.01]">
+            <div className="flex items-center justify-between border-b border-white/5 px-4 py-3.5 bg-white/[0.01]">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black uppercase tracking-wider text-white">
                   {t("notifications.title") || "Notificaciones"}
@@ -109,15 +110,6 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                   </span>
                 )}
               </div>
-              {unreadCount > 0 && (
-                <button
-                  onClick={() => void markAllNotificationsRead()}
-                  className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-accent hover:text-white transition-colors cursor-pointer"
-                >
-                  <CheckCircle2 className="h-3 w-3" />
-                  {t("notifications.markAllRead") || "Leer todo"}
-                </button>
-              )}
             </div>
 
             {/* List */}
@@ -171,6 +163,30 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                 ))
               )}
             </div>
+
+            {/* Footer Actions */}
+            {notifications.length > 0 && (
+              <div className="flex items-center justify-between border-t border-white/5 px-4 py-3 bg-white/[0.01] shrink-0">
+                {unreadCount > 0 ? (
+                  <button
+                    onClick={() => void markAllNotificationsRead()}
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-accent hover:text-white transition-colors cursor-pointer"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    {t("notifications.markAllRead") || "Leer todo"}
+                  </button>
+                ) : (
+                  <div />
+                )}
+                <button
+                  onClick={() => void clearNotifications()}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/40 hover:text-red-400 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {t("notifications.clearAll") || "Limpiar todo"}
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

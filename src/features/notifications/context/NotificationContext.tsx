@@ -310,8 +310,17 @@ function NotificationProviderContent({
               <p className="text-[10px] font-black uppercase tracking-widest text-accent">
                 {t("notifications.newAlert") || "Notificación"}
               </p>
-              <p className="truncate text-xs font-black">{toast.title}</p>
-              <p className="mt-1 line-clamp-2 text-[11px] text-white/70">{toast.content}</p>
+              <p className="truncate text-xs font-black">{t(toast.title) || toast.title}</p>
+              <p className="mt-1 line-clamp-2 text-[11px] text-white/70">
+                {(() => {
+                  try {
+                    const parsed = JSON.parse(toast.content);
+                    return t(parsed.key, parsed.params) || toast.content;
+                  } catch {
+                    return t(toast.content) || toast.content;
+                  }
+                })()}
+              </p>
             </div>
             <button
               type="button"

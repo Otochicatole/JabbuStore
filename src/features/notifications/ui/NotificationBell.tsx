@@ -144,14 +144,21 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                       <div className="flex items-start justify-between gap-2">
                         <p className={`text-[11px] font-black leading-tight truncate group-hover:text-accent transition-colors
                           ${!notification.read ? "text-white" : "text-white/70"}`}>
-                          {notification.title}
+                          {t(notification.title) || notification.title}
                         </p>
                         <span className="text-[9px] text-white/30 shrink-0 mt-0.5">
                           {formatTimeAgo(notification.createdAt, t)}
                         </span>
                       </div>
                       <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-white/50">
-                        {notification.content}
+                        {(() => {
+                          try {
+                            const parsed = JSON.parse(notification.content);
+                            return t(parsed.key, parsed.params) || notification.content;
+                          } catch {
+                            return t(notification.content) || notification.content;
+                          }
+                        })()}
                       </p>
                     </div>
 

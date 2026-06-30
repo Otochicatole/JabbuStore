@@ -86,6 +86,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
     currentInventoryPage,
     visibleInventoryItems,
     handleUpdateItemPrice,
+    handleToggleMarketable,
     triggerSync,
     inventoryPage,
     setInventoryPage,
@@ -170,6 +171,7 @@ export function InventoryTab({ initialItems = [] }: InventoryTabProps) {
             items={visibleInventoryItems}
             botMap={botMap}
             onEditPrice={setPriceModalItem}
+            onToggleMarketable={handleToggleMarketable}
             currentPage={currentInventoryPage}
             totalPages={totalInventoryPages}
             onPageChange={setInventoryPage}

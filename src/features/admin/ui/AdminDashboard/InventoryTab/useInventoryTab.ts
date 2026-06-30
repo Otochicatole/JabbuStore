@@ -183,6 +183,41 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
     );
   };
 
+  const handleToggleMarketable = async (item: StoreItem, marketable: boolean) => {
+    try {
+      setError(null);
+      // Optimistic update
+      setItems((prev) =>
+        prev.map((i) =>
+          i.assetId === item.assetId ? { ...i, marketable } : i
+        )
+      );
+
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/store/items/${item.assetId}/marketable`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        body: JSON.stringify({ marketable }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Error al actualizar visibilidad");
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error de conexión");
+      // Revert state on error
+      setItems((prev) =>
+        prev.map((i) =>
+          i.assetId === item.assetId ? { ...i, marketable: !marketable } : i
+        )
+      );
+    }
+  };
+
   const botMap = useMemo(() => {
     const map: Record<string, string> = {};
     botsList.forEach((b) => {
@@ -212,6 +247,7 @@ export function useInventoryTab(initialItems: StoreItem[] = []) {
     currentInventoryPage,
     visibleInventoryItems,
     handleUpdateItemPrice,
+    handleToggleMarketable,
     triggerSync,
     fetchStoreItems,
     botMap,

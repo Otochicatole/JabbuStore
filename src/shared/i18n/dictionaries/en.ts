@@ -728,6 +728,7 @@ export const en = {
   "admin.inventory.skin": "Skin",
   "admin.inventory.assetId": "Asset ID",
   "admin.inventory.floatValue": "Float Value",
+  "admin.inventory.visible": "Visible",
   "admin.market.title": "Market Catalog (YouPin)",
   "admin.market.description": "Same catalog as /buy (resale) — {count} indexed YouPin assets",
   "admin.market.syncing": "Syncing...",

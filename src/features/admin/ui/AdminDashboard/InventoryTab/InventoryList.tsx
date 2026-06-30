@@ -11,6 +11,7 @@ interface InventoryListProps {
   items: StoreItem[];
   botMap: Record<string, string>;
   onEditPrice: (item: StoreItem) => void;
+  onToggleMarketable: (item: StoreItem, marketable: boolean) => void;
   currentPage: number;
   totalPages: number;
   onPageChange: React.Dispatch<React.SetStateAction<number>>;
@@ -59,6 +60,7 @@ export function InventoryList({
   items,
   botMap,
   onEditPrice,
+  onToggleMarketable,
   currentPage,
   totalPages,
   onPageChange,
@@ -78,6 +80,7 @@ export function InventoryList({
                 <th className="py-4 px-5">{t("admin.inventory.floatValue")}</th>
                 <th className="py-4 px-5">{t("admin.inventory.ownerBot")}</th>
                 <th className="py-4 px-5">{t("common.price")}</th>
+                <th className="py-4 px-5 text-center">{t("admin.inventory.visible") || "Visible"}</th>
                 <th className="py-4 px-5 text-right">{t("admin.common.actions")}</th>
               </tr>
             </thead>
@@ -152,6 +155,20 @@ export function InventoryList({
                       <span className="font-black text-green-400 font-mono text-sm">
                         ${item.price.toLocaleString()}
                       </span>
+                    </td>
+                    <td className="py-3 px-5">
+                      <div className="flex items-center justify-center">
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={item.marketable !== false}
+                            onChange={(e) => onToggleMarketable(item, e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-white/5 rounded-full border border-white/10 peer peer-checked:bg-accent peer-checked:border-accent/50 transition-all" />
+                          <div className="absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow transition-all peer-checked:translate-x-5" />
+                        </label>
+                      </div>
                     </td>
                     <td className="py-3 px-5 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -256,19 +273,35 @@ export function InventoryList({
 
                 {/* Pricing and Action Buttons */}
                 <div className="flex items-center justify-between mt-0.5">
-                  <div>
-                    <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("common.price")}</span>
-                    <span className="font-black text-green-400 font-mono text-sm block mt-0.5">
-                      ${item.price.toLocaleString()}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("common.price")}</span>
+                      <span className="font-black text-green-400 font-mono text-sm block mt-0.5">
+                        ${item.price.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="border-l border-white/5 h-8" />
+                    <div>
+                      <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold mb-0.5">{t("admin.inventory.visible") || "Visible"}</span>
+                      <label className="relative inline-flex items-center cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={item.marketable !== false}
+                          onChange={(e) => onToggleMarketable(item, e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-white/5 rounded-full border border-white/10 peer peer-checked:bg-accent peer-checked:border-accent/50 transition-all" />
+                        <div className="absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow transition-all peer-checked:translate-x-5" />
+                      </label>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onEditPrice(item)}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/80 hover:text-accent hover:border-accent/40 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer min-h-[34px]"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/80 hover:text-accent hover:border-accent/40 text-[9px] font-black uppercase tracking-wider tracking-widest transition-all cursor-pointer min-h-[34px]"
                     >
-                      <Pencil className="w-3 h-3 text-accent" />
+                      <Pencil className="w-3.5 h-3.5 text-accent" />
                       <span>{t("common.edit")}</span>
                     </button>
                     <a

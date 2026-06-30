@@ -42,7 +42,6 @@ export const TABS: {
 }[] = [
   { id: "precios", icon: TrendingUp },
   { id: "reventa", icon: Coins },
-  { id: "limites", icon: ShieldCheck },
   { id: "webhook", icon: Webhook },
   { id: "pagos", icon: CreditCard },
   { id: "credenciales", icon: KeyRound },

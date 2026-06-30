@@ -883,46 +883,6 @@ export function AdminSettings() {
         </div>
       )}
 
-      {/* ── TAB: Límites ── */}
-      {activeTab === "limites" && (
-        <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
-          <SectionHeader
-            title={t("admin.settings.sellLimitsTitle")}
-            desc={t("admin.settings.sellLimitsDesc")}
-          />
-          <form onSubmit={handleMinSellSubmit} className="space-y-5 max-w-xl">
-            <div className="space-y-1.5">
-              <FieldLabel>{t("admin.settings.minimumSellPriceUsd")}</FieldLabel>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-accent/60 text-sm font-bold">
-                  $
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={settings.minimumUserSellPrice}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      minimumUserSellPrice: Number(e.target.value),
-                    })
-                  }
-                  className="w-full pl-8 pr-4 py-3 bg-white/[0.03] border border-white/8 rounded-[3px] text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all"
-                />
-              </div>
-              <p className="text-[10px] text-[#84849b] font-mono">
-                {t("admin.settings.minimumSellPriceHelp")}
-              </p>
-            </div>
-            <SaveButton
-              saving={savingMinSell}
-              saved={savedMinSell}
-              label={t("admin.settings.saveMinimumPrice")}
-            />
-          </form>
-        </div>
-      )}
-
       {/* ── TAB: Credenciales ── */}
       {activeTab === "credenciales" && (
         <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">

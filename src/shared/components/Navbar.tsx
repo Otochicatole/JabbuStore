@@ -17,7 +17,8 @@ import { NotificationBell } from "@/features/notifications/ui/NotificationBell";
 
 const NAV_LINKS = [
   { labelKey: "nav.home", path: "/" },
-  { labelKey: "nav.buy", path: "/buy" },
+  { labelKey: "nav.express", path: "/buy" },
+  { labelKey: "nav.market", path: "/market" },
   { labelKey: "nav.sell", path: "/sell" },
 ];
 

@@ -18,7 +18,7 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Error al cargar skins de la tienda";
 }
 
-export const useSkins = () => {
+export const useSkins = (marketType: "express" | "market") => {
   const filters = useFilters();
   const searchParams = useSearchParams();
   const [skins, setSkins] = useState<Skin[]>([]);
@@ -43,7 +43,7 @@ export const useSkins = () => {
         categories: filters.selectedCategories,
         conditions: filters.selectedConditions,
         sort: filters.sortOption,
-        immediate: filters.immediateTradeOnly,
+        immediate: marketType === "express",
         group: filters.groupSameItems,
       });
       

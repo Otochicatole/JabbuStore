@@ -45,7 +45,6 @@ export const FilterSidebar = () => {
     maxPrice, setMaxPrice,
     selectedCategories, toggleCategory,
     selectedConditions, toggleCondition,
-    immediateTradeOnly, setImmediateTradeOnly,
     groupSameItems, setGroupSameItems,
     clearFilters,
   } = useFilters();

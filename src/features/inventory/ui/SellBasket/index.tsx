@@ -12,7 +12,7 @@ interface SellBasketProps {
 }
 
 export const SellBasket = ({ embedded = false }: SellBasketProps) => {
-  const { selectedItems, removeFromSellList, totalValue, clearSellList, minSellPrice } = useInventory();
+  const { selectedItems, removeFromSellList, clearSellList } = useInventory();
   const router = useRouter();
   const { t } = useI18n();
   const localizePath = useLocalizedPath();
@@ -20,11 +20,7 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
   const [sellError, setSellError] = useState<string | null>(null);
   const [sellSuccess, setSellSuccess] = useState(false);
 
-
-  // Items that don't meet the minimum sell price
-  const invalidItems = selectedItems.filter((item) => item.price < minSellPrice);
-  const validItems = selectedItems.filter((item) => item.price >= minSellPrice);
-  const canSell = validItems.length > 0 && !selling;
+  const canSell = selectedItems.length > 0 && !selling;
 
   const handleSell = async () => {
     setSelling(true);
@@ -32,10 +28,26 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
     setSellSuccess(false);
 
     try {
-      // Redirigir a la página de checkout de venta
-      router.push(localizePath("/checkout?type=sell"));
+      const response = await fetchWithAuth(`${BACKEND_URL}/quotes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assetIds: selectedItems.map((item) => item.id),
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || "Error al enviar la solicitud de cotización.");
+      }
+
+      setSellSuccess(true);
+      clearSellList();
+      setTimeout(() => {
+        router.push(localizePath("/quotes"));
+      }, 1500);
     } catch (e: unknown) {
-      setSellError(e instanceof Error ? e.message : t("sell.checkoutStartError"));
+      setSellError(e instanceof Error ? e.message : "Error al iniciar la cotización.");
     } finally {
       setSelling(false);
     }
@@ -57,16 +69,6 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
         )}
       </div>
 
-      {/* Min price info badge */}
-      {minSellPrice > 0 && (
-        <div className="flex items-start gap-2 mb-4 px-3 py-2 rounded-lg bg-accent/5 border border-accent/10">
-          <Info className="w-3 h-3 text-accent shrink-0 mt-0.5" />
-          <p className="text-[10px] font-bold text-accent/80">
-            {t("sell.minimumPrice")}: <span className="text-accent">${minSellPrice.toFixed(2)} USD</span>
-          </p>
-        </div>
-      )}
-
       <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar mb-6">
         {selectedItems.length === 0 ? (
           <div className="py-10 text-center">
@@ -79,32 +81,21 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
           </div>
         ) : (
           selectedItems.map((item) => {
-            const meetsMinimum = item.price >= minSellPrice;
             return (
               <div
                 key={item.id}
-                className={`flex items-start sm:items-center gap-3 p-3 rounded-xl border group transition-colors ${
-                  meetsMinimum
-                    ? 'bg-background/50 border-white/5'
-                    : 'bg-red-500/5 border-red-500/15'
-                }`}
+                className="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-white/5 bg-background/50 group transition-colors"
               >
                 <div className="relative w-12 h-12 shrink-0 bg-white/5 rounded-lg flex items-center justify-center p-1">
-                  <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-1" />
+                  <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-1 animate-fadeIn" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-[10px] font-black text-white truncate uppercase">
                     {item.weapon} | {item.name}
                   </h4>
-                  <p className={`text-[11px] font-black ${meetsMinimum ? 'text-accent' : 'text-red-400'}`}>
-                    ${item.price.toLocaleString()}
+                  <p className="text-[9px] text-muted font-bold mt-0.5 uppercase tracking-wide">
+                    Cotización manual
                   </p>
-                  {!meetsMinimum && (
-                    <p className="text-[9px] text-red-400/80 font-bold flex items-center gap-0.5 mt-0.5">
-                      <AlertTriangle className="w-2.5 h-2.5" />
-                      {t("sell.minimum")}: ${minSellPrice.toFixed(2)}
-                    </p>
-                  )}
                 </div>
                 <button
                   onClick={() => removeFromSellList(item.id)}
@@ -118,28 +109,13 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
         )}
       </div>
 
-      {/* Invalid items warning */}
-      {invalidItems.length > 0 && (
-        <div className="mb-4 px-3 py-2.5 rounded-lg bg-red-500/5 border border-red-500/15">
-          <p className="text-[10px] font-bold text-red-400">
-            {t("sell.invalidItems", { count: invalidItems.length })}
-          </p>
-        </div>
-      )}
-
       <div className="pt-6 border-t border-white/5">
-        <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center justify-between gap-3 mb-6 font-sans">
           <div className="flex flex-col">
             <span className="text-[10px] font-black text-muted uppercase tracking-widest">{t("sell.youWillReceive")}</span>
-            <span className="text-2xl font-black text-white tracking-tighter">
-              ${validItems.reduce((sum, i) => sum + i.price, 0).toLocaleString()}{' '}
-              <span className="text-xs text-muted">USD</span>
+            <span className="text-[11px] sm:text-xs font-black text-accent uppercase tracking-widest mt-1">
+              Cotización manual por admin
             </span>
-            {invalidItems.length > 0 && (
-              <span className="text-[9px] text-red-400/80 font-bold mt-0.5">
-                {t("sell.excludedItems", { count: invalidItems.length })}
-              </span>
-            )}
           </div>
           <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
             <DollarSign className="w-5 h-5 text-accent" />
@@ -156,7 +132,7 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
         {/* Success message */}
         {sellSuccess && (
           <div className="mb-4 px-3 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
-            <p className="text-[10px] font-bold text-emerald-400">{t("sell.successListed")}</p>
+            <p className="text-[10px] font-bold text-emerald-400">¡Solicitud de cotización enviada! Redirigiendo...</p>
           </div>
         )}
 
@@ -166,11 +142,11 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
           className="w-full h-12 bg-accent text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:grayscale active:scale-95 cursor-pointer flex items-center justify-center gap-2"
         >
           {selling ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-          {selling ? t("checkout.processing") : validItems.length > 0 ? t("sell.sellCount", { count: validItems.length }) : t("sell.sellNow")}
+          {selling ? t("checkout.processing") : selectedItems.length > 0 ? `Cotizar ${selectedItems.length} ítem(s)` : "Solicitar Cotización"}
         </button>
 
         <p className="text-[8px] text-center text-muted mt-4 font-bold uppercase tracking-widest leading-relaxed">
-          {t("sell.fundsNotice")}
+          El administrador cotizará tus ítems de forma manual
         </p>
       </div>
     </div>

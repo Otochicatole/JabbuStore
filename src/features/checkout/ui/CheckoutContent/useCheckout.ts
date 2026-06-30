@@ -44,6 +44,7 @@ export function useCheckout() {
   } = useInventory();
 
   const checkoutType: "buy" | "sell" = searchParams.get("type") === "sell" ? "sell" : "buy";
+  const quoteId = searchParams.get("quoteId");
 
   const processedRef = useRef(false);
 
@@ -241,7 +242,7 @@ export function useCheckout() {
   // 2. Validate checkout items
   useEffect(() => {
     const status = searchParams.get("status");
-    if (status) return;
+    if (status || isSuccess) return;
 
     const validateCheckout = async () => {
       setLoading(true);
@@ -281,18 +282,25 @@ export function useCheckout() {
             })),
           };
         } else {
-          if (sellItems.length === 0) {
-            setError(t("checkout.noSellItems"));
-            setLoading(false);
-            return;
+          if (quoteId) {
+            payload = {
+              type: "SELL",
+              quoteId,
+            };
+          } else {
+            if (sellItems.length === 0) {
+              setError(t("checkout.noSellItems"));
+              setLoading(false);
+              return;
+            }
+            payload = {
+              type: "SELL",
+              items: sellItems.map((i) => ({
+                assetId: i.id,
+                requestedPrice: i.price,
+              })),
+            };
           }
-          payload = {
-            type: "SELL",
-            items: sellItems.map((i) => ({
-              assetId: i.id,
-              requestedPrice: i.price,
-            })),
-          };
         }
 
         const res = await fetchWithAuth(`${BACKEND_URL}/orders/validate`, {
@@ -362,7 +370,7 @@ export function useCheckout() {
     };
 
     validateCheckout();
-  }, [checkoutType, cartItems, sellItems, searchParams, t]);
+  }, [checkoutType, cartItems, sellItems, searchParams, t, isSuccess]);
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
@@ -657,6 +665,7 @@ export function useCheckout() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                  quoteId,
                   items: items.map((i) => ({
                     assetId: i.assetId,
                     requestedPrice: i.price,

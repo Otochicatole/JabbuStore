@@ -14,6 +14,7 @@ import {
   Tag,
   Globe,
   MessageSquare,
+  DollarSign,
   type LucideIcon,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
@@ -136,6 +137,11 @@ export default function AdminLayout({
       name: t("admin.sellRequests"),
       href: "/admin/panel/dashboard?tab=listings",
       icon: Tag,
+    },
+    {
+      name: "Cotizaciones",
+      href: "/admin/panel/dashboard?tab=quotes",
+      icon: DollarSign,
     },
     {
       name: t("tickets.adminNav"),

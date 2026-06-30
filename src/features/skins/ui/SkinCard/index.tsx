@@ -90,7 +90,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
       (s) => !items.some((item) => item.skin.id === s.id),
     );
     if (nextAvailable) {
-      addToCart(nextAvailable);
+      addToCart({ ...nextAvailable, isSpecific: false, float: undefined, pattern: undefined });
     }
   };
 

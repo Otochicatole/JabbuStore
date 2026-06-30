@@ -277,6 +277,7 @@ export function useCheckout() {
               assetId: i.skin.id,
               float: i.skin.float !== undefined ? i.skin.float : null,
               pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
+              isSpecific: i.skin.isSpecific !== false,
             })),
           };
         } else {
@@ -307,7 +308,13 @@ export function useCheckout() {
               const validateRes = await fetch(`${BACKEND_URL}/orders/validate-cart`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ itemIds: cartItems.map((i) => i.skin.id) }),
+                body: JSON.stringify({
+                  itemIds: cartItems.map((i) => i.skin.id),
+                  items: cartItems.map((i) => ({
+                    assetId: i.skin.id,
+                    isSpecific: i.skin.isSpecific !== false,
+                  })),
+                }),
               });
               if (validateRes.ok) {
                 const validateData = await validateRes.json();
@@ -509,6 +516,7 @@ export function useCheckout() {
                 rarity: skin?.rarity || "common",
                 exterior: skin?.exterior || null,
                 provider: skin?.provider || "bot",
+                isSpecific: skin?.isSpecific !== false,
               };
             });
             sendDebugLog("detailedItems mapping completed: " + JSON.stringify(detailedItems));

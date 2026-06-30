@@ -32,6 +32,7 @@ export interface Skin {
   inspectLink?: string | null;
   /** Variantes exactas cuando el catálogo viene agrupado desde backend. */
   variants?: Skin[];
+  isSpecific?: boolean;
 }
 
 export interface SkinPagination {

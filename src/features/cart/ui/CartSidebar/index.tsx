@@ -107,7 +107,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                         </h4>
                         <p className="text-[9px] font-bold text-[#84849b] uppercase break-words">
                           {item.skin.exterior || "Factory New"}
-                          {item.skin.float !== undefined && ` • Float: ${item.skin.float.toFixed(5)}`}
+                          {item.skin.isSpecific !== false && item.skin.float !== undefined && ` • Float: ${item.skin.float.toFixed(5)}`}
                         </p>
                         
                       </div>

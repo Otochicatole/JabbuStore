@@ -60,7 +60,7 @@ export const SkinCardActions = ({
               onClick={
                 showFloatsModalTrigger
                   ? () => setIsFloatsModalOpen(true)
-                  : () => addToCart(skin)
+                  : () => addToCart({ ...skin, isSpecific: false, float: undefined, pattern: undefined })
               }
               className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer animate-fade-in shrink-0"
             >

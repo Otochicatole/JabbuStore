@@ -33,7 +33,13 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await fetch(`${BACKEND_URL}/orders/validate-cart`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemIds: currentItems.map(i => i.skin.id) }),
+        body: JSON.stringify({
+          itemIds: currentItems.map(i => i.skin.id),
+          items: currentItems.map(i => ({
+            assetId: i.skin.id,
+            isSpecific: i.skin.isSpecific !== false,
+          })),
+        }),
       });
       if (!response.ok) return true;
       const data = await response.json();

@@ -276,11 +276,17 @@ export const SkinCardModal = ({
                 {/* Buy and Inspect Actions */}
                 <div className="flex gap-2 mt-2">
                   <button
-                    onClick={() => {}}
+                    onClick={() => {
+                      const isAlreadyInCart = items.some((item) => item.skin.id === skin.id);
+                      if (!isAlreadyInCart) {
+                        addToCart({ ...skin, isSpecific: false, float: undefined, pattern: undefined });
+                      }
+                      setIsModalOpen(false);
+                    }}
                     className="flex-1 h-12 bg-accent hover:brightness-110 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.3)] active:scale-95 flex items-center justify-center gap-2 cursor-pointer border-none"
                   >
                     <ShoppingCart className="w-4 h-4 shrink-0" />
-                    {t("nav.buy")}
+                    {items.some((item) => item.skin.id === skin.id) ? t("cart.title") : t("nav.buy")}
                   </button>
 
                   {skin.inspectLink && (
@@ -391,7 +397,7 @@ export const SkinCardModal = ({
 
                     {!isThisInCart ? (
                       <button
-                        onClick={() => addToCart(s)}
+                        onClick={() => addToCart({ ...s, isSpecific: true })}
                         className="h-9 px-5 flex items-center justify-center bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)] shrink-0"
                       >
                         {t("common.add")}

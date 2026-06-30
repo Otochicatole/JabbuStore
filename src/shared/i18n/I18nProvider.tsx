@@ -9,10 +9,11 @@ import {
 } from "react";
 import { en } from "./dictionaries/en";
 import { es } from "./dictionaries/es";
+import { br } from "./dictionaries/br";
 import type { Locale, TranslationParams } from "./types";
 import { DEFAULT_LOCALE, isLocale } from "./routing";
 
-const dictionaries = { en, es } as const;
+const dictionaries = { en, es, br } as const;
 
 type DictionaryKey = keyof typeof en;
 

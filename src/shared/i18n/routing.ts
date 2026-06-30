@@ -1,10 +1,10 @@
 import type { Locale } from "./types";
 
-export const LOCALES: Locale[] = ["en", "es"];
+export const LOCALES: Locale[] = ["en", "es", "br"];
 export const DEFAULT_LOCALE: Locale = "en";
 
 export function isLocale(value: string | null | undefined): value is Locale {
-  return value === "en" || value === "es";
+  return value === "en" || value === "es" || value === "br";
 }
 
 export function getLocaleFromPathname(pathname: string | null | undefined): Locale | null {

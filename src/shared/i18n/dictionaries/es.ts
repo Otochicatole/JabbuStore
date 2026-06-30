@@ -14,6 +14,7 @@ export const es = {
   "language.label": "Idioma",
   "language.en": "EN",
   "language.es": "ES",
+  "language.br": "BR",
   "steam.login": "Steam",
 
   "home.meta.title": "JabbuStore - El Futuro del Skin Trading",

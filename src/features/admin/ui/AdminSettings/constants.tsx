@@ -41,7 +41,6 @@ export const TABS: {
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
   { id: "precios", icon: TrendingUp },
-  { id: "venta", icon: Users },
   { id: "reventa", icon: Coins },
   { id: "limites", icon: ShieldCheck },
   { id: "webhook", icon: Webhook },

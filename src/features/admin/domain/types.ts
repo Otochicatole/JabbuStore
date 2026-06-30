@@ -29,6 +29,32 @@ export interface OrderItem {
   float?: number | null;
   pattern?: number | null;
   provider?: string | null;
+  /** YouPin listing id (SteamWebAPI marketid) when the user bought a specific float */
+  externalId?: string | null;
+}
+
+export interface PaymentProofMetadata {
+  id?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+  size?: number | null;
+  uploadedAt?: string | null;
+  uploadedBy?: "buyer" | "admin" | string | null;
+}
+
+export interface ManualTransferSnapshot {
+  type?: "bank" | "crypto" | string | null;
+  bank?: {
+    alias?: string | null;
+    cbu?: string | null;
+    holder?: string | null;
+    instructions?: string | null;
+  } | null;
+  crypto?: {
+    address?: string | null;
+    network?: string | null;
+    instructions?: string | null;
+  } | null;
 }
 
 export interface Order {
@@ -51,6 +77,13 @@ export interface Order {
     accountHolder?: string | null;
     walletAddress?: string | null;
     network?: string | null;
+    mpPaymentId?: string | null;
+    nowpaymentsPaymentId?: string | null;
+    paypalPaymentId?: string | null;
+    buyerPaymentProof?: PaymentProofMetadata | null;
+    adminPaymentProof?: PaymentProofMetadata | null;
+    manualTransferType?: "bank" | "crypto" | string | null;
+    manualTransferSnapshot?: ManualTransferSnapshot | null;
   } | null;
 }
 

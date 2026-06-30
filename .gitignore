@@ -11,6 +11,8 @@
 !.yarn/versions
 proxy-log.txt
 .proxy-log.txt
+proxy-log-errors.txt
+.proxy-log-errors.txt
 
 # testing
 /coverage

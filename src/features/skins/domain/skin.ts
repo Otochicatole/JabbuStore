@@ -22,19 +22,45 @@ export interface Skin {
   isSouvenir?: boolean;
   phase?: string;
   isImmediate?: boolean;
-  /** 'bot' = ítem físico de Steam | 'buff' | 'youpin' = catálogo de mercado externo */
-  provider?: "bot" | "buff" | "youpin";
+  /** 'bot' = ítem físico de Steam | 'youpin' = catálogo de mercado externo */
+  provider?: "bot" | "youpin";
   /** Para market listings: precio ask en YouPin */
   youpinAsk?: number | null;
-  /** Para market listings: precio ask en Buff163 */
-  buffAsk?: number | null;
   /** Volumen de stock en YouPin */
   youpinVolume?: number | null;
-  /** Volumen de stock en Buff163 */
-  buffVolume?: number | null;
+  /** Enlace steam:// para inspeccionar in-game (ítems de bot) */
+  inspectLink?: string | null;
+  /** Variantes exactas cuando el catálogo viene agrupado desde backend. */
+  variants?: Skin[];
+  isSpecific?: boolean;
+}
+
+export interface SkinPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface SkinCatalogResult {
+  items: Skin[];
+  pagination: SkinPagination;
+}
+
+export interface SkinCatalogQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  categories?: string[];
+  conditions?: string[];
+  sort?: string;
+  immediate?: boolean;
+  group?: boolean;
 }
 
 export interface SkinRepository {
-  getSkins(): Promise<Skin[]>;
+  getSkins(query?: SkinCatalogQuery): Promise<SkinCatalogResult>;
   getSkinById(id: string): Promise<Skin | null>;
 }

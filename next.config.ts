@@ -17,6 +17,21 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'avatars.steamstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.cloudflare.steamstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.akamai.steamstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'raw.githubusercontent.com',
         pathname: '/**',
       },

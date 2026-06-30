@@ -1,46 +1,36 @@
-import { Skin, SkinRepository, SkinRarity } from "../domain/skin";
+import {
+  Skin,
+  SkinCatalogQuery,
+  SkinCatalogResult,
+  SkinPagination,
+  SkinRarity,
+  SkinRepository,
+} from "../domain/skin";
 import { BACKEND_URL } from "@/shared/lib/api";
 
-// ─── Tipos de respuesta del backend ───────────────────────────────────────────
-
-export interface StoreItem {
-  assetId: string;
-  classId: string;
-  name: string;
-  type: string;
-  iconUrl: string | null;
-  tradable: boolean;
-  marketable: boolean;
-  price?: number;
-  displayPrice?: number;
-  rarity?: string;
-  exterior?: string | null;
-  category?: string;
-  isStatTrak?: boolean;
-  isSouvenir?: boolean;
-  float?: number | null;
-  pattern?: number | null;
-}
-
-export interface MarketListingItem {
+export interface CatalogItemResponse {
   id: string;
   name: string;
-  provider: "buff" | "youpin";
-  youpinAsk: number | null;
-  youpinVolume: number | null;
-  buffAsk: number | null;
-  buffVolume: number | null;
+  weapon: string;
+  rarity?: string;
   price: number;
-  displayPrice?: number;
-  iconUrl: string | null;
-  rarity: string;
+  imageUrl: string | null;
+  float: number | null;
+  pattern: number | null;
   exterior: string | null;
   category: string;
   isStatTrak: boolean;
   isSouvenir: boolean;
+  phase: string | null;
+  isImmediate: boolean;
+  inspectLink: string | null;
+  variants?: CatalogItemResponse[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+export interface CatalogItemsResponse {
+  items: CatalogItemResponse[];
+  pagination: SkinPagination;
+}
 
 function toSkinRarity(raw: string | undefined): SkinRarity {
   const normalized = (raw || "common").toLowerCase();
@@ -58,134 +48,132 @@ function toSkinRarity(raw: string | undefined): SkinRarity {
     : "common";
 }
 
-function parseName(fullName: string): {
-  weapon: string;
-  skinName: string;
-  phase?: string;
-} {
-  if (fullName.includes(" | ")) {
-    const parts = fullName.split(" | ");
-    const weapon = parts[0] || "Item";
-    let skinName = parts[1] || "";
-    const phase = parts.length > 2 ? parts[2] : undefined;
-    // Quitar desgaste del nombre: "Redline (Field-Tested)" → "Redline"
-    if (skinName.includes(" (")) skinName = skinName.split(" (")[0] || skinName;
-    return { weapon, skinName, phase };
-  }
-  return { weapon: "Item", skinName: fullName };
-}
-
-// ─── Mappers ──────────────────────────────────────────────────────────────────
-
-/**
- * Convierte un ítem físico de bot Steam al formato Skin.
- * Mantiene float y seed reales del inventario de Steam.
- */
-function mapBotItemToSkin(item: StoreItem): Skin {
-  const { weapon, skinName, phase } = parseName(item.name);
-  const price =
-    item.displayPrice && item.displayPrice > 0
-      ? item.displayPrice
-      : item.price || 0;
-
-  return {
-    id: item.assetId,
-    name: skinName,
-    weapon,
+function mapCatalogItemToSkin(item: CatalogItemResponse): Skin {
+  const variants = item.variants?.map(mapCatalogItemToSkin);
+  const skin: Skin = {
+    id: item.id,
+    name: item.name,
+    weapon: item.weapon,
     rarity: toSkinRarity(item.rarity),
-    price,
-    imageUrl: item.iconUrl || "/skin.webp",
+    price: item.price,
+    imageUrl: item.imageUrl || "/skin.webp",
     float: item.float ?? undefined,
     pattern: item.pattern ?? undefined,
     exterior: item.exterior || null,
     category: item.category || "other",
     isStatTrak: item.isStatTrak || false,
     isSouvenir: item.isSouvenir || false,
-    phase,
-    isImmediate: true,
-    provider: "bot",
+    phase: item.phase ?? undefined,
+    isImmediate: item.isImmediate,
+    inspectLink: item.inspectLink,
   };
+
+  if (variants && variants.length > 0) {
+    skin.variants = variants;
+  }
+
+  return skin;
 }
 
-/**
- * Convierte un listing de catálogo de mercado (Buff/YouPin) al formato Skin.
- * NO tiene float ni seed individuales — son listings de catálogo, no ítems físicos.
- */
-function mapMarketListingToSkin(item: MarketListingItem): Skin {
-  const { weapon, skinName, phase } = parseName(item.name);
-  const price =
-    item.displayPrice && item.displayPrice > 0 ? item.displayPrice : item.price;
-
-  return {
-    id: `market-${item.name}`, // Usar el nombre único como ID estable contra regeneraciones de CUID
-    name: skinName,
-    weapon,
-    rarity: toSkinRarity(item.rarity),
-    price,
-    imageUrl: item.iconUrl || "/skin.webp",
-    float: undefined,
-    pattern: undefined,
-    exterior: item.exterior || null,
-    category: item.category || "other",
-    isStatTrak: item.isStatTrak || false,
-    isSouvenir: item.isSouvenir || false,
-    phase,
-    isImmediate: false,
-    provider: item.provider,
-    youpinAsk: item.youpinAsk,
-    buffAsk: item.buffAsk,
-    youpinVolume: item.youpinVolume,
-    buffVolume: item.buffVolume,
-  };
+function appendListParam(params: URLSearchParams, key: string, values?: string[]) {
+  if (values && values.length > 0) {
+    params.set(key, values.join(","));
+  }
 }
 
-// ─── Repository ───────────────────────────────────────────────────────────────
+const CATEGORY_LABEL_TO_TOKEN: Record<string, string> = {
+  Cuchillos: "knives",
+  Guantes: "gloves",
+  Pistolas: "pistols",
+  Subfusiles: "smgs",
+  "Rifles de asalto": "rifles",
+  "Rifles de francotirador": "snipers",
+  Escopetas: "shotguns",
+  Ametralladoras: "machine_guns",
+  Agentes: "agents",
+  Contenedores: "containers",
+  "Kits musicales": "music_kits",
+  Parches: "patches",
+  Pegatinas: "stickers",
+};
+
+const CONDITION_LABEL_TO_TOKEN: Record<string, string> = {
+  "Recién fabricado": "factory_new",
+  "Casi nuevo": "minimal_wear",
+  "Algo desgastado": "field_tested",
+  "Bastante desgastado": "well_worn",
+  Deplorable: "battle_scarred",
+};
+
+const SORT_LABEL_TO_TOKEN: Record<string, string> = {
+  "Precio: Mayor a Menor": "price_desc",
+  "Precio: Menor a Mayor": "price_asc",
+  "Float: Menor a Mayor": "float_asc",
+  "Float: Mayor a Menor": "float_desc",
+  "Más recientes": "newest",
+};
+
+function mapTokens(values: string[] | undefined, mapper: Record<string, string>): string[] | undefined {
+  return values?.map((value) => mapper[value] ?? value);
+}
+
+function buildCatalogQuery(query: SkinCatalogQuery = {}): string {
+  const params = new URLSearchParams();
+
+  params.set("page", String(query.page ?? 1));
+  params.set("limit", String(query.limit ?? 40));
+  if (query.search?.trim()) params.set("search", query.search.trim());
+  if (query.minPrice?.trim()) params.set("minPrice", query.minPrice.trim());
+  if (query.maxPrice?.trim()) params.set("maxPrice", query.maxPrice.trim());
+  appendListParam(params, "categories", mapTokens(query.categories, CATEGORY_LABEL_TO_TOKEN));
+  appendListParam(params, "conditions", mapTokens(query.conditions, CONDITION_LABEL_TO_TOKEN));
+  if (query.sort) params.set("sort", SORT_LABEL_TO_TOKEN[query.sort] ?? query.sort);
+  if (query.immediate) params.set("immediate", "1");
+  if (query.group) params.set("group", "1");
+
+  return params.toString();
+}
+
+const emptyPagination = (query?: SkinCatalogQuery): SkinPagination => ({
+  page: query?.page ?? 1,
+  limit: query?.limit ?? 40,
+  total: 0,
+  totalPages: 1,
+});
 
 export class ApiSkinRepository implements SkinRepository {
-  async getSkins(): Promise<Skin[]> {
+  async getSkins(query?: SkinCatalogQuery): Promise<SkinCatalogResult> {
     try {
-      // Fetch paralelo de bots (trade inmediato) y mercado (Buff/YouPin)
-      const [botRes, marketRes] = await Promise.allSettled([
-        fetch(`${BACKEND_URL}/store/items`, {
-          headers: {
-            "X-Tunnel-Skip-AntiPhishing-Page": "true",
-            Accept: "application/json",
-          },
-          credentials: "include",
-        }),
-        fetch(`${BACKEND_URL}/market/listings`, {
-          headers: {
-            "X-Tunnel-Skip-AntiPhishing-Page": "true",
-            Accept: "application/json",
-          },
-          credentials: "include",
-        }),
-      ]);
+      const response = await fetch(`${BACKEND_URL}/catalog/items?${buildCatalogQuery(query)}`, {
+        headers: {
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+          Accept: "application/json",
+        },
+        credentials: "include",
+      });
 
-      let botSkins: Skin[] = [];
-      let marketSkins: Skin[] = [];
-
-      if (botRes.status === "fulfilled" && botRes.value.ok) {
-        const data = (await botRes.value.json()) as StoreItem[];
-        if (Array.isArray(data)) botSkins = data.map(mapBotItemToSkin);
+      if (!response.ok) {
+        throw new Error("Error al cargar el catálogo de skins.");
       }
 
-      if (marketRes.status === "fulfilled" && marketRes.value.ok) {
-        const data = (await marketRes.value.json()) as MarketListingItem[];
-        if (Array.isArray(data)) marketSkins = data.map(mapMarketListingToSkin);
-      }
-
-      // Bots primero (trade inmediato), market listings después
-      return [...botSkins, ...marketSkins];
+      const data = (await response.json()) as CatalogItemsResponse;
+      return {
+        items: Array.isArray(data.items) ? data.items.map(mapCatalogItemToSkin) : [],
+        pagination: data.pagination ?? emptyPagination(query),
+      };
     } catch (error) {
       console.error("Error in ApiSkinRepository.getSkins:", error);
-      return [];
+      return {
+        items: [],
+        pagination: emptyPagination(query),
+      };
     }
   }
 
   async getSkinById(id: string): Promise<Skin | null> {
     try {
-      const skins = await this.getSkins();
+      const result = await this.getSkins({ limit: 100 });
+      const skins = result.items.flatMap((s) => s.variants ?? [s]);
       return skins.find((s) => s.id === id) || null;
     } catch (error) {
       console.error("Error in ApiSkinRepository.getSkinById:", error);

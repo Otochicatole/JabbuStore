@@ -1,6 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useEffect,
+  Suspense,
+} from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 
 export type SortOption = "Precio: Mayor a Menor" | "Precio: Menor a Mayor" | "Float: Menor a Mayor" | "Float: Mayor a Menor" | "Más recientes";
 
@@ -12,6 +22,7 @@ export interface FilterState {
   selectedConditions: string[];
   sortOption: SortOption;
   immediateTradeOnly: boolean;
+  groupSameItems: boolean;
 }
 
 interface FilterContextType extends FilterState {
@@ -22,6 +33,7 @@ interface FilterContextType extends FilterState {
   toggleCondition: (cond: string) => void;
   setSortOption: (opt: SortOption) => void;
   setImmediateTradeOnly: (v: boolean) => void;
+  setGroupSameItems: (v: boolean) => void;
   clearFilters: () => void;
 }
 
@@ -33,11 +45,269 @@ const defaultState: FilterState = {
   selectedConditions: [],
   sortOption: "Precio: Mayor a Menor",
   immediateTradeOnly: false,
+  groupSameItems: true,
 };
+
+const FILTER_ROUTES = new Set(["/buy", "/sell"]);
+const FILTER_QUERY_KEYS = [
+  "search",
+  "minPrice",
+  "maxPrice",
+  "categories",
+  "conditions",
+  "sort",
+  "immediate",
+  "group",
+  // Legacy keys are deleted when rewriting the URL.
+  "q",
+  "min",
+  "max",
+  "cat",
+  "cond",
+  "instant",
+];
+const SORT_OPTIONS: SortOption[] = [
+  "Precio: Mayor a Menor",
+  "Precio: Menor a Mayor",
+  "Float: Menor a Mayor",
+  "Float: Mayor a Menor",
+  "Más recientes",
+];
+
+const SORT_LABEL_TO_TOKEN: Record<SortOption, string> = {
+  "Precio: Mayor a Menor": "price_desc",
+  "Precio: Menor a Mayor": "price_asc",
+  "Float: Menor a Mayor": "float_asc",
+  "Float: Mayor a Menor": "float_desc",
+  "Más recientes": "newest",
+};
+
+const SORT_TOKEN_TO_LABEL: Record<string, SortOption> = {
+  price_desc: "Precio: Mayor a Menor",
+  price_asc: "Precio: Menor a Mayor",
+  float_asc: "Float: Menor a Mayor",
+  float_desc: "Float: Mayor a Menor",
+  newest: "Más recientes",
+};
+
+const CATEGORY_LABEL_TO_TOKEN: Record<string, string> = {
+  Cuchillos: "knives",
+  Guantes: "gloves",
+  Pistolas: "pistols",
+  Subfusiles: "smgs",
+  "Rifles de asalto": "rifles",
+  "Rifles de francotirador": "snipers",
+  Escopetas: "shotguns",
+  Ametralladoras: "machine_guns",
+  Agentes: "agents",
+  Contenedores: "containers",
+  "Kits musicales": "music_kits",
+  Parches: "patches",
+  Pegatinas: "stickers",
+};
+
+const CATEGORY_TOKEN_TO_LABEL = Object.fromEntries(
+  Object.entries(CATEGORY_LABEL_TO_TOKEN).map(([label, token]) => [token, label]),
+) as Record<string, string>;
+
+const CONDITION_LABEL_TO_TOKEN: Record<string, string> = {
+  "Recién fabricado": "factory_new",
+  "Casi nuevo": "minimal_wear",
+  "Algo desgastado": "field_tested",
+  "Bastante desgastado": "well_worn",
+  Deplorable: "battle_scarred",
+};
+
+const CONDITION_TOKEN_TO_LABEL = Object.fromEntries(
+  Object.entries(CONDITION_LABEL_TO_TOKEN).map(([label, token]) => [token, label]),
+) as Record<string, string>;
+
+function parseListParam(value: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseSortOption(value: string | null): SortOption {
+  if (value && SORT_TOKEN_TO_LABEL[value]) {
+    return SORT_TOKEN_TO_LABEL[value];
+  }
+
+  return SORT_OPTIONS.includes(value as SortOption)
+    ? (value as SortOption)
+    : defaultState.sortOption;
+}
+
+function labelsFromTokens(values: string[], tokenToLabel: Record<string, string>): string[] {
+  return values.map((value) => tokenToLabel[value] ?? value);
+}
+
+function tokensFromLabels(values: string[], labelToToken: Record<string, string>): string[] {
+  return values.map((value) => labelToToken[value] ?? value);
+}
+
+function filterStateFromSearchParams(params: URLSearchParams): FilterState {
+  return {
+    searchQuery: params.get("search") ?? params.get("q") ?? defaultState.searchQuery,
+    minPrice: params.get("minPrice") ?? params.get("min") ?? defaultState.minPrice,
+    maxPrice: params.get("maxPrice") ?? params.get("max") ?? defaultState.maxPrice,
+    selectedCategories: labelsFromTokens(
+      parseListParam(params.get("categories") ?? params.get("cat")),
+      CATEGORY_TOKEN_TO_LABEL,
+    ),
+    selectedConditions: labelsFromTokens(
+      parseListParam(params.get("conditions") ?? params.get("cond")),
+      CONDITION_TOKEN_TO_LABEL,
+    ),
+    sortOption: parseSortOption(params.get("sort")),
+    immediateTradeOnly: (params.get("immediate") ?? params.get("instant")) === "1",
+    groupSameItems: params.get("group") !== "0",
+  };
+}
+
+function writeFilterStateToSearchParams(
+  params: URLSearchParams,
+  state: FilterState,
+): URLSearchParams {
+  const next = new URLSearchParams(params.toString());
+  for (const key of FILTER_QUERY_KEYS) {
+    next.delete(key);
+  }
+
+  if (state.searchQuery.trim()) next.set("search", state.searchQuery.trim());
+  if (state.minPrice.trim()) next.set("minPrice", state.minPrice.trim());
+  if (state.maxPrice.trim()) next.set("maxPrice", state.maxPrice.trim());
+  if (state.selectedCategories.length > 0) {
+    next.set(
+      "categories",
+      tokensFromLabels(state.selectedCategories, CATEGORY_LABEL_TO_TOKEN).join(","),
+    );
+  }
+  if (state.selectedConditions.length > 0) {
+    next.set(
+      "conditions",
+      tokensFromLabels(state.selectedConditions, CONDITION_LABEL_TO_TOKEN).join(","),
+    );
+  }
+  if (state.sortOption !== defaultState.sortOption) {
+    next.set("sort", SORT_LABEL_TO_TOKEN[state.sortOption]);
+  }
+  if (state.immediateTradeOnly) next.set("immediate", "1");
+  if (!state.groupSameItems) next.set("group", "0");
+
+  return next;
+}
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
+const FilterUrlSync = ({
+  urlHydrated,
+  setUrlHydrated,
+  applyFilterState,
+  shouldSyncUrl,
+  pathname,
+  router,
+  searchQuery,
+  minPrice,
+  maxPrice,
+  selectedCategories,
+  selectedConditions,
+  sortOption,
+  immediateTradeOnly,
+  groupSameItems,
+}: {
+  urlHydrated: boolean;
+  setUrlHydrated: (v: boolean) => void;
+  applyFilterState: (s: FilterState) => void;
+  shouldSyncUrl: boolean;
+  pathname: string | null;
+  router: any;
+  searchQuery: string;
+  minPrice: string;
+  maxPrice: string;
+  selectedCategories: string[];
+  selectedConditions: string[];
+  sortOption: SortOption;
+  immediateTradeOnly: boolean;
+  groupSameItems: boolean;
+}) => {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    if (!shouldSyncUrl) {
+      timer = setTimeout(() => {
+        applyFilterState(defaultState);
+        setUrlHydrated(false);
+      }, 0);
+      return () => {
+        if (timer) clearTimeout(timer);
+      };
+    }
+
+    timer = setTimeout(() => {
+      applyFilterState(
+        filterStateFromSearchParams(
+          new URLSearchParams(searchParams.toString()),
+        ),
+      );
+      setUrlHydrated(true);
+    }, 0);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [applyFilterState, pathname, searchParams, shouldSyncUrl]);
+
+  useEffect(() => {
+    if (!shouldSyncUrl || !urlHydrated || !pathname) return;
+
+    const currentParams = new URLSearchParams(searchParams.toString());
+    const nextParams = writeFilterStateToSearchParams(currentParams, {
+      searchQuery,
+      minPrice,
+      maxPrice,
+      selectedCategories,
+      selectedConditions,
+      sortOption,
+      immediateTradeOnly,
+      groupSameItems,
+    });
+
+    const currentQuery = currentParams.toString();
+    const nextQuery = nextParams.toString();
+    if (currentQuery === nextQuery) return;
+
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    });
+  }, [
+    searchQuery,
+    minPrice,
+    maxPrice,
+    selectedCategories,
+    selectedConditions,
+    sortOption,
+    immediateTradeOnly,
+    groupSameItems,
+    pathname,
+    router,
+    searchParams,
+    shouldSyncUrl,
+    urlHydrated,
+  ]);
+
+  return null;
+};
+
 export const FilterProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const shouldSyncUrl = FILTER_ROUTES.has(stripLocaleFromPathname(pathname));
+
   const [searchQuery, setSearchQuery] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -45,6 +315,19 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>("Precio: Mayor a Menor");
   const [immediateTradeOnly, setImmediateTradeOnly] = useState(false);
+  const [groupSameItems, setGroupSameItems] = useState(true);
+  const [urlHydrated, setUrlHydrated] = useState(false);
+
+  const applyFilterState = useCallback((state: FilterState) => {
+    setSearchQuery(state.searchQuery);
+    setMinPrice(state.minPrice);
+    setMaxPrice(state.maxPrice);
+    setSelectedCategories(state.selectedCategories);
+    setSelectedConditions(state.selectedConditions);
+    setSortOption(state.sortOption);
+    setImmediateTradeOnly(state.immediateTradeOnly);
+    setGroupSameItems(state.groupSameItems);
+  }, []);
 
   const toggleCategory = useCallback((cat: string) => {
     setSelectedCategories(prev =>
@@ -59,14 +342,8 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setSearchQuery("");
-    setMinPrice("");
-    setMaxPrice("");
-    setSelectedCategories([]);
-    setSelectedConditions([]);
-    setSortOption("Precio: Mayor a Menor");
-    setImmediateTradeOnly(false);
-  }, []);
+    applyFilterState(defaultState);
+  }, [applyFilterState]);
 
   return (
     <FilterContext.Provider
@@ -78,9 +355,28 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
         selectedConditions, toggleCondition,
         sortOption, setSortOption,
         immediateTradeOnly, setImmediateTradeOnly,
+        groupSameItems, setGroupSameItems,
         clearFilters,
       }}
     >
+      <Suspense fallback={null}>
+        <FilterUrlSync
+          urlHydrated={urlHydrated}
+          setUrlHydrated={setUrlHydrated}
+          applyFilterState={applyFilterState}
+          shouldSyncUrl={shouldSyncUrl}
+          pathname={pathname}
+          router={router}
+          searchQuery={searchQuery}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          selectedCategories={selectedCategories}
+          selectedConditions={selectedConditions}
+          sortOption={sortOption}
+          immediateTradeOnly={immediateTradeOnly}
+          groupSameItems={groupSameItems}
+        />
+      </Suspense>
       {children}
     </FilterContext.Provider>
   );

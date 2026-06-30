@@ -1,27 +1,31 @@
 /**
- * Listing de mercado externo (Buff163 o YouPin) obtenido via SteamWebAPI.
- * NO es un ítem físico en inventario de bots.
+ * Asset YouPin indexado (un float = una fila en catálogo).
+ * Misma forma que GET /market/listings (admin y tienda /buy reventa).
  */
-export interface MarketListing {
+export interface MarketStoreAsset {
   id: string;
+  floatItemId: string;
+  assetId: string;
+  listingId: string;
   name: string;
-  /** Plataforma con mejor precio/volumen */
-  provider: 'buff' | 'youpin';
+  provider: "youpin";
   youpinAsk: number | null;
   youpinVolume: number | null;
-  buffAsk: number | null;
-  buffVolume: number | null;
-  /** Precio base del proveedor seleccionado */
+  /** Precio base del float (USD). */
   price: number;
-  /** Precio con modificador de admin aplicado */
+  /** Precio con marketModifier de admin. */
   displayPrice: number;
+  float: number;
+  pattern: number;
+  inspectLink: string | null;
+  externalId: string | null;
   iconUrl: string | null;
   rarity: string;
   exterior: string | null;
   category: string;
   isStatTrak: boolean;
   isSouvenir: boolean;
-  isPriceManual: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
+
+/** @deprecated Usar MarketStoreAsset — alias legacy del panel admin. */
+export type MarketListing = MarketStoreAsset;

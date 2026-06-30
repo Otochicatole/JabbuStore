@@ -6,38 +6,55 @@ import { CartProvider } from "@/features/cart/context/CartContext";
 import { InventoryProvider } from "@/features/inventory/context/InventoryContext";
 import { FilterProvider } from "@/features/filters/context/FilterContext";
 import { CartSidebar } from "@/features/cart/ui/CartSidebar";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
+import { I18nProvider } from "@/shared/i18n/I18nProvider";
+import { TicketNotificationProvider } from "@/features/tickets/ui/TicketNotificationProvider";
+import { NotificationProvider } from "@/features/notifications/context/NotificationContext";
+import { ProfileCompletionModal } from "@/shared/components/ProfileCompletionModal";
+import { DEFAULT_LOCALE, isLocale, stripLocaleFromPathname } from "@/shared/i18n/routing";
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const params = useParams<{ language?: string }>();
   const pathname = usePathname();
-  const isAdminRoute = pathname?.startsWith("/admin");
+  const locale = isLocale(params?.language) ? params.language : DEFAULT_LOCALE;
+  const normalizedPathname = stripLocaleFromPathname(pathname);
+  const isAdminRoute = normalizedPathname.startsWith("/admin");
 
   if (isAdminRoute) {
     return (
-      <CartProvider>
-        <FilterProvider>
-          <InventoryProvider>
-            <div className="min-h-screen bg-background">
-              {children}
-            </div>
-          </InventoryProvider>
-        </FilterProvider>
-      </CartProvider>
+      <I18nProvider initialLocale={locale}>
+        <CartProvider>
+          <FilterProvider>
+            <InventoryProvider>
+              <div className="min-h-screen min-w-0 bg-background overflow-x-hidden">
+                {children}
+              </div>
+            </InventoryProvider>
+          </FilterProvider>
+        </CartProvider>
+      </I18nProvider>
     );
   }
 
   return (
-    <CartProvider>
-      <FilterProvider>
-        <InventoryProvider>
-          <div className="min-h-screen">
-            <Navbar onOpenCart={() => setIsCartOpen(true)} />
-            <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-            {children}
-          </div>
-        </InventoryProvider>
-      </FilterProvider>
-    </CartProvider>
+    <I18nProvider initialLocale={locale}>
+      <CartProvider>
+        <FilterProvider>
+          <InventoryProvider>
+            <NotificationProvider actor="USER" enabled>
+              <TicketNotificationProvider actor="USER" enabled>
+                <div className="min-h-screen min-w-0 overflow-x-hidden">
+                  <Navbar onOpenCart={() => setIsCartOpen(true)} />
+                  <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+                  <ProfileCompletionModal />
+                  {children}
+                </div>
+              </TicketNotificationProvider>
+            </NotificationProvider>
+          </InventoryProvider>
+        </FilterProvider>
+      </CartProvider>
+    </I18nProvider>
   );
 };

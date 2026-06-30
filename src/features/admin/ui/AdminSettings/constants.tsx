@@ -26,14 +26,7 @@ export const SECRET_LABELS = [
 
 export const RUNTIME_CONFIG_LABELS = [
   { key: "ENABLE_SYNC", label: "ENABLE_SYNC", type: "boolean" },
-  { key: "STORE_SYNC_INTERVAL_MINUTES", label: "STORE_SYNC_INTERVAL_MINUTES", type: "number" },
   { key: "ENABLE_ITEMS_CATALOG_SYNC", label: "ENABLE_ITEMS_CATALOG_SYNC", type: "boolean" },
-  { key: "ITEMS_CATALOG_SYNC_INTERVAL_MINUTES", label: "ITEMS_CATALOG_SYNC_INTERVAL_MINUTES", type: "number" },
-  { key: "MARKET_SYNC_PAGE_SIZE", label: "MARKET_SYNC_PAGE_SIZE", type: "number" },
-  { key: "MARKET_SYNC_MAX_PAGES", label: "MARKET_SYNC_MAX_PAGES", type: "number" },
-  { key: "MARKET_SYNC_MIN_PRICE", label: "MARKET_SYNC_MIN_PRICE", type: "number" },
-  { key: "MARKET_SYNC_SORT", label: "MARKET_SYNC_SORT", type: "text" },
-  { key: "FLOAT_SYNC_SORT", label: "FLOAT_SYNC_SORT", type: "text" },
 ];
 
 export const TABS: {

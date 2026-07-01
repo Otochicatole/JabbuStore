@@ -110,7 +110,9 @@ export interface AdminUser {
   role: string;
 }
 
-export interface AdminDashboardProps {
-  initialItems: StoreItem[];
-  adminUser: AdminUser;
+export interface AdminBotOption {
+  id: string;
+  name: string;
+  steamId: string;
+  isActive: boolean;
 }

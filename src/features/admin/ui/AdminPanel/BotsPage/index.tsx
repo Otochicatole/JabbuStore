@@ -1,10 +1,11 @@
 import React from "react";
 import { AdminBotsPanel } from "../../AdminBotsPanel";
+import { AdminSection } from "../../AdminShell";
 
-export function BotsTab() {
+export function BotsPage() {
   return (
-    <div className="bg-[#110f1e]/40 border border-white/5 rounded-[3px] p-8">
+    <AdminSection>
       <AdminBotsPanel />
-    </div>
+    </AdminSection>
   );
 }

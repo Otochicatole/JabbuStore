@@ -1,8 +1,8 @@
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
+import { AdminTicketsPage } from "@/features/tickets/ui/AdminTicketsPage";
 import { AdminPage } from "@/features/admin/ui/AdminShell";
-import { BotsPage } from "@/features/admin/ui/AdminPanel/BotsPage";
 
-export default async function AdminBotsPage({
+export default async function AdminTicketsRoute({
   params,
 }: {
   params: Promise<{ language: string }>;
@@ -12,7 +12,7 @@ export default async function AdminBotsPage({
 
   return (
     <AdminPage>
-      <BotsPage />
+      <AdminTicketsPage />
     </AdminPage>
   );
 }

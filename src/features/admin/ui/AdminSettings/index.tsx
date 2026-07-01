@@ -22,6 +22,7 @@ import {
   ToggleSwitch,
 } from "./FormControls";
 import { getErrorMessage } from "./helpers";
+import { AdminHeader, AdminPage } from "../AdminShell";
 
 /* ══════════════════════════════════════════════ */
 export function AdminSettings() {
@@ -686,16 +687,11 @@ export function AdminSettings() {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 w-full min-w-0 space-y-6">
-      {/* Page header */}
-      <div>
-        <h1 className="text-xl font-black uppercase tracking-wider text-white">
-          {t("admin.globalSettings")}
-        </h1>
-        <p className="text-xs text-[#84849b] mt-1">
-          {t("admin.settings.description")}
-        </p>
-      </div>
+    <AdminPage>
+      <AdminHeader
+        title={t("admin.globalSettings")}
+        description={t("admin.settings.description")}
+      />
 
       {/* Tab bar - Horizontal scrollable on mobile */}
       <div className="flex gap-2 bg-[#110f1e]/40 p-1 rounded-[3px] border border-white/5 overflow-x-auto scrollbar-none shrink-0 flex-nowrap sm:flex-wrap">
@@ -1457,7 +1453,7 @@ export function AdminSettings() {
           </div>
         </div>
       )}
-    </div>
+    </AdminPage>
   );
 }
 

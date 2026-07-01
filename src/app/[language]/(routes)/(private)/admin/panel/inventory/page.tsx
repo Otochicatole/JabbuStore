@@ -1,18 +1,20 @@
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
+import type { StoreItem } from "@/features/admin/domain/types";
+import { InventoryPage } from "@/features/admin/ui/AdminPanel/InventoryPage";
 import { AdminPage } from "@/features/admin/ui/AdminShell";
-import { BotsPage } from "@/features/admin/ui/AdminPanel/BotsPage";
 
-export default async function AdminBotsPage({
+export default async function AdminInventoryPage({
   params,
 }: {
   params: Promise<{ language: string }>;
 }) {
   const { language } = await params;
   await requireAdmin(language);
+  const initialItems: StoreItem[] = [];
 
   return (
     <AdminPage>
-      <BotsPage />
+      <InventoryPage initialItems={initialItems} />
     </AdminPage>
   );
 }

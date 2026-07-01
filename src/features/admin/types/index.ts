@@ -1,5 +1,4 @@
 import type { LucideIcon } from "lucide-react";
-import type { StoreItem, AdminUser as DomainAdminUser } from "../domain/types";
 
 export interface AdminUser {
   id: string;
@@ -12,11 +11,6 @@ export interface NavItem {
   name: string;
   href: string;
   icon: LucideIcon;
-}
-
-export interface AdminDashboardClientProps {
-  initialItems: StoreItem[];
-  adminUser: DomainAdminUser;
 }
 
 export type Tab =

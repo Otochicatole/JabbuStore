@@ -52,12 +52,12 @@ export function AdminSelect({
         className={
           buttonClassName
             ? `${buttonClassName} ${isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : ''}`
-            : `flex min-w-0 items-center justify-between gap-2 px-3 py-2 bg-[#110f1e]/80 border transition-all duration-300 rounded-lg max-w-full group cursor-pointer flex-1 sm:flex-initial w-full ${
+            : `flex h-10 min-w-0 items-center justify-between gap-2 px-3 py-2 bg-white/[0.025] border transition-all duration-300 rounded-[3px] max-w-full group cursor-pointer flex-1 sm:flex-initial w-full ${
                 isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : 'border-white/5 hover:border-white/10'
               }`
         }
       >
-        <span className={buttonClassName ? "truncate min-w-0 text-left" : "min-w-0 text-[10px] sm:text-xs font-black text-white uppercase tracking-tight truncate max-w-[150px]"}>
+        <span className={buttonClassName ? "truncate min-w-0 text-left" : "min-w-0 text-[10px] sm:text-xs font-black text-white uppercase tracking-tight truncate max-w-[180px]"}>
           {selectedLabel}
         </span>
         <ChevronDown className={`h-3.5 w-3.5 text-white/40 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180 text-accent' : 'group-hover:text-white'}`} />
@@ -72,7 +72,7 @@ export function AdminSelect({
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               className={
                 menuClassName ||
-                "absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-full min-w-0 sm:min-w-[160px] bg-card border border-white/10 rounded-xl overflow-hidden shadow-2xl z-40 backdrop-blur-xl"
+                "absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-full min-w-0 sm:min-w-[180px] bg-card border border-white/10 rounded-[3px] overflow-hidden shadow-2xl z-40 backdrop-blur-xl"
               }
             >
               <div className="py-2 max-h-64 overflow-y-auto custom-scrollbar">

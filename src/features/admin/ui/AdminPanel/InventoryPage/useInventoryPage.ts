@@ -14,7 +14,7 @@ export interface BotBasicInfo {
   steamId: string;
 }
 
-export function useInventoryTab(initialItems: StoreItem[] = []) {
+export function useInventoryPage(initialItems: StoreItem[] = []) {
   const { t } = useI18n();
   const router = useRouter();
   const [items, setItems] = useState<StoreItem[]>(initialItems);

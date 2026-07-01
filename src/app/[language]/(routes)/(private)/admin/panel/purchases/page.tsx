@@ -1,8 +1,8 @@
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
+import { PurchasesPage } from "@/features/admin/ui/AdminPanel/PurchasesPage";
 import { AdminPage } from "@/features/admin/ui/AdminShell";
-import { BotsPage } from "@/features/admin/ui/AdminPanel/BotsPage";
 
-export default async function AdminBotsPage({
+export default async function AdminPurchasesPage({
   params,
 }: {
   params: Promise<{ language: string }>;
@@ -12,7 +12,7 @@ export default async function AdminBotsPage({
 
   return (
     <AdminPage>
-      <BotsPage />
+      <PurchasesPage />
     </AdminPage>
   );
 }

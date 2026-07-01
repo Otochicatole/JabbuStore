@@ -12,8 +12,8 @@ export default async function AdminLoginPage({
   const token = cookieStore.get('admin_token')?.value;
 
   if (token) {
-    // Si ya existe la cookie con el JWT, redirigimos al dashboard directamente en el servidor sin destello de cliente
-    redirect(`/${language}/admin/panel/dashboard`);
+    // Si ya existe la cookie con el JWT, redirigimos al panel directamente en el servidor sin destello de cliente
+    redirect(`/${language}/admin/panel/inventory`);
   }
 
   return (

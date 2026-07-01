@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  Calendar,
   ChevronDown,
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle,
   Loader2,
   Trash2,
   DollarSign,
@@ -21,7 +19,6 @@ import {
   Filter
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
-import { useI18n } from "@/shared/i18n/I18nProvider";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
 
 interface QuoteItem {
@@ -53,8 +50,7 @@ interface Quote {
   updatedAt: string;
 }
 
-export function QuotesTab() {
-  const { t } = useI18n();
+export function QuotesPage() {
   const router = useRouter();
 
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -111,7 +107,7 @@ export function QuotesTab() {
     });
   };
 
-  const fetchQuotes = async () => {
+  const fetchQuotes = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -128,7 +124,7 @@ export function QuotesTab() {
         throw new Error("Error al obtener la lista de cotizaciones.");
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as Quote[];
       setQuotes(data);
 
       // Initialize pricing inputs with existing prices if any
@@ -140,17 +136,21 @@ export function QuotesTab() {
         });
       });
       setPricesInput(initialInputs);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || "Error al conectar con el servidor.");
+      setError(err instanceof Error ? err.message : "Error al conectar con el servidor.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    fetchQuotes();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void fetchQuotes();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchQuotes]);
 
   const toggleExpand = (id: string) => {
     setExpandedQuotes((prev) => ({
@@ -197,18 +197,18 @@ export function QuotesTab() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(data?.error || "Error al enviar la cotización.");
       }
 
-      const updated = await res.json();
+      const updated = (await res.json()) as Quote;
       setQuotes((prev) => prev.map((q) => (q.id === quoteId ? updated : q)));
       showAlert("Cotización Enviada", "¡Cotización enviada exitosamente al usuario!", "success");
       
       // Close card details
       setExpandedQuotes((prev) => ({ ...prev, [quoteId]: false }));
-    } catch (err: any) {
-      showAlert("Error", err.message || "Error al enviar la cotización.", "error");
+    } catch (err: unknown) {
+      showAlert("Error", err instanceof Error ? err.message : "Error al enviar la cotización.", "error");
     } finally {
       setSubmittingId(null);
     }
@@ -227,18 +227,18 @@ export function QuotesTab() {
           });
 
           if (!res.ok) {
-            const data = await res.json();
+            const data = (await res.json().catch(() => ({}))) as { error?: string };
             throw new Error(data?.error || "Error al cancelar la cotización.");
           }
 
-          const updated = await res.json();
+          const updated = (await res.json()) as Quote;
           setQuotes((prev) => prev.map((q) => (q.id === quoteId ? { ...q, status: updated.status } : q)));
           showAlert("Cotización Cancelada", "La solicitud de cotización ha sido rechazada/cancelada correctamente.", "success");
           
           // Close details
           setExpandedQuotes((prev) => ({ ...prev, [quoteId]: false }));
-        } catch (err: any) {
-          showAlert("Error", err.message || "Error al cancelar la cotización.", "error");
+        } catch (err: unknown) {
+          showAlert("Error", err instanceof Error ? err.message : "Error al cancelar la cotización.", "error");
         } finally {
           setCancellingId(null);
         }
@@ -596,4 +596,4 @@ export function QuotesTab() {
     </div>
   );
 }
-export default QuotesTab;
+export default QuotesPage;

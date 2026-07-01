@@ -42,7 +42,7 @@ export function LoginForm() {
       }
 
       // Redirigir al panel. Al cargar, el servidor validará el JWT de la cookie de forma automática.
-      router.push(localizePath('/admin/panel/dashboard'));
+      router.push(localizePath('/admin/panel/inventory'));
       router.refresh(); // Refrescar para activar la carga del Server Component
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("admin.login.serverError"));

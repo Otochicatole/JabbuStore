@@ -1,169 +1,103 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Package, RefreshCw, Ticket } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { DollarSign, Hash, RefreshCw, Ticket, Users } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { AdminSelect } from "@/shared/components/AdminSelect";
 import {
   AdminAlert,
   AdminButton,
   AdminEmptyState,
   AdminHeader,
   AdminLoadingState,
+  AdminSearchInput,
+  AdminStatCard,
+  AdminToolbar,
 } from "@/features/admin/ui/AdminShell";
 import {
-  RaffleManageActions,
-  type RaffleManageData,
-} from "@/features/admin/raffles/ui/RaffleManageActions";
+  RafflePurchaseOrderCard,
+  type RafflePurchaseOrder,
+} from "@/features/admin/raffles/ui/RafflePurchasesPage/RafflePurchaseOrderCard";
 
-export interface RaffleSummary {
+interface RaffleFilterOption {
   id: string;
   name: string;
-  description: string | null;
-  status: string;
-  drawDate: string;
-  ticketPrice: number;
-  maxTickets: number | null;
-  prizesCount: number;
-  soldChances: number;
-  pendingChances: number;
-  revenue: number;
-  ordersCount: number;
-  prizes: { iconUrl: string | null; name: string }[];
-}
-
-function getRaffleStatusBadge(status: string) {
-  switch (status) {
-    case "ACTIVE":
-      return "bg-purple-500/10 text-purple-400 border-purple-500/20";
-    case "PENDING":
-      return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-    case "FINISHED":
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-    default:
-      return "bg-red-500/10 text-red-400 border-red-500/20";
-  }
-}
-
-function RaffleListCard({
-  raffle,
-  href,
-  onUpdated,
-}: {
-  raffle: RaffleSummary;
-  href: string;
-  onUpdated: () => void;
-}) {
-  const pct = raffle.maxTickets
-    ? Math.min(100, Math.round((raffle.soldChances / raffle.maxTickets) * 100))
-    : 0;
-
-  const manageData: RaffleManageData = {
-    id: raffle.id,
-    name: raffle.name,
-    description: raffle.description,
-    status: raffle.status,
-    drawDate: raffle.drawDate,
-    ticketPrice: raffle.ticketPrice,
-    maxTickets: raffle.maxTickets,
-    soldChances: raffle.soldChances,
-  };
-
-  return (
-    <div className="rounded-[3px] border border-white/5 bg-[#110f1e]/35 p-4 transition-all hover:border-accent/30 hover:bg-accent/5">
-      <Link href={href} className="block">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="min-w-0">
-            <p className="truncate text-xs font-black text-white">{raffle.name}</p>
-            <p className="text-[10px] font-mono text-[#84849b] mt-0.5">
-              {new Date(raffle.drawDate).toLocaleDateString()}
-            </p>
-          </div>
-          <span
-            className={`shrink-0 rounded-[3px] border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${getRaffleStatusBadge(raffle.status)}`}
-          >
-            {raffle.status}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between text-[10px] font-bold text-[#84849b] uppercase tracking-wider mb-2">
-          <span className="flex items-center gap-1">
-            <Ticket className="w-3 h-3" />
-            {raffle.soldChances} {raffle.maxTickets ? `/ ${raffle.maxTickets}` : "vendidas"}
-          </span>
-          <span className="text-emerald-400 font-mono">${raffle.revenue.toFixed(2)}</span>
-        </div>
-
-        {raffle.maxTickets ? (
-          <div className="w-full bg-white/5 rounded-full h-1 overflow-hidden mb-3">
-            <div
-              className="bg-linear-to-r from-accent to-accent/60 h-full rounded-full"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        ) : null}
-
-        <div className="flex items-center gap-1.5">
-          {raffle.prizes.map((p, i) => (
-            <div
-              key={i}
-              className="w-8 h-8 rounded border border-white/5 bg-white/5 flex items-center justify-center overflow-hidden"
-              title={p.name}
-            >
-              {p.iconUrl ? (
-                <img src={p.iconUrl} alt={p.name} className="w-full h-full object-contain" />
-              ) : (
-                <Package className="w-3 h-3 text-white/20" />
-              )}
-            </div>
-          ))}
-          {raffle.ordersCount > 0 && (
-            <span className="ml-auto text-[9px] font-black uppercase tracking-wider text-[#84849b]">
-              {raffle.ordersCount} {raffle.ordersCount === 1 ? "orden" : "órdenes"}
-            </span>
-          )}
-        </div>
-      </Link>
-
-      <div className="mt-3 pt-3 border-t border-white/5">
-        <RaffleManageActions
-          raffle={manageData}
-          onUpdated={onUpdated}
-          onDeleted={onUpdated}
-          layout="compact"
-        />
-      </div>
-    </div>
-  );
 }
 
 export function RafflePurchasesListPage() {
   const { t } = useI18n();
   const localizePath = useLocalizedPath();
+  const searchParams = useSearchParams();
 
-  const [raffles, setRaffles] = useState<RaffleSummary[]>([]);
+  const [orders, setOrders] = useState<RafflePurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRaffles = async () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const [raffleFilter, setRaffleFilter] = useState(searchParams.get("raffle") ?? "all");
+
+  useEffect(() => {
+    const raffleFromUrl = searchParams.get("raffle");
+    if (raffleFromUrl) {
+      setRaffleFilter(raffleFromUrl);
+    }
+  }, [searchParams]);
+
+  const fetchOrders = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/summaries`);
-      if (!res.ok) throw new Error("Error al cargar los sorteos.");
-      setRaffles(await res.json());
-    } catch (err: any) {
-      setError(err.message || "Error al cargar.");
+      const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/orders`);
+      if (!res.ok) throw new Error("Error al cargar las órdenes.");
+      const data = await res.json();
+      setOrders(data.orders ?? []);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al cargar.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRaffles();
+    fetchOrders();
   }, []);
+
+  const raffleOptions = useMemo<RaffleFilterOption[]>(() => {
+    const map = new Map<string, string>();
+    for (const order of orders) {
+      map.set(order.raffleId, order.raffle.name);
+    }
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [orders]);
+
+  const filteredOrders = orders.filter((order) => {
+    if (raffleFilter !== "all" && order.raffleId !== raffleFilter) return false;
+
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      const idMatch = order.id.toLowerCase().includes(q);
+      const nameMatch = order.user?.name?.toLowerCase().includes(q);
+      const steamMatch = order.user?.steamId?.toLowerCase().includes(q);
+      const raffleMatch = order.raffle.name.toLowerCase().includes(q);
+      if (!idMatch && !nameMatch && !steamMatch && !raffleMatch) return false;
+    }
+
+    if (statusFilter !== "all" && order.status !== statusFilter) return false;
+    if (paymentFilter !== "all" && order.paymentMethod !== paymentFilter) return false;
+    return true;
+  });
+
+  const uniqueParticipants = new Set(filteredOrders.map((o) => o.userId)).size;
+  const nonCancelled = filteredOrders.filter((o) => o.status !== "CANCELLED");
+  const totalRevenue = nonCancelled.reduce((sum, order) => sum + order.totalPrice, 0);
+  const avgOrder = nonCancelled.length > 0 ? totalRevenue / nonCancelled.length : 0;
 
   return (
     <div className="space-y-6">
@@ -172,7 +106,7 @@ export function RafflePurchasesListPage() {
         description={t("admin.rafflePurchases.description")}
         actions={
           <AdminButton
-            onClick={fetchRaffles}
+            onClick={fetchOrders}
             disabled={loading}
             icon={RefreshCw}
             loading={loading}
@@ -185,18 +119,94 @@ export function RafflePurchasesListPage() {
 
       {error && <AdminAlert>{error}</AdminAlert>}
 
+      {!loading && orders.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <AdminStatCard
+            label={t("admin.rafflePurchases.revenue")}
+            value={`$${totalRevenue.toFixed(2)}`}
+            icon={DollarSign}
+            tone="green"
+          />
+          <AdminStatCard
+            label={t("admin.rafflePurchases.chancesLabel")}
+            value={filteredOrders.reduce((sum, order) => sum + order.ticketsCount, 0)}
+            icon={Ticket}
+            tone="accent"
+          />
+          <AdminStatCard
+            label={t("admin.rafflePurchases.participants")}
+            value={uniqueParticipants}
+            icon={Users}
+            tone="blue"
+          />
+          <AdminStatCard
+            label={t("admin.rafflePurchases.avgOrder")}
+            value={`$${isFinite(avgOrder) ? avgOrder.toFixed(2) : "0.00"}`}
+            icon={Hash}
+            tone="yellow"
+          />
+        </div>
+      )}
+
+      <AdminToolbar>
+        <AdminSearchInput
+          placeholder={t("admin.rafflePurchases.searchPlaceholder")}
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+        <AdminSelect
+          value={raffleFilter}
+          onChange={setRaffleFilter}
+          className="w-full md:w-56"
+          options={[
+            { value: "all", label: t("admin.rafflePurchases.allRaffles") },
+            ...raffleOptions.map((raffle) => ({ value: raffle.id, label: raffle.name })),
+          ]}
+        />
+        <AdminSelect
+          value={statusFilter}
+          onChange={setStatusFilter}
+          className="w-full md:w-48"
+          options={[
+            { value: "all", label: t("admin.rafflePurchases.allStatuses") },
+            { value: "PENDING_PAYMENT", label: t("admin.rafflePurchases.workflowPending") },
+            { value: "PAID", label: t("admin.rafflePurchases.workflowPaid") },
+            { value: "TRADE_PENDING", label: "Procesando" },
+            { value: "COMPLETED", label: t("admin.rafflePurchases.workflowCompleted") },
+            { value: "CANCELLED", label: t("admin.rafflePurchases.cancelOrder") },
+          ]}
+        />
+        <AdminSelect
+          value={paymentFilter}
+          onChange={setPaymentFilter}
+          className="w-full md:w-48"
+          options={[
+            { value: "all", label: t("admin.rafflePurchases.allPayments") },
+            { value: "mercado_pago", label: "Mercado Pago" },
+            { value: "paypal", label: "PayPal" },
+            { value: "nowpayments", label: "Crypto (NOWPayments)" },
+            { value: "manual_transfer", label: "Transferencia" },
+          ]}
+        />
+      </AdminToolbar>
+
       {loading ? (
         <AdminLoadingState />
-      ) : raffles.length === 0 ? (
-        <AdminEmptyState icon={Ticket} title="No hay sorteos" description="Crea tu primer sorteo desde la sección Sorteos." />
+      ) : filteredOrders.length === 0 ? (
+        <AdminEmptyState
+          icon={Ticket}
+          title={t("admin.rafflePurchases.empty")}
+          description={t("admin.rafflePurchases.emptyFiltered")}
+        />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {raffles.map((r) => (
-            <RaffleListCard
-              key={r.id}
-              raffle={r}
-              href={localizePath(`/admin/panel/raffle-purchases/${r.id}`)}
-              onUpdated={fetchRaffles}
+        <div className="space-y-3">
+          {filteredOrders.map((order) => (
+            <RafflePurchaseOrderCard
+              key={order.id}
+              order={order}
+              detailHref={localizePath(
+                `/admin/panel/raffle-purchases/${order.raffleId}/${order.id}`
+              )}
             />
           ))}
         </div>

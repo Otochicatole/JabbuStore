@@ -212,7 +212,7 @@ export function RaffleOrderDetailPage({ raffleId, orderId }: RaffleOrderDetailPa
     }
   };
 
-  const backHref = localizePath(`/admin/panel/raffle-purchases/${raffleId}`);
+  const backHref = localizePath("/admin/panel/raffle-purchases");
 
   const orderMetadata = detail ? normalizeOrderMetadata(detail.order.metadata) : null;
 

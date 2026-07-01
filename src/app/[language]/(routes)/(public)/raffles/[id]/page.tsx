@@ -446,14 +446,17 @@ function RaffleDetailsContent() {
                 ) : (
                   <div className="text-center p-4 border border-white/5 rounded-2xl bg-white/[0.01]">
                     <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider mb-2">
-                      Iniciá sesión para participar
+                      {t("raffles.loginToParticipate")}
                     </p>
-                    <Link
-                      href={localizePath("/buy")}
-                      className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-white transition-colors"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.location.href = `${BACKEND_URL}/auth/steam`;
+                      }}
+                      className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-white transition-colors cursor-pointer"
                     >
-                      Conectar cuenta &rarr;
-                    </Link>
+                      {t("raffles.connectAccount")} &rarr;
+                    </button>
                   </div>
                 )}
               </div>

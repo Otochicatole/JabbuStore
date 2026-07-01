@@ -1,9 +1,7 @@
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
-import { RaffleOrdersPage } from "@/features/admin/raffles/ui/RafflePurchasesPage/RaffleOrdersPage";
-import { AdminPage, AdminLoadingState } from "@/features/admin/ui/AdminShell";
 
-export default async function AdminRaffleOrdersRoute({
+export default async function AdminRaffleOrdersRedirect({
   params,
 }: {
   params: Promise<{ language: string; raffleId: string }>;
@@ -11,11 +9,5 @@ export default async function AdminRaffleOrdersRoute({
   const { language, raffleId } = await params;
   await requireAdmin(language);
 
-  return (
-    <AdminPage>
-      <Suspense fallback={<AdminLoadingState />}>
-        <RaffleOrdersPage raffleId={raffleId} />
-      </Suspense>
-    </AdminPage>
-  );
+  redirect(`/${language}/admin/panel/raffle-purchases?raffle=${raffleId}`);
 }

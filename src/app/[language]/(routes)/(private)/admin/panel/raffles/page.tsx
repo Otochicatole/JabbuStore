@@ -10,8 +10,6 @@ import {
   Gift,
   X,
   Search,
-  Play,
-  Trash2,
   ExternalLink,
   Package,
 } from "lucide-react";
@@ -27,6 +25,10 @@ import {
   AdminPage,
   AdminSection,
 } from "@/features/admin/ui/AdminShell";
+import {
+  RaffleManageActions,
+  type RaffleManageData,
+} from "@/features/admin/raffles/ui/RaffleManageActions";
 
 interface RafflePrize {
   id: string;
@@ -200,60 +202,6 @@ function RafflesAdminContent() {
     }
   };
 
-  const handleCancelRaffle = async (raffleId: string) => {
-    if (
-      !confirm(
-        "¿Estás seguro de que deseas cancelar este sorteo? Las skins asociadas serán liberadas."
-      )
-    )
-      return;
-    try {
-      const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/${raffleId}/cancel`, {
-        method: "PATCH",
-      });
-      if (!res.ok) throw new Error("Error al cancelar.");
-      fetchRaffles();
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
-
-  const handleActivateRaffle = async (raffleId: string) => {
-    try {
-      const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/${raffleId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "ACTIVE" }),
-      });
-      if (!res.ok) throw new Error("Error al activar el sorteo.");
-      fetchRaffles();
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
-
-  const handleDrawRaffle = async (raffleId: string) => {
-    if (
-      !confirm(
-        t("raffles.confirmDraw") ||
-          "¿Estás seguro de ejecutar el sorteo ahora? Se elegirán ganadores aleatorios."
-      )
-    )
-      return;
-    try {
-      const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/${raffleId}/draw`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Error al realizar el sorteo.");
-      }
-      fetchRaffles();
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
-
   const filteredCatalog = catalogItems.filter((item) =>
     `${item.weapon} ${item.name}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -293,13 +241,21 @@ function RafflesAdminContent() {
         <div className="grid grid-cols-1 gap-4">
           {raffles.map((raffle) => {
             const isFinished = raffle.status === "FINISHED";
-            const isCancelled = raffle.status === "CANCELLED";
-            const isPending = raffle.status === "PENDING";
-            const isActive = raffle.status === "ACTIVE";
             const soldTickets = raffle.tickets.filter((t) => t.status === "PAID").length;
             const pct = raffle.maxTickets
               ? Math.min(100, Math.round((soldTickets / raffle.maxTickets) * 100))
               : 0;
+
+            const manageData: RaffleManageData = {
+              id: raffle.id,
+              name: raffle.name,
+              description: raffle.description,
+              status: raffle.status,
+              drawDate: raffle.drawDate,
+              ticketPrice: raffle.ticketPrice,
+              maxTickets: raffle.maxTickets,
+              soldChances: soldTickets,
+            };
 
             return (
               <AdminSection key={raffle.id} className="flex flex-col gap-4">
@@ -387,41 +343,19 @@ function RafflesAdminContent() {
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/5">
                   <Link
-                    href={localizePath(`/admin/panel/raffle-purchases/${raffle.id}`)}
+                    href={localizePath(`/admin/panel/raffle-purchases?raffle=${raffle.id}`)}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[3px] bg-white/5 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-wider transition-colors"
                   >
                     <ExternalLink className="w-3 h-3" />
                     {t("raffles.viewParticipants")}
                   </Link>
 
-                  {!isFinished && !isCancelled && (
-                    <>
-                      {isPending && (
-                        <button
-                          onClick={() => handleActivateRaffle(raffle.id)}
-                          className="px-3.5 py-2 rounded-[3px] bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                        >
-                          {t("raffles.activate") || "Activar"}
-                        </button>
-                      )}
-                      {isActive && (
-                        <button
-                          onClick={() => handleDrawRaffle(raffle.id)}
-                          className="px-3.5 py-2 rounded-[3px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Play className="w-3 h-3" />
-                          {t("raffles.executeDraw")}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleCancelRaffle(raffle.id)}
-                        className="px-3.5 py-2 rounded-[3px] bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1 cursor-pointer"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        {t("raffles.cancelRaffle")}
-                      </button>
-                    </>
-                  )}
+                  <RaffleManageActions
+                    raffle={manageData}
+                    onUpdated={fetchRaffles}
+                    onDeleted={fetchRaffles}
+                    layout="toolbar"
+                  />
 
                   {isFinished && (
                     <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">

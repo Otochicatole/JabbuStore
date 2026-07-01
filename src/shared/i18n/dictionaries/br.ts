@@ -558,6 +558,7 @@ export const br = {
   "admin.marketCatalog": "Catálogo de Mercado",
   "admin.purchaseRequests": "Solicitações de Compra",
   "admin.sellRequests": "Solicitações de Venda",
+  "admin.quotes": "Cotações",
   "admin.botManagement": "Gerenciamento de Bots",
   "admin.globalSettings": "Configuração Global",
   "admin.logout": "Sair",

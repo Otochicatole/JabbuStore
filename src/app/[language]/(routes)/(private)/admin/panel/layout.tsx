@@ -130,7 +130,7 @@ export default function AdminLayout({
       icon: Tag,
     },
     {
-      name: "Cotizaciones",
+      name: t("admin.quotes"),
       href: "/admin/panel/quotes",
       icon: DollarSign,
     },

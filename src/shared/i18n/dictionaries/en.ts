@@ -558,6 +558,7 @@ export const en = {
   "admin.marketCatalog": "Market Catalog",
   "admin.purchaseRequests": "Purchase Requests",
   "admin.sellRequests": "Sell Requests",
+  "admin.quotes": "Quotes",
   "admin.botManagement": "Bot Management",
   "admin.globalSettings": "Global Settings",
   "admin.logout": "Log out",

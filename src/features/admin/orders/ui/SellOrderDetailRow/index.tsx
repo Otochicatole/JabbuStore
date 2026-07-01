@@ -2,11 +2,15 @@
 
 import React, { useState } from "react";
 import {
+  Bot,
   Copy,
   Check,
   ShieldCheck,
   CreditCard,
   Layers,
+  HandCoins,
+  UserRound,
+  WalletCards,
   XCircle,
 } from "lucide-react";
 import { AdminBotOption, Order, PaymentProofMetadata } from "@/features/admin/domain/types";
@@ -84,6 +88,17 @@ export function SellOrderDetailRow({
   const adminProof = localAdminProof || order.metadata?.adminPaymentProof || null;
   const adminProofUrl = adminProof ? `${BACKEND_URL}/orders/${order.id}/payment-proof/admin` : null;
   const canUploadAdminProof = order.status === "PAID" || order.status === "COMPLETED";
+  const assignedBotLabel = order.bot ? `${order.bot.name} (${order.bot.steamId.slice(-4)})` : t("admin.common.notAssigned");
+  const statusLabel =
+    order.status === "PENDING_PAYMENT"
+      ? t("purchases.status.sellPendingApproval")
+      : order.status === "TRADE_PENDING"
+        ? t("purchases.status.sellApprovedSendTrade")
+        : order.status === "PAID"
+          ? t("purchases.status.tradeConfirmedPendingPayment")
+          : order.status === "COMPLETED"
+            ? t("purchases.status.sellCompletedPaid")
+            : t("purchases.status.sellRejected");
 
   const handleAdminProofUpload = async (file: File | null) => {
     if (!file) return;
@@ -127,7 +142,7 @@ export function SellOrderDetailRow({
 
   return (
     <div
-      className={`bg-[#0e0d16]/95 border p-4 sm:p-6 transition-all duration-300 relative overflow-hidden rounded-[3px] ${
+      className={`bg-[#0e0d16]/95 border border-t-2 border-t-accent/80 p-4 sm:p-6 transition-all duration-300 relative overflow-hidden rounded-[3px] ${
         order.status === "PENDING_PAYMENT"
           ? "border-white/5 hover:border-orange-500/20"
           : order.status === "TRADE_PENDING"
@@ -137,7 +152,75 @@ export function SellOrderDetailRow({
               : "border-emerald-500/10 hover:border-emerald-500/30"
       }`}
     >
-      {/* 🚀 BARRA DE WORKFLOW VISUAL DE VENTA */}
+      <div className="mb-5 overflow-hidden rounded-[3px] border border-accent/20 bg-[linear-gradient(135deg,rgba(217,70,239,0.15),rgba(17,15,30,0.62)_48%,rgba(249,115,22,0.08))]">
+        <div className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="min-w-0">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-[3px] border border-accent/30 bg-accent/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-accent">
+                <HandCoins className="h-3.5 w-3.5" />
+                {t("admin.sellOrders.operationKindSell")}
+              </span>
+              <span className="rounded-[3px] border border-white/10 bg-black/20 px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-wider text-white/45">
+                {t("purchases.order")} ID: {order.id}
+              </span>
+            </div>
+            <h3 className="text-xl font-black tracking-tight text-white">
+              {t("admin.sellOrders.sellOperationTitle")}
+            </h3>
+            <p className="mt-1 max-w-3xl text-xs font-semibold leading-relaxed text-[#a8a8bc]">
+              {t("admin.sellOrders.sellOperationDescription")}
+            </p>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[520px]">
+            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
+              <span className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-[#84849b]">
+                <UserRound className="h-3 w-3" />
+                {t("admin.sellOrders.seller")}
+              </span>
+              <p className="truncate text-sm font-black text-white">{order.user?.name || t("admin.common.unknownUser")}</p>
+              <p className="truncate font-mono text-[10px] font-bold text-accent">{order.user?.steamId || "-"}</p>
+            </div>
+            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
+              <span className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-[#84849b]">
+                <WalletCards className="h-3 w-3" />
+                {t("admin.sellOrders.amountToPay")}
+              </span>
+              <p className="text-lg font-black leading-none text-emerald-400">${order.totalPrice.toLocaleString()} USD</p>
+              <p className="mt-1 text-[10px] font-bold text-white/35">{statusLabel}</p>
+            </div>
+            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
+              <span className="mb-1 block text-[9px] font-black uppercase tracking-widest text-[#84849b]">
+                {t("admin.sellOrders.currentStatus")}
+              </span>
+              <span
+                className={`inline-flex rounded-[3px] border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                  order.status === "PENDING_PAYMENT"
+                    ? "border-orange-500/20 bg-orange-500/10 text-orange-400"
+                    : order.status === "TRADE_PENDING"
+                      ? "border-blue-500/20 bg-blue-500/10 text-blue-400"
+                      : order.status === "PAID"
+                        ? "border-purple-500/20 bg-purple-500/10 text-purple-400"
+                        : order.status === "COMPLETED"
+                          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                          : "border-red-500/20 bg-red-500/10 text-red-400"
+                }`}
+              >
+                {statusLabel}
+              </span>
+            </div>
+            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
+              <span className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-[#84849b]">
+                <Bot className="h-3 w-3" />
+                {t("admin.orders.selectedBot")}
+              </span>
+              <p className="truncate text-xs font-black text-white">{assignedBotLabel}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Workflow */}
       <div className="mb-6 bg-white/[0.01] border border-white/5 p-4 rounded-[3px]">
         <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider font-mono text-[#84849b] mb-4">
           <span className="flex items-center gap-1.5">
@@ -276,102 +359,40 @@ export function SellOrderDetailRow({
         </div>
       </div>
 
-      {/* Cabecera de Datos Generales y Acción Paso a Paso */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
-        <div className="flex items-center gap-3">
-          {order.user?.avatar && (
-            <img
-              src={order.user.avatar}
-              className="w-10 h-10 border border-white/10 rounded-[3px] shrink-0"
-              alt="avatar"
-            />
-          )}
-          <div className="min-w-0">
-            <span className="text-[10px] text-[#84849b] font-mono block">
-              {t("admin.sellOrders.seller")}
-            </span>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-extrabold text-white text-sm truncate max-w-[150px]">
-                {order.user?.name || t("admin.common.unknownUser")}
-              </span>
-              <span className="text-[9.5px] text-accent font-mono truncate">
-                ({order.user?.steamId})
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1 border-t border-b border-white/[0.02] py-2 lg:py-0 lg:border-none">
-          <span className="text-[10px] text-[#84849b] font-mono">
-            {t("admin.sellOrders.amountToPay")}
+      <div className="grid grid-cols-1 gap-4 border-b border-white/5 pb-5 mb-5 lg:grid-cols-[280px_1fr]">
+        <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4">
+          <span className="mb-2 flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
+            <Bot className="h-3.5 w-3.5" />
+            {t("admin.orders.selectBotAccount") || "Bot de Recibo"}
           </span>
-          <span className="text-emerald-400 font-black text-xl leading-none block">
-            ${order.totalPrice.toLocaleString()} USD
-          </span>
-        </div>
-
-        <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1">
-          <span className="text-[10px] text-[#84849b] font-mono">
-            {t("admin.sellOrders.currentStatus")}
-          </span>
-          <span
-            className={`px-2.5 py-1 rounded-[3px] text-[10px] font-black uppercase tracking-widest block ${
-              order.status === "PENDING_PAYMENT"
-                ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-                : order.status === "TRADE_PENDING"
-                  ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                  : order.status === "PAID"
-                    ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                    : order.status === "COMPLETED"
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                      : "bg-red-500/10 text-red-400 border border-red-500/20"
-            }`}
-          >
-            {order.status === "PENDING_PAYMENT"
-              ? t("purchases.status.sellPendingApproval")
-              : order.status === "TRADE_PENDING"
-                ? t("purchases.status.sellApprovedSendTrade")
-                : order.status === "PAID"
-                  ? t("purchases.status.tradeConfirmedPendingPayment")
-                  : order.status === "COMPLETED"
-                    ? t("purchases.status.sellCompletedPaid")
-                    : t("purchases.status.sellRejected")}
-          </span>
-        </div>
-
-        {/* Bot selector column */}
-        {order.status !== "COMPLETED" && order.status !== "CANCELLED" ? (
-          <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1.5 w-full lg:w-44 shrink-0">
-            <span className="text-[10px] text-[#84849b] font-mono uppercase tracking-wider block">
-              {t("admin.orders.selectBotAccount") || "Bot de Recibo"}
-            </span>
+          {order.status !== "COMPLETED" && order.status !== "CANCELLED" ? (
             <AdminSelect
               value={selectedBotId}
               onChange={setSelectedBotId}
-              className="w-full sm:w-full min-w-full"
+              className="w-full"
               options={[
                 { value: "", label: t("admin.orders.selectBotPlaceholder") || "Seleccionar bot..." },
-                ...bots.filter(b => b.isActive).map(b => ({ value: b.id, label: `${b.name} (${b.steamId.slice(-4)})` }))
+                ...bots.filter((b) => b.isActive).map((b) => ({ value: b.id, label: `${b.name} (${b.steamId.slice(-4)})` }))
               ]}
             />
-          </div>
-        ) : (
-          <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1">
-            <span className="text-[10px] text-[#84849b] font-mono">
-              {t("admin.orders.selectedBot") || "Bot Asignado"}
+          ) : (
+            <span className="block rounded-[3px] border border-white/10 bg-white/5 px-2.5 py-2 text-xs font-bold text-white/80">
+              {assignedBotLabel}
             </span>
-            <span className="text-xs text-white/80 font-mono font-bold block bg-white/5 px-2.5 py-1.5 rounded-[3px] border border-white/10 font-mono">
-              {order.bot ? `${order.bot.name} (${order.bot.steamId.slice(-4)})` : "Ninguno"}
-            </span>
-          </div>
-        )}
+          )}
+          <p className="mt-2 text-[10px] font-semibold leading-relaxed text-white/35">
+            {t("admin.sellOrders.sellBotHelper")}
+          </p>
+        </div>
 
-        {/* 🛠️ MANUAL / PASO A PASO ACTION BUTTONS */}
-        <div className="space-y-1.5 w-full lg:w-auto">
+        <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4">
           <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
             {t("admin.sellOrders.correctFlowAction")}
           </span>
-          <div className="grid grid-cols-1 gap-1.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] sm:flex sm:flex-wrap sm:items-center">
+          <p className="mb-3 text-[10px] font-semibold text-white/35">
+            {t("admin.sellOrders.sellStatusHelper")}
+          </p>
+          <div className="grid grid-cols-1 gap-1.5 xl:flex xl:flex-wrap xl:items-center">
             {/* Paso 1: Aprobar Venta */}
             <button
               onClick={() => {

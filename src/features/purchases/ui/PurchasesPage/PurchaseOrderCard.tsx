@@ -130,7 +130,15 @@ export function PurchaseOrderCard({
                 onOpenSupport={() => router.push(`${localizePath("/tickets")}?orderId=${order.id}`)}
                 t={t}
               />
-              <PurchaseItemsList items={order.items} t={t} />
+              <PurchaseItemsList
+                items={order.items}
+                t={t}
+                raffleId={(order.metadata as any)?.raffleId ?? null}
+                raffleName={(order.metadata as any)?.raffleName ?? null}
+                ticketsCount={(order.metadata as any)?.ticketsCount ?? null}
+                userChancesInRaffle={(order.metadata as any)?.userChancesInRaffle ?? null}
+                localizePath={localizePath}
+              />
             </div>
           </motion.div>
         )}

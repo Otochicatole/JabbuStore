@@ -3,6 +3,7 @@ export interface CheckoutItem {
   name: string;
   price: number;
   iconUrl: string | null;
+  provider?: string | null;
   float?: number | null;
   pattern?: number | null;
   exterior?: string | null;

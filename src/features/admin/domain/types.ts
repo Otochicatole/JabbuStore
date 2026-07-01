@@ -86,6 +86,11 @@ export interface Order {
     adminPaymentProof?: PaymentProofMetadata | null;
     manualTransferType?: "bank" | "crypto" | string | null;
     manualTransferSnapshot?: ManualTransferSnapshot | null;
+    raffleId?: string | null;
+    raffleName?: string | null;
+    raffleTicketPrice?: number | null;
+    ticketsCount?: number | null;
+    userChancesInRaffle?: number | null;
   } | null;
 }
 

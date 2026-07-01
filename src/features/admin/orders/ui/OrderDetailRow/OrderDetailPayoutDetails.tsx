@@ -30,7 +30,7 @@ export function OrderDetailPayoutDetails({
   const manualTransferSnapshot = order.metadata?.manualTransferSnapshot;
   const buyerProof = order.metadata?.buyerPaymentProof || null;
   const buyerProofUrl = buyerProof
-    ? `${BACKEND_URL}/orders/${order.id}/payment-proof`
+    ? `${BACKEND_URL}/orders/${order.id}/payment-proof/buyer`
     : null;
 
   return (

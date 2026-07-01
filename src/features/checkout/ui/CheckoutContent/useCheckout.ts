@@ -43,7 +43,13 @@ export function useCheckout() {
     clearSellList,
   } = useInventory();
 
-  const checkoutType: "buy" | "sell" = searchParams.get("type") === "sell" ? "sell" : "buy";
+  const checkoutType: "buy" | "sell" | "raffle" =
+    searchParams.get("type") === "sell"
+      ? "sell"
+      : searchParams.get("type") === "raffle"
+        ? "raffle"
+        : "buy";
+  const isBuyLikeCheckout = checkoutType === "buy" || checkoutType === "raffle";
   const quoteId = searchParams.get("quoteId");
 
   const processedRef = useRef(false);
@@ -265,7 +271,20 @@ export function useCheckout() {
         }
 
         let payload: Record<string, unknown> = {};
-        if (checkoutType === "buy") {
+        if (checkoutType === "raffle") {
+          const raffleId = searchParams.get("raffleId");
+          const tickets = Number(searchParams.get("tickets") || 1);
+          if (!raffleId) {
+            setError("Falta el identificador del sorteo.");
+            setLoading(false);
+            return;
+          }
+          payload = {
+            type: "raffle",
+            raffleId,
+            ticketsCount: tickets,
+          };
+        } else if (checkoutType === "buy") {
           if (cartItems.length === 0) {
             setError(t("checkout.emptyCart"));
             setLoading(false);
@@ -396,7 +415,7 @@ export function useCheckout() {
       errors.paymentMethod = t("checkout.error.nowpaymentsDisabled");
     }
 
-    if (checkoutType === "buy" && selectedMethod === "manual_transfer") {
+    if (isBuyLikeCheckout && selectedMethod === "manual_transfer") {
       if (!manualTransferSettings?.manualTransferEnabled) {
         errors.paymentProof = t("checkout.manualTransferDisabled");
       } else if (!formData.paymentProof) {
@@ -482,7 +501,7 @@ export function useCheckout() {
     sendDebugLog("validateForm passed. Proceeding with checkout.");
 
     // Buy orders using external payment providers use the real redirect flow.
-    if (checkoutType === "buy" && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments" || selectedMethod === "paypal")) {
+    if ((checkoutType === "buy" || checkoutType === "raffle") && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments" || selectedMethod === "paypal")) {
       setIsProcessingPayment(true);
       setPaymentStep(1);
 
@@ -510,23 +529,38 @@ export function useCheckout() {
 
           let detailedItems;
           try {
-            detailedItems = items.map((i) => {
-              const cartItem = cartItems.find((c) => c.skin.id === i.assetId);
-              const skin = cartItem?.skin;
-
-              return {
+            if (checkoutType === "raffle") {
+              detailedItems = items.map((i) => ({
                 assetId: i.assetId,
                 name: i.name,
                 price: i.price,
                 iconUrl: i.iconUrl,
-                float: skin?.float !== undefined ? skin.float : null,
-                pattern: skin?.pattern !== undefined ? skin.pattern : null,
-                rarity: skin?.rarity || "common",
-                exterior: skin?.exterior || null,
-                provider: skin?.provider || "bot",
-                isSpecific: skin?.isSpecific !== false,
-              };
-            });
+                float: null,
+                pattern: null,
+                rarity: "common",
+                exterior: null,
+                provider: "raffle",
+                isSpecific: false,
+              }));
+            } else {
+              detailedItems = items.map((i) => {
+                const cartItem = cartItems.find((c) => c.skin.id === i.assetId);
+                const skin = cartItem?.skin;
+
+                return {
+                  assetId: i.assetId,
+                  name: i.name,
+                  price: i.price,
+                  iconUrl: i.iconUrl,
+                  float: skin?.float !== undefined ? skin.float : null,
+                  pattern: skin?.pattern !== undefined ? skin.pattern : null,
+                  rarity: skin?.rarity || "common",
+                  exterior: skin?.exterior || null,
+                  provider: skin?.provider || "bot",
+                  isSpecific: skin?.isSpecific !== false,
+                };
+              });
+            }
             sendDebugLog("detailedItems mapping completed: " + JSON.stringify(detailedItems));
           } catch (mapErr: unknown) {
             sendDebugLog(
@@ -545,7 +579,15 @@ export function useCheckout() {
               itemIds: items.map((i) => i.assetId),
               items: detailedItems,
               paymentMethod: selectedMethod,
-              metadata: metadataPayload,
+              metadata: {
+                ...metadataPayload,
+                ...(checkoutType === "raffle"
+                  ? {
+                      raffleId: searchParams.get("raffleId"),
+                      ticketsCount: Number(searchParams.get("tickets") || 1),
+                    }
+                  : {}),
+              },
             }),
           });
 
@@ -632,23 +674,39 @@ export function useCheckout() {
                   : null,
             };
 
-            if (checkoutType === "buy") {
-              const detailedItems = items.map((i) => {
-                const cartItem = cartItems.find((c) => c.skin.id === i.assetId);
-                const skin = cartItem?.skin;
-
-                return {
+            if (checkoutType === "buy" || checkoutType === "raffle") {
+              let detailedItems;
+              if (checkoutType === "raffle") {
+                detailedItems = items.map((i) => ({
                   assetId: i.assetId,
                   name: i.name,
                   price: i.price,
                   iconUrl: i.iconUrl,
-                  float: skin?.float !== undefined ? skin.float : null,
-                  pattern: skin?.pattern !== undefined ? skin.pattern : null,
-                  rarity: skin?.rarity || "common",
-                  exterior: skin?.exterior || null,
-                  provider: skin?.provider || "bot",
-                };
-              });
+                  float: null,
+                  pattern: null,
+                  rarity: "common",
+                  exterior: null,
+                  provider: "raffle",
+                  isSpecific: false,
+                }));
+              } else {
+                detailedItems = items.map((i) => {
+                  const cartItem = cartItems.find((c) => c.skin.id === i.assetId);
+                  const skin = cartItem?.skin;
+
+                  return {
+                    assetId: i.assetId,
+                    name: i.name,
+                    price: i.price,
+                    iconUrl: i.iconUrl,
+                    float: skin?.float !== undefined ? skin.float : null,
+                    pattern: skin?.pattern !== undefined ? skin.pattern : null,
+                    rarity: skin?.rarity || "common",
+                    exterior: skin?.exterior || null,
+                    provider: skin?.provider || "bot",
+                  };
+                });
+              }
 
               res = await fetchWithAuth(`${BACKEND_URL}/orders`, {
                 method: "POST",
@@ -657,7 +715,15 @@ export function useCheckout() {
                   itemIds: items.map((i) => i.assetId),
                   items: detailedItems,
                   paymentMethod: selectedMethod,
-                  metadata: metadataPayload,
+                  metadata: {
+                    ...metadataPayload,
+                    ...(checkoutType === "raffle"
+                      ? {
+                          raffleId: searchParams.get("raffleId"),
+                          ticketsCount: Number(searchParams.get("tickets") || 1),
+                        }
+                      : {}),
+                  },
                 }),
               });
             } else {
@@ -683,7 +749,7 @@ export function useCheckout() {
               );
             }
 
-            if (checkoutType === "buy" && selectedMethod === "manual_transfer") {
+            if (isBuyLikeCheckout && selectedMethod === "manual_transfer") {
               if (!formData.paymentProof) {
                 throw new Error(t("checkout.error.proofRequired"));
               }
@@ -711,7 +777,7 @@ export function useCheckout() {
 
             if (checkoutType === "buy") {
               clearCart();
-            } else {
+            } else if (checkoutType === "sell") {
               clearSellList();
             }
           } catch (err: unknown) {

@@ -15,6 +15,8 @@ import {
   Globe,
   MessageSquare,
   DollarSign,
+  Gift,
+  TicketPlus,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -138,6 +140,16 @@ export default function AdminLayout({
       name: t("tickets.adminNav"),
       href: "/admin/panel/tickets",
       icon: MessageSquare,
+    },
+    {
+      name: t("admin.raffles"),
+      href: "/admin/panel/raffles",
+      icon: Gift,
+    },
+    {
+      name: t("admin.rafflePurchases"),
+      href: "/admin/panel/raffle-purchases",
+      icon: TicketPlus,
     },
     { name: t("admin.botManagement"), href: "/admin/panel/bots", icon: Bot },
     {

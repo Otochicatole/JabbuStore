@@ -51,7 +51,9 @@ export function PurchasesPage() {
       }
       if (!response.ok) throw new Error(t("admin.orders.loadError"));
       const data: Order[] = await response.json();
-      const filtered = data.filter(o => o.type === 'BUY');
+      const filtered = data.filter(
+        (o) => o.type === 'BUY' && !(o.metadata && (o.metadata as any).raffleId)
+      );
       setOrders(filtered);
     } catch (err: unknown) {
       console.error(err);

@@ -37,6 +37,8 @@ export function CheckoutContent() {
     router,
   } = useCheckout();
 
+  const subCheckoutType = checkoutType === "raffle" ? "buy" : checkoutType;
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center pt-24 bg-[#070510]">
@@ -58,7 +60,7 @@ export function CheckoutContent() {
           </h2>
           <p className="text-sm text-[#84849b] mb-6">{error}</p>
           <Link
-            href={localizePath(checkoutType === "buy" ? "/buy" : "/sell")}
+            href={localizePath(checkoutType === "sell" ? "/sell" : checkoutType === "raffle" ? "/raffles" : "/buy")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent/90 text-xs font-black uppercase text-white tracking-widest transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> {t("checkout.backToStore")}
@@ -71,7 +73,7 @@ export function CheckoutContent() {
   if (isSuccess) {
     return (
       <SuccessScreen
-        checkoutType={checkoutType}
+        checkoutType={subCheckoutType}
         createdOrderId={createdOrderId}
         paymentMethod={selectedMethod}
         onNavigateToOrders={() => router.push(localizePath("/purchases"))}
@@ -89,16 +91,16 @@ export function CheckoutContent() {
       {/* Header */}
       <div className="mb-10">
         <Link
-          href={localizePath(checkoutType === "buy" ? "/buy" : "/sell")}
+          href={localizePath(checkoutType === "sell" ? "/sell" : checkoutType === "raffle" ? "/raffles" : "/buy")}
           className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-white transition-colors uppercase tracking-widest mb-4"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> {t("common.back")}{" "}
-          {checkoutType === "buy" ? t("nav.buy") : t("nav.sell")}
+          {checkoutType === "sell" ? t("nav.sell") : checkoutType === "raffle" ? t("nav.raffles") : t("nav.buy")}
         </Link>
         <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
           {t("checkout.title")}{" "}
           <span className="text-accent">
-            {checkoutType === "buy" ? t("nav.buy") : t("nav.sell")}
+            {checkoutType === "sell" ? t("nav.sell") : checkoutType === "raffle" ? t("nav.raffles") : t("nav.buy")}
           </span>
         </h1>
         <p className="text-sm text-[#84849b] mt-1">
@@ -112,13 +114,13 @@ export function CheckoutContent() {
           <PaymentMethodsSelector
             selectedMethod={selectedMethod}
             onSelectMethod={setSelectedMethod}
-            checkoutType={checkoutType}
+            checkoutType={subCheckoutType}
             manualTransferSettings={manualTransferSettings}
           />
 
           {selectedMethod && (
             <CheckoutForm
-              checkoutType={checkoutType}
+              checkoutType={subCheckoutType}
               selectedMethod={selectedMethod}
               formData={formData}
               onFormChange={setFormData}
@@ -137,10 +139,10 @@ export function CheckoutContent() {
             totalPrice={totalPrice}
             selectedMethod={selectedMethod}
             isProcessingPayment={isProcessingPayment}
-            checkoutType={checkoutType}
+            checkoutType={subCheckoutType}
             onSubmit={handleSubmitCheckout}
           />
-          {checkoutType === "buy" && !selectedMethod && (
+          {(checkoutType === "buy" || checkoutType === "raffle") && !selectedMethod && (
             <p className="mt-3 text-[10px] text-red-300 font-bold uppercase tracking-wider text-center">
               {t("checkout.noPaymentMethods")}
             </p>
@@ -153,7 +155,7 @@ export function CheckoutContent() {
         <PaymentProcessingOverlay
           selectedMethodName={t(`paymentMethod.${selectedMethodObj.id}.name`)}
           paymentStep={paymentStep}
-          checkoutType={checkoutType}
+          checkoutType={subCheckoutType}
         />
       )}
     </main>

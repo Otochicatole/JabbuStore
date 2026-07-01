@@ -54,6 +54,11 @@ export interface Order {
         instructions?: string | null;
       } | null;
     } | null;
+    raffleId?: string | null;
+    raffleName?: string | null;
+    raffleTicketPrice?: number | null;
+    ticketsCount?: number | null;
+    userChancesInRaffle?: number | null;
   } | null;
 }
 

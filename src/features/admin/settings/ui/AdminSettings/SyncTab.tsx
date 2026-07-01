@@ -28,9 +28,11 @@ export function SyncTab() {
   const [catalogStatus, setCatalogStatus] = useState<PriceCatalogStatus | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
 
+  const [syncStatus, setSyncStatus] = useState<any | null>(null);
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      const saved = localStorage.getItem("last_sync_timestamp");
+      const saved = window.localStorage.getItem("last_sync_timestamp");
       if (saved) {
         const diff = Date.now() - Number(saved);
         const remaining = Math.max(0, Math.ceil((3 * 60 * 1000 - diff) / 1000));
@@ -87,10 +89,26 @@ export function SyncTab() {
     }
   };
 
+  const fetchSyncStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/market/sync/status`, {
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setSyncStatus(data);
+      }
+    } catch (err) {
+      console.error("Error fetching sync status:", err);
+    }
+  };
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void fetchCatalogStatus();
       void fetchRuntimeConfig();
+      void fetchSyncStatus();
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -102,6 +120,14 @@ export function SyncTab() {
     }, 5000);
     return () => window.clearInterval(interval);
   }, [catalogStatus?.running]);
+
+  useEffect(() => {
+    if (!syncStatus?.running) return;
+    const interval = window.setInterval(() => {
+      void fetchSyncStatus();
+    }, 2000);
+    return () => window.clearInterval(interval);
+  }, [syncStatus?.running]);
 
   const handleRuntimeConfigSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,8 +177,9 @@ export function SyncTab() {
       setSyncResult(data.message || t("admin.settings.fullSyncSuccess"));
       
       const now = Date.now();
-      localStorage.setItem("last_sync_timestamp", String(now));
+      window.localStorage.setItem("last_sync_timestamp", String(now));
       setCooldownLeft(180); // 3 minutos
+      void fetchSyncStatus();
     } catch (err: unknown) {
       setSyncError(getErrorMessage(err, t("admin.settings.syncAppError")));
     } finally {
@@ -303,16 +330,50 @@ export function SyncTab() {
             </ul>
           </div>
 
-          {syncError && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-[3px]">
-              {syncError}
+          {syncStatus && (syncStatus.running || syncStatus.phase !== "idle") ? (
+            <div className={`p-4 rounded-[3px] border ${syncStatus.running ? "bg-sky-500/10 border-sky-500/20 text-sky-400" : syncStatus.phase === "completed" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"} space-y-2`}>
+              <div className="flex items-center gap-2 font-bold text-xs">
+                {syncStatus.running && <Loader2 className="w-4 h-4 animate-spin text-sky-400" />}
+                <span className="uppercase tracking-wider">
+                  {syncStatus.running ? "Sincronización en curso" : syncStatus.phase === "completed" ? "Sincronización completada" : "Sincronización fallida"}
+                </span>
+              </div>
+              <p className="text-xs font-medium text-[#84849b] font-mono leading-relaxed">
+                {syncStatus.message || "Procesando..."}
+              </p>
+              {syncStatus.running && (
+                <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden mt-2">
+                  <div 
+                    className="bg-accent h-full transition-all duration-300"
+                    style={{
+                      width: `${
+                        syncStatus.phase === "fetching_youpin" && syncStatus.maxPages > 0
+                          ? Math.min(100, Math.round((syncStatus.currentPage / syncStatus.maxPages) * 50))
+                          : syncStatus.phase === "saving_database" && syncStatus.totalListings > 0
+                          ? Math.min(100, 50 + Math.round((syncStatus.listingsProcessed / syncStatus.totalListings) * 40))
+                          : syncStatus.phase === "syncing_bots"
+                          ? 95
+                          : 0
+                      }%`
+                    }}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          ) : (
+            <>
+              {syncError && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-[3px]">
+                  {syncError}
+                </div>
+              )}
 
-          {syncResult && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-[3px]">
-              {syncResult}
-            </div>
+              {syncResult && (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-[3px]">
+                  {syncResult}
+                </div>
+              )}
+            </>
           )}
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

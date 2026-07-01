@@ -6,7 +6,7 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
-import { rarityColors } from "@/features/admin/ui/AdminPanel/utils";
+import { rarityColors } from "@/features/admin/shared/utils";
 import { useMarketCatalog } from "./useMarketCatalog";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import { useI18n } from "@/shared/i18n/I18nProvider";

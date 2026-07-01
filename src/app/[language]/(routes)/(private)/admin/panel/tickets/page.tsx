@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
-import { AdminTicketsPage } from "@/features/tickets/ui/AdminTicketsPage";
+import { AdminTicketsPage } from "@/features/admin/tickets/ui/AdminTicketsPage";
 import { AdminPage } from "@/features/admin/ui/AdminShell";
 
 export default async function AdminTicketsRoute({

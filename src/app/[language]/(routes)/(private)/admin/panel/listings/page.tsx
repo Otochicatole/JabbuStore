@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
-import { ListingsPage } from "@/features/admin/ui/AdminPanel/ListingsPage";
+import { ListingsPage } from "@/features/admin/orders/ui/ListingsPage";
 import { AdminPage } from "@/features/admin/ui/AdminShell";
 
 export default async function AdminListingsPage({

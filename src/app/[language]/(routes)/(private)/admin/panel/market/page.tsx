@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
-import { MarketCatalog } from "@/features/market/ui/MarketCatalog";
 import { AdminPage } from "@/features/admin/ui/AdminShell";
+import { MarketPage } from "@/features/admin/market/ui/MarketPage";
 
 export default async function AdminMarketPage({
   params,
@@ -12,7 +12,7 @@ export default async function AdminMarketPage({
 
   return (
     <AdminPage>
-      <MarketCatalog />
+      <MarketPage />
     </AdminPage>
   );
 }

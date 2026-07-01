@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
 import type { StoreItem } from "@/features/admin/domain/types";
-import { InventoryPage } from "@/features/admin/ui/AdminPanel/InventoryPage";
+import { InventoryPage } from "@/features/admin/inventory/ui/InventoryPage";
 import { AdminPage } from "@/features/admin/ui/AdminShell";
 
 export default async function AdminInventoryPage({

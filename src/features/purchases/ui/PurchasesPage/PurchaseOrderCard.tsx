@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Order, SelectedProof } from "@/features/purchases/types";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
-import { getStatusConfig, type Translate } from "./helpers";
+import { getRaffleOrderContext, getStatusConfig, type Translate } from "./helpers";
 import { PurchaseDetailsPanels } from "./PurchaseDetailsPanels";
 import { PurchaseItemsList } from "./PurchaseItemsList";
 import { PurchaseTimeline } from "./PurchaseTimeline";
@@ -32,7 +32,9 @@ export function PurchaseOrderCard({
   const router = useRouter();
   const localizePath = useLocalizedPath();
   const isBuy = order.type === "BUY";
-  const statusConfig = getStatusConfig(order.status, order.type, t);
+  const raffleContext = getRaffleOrderContext(order);
+  const isRaffle = raffleContext.isRaffle;
+  const statusConfig = getStatusConfig(order.status, order.type, t, order);
 
   return (
     <motion.div
@@ -41,15 +43,17 @@ export function PurchaseOrderCard({
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className="bg-[#110f1e]/40 border border-white/5 rounded-[3px] p-5 hover:border-white/10 transition-colors backdrop-blur-sm relative overflow-hidden"
     >
-      <div className={`absolute top-0 bottom-0 left-0 w-1 ${isBuy ? "bg-emerald-500" : "bg-purple-500"}`} />
+      <div className={`absolute top-0 bottom-0 left-0 w-1 ${isRaffle ? "bg-accent" : isBuy ? "bg-emerald-500" : "bg-purple-500"}`} />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div
             className={`p-2.5 rounded-[3px] border shrink-0 ${
-              isBuy
-                ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400"
-                : "bg-purple-500/5 border-purple-500/10 text-purple-400"
+              isRaffle
+                ? "bg-accent/5 border-accent/10 text-accent"
+                : isBuy
+                  ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400"
+                  : "bg-purple-500/5 border-purple-500/10 text-purple-400"
             }`}
           >
             {isBuy ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
@@ -62,12 +66,14 @@ export function PurchaseOrderCard({
               </span>
               <span
                 className={`px-2 py-0.5 rounded-[3px] text-[8.5px] font-black tracking-widest uppercase ${
-                  isBuy
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    : "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                  isRaffle
+                    ? "bg-accent/10 text-accent border border-accent/20"
+                    : isBuy
+                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                      : "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                 }`}
               >
-                {isBuy ? t("purchases.buy") : t("purchases.sell")}
+                {isRaffle ? t("purchases.raffle") : isBuy ? t("purchases.buy") : t("purchases.sell")}
               </span>
             </div>
 
@@ -133,10 +139,10 @@ export function PurchaseOrderCard({
               <PurchaseItemsList
                 items={order.items}
                 t={t}
-                raffleId={(order.metadata as any)?.raffleId ?? null}
-                raffleName={(order.metadata as any)?.raffleName ?? null}
-                ticketsCount={(order.metadata as any)?.ticketsCount ?? null}
-                userChancesInRaffle={(order.metadata as any)?.userChancesInRaffle ?? null}
+                raffleId={raffleContext.raffleId}
+                raffleName={raffleContext.raffleName}
+                ticketsCount={raffleContext.ticketsCount}
+                userChancesInRaffle={raffleContext.userChancesInRaffle}
                 localizePath={localizePath}
               />
             </div>

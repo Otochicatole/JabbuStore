@@ -2,7 +2,7 @@ import { Layers } from "lucide-react";
 
 import type { Order } from "@/features/purchases/types";
 
-import { getCurrentPurchaseStep, type Translate } from "./helpers";
+import { getCurrentPurchaseStep, getRaffleOrderContext, type Translate } from "./helpers";
 
 interface PurchaseTimelineProps {
   order: Order;
@@ -10,32 +10,88 @@ interface PurchaseTimelineProps {
 }
 
 export function PurchaseTimeline({ order, t }: PurchaseTimelineProps) {
+  const raffleContext = getRaffleOrderContext(order);
+  const isRaffle = raffleContext.isRaffle;
   const isBuy = order.type === "BUY";
   const currentStep = getCurrentPurchaseStep(order);
-  const labels = isBuy
+
+  const labels = isRaffle
     ? [
-        [t("purchases.step.verifyPayment"), currentStep === 1 ? t("purchases.step.paymentPending") : t("purchases.step.paymentVerified")],
-        [t("purchases.step.sourcingSkins"), currentStep === 2 ? t("purchases.step.locatingSkins") : t("purchases.step.skinsReady")],
-        [t("purchases.step.sendTrade"), currentStep === 3 ? t("purchases.step.awaitingAcceptance") : t("purchases.step.tradeDelivered")],
-        [t("purchases.step.completed"), currentStep === 4 ? t("purchases.step.skinDelivered") : t("purchases.step.queued")],
+        [
+          t("purchases.step.raffle.verifyPayment"),
+          currentStep === 1
+            ? t("purchases.step.raffle.paymentPending")
+            : t("purchases.step.raffle.paymentVerified"),
+        ],
+        [
+          t("purchases.step.raffle.assignChances"),
+          currentStep === 2
+            ? t("purchases.step.raffle.assigningChances")
+            : t("purchases.step.raffle.chancesAssigned"),
+        ],
+        [
+          t("purchases.step.raffle.completed"),
+          currentStep === 3
+            ? t("purchases.step.raffle.participating")
+            : t("purchases.step.raffle.queued"),
+        ],
       ]
-    : [
-        [t("purchases.step.reviewSell"), currentStep === 1 ? t("purchases.step.awaitingReview") : t("purchases.step.sellApproved")],
-        [t("purchases.step.sendTrade"), currentStep === 2 ? t("purchases.step.awaitingTrade") : t("purchases.step.tradeReceived")],
-        [t("purchases.step.processPayment"), currentStep === 3 ? t("purchases.step.paymentQueued") : t("purchases.step.paymentSent")],
-        [t("purchases.step.completed"), currentStep === 4 ? t("purchases.step.sellCompleted") : t("purchases.step.queued")],
-      ];
+    : isBuy
+      ? [
+          [
+            t("purchases.step.verifyPayment"),
+            currentStep === 1 ? t("purchases.step.paymentPending") : t("purchases.step.paymentVerified"),
+          ],
+          [
+            t("purchases.step.sourcingSkins"),
+            currentStep === 2 ? t("purchases.step.locatingSkins") : t("purchases.step.skinsReady"),
+          ],
+          [
+            t("purchases.step.sendTrade"),
+            currentStep === 3 ? t("purchases.step.awaitingAcceptance") : t("purchases.step.tradeDelivered"),
+          ],
+          [
+            t("purchases.step.completed"),
+            currentStep === 4 ? t("purchases.step.skinDelivered") : t("purchases.step.queued"),
+          ],
+        ]
+      : [
+          [
+            t("purchases.step.reviewSell"),
+            currentStep === 1 ? t("purchases.step.awaitingReview") : t("purchases.step.sellApproved"),
+          ],
+          [
+            t("purchases.step.sendTrade"),
+            currentStep === 2 ? t("purchases.step.awaitingTrade") : t("purchases.step.tradeReceived"),
+          ],
+          [
+            t("purchases.step.processPayment"),
+            currentStep === 3 ? t("purchases.step.paymentQueued") : t("purchases.step.paymentSent"),
+          ],
+          [
+            t("purchases.step.completed"),
+            currentStep === 4 ? t("purchases.step.sellCompleted") : t("purchases.step.queued"),
+          ],
+        ];
 
   return (
     <div className="bg-white/[0.01] border border-white/5 p-4 rounded-[3px]">
       <span className="text-[10px] font-black uppercase tracking-wider font-mono text-[#84849b] mb-4 flex items-center gap-1.5">
         <Layers className="w-3.5 h-3.5 text-accent" />
-        {t("purchases.transactionProgress", {
-          type: isBuy ? t("purchases.buy") : t("purchases.sell"),
-        })}
+        {isRaffle
+          ? raffleContext.raffleName
+            ? t("purchases.transactionProgressRaffleNamed", { name: raffleContext.raffleName })
+            : t("purchases.transactionProgressRaffle")
+          : t("purchases.transactionProgress", {
+              type: isBuy ? t("purchases.buy") : t("purchases.sell"),
+            })}
       </span>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
+      <div
+        className={`grid grid-cols-1 gap-3 mt-3 ${
+          isRaffle ? "sm:grid-cols-3" : "sm:grid-cols-4"
+        }`}
+      >
         {labels.map(([title, description], index) => {
           const step = index + 1;
           const active = currentStep === step;

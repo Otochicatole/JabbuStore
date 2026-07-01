@@ -3,7 +3,7 @@ import { FileText, MessageSquare } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import type { Order, SelectedProof } from "@/features/purchases/types";
 
-import { getPaymentMethodLabel, type Translate } from "./helpers";
+import { getPaymentMethodLabel, isRaffleOrder, type Translate } from "./helpers";
 
 interface PurchaseDetailsPanelsProps {
   isBuy: boolean;
@@ -26,12 +26,13 @@ export function PurchaseDetailsPanels({
     ? `${BACKEND_URL}/orders/${order.id}/payment-proof/${visibleProofType}`
     : null;
   const isManualTransfer = order.paymentMethod === "manual_transfer";
+  const isRaffle = isRaffleOrder(order);
 
   return (
     <>
       <PaymentInfoPanel order={order} t={t} />
       {isBuy && isManualTransfer && <ManualTransferPanel order={order} t={t} />}
-      {order.bot && <BotAccountPanel order={order} t={t} />}
+      {order.bot && !isRaffle && <BotAccountPanel order={order} t={t} />}
 
       <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px]">
         <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-3">

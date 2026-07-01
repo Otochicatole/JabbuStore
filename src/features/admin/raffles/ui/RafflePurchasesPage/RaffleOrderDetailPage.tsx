@@ -281,8 +281,11 @@ export function RaffleOrderDetailPage({ raffleId, orderId }: RaffleOrderDetailPa
 
   const currentStep = detail ? getWorkflowStep(detail.order.status) : 0;
   const isCancelled = detail?.order.status === "CANCELLED";
-  const canCancel =
-    detail?.order.status === "PENDING_PAYMENT" || detail?.order.status === "CANCELLED";
+  const canCancel = detail?.order.status !== "CANCELLED";
+  const canRestore =
+    detail?.order.status === "CANCELLED" ||
+    detail?.order.status === "COMPLETED" ||
+    detail?.order.status === "PAID";
 
   return (
     <div className="space-y-6">
@@ -416,97 +419,100 @@ export function RaffleOrderDetailPage({ raffleId, orderId }: RaffleOrderDetailPa
           </div>
 
           {/* 3-step workflow */}
-          {!isCancelled && (
-            <AdminSection>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-4">
-                {t("purchases.transactionProgress", { type: t("raffles.tickets") })}
+          <AdminSection>
+            {isCancelled && (
+              <p className="mb-4 rounded-[3px] border border-red-500/20 bg-red-500/10 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-red-400">
+                {t("admin.rafflePurchases.orderCancelled")}
               </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {[
-                  { step: 1, label: t("admin.rafflePurchases.workflowPending"), icon: CreditCard },
-                  { step: 2, label: t("admin.rafflePurchases.workflowPaid"), icon: WalletCards },
-                  { step: 3, label: t("admin.rafflePurchases.workflowCompleted"), icon: Check },
-                ].map(({ step, label, icon: Icon }) => (
-                  <div
-                    key={step}
-                    className={`flex items-center gap-2.5 rounded-[3px] border p-3 transition-all ${
-                      currentStep === step
-                        ? "border-accent/30 bg-accent/10 text-accent"
-                        : currentStep > step
-                          ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400 opacity-70"
-                          : "border-white/5 bg-white/1 text-white/30"
-                    }`}
-                  >
+            )}
+            {!isCancelled && (
+              <>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-4">
+                  {t("purchases.transactionProgress", { type: t("raffles.tickets") })}
+                </p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {[
+                    { step: 1, label: t("admin.rafflePurchases.workflowPending"), icon: CreditCard },
+                    { step: 2, label: t("admin.rafflePurchases.workflowPaid"), icon: WalletCards },
+                    { step: 3, label: t("admin.rafflePurchases.workflowCompleted"), icon: Check },
+                  ].map(({ step, label, icon: Icon }) => (
                     <div
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[3px] text-[10px] font-black ${
-                        currentStep > step
-                          ? "bg-emerald-400 text-black"
-                          : currentStep === step
-                            ? "bg-accent text-white"
-                            : "bg-white/10 text-white/40"
+                      key={step}
+                      className={`flex items-center gap-2.5 rounded-[3px] border p-3 transition-all ${
+                        currentStep === step
+                          ? "border-accent/30 bg-accent/10 text-accent"
+                          : currentStep > step
+                            ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400 opacity-70"
+                            : "border-white/5 bg-white/1 text-white/30"
                       }`}
                     >
-                      {currentStep > step ? "✓" : step}
+                      <div
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[3px] text-[10px] font-black ${
+                          currentStep > step
+                            ? "bg-emerald-400 text-black"
+                            : currentStep === step
+                              ? "bg-accent text-white"
+                              : "bg-white/10 text-white/40"
+                        }`}
+                      >
+                        {currentStep > step ? "✓" : step}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="flex items-center gap-1 text-[10px] font-black uppercase">
+                          <Icon className="h-3 w-3 shrink-0" />
+                          {label}
+                        </span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <span className="flex items-center gap-1 text-[10px] font-black uppercase">
-                        <Icon className="h-3 w-3 shrink-0" />
-                        {label}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </AdminSection>
-          )}
+                  ))}
+                </div>
+              </>
+            )}
+          </AdminSection>
 
           {/* Actions */}
-          {!isCancelled && (
-            <AdminSection>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-3">
-                {t("admin.orders.manualStatusChange")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {detail.order.status === "PENDING_PAYMENT" && (
-                  <button
-                    type="button"
-                    onClick={() => updateOrderStatus("PAID")}
-                    className="inline-flex items-center gap-1.5 rounded-[3px] border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/20 cursor-pointer"
-                  >
-                    <CreditCard className="h-3.5 w-3.5" />
-                    {t("admin.rafflePurchases.markPaid")}
-                  </button>
-                )}
-                {detail.order.status !== "PENDING_PAYMENT" && detail.order.status !== "CANCELLED" && (
-                  <button
-                    type="button"
-                    onClick={() => updateOrderStatus("PENDING_PAYMENT")}
-                    className="inline-flex items-center gap-1.5 rounded-[3px] border border-white/10 bg-white/5 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-[#84849b] hover:text-white cursor-pointer"
-                  >
-                    {t("admin.rafflePurchases.resetToPending")}
-                  </button>
-                )}
+          <AdminSection>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-3">
+              {t("admin.orders.manualStatusChange")}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(detail.order.status === "PENDING_PAYMENT" || isCancelled) && (
                 <button
                   type="button"
-                  onClick={() => canCancel && updateOrderStatus("CANCELLED")}
-                  disabled={!canCancel}
-                  className={`inline-flex items-center gap-1.5 rounded-[3px] border px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer ${
-                    detail.order.status === "CANCELLED"
-                      ? "border-red-500/30 bg-red-500/10 text-red-400"
-                      : canCancel
-                        ? "border-white/10 bg-white/5 text-[#84849b] hover:text-red-400"
-                        : "border-white/5 bg-white/1 text-white/20 cursor-not-allowed"
-                  }`}
+                  onClick={() => updateOrderStatus("PAID")}
+                  className="inline-flex items-center gap-1.5 rounded-[3px] border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/20 cursor-pointer"
                 >
-                  <XCircle className="h-3.5 w-3.5" />
-                  {t("admin.rafflePurchases.cancelOrder")}
+                  <CreditCard className="h-3.5 w-3.5" />
+                  {t("admin.rafflePurchases.markPaid")}
                 </button>
-              </div>
-              <p className="mt-3 text-[10px] text-[#84849b]">
-                {t("admin.rafflePurchases.markPaidHint")}
-              </p>
-            </AdminSection>
-          )}
+              )}
+              {canRestore && detail.order.status !== "PENDING_PAYMENT" && (
+                <button
+                  type="button"
+                  onClick={() => updateOrderStatus("PENDING_PAYMENT")}
+                  className="inline-flex items-center gap-1.5 rounded-[3px] border border-white/10 bg-white/5 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-[#84849b] hover:text-white cursor-pointer"
+                >
+                  {t("admin.rafflePurchases.resetToPending")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => canCancel && updateOrderStatus("CANCELLED")}
+                disabled={!canCancel}
+                className={`inline-flex items-center gap-1.5 rounded-[3px] border px-4 py-2.5 text-[10px] font-black uppercase tracking-wider cursor-pointer ${
+                  !canCancel
+                    ? "border-red-500/30 bg-red-500/10 text-red-400"
+                    : "border-white/10 bg-white/5 text-[#84849b] hover:text-red-400"
+                }`}
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                {t("admin.rafflePurchases.cancelOrder")}
+              </button>
+            </div>
+            <p className="mt-3 text-[10px] text-[#84849b]">
+              {t("admin.rafflePurchases.markPaidHint")}
+            </p>
+          </AdminSection>
 
           {/* Assigned tickets */}
           {detail.assignedTickets.length > 0 && (

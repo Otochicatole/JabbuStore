@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -22,10 +23,15 @@ import {
   AdminEmptyState,
   AdminHeader,
   AdminLoadingState,
+  AdminSection,
   AdminSearchInput,
   AdminStatCard,
   AdminToolbar,
 } from "@/features/admin/ui/AdminShell";
+import {
+  RaffleManageActions,
+  type RaffleManageData,
+} from "@/features/admin/raffles/ui/RaffleManageActions";
 
 export interface RaffleOrder {
   id: string;
@@ -123,25 +129,6 @@ function RaffleOrderCard({
           </div>
         </div>
 
-        {/* Ticket numbers */}
-        {order.raffleTickets.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 lg:min-w-[140px]">
-            {order.raffleTickets.slice(0, 6).map((n) => (
-              <span
-                key={n}
-                className="px-2 py-0.5 rounded bg-accent/10 border border-accent/20 text-[9px] font-mono font-black text-accent"
-              >
-                #{n}
-              </span>
-            ))}
-            {order.raffleTickets.length > 6 && (
-              <span className="text-[9px] font-bold text-[#84849b]">
-                +{order.raffleTickets.length - 6} más
-              </span>
-            )}
-          </div>
-        )}
-
         {/* Detail link */}
         <Link
           href={detailHref}
@@ -167,8 +154,10 @@ interface RaffleOrdersPageProps {
 export function RaffleOrdersPage({ raffleId }: RaffleOrdersPageProps) {
   const { t } = useI18n();
   const localizePath = useLocalizedPath();
+  const router = useRouter();
 
   const [raffleName, setRaffleName] = useState<string | null>(null);
+  const [raffleMeta, setRaffleMeta] = useState<RaffleManageData | null>(null);
   const [orders, setOrders] = useState<RaffleOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -185,6 +174,7 @@ export function RaffleOrdersPage({ raffleId }: RaffleOrdersPageProps) {
       if (!res.ok) throw new Error("Error al cargar las órdenes.");
       const data = await res.json();
       setRaffleName(data.raffle?.name ?? null);
+      setRaffleMeta(data.raffle ?? null);
       setOrders(data.orders ?? []);
     } catch (err: any) {
       setError(err.message || "Error al cargar.");
@@ -243,6 +233,28 @@ export function RaffleOrdersPage({ raffleId }: RaffleOrdersPageProps) {
       />
 
       {error && <AdminAlert>{error}</AdminAlert>}
+
+      {raffleMeta && (
+        <AdminSection>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-1">
+                {t("admin.rafflePurchases.raffleContextTitle")}
+              </p>
+              <p className="text-sm font-black text-white">{raffleMeta.name}</p>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
+                {raffleMeta.status}
+              </p>
+            </div>
+            <RaffleManageActions
+              raffle={raffleMeta}
+              onUpdated={fetchOrders}
+              onDeleted={() => router.push(localizePath("/admin/panel/raffle-purchases"))}
+              layout="toolbar"
+            />
+          </div>
+        </AdminSection>
+      )}
 
       {/* Stats */}
       {!loading && orders.length > 0 && (

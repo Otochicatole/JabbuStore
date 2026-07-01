@@ -22,6 +22,8 @@ export interface Order {
   items: OrderItem[];
   createdAt: string;
   paymentMethod?: string | null;
+  botId?: string | null;
+  bot?: { id: string; name: string; steamId: string; tradeUrl: string | null } | null;
   metadata?: {
     firstName?: string | null;
     lastName?: string | null;

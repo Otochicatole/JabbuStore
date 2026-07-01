@@ -4,4 +4,6 @@ export interface Order {
   status: string;
   type: "BUY" | "SELL";
   totalPrice: number;
+  botId?: string | null;
+  bot?: any;
 }

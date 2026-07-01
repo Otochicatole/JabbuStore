@@ -14,10 +14,12 @@ import { PaymentProofModal } from "@/shared/components/PaymentProofModal";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { OrderDetailItem } from "./OrderDetailItem";
 import { OrderDetailPayoutDetails } from "./OrderDetailPayoutDetails";
+import { AdminSelect } from "@/shared/components/AdminSelect";
+import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
 
 interface OrderDetailRowProps {
   order: Order;
-  onUpdateStatus: (orderId: string, newStatus: string) => Promise<void>;
+  onUpdateStatus: (orderId: string, newStatus: string, botId?: string | null) => Promise<void>;
   resolvedItemsMap: Record<
     string,
     {
@@ -27,12 +29,14 @@ interface OrderDetailRowProps {
       exterior?: string;
     }
   >;
+  bots?: any[];
 }
 
 export function OrderDetailRow({
   order,
   onUpdateStatus,
   resolvedItemsMap,
+  bots = [],
 }: OrderDetailRowProps) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
@@ -40,6 +44,9 @@ export function OrderDetailRow({
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [proofOpen, setProofOpen] = useState(false);
+  const [selectedBotId, setSelectedBotId] = useState<string>(order.botId || "");
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   // Workflow steps based on order status
   const getWorkflowStep = (): number => {
@@ -75,14 +82,28 @@ export function OrderDetailRow({
     }, 2000);
   };
 
+  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+    if (newStatus !== "CANCELLED" && newStatus !== "PENDING_PAYMENT" && !selectedBotId) {
+      setAlertMessage(t("admin.orders.selectBotRequiredError") || "Debes seleccionar una cuenta de bot para poder cambiar el estado.");
+      setAlertOpen(true);
+      return;
+    }
+    await onUpdateStatus(orderId, newStatus, selectedBotId || null);
+  };
+
   // AUTOMATION: Performs the transition in one click (e.g. Approve Payment & go straight to Trade Pending)
   const handleAutoApproveAndTrade = async () => {
+    if (!selectedBotId) {
+      setAlertMessage(t("admin.orders.selectBotRequiredError") || "Debes seleccionar una cuenta de bot para poder generar el trade.");
+      setAlertOpen(true);
+      return;
+    }
     setUpdating(true);
     try {
       // 1. Mark as PAID
-      await onUpdateStatus(order.id, "PAID");
+      await onUpdateStatus(order.id, "PAID", selectedBotId);
       // 2. Mark as TRADE_PENDING
-      await onUpdateStatus(order.id, "TRADE_PENDING");
+      await onUpdateStatus(order.id, "TRADE_PENDING", selectedBotId);
       // 3. Automatically copy user tradelink to ease the operator's life
       if (order.user?.tradeUrl) {
         navigator.clipboard.writeText(order.user.tradeUrl);
@@ -318,6 +339,33 @@ export function OrderDetailRow({
           </span>
         </div>
 
+        {/* Bot selector column */}
+        {order.status !== "COMPLETED" && order.status !== "CANCELLED" ? (
+          <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1.5 w-full lg:w-44 shrink-0">
+            <span className="text-[10px] text-[#84849b] font-mono uppercase tracking-wider block">
+              {t("admin.orders.selectBotAccount") || "Bot de Envío"}
+            </span>
+            <AdminSelect
+              value={selectedBotId}
+              onChange={setSelectedBotId}
+              className="w-full sm:w-full min-w-full"
+              options={[
+                { value: "", label: t("admin.orders.selectBotPlaceholder") || "Seleccionar bot..." },
+                ...bots.filter(b => b.isActive).map(b => ({ value: b.id, label: `${b.name} (${b.steamId.slice(-4)})` }))
+              ]}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-1">
+            <span className="text-[10px] text-[#84849b] font-mono">
+              {t("admin.orders.selectedBot") || "Bot Asignado"}
+            </span>
+            <span className="text-xs text-white/80 font-mono font-bold block bg-white/5 px-2.5 py-1.5 rounded-[3px] border border-white/10 font-mono">
+              {order.bot ? `${order.bot.name} (${order.bot.steamId.slice(-4)})` : "Ninguno"}
+            </span>
+          </div>
+        )}
+
         {/* 🛠️ MANUAL STATUS BUTTONS (CAMBIO DE ESTADO MANUAL CLÁSICO) */}
         <div className="space-y-1.5 w-full lg:w-auto">
           <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
@@ -325,7 +373,7 @@ export function OrderDetailRow({
           </span>
           <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:items-center">
             <button
-              onClick={() => onUpdateStatus(order.id, "PENDING_PAYMENT")}
+              onClick={() => handleUpdateStatus(order.id, "PENDING_PAYMENT")}
               className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
                 order.status === "PENDING_PAYMENT"
                   ? "bg-orange-500/20 border-orange-500/40 text-orange-400"
@@ -337,7 +385,7 @@ export function OrderDetailRow({
             <button
               onClick={() => {
                 if (!isCancelled) {
-                  onUpdateStatus(order.id, "PAID");
+                  handleUpdateStatus(order.id, "PAID");
                 }
               }}
               disabled={isCancelled}
@@ -355,7 +403,7 @@ export function OrderDetailRow({
             <button
               onClick={() => {
                 if (!isCancelled) {
-                  onUpdateStatus(order.id, "TRADE_PENDING");
+                  handleUpdateStatus(order.id, "TRADE_PENDING");
                 }
               }}
               disabled={isCancelled}
@@ -373,7 +421,7 @@ export function OrderDetailRow({
             <button
               onClick={() => {
                 if (!isCancelled) {
-                  onUpdateStatus(order.id, "COMPLETED");
+                  handleUpdateStatus(order.id, "COMPLETED");
                 }
               }}
               disabled={isCancelled}
@@ -391,7 +439,7 @@ export function OrderDetailRow({
             <button
               onClick={() => {
                 if (canCancel) {
-                  onUpdateStatus(order.id, "CANCELLED");
+                  handleUpdateStatus(order.id, "CANCELLED");
                 }
               }}
               disabled={!canCancel}
@@ -489,6 +537,13 @@ export function OrderDetailRow({
           ))}
         </div>
       </div>
+      <AlertConfirmModal
+        isOpen={alertOpen}
+        title={t("admin.orders.alertTitle") || "Atención"}
+        message={alertMessage}
+        type="warning"
+        onConfirm={() => setAlertOpen(false)}
+      />
     </div>
   );
 }

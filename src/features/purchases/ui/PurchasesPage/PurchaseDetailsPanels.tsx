@@ -31,6 +31,7 @@ export function PurchaseDetailsPanels({
     <>
       <PaymentInfoPanel order={order} t={t} />
       {isBuy && isManualTransfer && <ManualTransferPanel order={order} t={t} />}
+      {order.bot && <BotAccountPanel order={order} t={t} />}
 
       <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px]">
         <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-3">
@@ -183,6 +184,47 @@ function ManualField({
     <div className={className}>
       <span className="text-[#84849b] uppercase block">{label}</span>
       <span className="font-mono font-bold text-white break-all">{value}</span>
+    </div>
+  );
+}
+
+function BotAccountPanel({ order, t }: { order: Order; t: Translate }) {
+  if (!order.bot) return null;
+  const isBuy = order.type === "BUY";
+  return (
+    <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px]">
+      <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-2">
+        {isBuy
+          ? (t("purchases.botAccountDetails") || "Cuenta oficial de envío (Bot)")
+          : (t("purchases.botAccountReceiveDetails") || "Cuenta oficial de recepción (Bot)")}
+      </span>
+      <p className="text-[10px] text-white/50 mb-3 font-semibold">
+        {isBuy
+          ? (t("purchases.botAccountSecurityNote") || "Por tu seguridad, asegurate de que la oferta de intercambio provenga de esta cuenta:")
+          : (t("purchases.botAccountSecurityNoteReceive") || "Por tu seguridad, realizá el intercambio únicamente con esta cuenta oficial:")}
+      </p>
+      <div className="grid grid-cols-2 gap-3 text-[9.5px]">
+        <div>
+          <span className="text-[8px] text-[#84849b] block uppercase">{t("purchases.botAccountName") || "Nombre del Bot"}</span>
+          <span className="font-bold text-white block select-all">{order.bot.name}</span>
+        </div>
+        <div>
+          <span className="text-[8px] text-[#84849b] block uppercase">{t("purchases.botAccountSteamId") || "Steam ID"}</span>
+          <span className="font-mono font-bold text-accent block select-all">{order.bot.steamId}</span>
+        </div>
+      </div>
+      {order.bot.tradeUrl && (
+        <div className="mt-3 pt-2.5 border-t border-white/5">
+          <a
+            href={order.bot.tradeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[9px] font-bold uppercase tracking-wider text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            {t("purchases.botAccountTradeLink") || "Enlace de Trade del Bot"}
+          </a>
+        </div>
+      )}
     </div>
   );
 }

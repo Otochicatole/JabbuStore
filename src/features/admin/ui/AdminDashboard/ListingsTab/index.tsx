@@ -29,6 +29,7 @@ export function ListingsTab() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bots, setBots] = useState<any[]>([]);
 
   // Filtros interactivos
   const [searchTerm, setSearchTerm] = useState('');
@@ -160,7 +161,7 @@ export function ListingsTab() {
     }
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: string, botId?: string | null) => {
     if (updatingStatusRef.current.has(orderId)) return;
 
     // Actualización optimista local en memoria para evitar un parpadeo de recarga de red (sin Loader2)
@@ -184,7 +185,7 @@ export function ListingsTab() {
         },
         credentials: "include",
         signal: controller.signal,
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus, botId }),
       });
       if (response.status === 401 || response.status === 403) {
         const message = await getErrorMessage(response, t("admin.common.adminSessionExpired"));
@@ -219,9 +220,27 @@ export function ListingsTab() {
     }
   };
 
+  const fetchBots = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/bots`, {
+        headers: {
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBots(data);
+      }
+    } catch (err) {
+      console.error("Error fetching bots:", err);
+    }
+  };
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       fetchOrders();
+      fetchBots();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -354,6 +373,7 @@ export function ListingsTab() {
                     order={order}
                     onUpdateStatus={updateOrderStatus}
                     resolvedItemsMap={resolvedItemsMap}
+                    bots={bots}
                   />
                 );
               }
@@ -364,6 +384,7 @@ export function ListingsTab() {
                   order={order} 
                   onUpdateStatus={updateOrderStatus} 
                   resolvedItemsMap={resolvedItemsMap}
+                  bots={bots}
                 />
               );
             })}

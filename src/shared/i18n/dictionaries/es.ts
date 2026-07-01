@@ -990,4 +990,6 @@ export const es = {
   "notifications.botAssigned.sellContent": "Por favor, envía el trade únicamente al bot oficial '{botName}' (Steam ID: {botSteamId}).",
   "admin.orders.selectedBot": "Bot Asignado",
   "admin.orders.alertTitle": "Atención",
+  "notifications.ticketAlert": "Mensaje de Soporte",
+  "notifications.orderAlert": "Actualización de Orden",
 } as const;

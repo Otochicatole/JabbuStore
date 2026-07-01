@@ -10,7 +10,8 @@ import {
   useState,
   Suspense,
 } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell, X, MessageSquare, ShoppingBag, Info } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
@@ -43,6 +44,7 @@ interface ToastPayload {
   title: string;
   content: string;
   link: string | null;
+  type: string;
 }
 
 function NotificationProviderContent({
@@ -75,21 +77,33 @@ function NotificationProviderContent({
   // Play a premium micro-sound alert
   const playSound = useCallback(() => {
     try {
-      const context = audioContextRef.current;
-      if (!context || context.state !== "running") return;
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      const now = context.currentTime;
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(880, now);
-      oscillator.frequency.setValueAtTime(1100, now + 0.08);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.1, now + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(now);
-      oscillator.stop(now + 0.21);
+      let context = audioContextRef.current;
+      if (!context) {
+        context = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioContextRef.current = context;
+      }
+      
+      const play = () => {
+        const oscillator = context!.createOscillator();
+        const gain = context!.createGain();
+        const now = context!.currentTime;
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, now);
+        oscillator.frequency.setValueAtTime(1100, now + 0.08);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.1, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+        oscillator.connect(gain);
+        gain.connect(context!.destination);
+        oscillator.start(now);
+        oscillator.stop(now + 0.21);
+      };
+
+      if (context.state === "suspended") {
+        context.resume().then(play).catch(() => {});
+      } else {
+        play();
+      }
     } catch {
       // Audio context might fail on some browsers before interaction
     }
@@ -188,6 +202,7 @@ function NotificationProviderContent({
           title: notification.title,
           content: notification.content,
           link: notification.link,
+          type: notification.type,
         },
       ]);
 
@@ -295,46 +310,100 @@ function NotificationProviderContent({
     <NotificationContext.Provider value={value}>
       {children}
       {/* Real-time notification toasts overlay */}
-      <div className="pointer-events-none fixed bottom-4 right-4 z-[250] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2 sm:bottom-6 sm:right-6">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            role="status"
-            className="pointer-events-auto flex cursor-pointer gap-3 rounded-xl border border-accent/25 bg-[#120e24]/95 p-4 text-white shadow-2xl shadow-black/80 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => handleToastClick(toast)}
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-accent">
-              <Bell className="h-4.5 w-4.5 animate-bounce" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-accent">
-                {t("notifications.newAlert") || "Notificación"}
-              </p>
-              <p className="truncate text-xs font-black">{t(toast.title) || toast.title}</p>
-              <p className="mt-1 line-clamp-2 text-[11px] text-white/70">
-                {(() => {
-                  try {
-                    const parsed = JSON.parse(toast.content);
-                    return t(parsed.key, parsed.params) || toast.content;
-                  } catch {
-                    return t(toast.content) || toast.content;
-                  }
-                })()}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="h-fit cursor-pointer rounded-full p-1 text-white/30 hover:bg-white/10 hover:text-white"
-              aria-label="Dismiss"
-              onClick={(event) => {
-                event.stopPropagation();
-                removeToast(toast.id);
-              }}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
+      <div className="pointer-events-none fixed bottom-4 right-4 z-[250] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2.5 sm:bottom-6 sm:right-6">
+        <AnimatePresence>
+          {toasts.map((toast) => {
+            const isTicket = toast.type === "TICKET_MESSAGE";
+            const isOrder = toast.type === "ORDER_STATUS";
+            
+            // Icon selection
+            const toastIcon = isTicket ? (
+              <MessageSquare className="h-4.5 w-4.5 text-pink-400" />
+            ) : isOrder ? (
+              <ShoppingBag className="h-4.5 w-4.5 text-emerald-400" />
+            ) : (
+              <Bell className="h-4.5 w-4.5 text-accent animate-pulse" />
+            );
+
+            // Styling variables
+            const borderClass = isTicket 
+              ? "border-pink-500/20 hover:border-pink-500/40 shadow-[0_15px_40px_rgba(236,72,153,0.15)]" 
+              : isOrder 
+              ? "border-emerald-500/20 hover:border-emerald-500/40 shadow-[0_15px_40px_rgba(16,185,129,0.15)]" 
+              : "border-accent/25 hover:border-accent/40 shadow-[0_15px_40px_rgba(217,70,239,0.15)]";
+
+            const bgClass = isTicket 
+              ? "bg-gradient-to-r from-pink-500/10 via-[#160b21]/95 to-[#160b21]/95 hover:from-pink-500/15" 
+              : isOrder 
+              ? "bg-gradient-to-r from-emerald-500/10 via-[#081714]/95 to-[#081714]/95 hover:from-emerald-500/15" 
+              : "bg-gradient-to-r from-accent/10 via-[#0c071d]/95 to-[#0c071d]/95 hover:from-accent/15";
+
+            const tagText = isTicket 
+              ? t("notifications.ticketAlert") || "Mensaje de Soporte"
+              : isOrder 
+              ? t("notifications.orderAlert") || "Actualización de Orden"
+              : t("notifications.newAlert") || "Notificación";
+
+            const tagColorClass = isTicket 
+              ? "text-pink-400" 
+              : isOrder 
+              ? "text-emerald-400" 
+              : "text-accent";
+
+            const iconBgClass = isTicket 
+              ? "bg-pink-500/10 border-pink-500/20" 
+              : isOrder 
+              ? "bg-emerald-500/10 border-emerald-500/20" 
+              : "bg-accent/10 border-accent/25";
+
+            return (
+              <motion.div
+                key={toast.id}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                role="status"
+                className={`pointer-events-auto relative flex cursor-pointer gap-3.5 rounded-xl border p-4 text-white backdrop-blur-xl transition-all duration-300 ${borderClass} ${bgClass}`}
+                onClick={() => handleToastClick(toast)}
+              >
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${iconBgClass}`}>
+                  {toastIcon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[9.5px] font-black uppercase tracking-widest ${tagColorClass}`}>
+                    {tagText}
+                  </p>
+                  <p className="truncate text-xs font-black mt-0.5 text-white/95">
+                    {t(toast.title) || toast.title}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-[10.5px] leading-relaxed text-white/60">
+                    {(() => {
+                      try {
+                        const parsed = JSON.parse(toast.content);
+                        return t(parsed.key, parsed.params) || toast.content;
+                      } catch {
+                        return t(toast.content) || toast.content;
+                      }
+                    })()}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="h-fit cursor-pointer rounded-full p-1 text-white/30 hover:bg-white/10 hover:text-white transition-colors"
+                  aria-label="Dismiss"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeToast(toast.id);
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
     </NotificationContext.Provider>
   );

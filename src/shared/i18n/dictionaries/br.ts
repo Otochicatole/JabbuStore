@@ -992,4 +992,6 @@ export const br = {
   "admin.orders.alertTitle": "Atenção",
   "notifications.ticketAlert": "Mensagem de Suporte",
   "notifications.orderAlert": "Atualização de Pedido",
+  "notifications.errorAlert": "Falha na Operação",
+  "notifications.warningAlert": "Alerta de Segurança",
 } as const;

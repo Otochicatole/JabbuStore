@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, MessageSquare, ShoppingBag, Info, CheckCircle2, Trash2 } from "lucide-react";
+import { Bell, MessageSquare, ShoppingBag, Info, CheckCircle2, Trash2, XCircle, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useNotifications } from "../context/NotificationContext";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -20,6 +20,104 @@ function formatTimeAgo(dateString: string, t: any) {
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
   return `${diffDays}d`;
+}
+
+function getNotificationTheme(resolvedTitle: string, resolvedContent: string, type: string) {
+  const t = resolvedTitle.toLowerCase();
+  const c = resolvedContent.toLowerCase();
+  
+  // 1. Support/Tickets -> Pink
+  if (type === "TICKET_MESSAGE" || t.includes("ticket") || t.includes("soporte")) {
+    return {
+      name: "ticket",
+      color: "pink",
+      textClass: "text-pink-400",
+      bgFadeClass: "from-pink-500/10 via-pink-500/[0.02]",
+      borderClass: "border-pink-500/20 hover:border-pink-500/40",
+      toastBgClass: "from-pink-500/10 via-[#160b21]/95 to-[#160b21]/95 hover:from-pink-500/15",
+      shadowClass: "shadow-[0_15px_40px_rgba(236,72,153,0.15)]",
+      iconBgClass: "bg-pink-500/10 border-pink-500/20 text-pink-400"
+    };
+  }
+  
+  // 2. Critical/Error/Red -> Cancellations or rejections
+  if (
+    t.includes("cancelada") || 
+    t.includes("rechazada") || 
+    t.includes("error") || 
+    t.includes("cancel") || 
+    t.includes("reject") ||
+    c.includes("cancelada") ||
+    c.includes("rechazada")
+  ) {
+    return {
+      name: "error",
+      color: "red",
+      textClass: "text-red-400",
+      bgFadeClass: "from-red-500/10 via-red-500/[0.02] to-transparent",
+      borderClass: "border-red-500/20 hover:border-red-500/40",
+      toastBgClass: "from-red-500/10 via-[#1f0b0b]/95 to-[#1f0b0b]/95 hover:from-red-500/15",
+      shadowClass: "shadow-[0_15px_40px_rgba(239,68,68,0.15)]",
+      iconBgClass: "bg-red-500/10 border-red-500/20 text-red-400"
+    };
+  }
+  
+  // 3. Security/Warning/Orange -> Trade bot assigned or pending trade
+  if (
+    t.includes("bot") || 
+    t.includes("seguridad") || 
+    t.includes("security") || 
+    t.includes("pendiente") || 
+    t.includes("pending") ||
+    t.includes("trade") ||
+    c.includes("bot oficial")
+  ) {
+    return {
+      name: "warning",
+      color: "orange",
+      textClass: "text-orange-400",
+      bgFadeClass: "from-orange-500/10 via-orange-500/[0.02] to-transparent",
+      borderClass: "border-orange-500/20 hover:border-orange-500/40",
+      toastBgClass: "from-orange-500/10 via-[#21140b]/95 to-[#21140b]/95 hover:from-orange-500/15",
+      shadowClass: "shadow-[0_15px_40px_rgba(249,115,22,0.15)]",
+      iconBgClass: "bg-orange-500/10 border-orange-500/20 text-orange-400"
+    };
+  }
+  
+  // 4. Success/Green -> Approved, completed, paid
+  if (
+    t.includes("aprobada") || 
+    t.includes("completada") || 
+    t.includes("pagada") || 
+    t.includes("éxito") || 
+    t.includes("success") || 
+    t.includes("approved") || 
+    t.includes("completed") || 
+    t.includes("paid")
+  ) {
+    return {
+      name: "success",
+      color: "emerald",
+      textClass: "text-emerald-400",
+      bgFadeClass: "from-emerald-500/10 via-emerald-500/[0.02] to-transparent",
+      borderClass: "border-emerald-500/20 hover:border-emerald-500/40",
+      toastBgClass: "from-emerald-500/10 via-[#081714]/95 to-[#081714]/95 hover:from-emerald-500/15",
+      shadowClass: "shadow-[0_15px_40px_rgba(16,185,129,0.15)]",
+      iconBgClass: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+    };
+  }
+  
+  // 5. Default/System/Blue -> General info
+  return {
+    name: "info",
+    color: "accent",
+    textClass: "text-accent",
+    bgFadeClass: "from-accent/10 via-accent/[0.02] to-transparent",
+    borderClass: "border-accent/25 hover:border-accent/40",
+    toastBgClass: "from-accent/10 via-[#0c071d]/95 to-[#0c071d]/95 hover:from-accent/15",
+    shadowClass: "shadow-[0_15px_40px_rgba(217,70,239,0.15)]",
+    iconBgClass: "bg-accent/10 border-accent/25 text-accent"
+  };
 }
 
 export function NotificationBell({ align = "right" }: { align?: "left" | "right" }) {
@@ -58,14 +156,18 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
     }
   };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "TICKET_MESSAGE":
-        return <MessageSquare className="h-4 w-4 text-pink-400" />;
-      case "ORDER_STATUS":
-        return <ShoppingBag className="h-4 w-4 text-emerald-400" />;
+  const getIcon = (themeName: string) => {
+    switch (themeName) {
+      case "ticket":
+        return <MessageSquare className="h-4 w-4" />;
+      case "success":
+        return <ShoppingBag className="h-4 w-4" />;
+      case "error":
+        return <XCircle className="h-4 w-4" />;
+      case "warning":
+        return <ShieldCheck className="h-4 w-4" />;
       default:
-        return <Info className="h-4 w-4 text-blue-400" />;
+        return <Info className="h-4 w-4" />;
     }
   };
 
@@ -128,27 +230,20 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                 </div>
               ) : (
                 notifications.map((notification) => {
-                  const isTicket = notification.type === "TICKET_MESSAGE";
-                  const isOrder = notification.type === "ORDER_STATUS";
-                  
-                  // Contextual hover and unread styles (using fade-gradient on the left)
-                  const bgAndHoverClass = !notification.read
-                    ? isTicket
-                      ? "bg-gradient-to-r from-pink-500/10 via-pink-500/[0.02] to-transparent hover:from-pink-500/15"
-                      : isOrder
-                      ? "bg-gradient-to-r from-emerald-500/10 via-emerald-500/[0.02] to-transparent hover:from-emerald-500/15"
-                      : "bg-gradient-to-r from-accent/10 via-accent/[0.02] to-transparent hover:from-accent/15"
-                    : isTicket
-                    ? "bg-transparent hover:bg-gradient-to-r hover:from-pink-500/5 hover:to-transparent"
-                    : isOrder
-                    ? "bg-transparent hover:bg-gradient-to-r hover:from-emerald-500/5 hover:to-transparent"
-                    : "bg-transparent hover:bg-gradient-to-r hover:from-accent/5 hover:to-transparent";
+                  const resolvedTitle = t(notification.title) || notification.title;
+                  let resolvedContent = "";
+                  try {
+                    const parsed = JSON.parse(notification.content);
+                    resolvedContent = t(parsed.key, parsed.params) || notification.content;
+                  } catch {
+                    resolvedContent = t(notification.content) || notification.content;
+                  }
 
-                  const iconContainerClass = isTicket 
-                    ? "bg-pink-500/10 border-pink-500/20 text-pink-400" 
-                    : isOrder 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                    : "bg-accent/10 border-accent/25 text-accent";
+                  const theme = getNotificationTheme(resolvedTitle, resolvedContent, notification.type);
+                  
+                  const bgAndHoverClass = !notification.read
+                    ? `bg-gradient-to-r ${theme.bgFadeClass} to-transparent`
+                    : `bg-transparent hover:bg-gradient-to-r hover:${theme.bgFadeClass} hover:to-transparent`;
 
                   return (
                     <div
@@ -158,11 +253,17 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                     >
                       {/* Left Icon Container */}
                       <div className="relative shrink-0">
-                        <div className={`flex h-8.5 w-8.5 items-center justify-center rounded-full border shadow-sm transition-all group-hover:scale-105 ${iconContainerClass}`}>
-                          {getIcon(notification.type)}
+                        <div className={`flex h-8.5 w-8.5 items-center justify-center rounded-full border shadow-sm transition-all group-hover:scale-105 ${theme.iconBgClass}`}>
+                          {getIcon(theme.name)}
                         </div>
                         {!notification.read && (
-                          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-accent border-2 border-[#0c081e] shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
+                          <span className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0c081e]
+                            ${theme.name === 'info' ? 'bg-accent shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 
+                              theme.name === 'error' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 
+                              theme.name === 'warning' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]' : 
+                              theme.name === 'success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 
+                              'bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.8)]'}`}
+                          />
                         )}
                       </div>
 
@@ -171,21 +272,14 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                         <div className="flex items-start justify-between gap-2.5">
                           <p className={`text-[11px] leading-tight truncate group-hover:text-accent transition-colors
                             ${!notification.read ? "text-white font-black" : "text-white/60 font-semibold"}`}>
-                            {t(notification.title) || notification.title}
+                            {resolvedTitle}
                           </p>
                           <span className="text-[9px] text-white/30 shrink-0 mt-0.5 font-medium">
                             {formatTimeAgo(notification.createdAt, t)}
                           </span>
                         </div>
                         <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-white/45 group-hover:text-white/60 transition-colors">
-                          {(() => {
-                            try {
-                              const parsed = JSON.parse(notification.content);
-                              return t(parsed.key, parsed.params) || notification.content;
-                            } catch {
-                              return t(notification.content) || notification.content;
-                            }
-                          })()}
+                          {resolvedContent}
                         </p>
                       </div>
                     </div>

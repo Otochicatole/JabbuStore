@@ -992,4 +992,6 @@ export const en = {
   "admin.orders.alertTitle": "Attention",
   "notifications.ticketAlert": "Support Message",
   "notifications.orderAlert": "Order Update",
+  "notifications.errorAlert": "Operation Failed",
+  "notifications.warningAlert": "Security Alert",
 } as const;

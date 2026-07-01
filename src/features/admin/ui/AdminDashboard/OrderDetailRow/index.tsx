@@ -461,23 +461,7 @@ export function OrderDetailRow({
           </div>
         </div>
 
-        {/* AUTOMATION EXPRES BAR (Aprobar Pago y Generar Trade en 1 Clic) */}
-        {order.status === "PENDING_PAYMENT" && (
-          <div className="w-full lg:w-auto">
-            <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
-              {t("admin.orders.expressAction")}
-            </span>
-            <button
-              onClick={handleAutoApproveAndTrade}
-              disabled={updating}
-              className="w-full lg:w-auto justify-center px-3 py-1.5 bg-gradient-to-r from-accent to-indigo-600 hover:brightness-110 text-white border-none rounded-[3px] text-[9.5px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_15px_rgba(217,70,239,0.2)] disabled:opacity-50 min-h-[36px]"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{t("admin.orders.autoApproveTrade")}</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
-        )}
+
       </div>
 
       {/* 💳 SECCIÓN DE DETALLES DE PAGO Y FACTURACIÓN */}

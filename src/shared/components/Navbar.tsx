@@ -270,6 +270,28 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                     </Link>
 
                     <Link
+                      href={localizePath("/listings")}
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] text-xs font-semibold text-white/60 hover:text-white transition-all duration-300"
+                    >
+                      <svg
+                        className="w-4 h-4 text-accent/80"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      {t("nav.listings")}
+                    </Link>
+
+                    <Link
                       href={localizePath("/quotes")}
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] text-xs font-semibold text-white/60 hover:text-white transition-all duration-300"

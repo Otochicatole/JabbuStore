@@ -12,13 +12,12 @@ import {
   type PurchaseTab,
 } from "./helpers";
 
-export function usePurchases() {
+export function usePurchases(mode: "buy" | "sell") {
   const { t, locale } = useI18n();
   const isFetchingRef = useRef(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<PurchaseTab>("all");
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
   const [selectedProof, setSelectedProof] = useState<SelectedProof | null>(null);
 
@@ -73,10 +72,9 @@ export function usePurchases() {
   const filteredOrders = useMemo(
     () =>
       orders.filter((order) => {
-        if (activeTab === "all") return true;
-        return order.type.toLowerCase() === activeTab;
+        return order.type.toLowerCase() === mode;
       }),
-    [activeTab, orders],
+    [mode, orders],
   );
 
   const toggleOrderExpand = (orderId: string) => {
@@ -87,7 +85,6 @@ export function usePurchases() {
   };
 
   return {
-    activeTab,
     error,
     expandedOrders,
     fetchOrders,
@@ -96,7 +93,6 @@ export function usePurchases() {
     locale,
     orders,
     selectedProof,
-    setActiveTab,
     setSelectedProof,
     t,
     toggleOrderExpand,

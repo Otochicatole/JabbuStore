@@ -7,9 +7,8 @@ import { PurchasesHeader } from "./PurchasesHeader";
 import { PurchasesEmpty, PurchasesError, PurchasesLoading } from "./PurchasesStates";
 import { usePurchases } from "./usePurchases";
 
-export function PurchasesPage() {
+export function PurchasesPage({ mode = "buy" }: { mode?: "buy" | "sell" }) {
   const {
-    activeTab,
     error,
     expandedOrders,
     fetchOrders,
@@ -18,19 +17,17 @@ export function PurchasesPage() {
     locale,
     orders,
     selectedProof,
-    setActiveTab,
     setSelectedProof,
     t,
     toggleOrderExpand,
-  } = usePurchases();
+  } = usePurchases(mode);
 
   return (
     <div className="max-w-6xl mx-auto px-6 pt-28 pb-20 text-white min-h-screen font-sans">
       <PurchasesHeader
-        activeTab={activeTab}
+        mode={mode}
         loading={loading}
         onRefresh={fetchOrders}
-        onTabChange={setActiveTab}
         t={t}
       />
 
@@ -41,7 +38,7 @@ export function PurchasesPage() {
       {loading && orders.length === 0 ? (
         <PurchasesLoading t={t} />
       ) : filteredOrders.length === 0 ? (
-        <PurchasesEmpty activeTab={activeTab} t={t} />
+        <PurchasesEmpty mode={mode} t={t} />
       ) : (
         <div className="space-y-4">
           {filteredOrders.map((order, index) => (

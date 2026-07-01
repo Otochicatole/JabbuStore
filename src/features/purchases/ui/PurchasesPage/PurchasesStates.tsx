@@ -47,7 +47,7 @@ export function PurchasesLoading({ t }: { t: Translate }) {
   );
 }
 
-export function PurchasesEmpty({ activeTab, t }: { activeTab: PurchaseTab; t: Translate }) {
+export function PurchasesEmpty({ mode, t }: { mode: "buy" | "sell"; t: Translate }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -56,14 +56,10 @@ export function PurchasesEmpty({ activeTab, t }: { activeTab: PurchaseTab; t: Tr
     >
       <ShoppingBag className="w-16 h-16 text-white/10 mx-auto mb-5" />
       <p className="text-lg font-black text-white/50 uppercase tracking-wide">
-        {t("purchases.noOrders")}
+        {mode === "buy" ? t("purchases.noOrders") : t("listings.empty")}
       </p>
       <p className="text-sm text-[#84849b] mt-2 max-w-md mx-auto font-medium">
-        {activeTab === "all"
-          ? t("purchases.empty")
-          : activeTab === "buy"
-            ? t("purchases.noBuys")
-            : t("purchases.noSells")}
+        {mode === "buy" ? t("purchases.noBuys") : t("purchases.noSells")}
       </p>
     </motion.div>
   );

@@ -5,10 +5,13 @@ import {
   Bot,
   Copy,
   Check,
+  ShieldCheck,
+  CreditCard,
   Layers,
   ShoppingCart,
   UserRound,
   WalletCards,
+  XCircle,
 } from "lucide-react";
 import { AdminBotOption, Order } from "@/features/admin/domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
@@ -362,17 +365,8 @@ export function OrderDetailRow({
           <p className="mb-3 text-[10px] font-semibold text-white/35">
             {t("admin.orders.purchaseStatusHelper")}
           </p>
-          <div className="grid grid-cols-2 gap-1.5 xl:flex xl:flex-wrap xl:items-center">
-            <button
-              onClick={() => handleUpdateStatus(order.id, "PENDING_PAYMENT")}
-              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
-                order.status === "PENDING_PAYMENT"
-                  ? "bg-orange-500/20 border-orange-500/40 text-orange-400"
-                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
-              }`}
-            >
-              {t("purchases.status.paymentPending")}
-            </button>
+          <div className="grid grid-cols-1 gap-1.5 xl:flex xl:flex-wrap xl:items-center">
+            {/* Paso 1: Pago */}
             <button
               onClick={() => {
                 if (!isCancelled) {
@@ -381,16 +375,19 @@ export function OrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.markPaid")}
-              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "PAID"
-                  ? "bg-blue-500/20 border-blue-500/40 text-blue-400"
+                  ? "bg-blue-500/20 border-blue-500/40 text-blue-400 font-extrabold shadow-[0_0_10px_rgba(59,130,246,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
             >
-              {t("purchases.status.paid")}
+              <CreditCard className="w-3.5 h-3.5" />
+              {t("admin.orders.step1PaymentReceived")}
             </button>
+
+            {/* Paso 2: Trade */}
             <button
               onClick={() => {
                 if (!isCancelled) {
@@ -399,16 +396,19 @@ export function OrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.markTradePending")}
-              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "TRADE_PENDING"
-                  ? "bg-purple-500/20 border-purple-500/40 text-purple-400"
+                  ? "bg-purple-500/20 border-purple-500/40 text-purple-400 font-extrabold shadow-[0_0_10px_rgba(168,85,247,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
             >
-              {t("purchases.status.tradePending")}
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {t("admin.orders.step2TradePending")}
             </button>
+
+            {/* Paso 3: Completar */}
             <button
               onClick={() => {
                 if (!isCancelled) {
@@ -417,16 +417,32 @@ export function OrderDetailRow({
               }}
               disabled={isCancelled}
               title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.completeOrder")}
-              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
                   : order.status === "COMPLETED"
-                  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 font-extrabold shadow-[0_0_10px_rgba(16,185,129,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
             >
-              {t("admin.orders.complete")}
+              <Check className="w-3.5 h-3.5" />
+              {t("admin.orders.step3Complete")}
             </button>
+
+            {/* Volver a Pendiente */}
+            <button
+              onClick={() => handleUpdateStatus(order.id, "PENDING_PAYMENT")}
+              className={`w-full sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+                order.status === "PENDING_PAYMENT"
+                  ? "bg-[#110f1e] border-[#84849b]/40 text-[#84849b]"
+                  : "bg-white/5 border-white/5 text-white/30 hover:text-white"
+              }`}
+              title={t("admin.orders.resetToPending")}
+            >
+              {t("admin.orders.resetToPending")}
+            </button>
+
+            {/* Rechazar / Cancelar */}
             <button
               onClick={() => {
                 if (canCancel) {
@@ -439,15 +455,16 @@ export function OrderDetailRow({
                   ? t("admin.orders.cancelOrder")
                   : t("admin.orders.cancelFromPending")
               }
-              className={`w-full sm:w-auto px-2.5 py-1.5 border text-[9px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 order.status === "CANCELLED"
                   ? "bg-red-500/20 border-red-500/40 text-red-400"
                   : !canCancel
                     ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
-                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
+                    : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
             >
-              {t("common.cancel")}
+              <XCircle className="w-3.5 h-3.5" />
+              {t("admin.orders.rejectCancel")}
             </button>
           </div>
         </div>

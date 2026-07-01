@@ -59,12 +59,9 @@ export function SellOrderDetailItem({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row sm:items-center gap-6 bg-[#090812] p-5 border relative overflow-hidden group rounded-[3px] transition-all duration-300 hover:bg-[#0c0a1a] border-white/5 ${
-        rarityColors[finalRarity] || ""
-      }`}
+      className="flex flex-col sm:flex-row sm:items-center gap-6 bg-[#090812] p-5 border relative overflow-hidden group rounded-[3px] transition-all duration-300 hover:bg-[#0c0a1a] border-white/5"
     >
-      {/* Visual Accent stripe for physical verified items vs resell items */}
-      <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-rose-500 via-purple-500 to-indigo-500 opacity-60" />
+
 
       {/* Icon image */}
       <div className="w-24 h-16 relative bg-[#131124] border border-white/5 p-2 flex items-center justify-center flex-shrink-0 font-sans rounded-[4px] shadow-inner group-hover:scale-[1.02] transition-transform duration-300">

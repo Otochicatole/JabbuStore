@@ -137,16 +137,9 @@ export function OrderDetailItem({
         isPhysical
           ? "border-emerald-500/10 hover:border-emerald-500/25 shadow-[0_0_20px_rgba(16,185,129,0.02)]"
           : "border-white/5 hover:border-white/10"
-      } ${rarityColors[finalRarity] || ""}`}
+      }`}
     >
-      {/* Visual Accent stripe for physical verified items vs resell items */}
-      <div
-        className={`absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b ${
-          isPhysical
-            ? "from-emerald-500 via-teal-500 to-emerald-600"
-            : "from-indigo-500 via-purple-500 to-pink-500 opacity-60"
-        }`}
-      />
+
 
       {/* Icon image */}
       <div className="w-24 h-16 relative bg-[#131124] border border-white/5 p-2 flex items-center justify-center flex-shrink-0 font-sans rounded-[4px] shadow-inner group-hover:scale-[1.02] transition-transform duration-300">

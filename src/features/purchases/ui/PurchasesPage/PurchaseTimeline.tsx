@@ -15,7 +15,7 @@ export function PurchaseTimeline({ order, t }: PurchaseTimelineProps) {
   const labels = isBuy
     ? [
         [t("purchases.step.verifyPayment"), currentStep === 1 ? t("purchases.step.paymentPending") : t("purchases.step.paymentVerified")],
-        ["Sourcing Skins", currentStep === 2 ? t("purchases.step.locatingSkins") : t("purchases.step.skinsReady")],
+        [t("purchases.step.sourcingSkins"), currentStep === 2 ? t("purchases.step.locatingSkins") : t("purchases.step.skinsReady")],
         [t("purchases.step.sendTrade"), currentStep === 3 ? t("purchases.step.awaitingAcceptance") : t("purchases.step.tradeDelivered")],
         [t("purchases.step.completed"), currentStep === 4 ? t("purchases.step.skinDelivered") : t("purchases.step.queued")],
       ]

@@ -135,6 +135,7 @@ export function RaffleWinnersSection({
             {prizes.map((prize) => {
               const winner = getPrizeWinner(prize);
               const won = hasPrizeWinner(prize);
+
               return (
                 <div
                   key={prize.id}
@@ -209,7 +210,7 @@ export function RaffleWinnersSection({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4">
         {prizes.map((prize) => {
           const winner = getPrizeWinner(prize);
           const won = hasPrizeWinner(prize);
@@ -229,9 +230,12 @@ export function RaffleWinnersSection({
               <div className="flex items-center gap-3">
                 <PrizeThumb prize={prize} className="w-16 h-16 rounded-xl" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-black text-white/90 uppercase tracking-wider truncate">
-                    {formatItemName(prize.name)}
-                  </p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-accent text-[10px] font-black uppercase tracking-wider">#{prize.position || 1}</span>
+                    <p className="text-[10px] font-black text-white/90 uppercase tracking-wider truncate">
+                      {formatItemName(prize.name)}
+                    </p>
+                  </div>
                   <p className="text-xs font-black text-emerald-400 mt-1">${prize.price.toFixed(2)}</p>
                 </div>
               </div>

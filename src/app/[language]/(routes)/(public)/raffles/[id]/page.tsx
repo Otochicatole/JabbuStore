@@ -181,6 +181,8 @@ function RaffleDetailsContent() {
   const isPending = raffle.status === "PENDING";
   const isActive = raffle.status === "ACTIVE";
 
+  const hasSidebar = isActive || isPending || isCancelled;
+
   const soldTickets = raffle.tickets.filter((t) => t.status === "PAID");
   const myTickets = userProfile
     ? soldTickets.filter((t) => t.userId === userProfile.id)
@@ -257,16 +259,18 @@ function RaffleDetailsContent() {
           transition={{ duration: 0.8 }}
           className="space-y-8"
         >
-      <Link
-        href={localizePath("/raffles")}
-        className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-white transition-colors uppercase tracking-widest"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" /> {t("raffles.backToRaffles")}
-      </Link>
+      <div className={!hasSidebar ? "max-w-5xl mx-auto w-full" : ""}>
+        <Link
+          href={localizePath("/raffles")}
+          className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-white transition-colors uppercase tracking-widest"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> {t("raffles.backToRaffles")}
+        </Link>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className={`grid grid-cols-1 ${hasSidebar ? "lg:grid-cols-12" : "max-w-5xl mx-auto"} gap-8 items-start`}>
         {/* Left: Info + Prizes */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className={`${hasSidebar ? "lg:col-span-8" : "w-full"} space-y-8`}>
           {/* Main Info */}
           <section className="p-6 sm:p-8 rounded-3xl bg-card border border-white/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
@@ -301,6 +305,27 @@ function RaffleDetailsContent() {
             <p className="text-xs sm:text-sm text-[#84849b] leading-relaxed">
               {raffle.description || t("raffles.noDescription")}
             </p>
+
+            {userProfile && myTickets.length > 0 && (
+              <div className="mt-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                    {t("raffles.myChances", { count: myTickets.length })}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-[120px] overflow-y-auto custom-scrollbar pr-1">
+                  {myTickets.map((ticket) => (
+                    <span
+                      key={ticket.id}
+                      className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono font-black rounded-md"
+                    >
+                      #{ticket.ticketNumber}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-6 mt-6 pt-6 border-t border-white/5">
               <div className="flex items-center gap-2.5">
@@ -368,7 +393,7 @@ function RaffleDetailsContent() {
               {t("raffles.prizes")} ({raffle.prizes.length})
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4">
               {raffle.prizes.map((prize) => {
                 const hasWinner = hasPrizeWinner(prize);
                 const rarityStyle = getRarityStyle(prize.rarity);
@@ -445,7 +470,8 @@ function RaffleDetailsContent() {
         </div>
 
         {/* Right: Action widget */}
-        <div className="lg:col-span-4 lg:sticky lg:top-28 space-y-6">
+        {hasSidebar && (
+          <div className="lg:col-span-4 lg:sticky lg:top-28 space-y-6">
           {isCancelled && (
             <section className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6 text-center">
               <Ban className="w-8 h-8 text-red-400 mx-auto mb-3" />
@@ -571,27 +597,8 @@ function RaffleDetailsContent() {
             </section>
           )}
 
-          {/* My tickets */}
-          {userProfile && myTickets.length > 0 && (
-            <section className="bg-card border border-emerald-500/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
-              <h3 className="text-sm font-black uppercase tracking-widest text-white mb-4 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                {t("raffles.myChances", { count: myTickets.length })}
-              </h3>
-              <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1">
-                {myTickets.map((ticket) => (
-                  <span
-                    key={ticket.id}
-                    className="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono font-black text-emerald-400 tracking-wide"
-                  >
-                    {t("raffles.ticketNumber", { number: ticket.ticketNumber })}
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
+        )}
       </div>
     </motion.div>
     )}

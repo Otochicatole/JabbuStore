@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { User as UserIcon, Volume2, VolumeX, ChevronDown } from "lucide-react";
 import confetti from "canvas-confetti";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface UserProfile {
   id: string;
@@ -42,6 +43,7 @@ export function RaffleRoulette({
   onAnimationEnd,
 }: RaffleRouletteProps) {
   const [cards, setCards] = useState<UserProfile[]>([]);
+  const { t } = useI18n();
   const [isSpinning, setIsSpinning] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [hasStopped, setHasStopped] = useState(false);
@@ -221,7 +223,7 @@ export function RaffleRoulette({
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-2 duration-500">
           {totalPrizes && totalPrizes > 1 && (
             <span className="px-3 py-1 bg-accent/20 border border-accent/30 rounded-full text-[10px] font-black uppercase text-accent tracking-widest shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]">
-              Sorteando Premio {prizeIndex !== undefined ? prizeIndex + 1 : 1} de {totalPrizes}
+              {t("raffles.drawingPrize", { current: prizeIndex !== undefined ? prizeIndex + 1 : 1, total: totalPrizes })}
             </span>
           )}
           <div className="relative">
@@ -293,7 +295,7 @@ export function RaffleRoulette({
         onClick={handleSkip}
         className="absolute top-6 right-6 z-[60] px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/10 cursor-pointer"
       >
-        Saltar Animación
+        {t("raffles.skipAnimation")}
       </button>
 
       {/* Center line indicator */}

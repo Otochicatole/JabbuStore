@@ -19,6 +19,15 @@ interface RaffleWinnersSectionProps {
   t: Translate;
 }
 
+function formatItemName(name: string) {
+  return name
+    .replace(/\(Factory New\)/i, "(FN)")
+    .replace(/\(Minimal Wear\)/i, "(MW)")
+    .replace(/\(Field-Tested\)/i, "(FT)")
+    .replace(/\(Well-Worn\)/i, "(WW)")
+    .replace(/\(Battle-Scarred\)/i, "(BS)");
+}
+
 function WinnerAvatar({
   winner,
   size = "md",
@@ -133,7 +142,7 @@ export function RaffleWinnersSection({
                 >
                   <PrizeThumb prize={prize} className="w-12 h-12" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-black text-white truncate uppercase">{prize.name}</p>
+                    <p className="text-[10px] font-black text-white truncate uppercase">{formatItemName(prize.name)}</p>
                     {won && winner ? (
                       <div className="flex items-center gap-2 mt-1">
                         <WinnerAvatar winner={winner} size="sm" />
@@ -171,103 +180,85 @@ export function RaffleWinnersSection({
 
   // hero variant
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-[#110f1e] to-accent/5 p-6 sm:p-8 shadow-2xl">
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+    <section className="bg-card border border-white/5 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
 
-      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
-            <Crown className="w-6 h-6 text-emerald-400" />
-          </div>
-          <div>
-            <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-white">
-              {t("raffles.winners")}
-            </h2>
-            {drawDate && (
-              <p className="text-[10px] font-mono text-[#84849b] uppercase tracking-wider mt-0.5">
-                {t("raffles.drawDate")}: {new Date(drawDate).toLocaleString()}
-              </p>
-            )}
-          </div>
-        </div>
-        <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400">
-          <Trophy className="w-3.5 h-3.5" />
-          {t("raffles.winnersCount", { count: winnersCount })}
+      <div className="flex items-center justify-between mb-6 pb-6 border-b border-white/5">
+        <h2 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
+          <span className="w-1.5 h-4 bg-emerald-500 rounded-full" />
+          {t("raffles.winners")}
+        </h2>
+        <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-black uppercase tracking-wider">
+          {winnersCount} {t("raffles.winnersCount", { count: winnersCount }).replace(/[0-9]/g, '').trim()}
         </span>
       </div>
 
       {userWonPrizes.length > 0 && (
-        <div className="relative mb-6 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/15 to-accent/10 p-5">
-          <div className="flex items-start gap-3">
-            <Sparkles className="w-6 h-6 text-amber-300 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-black uppercase tracking-wider text-amber-300">
-                {t("raffles.congratulations")}
-              </p>
-              <p className="text-xs font-bold text-white/90 mt-1">{t("raffles.youWonBanner")}</p>
-              <ul className="mt-2 space-y-1">
-                {userWonPrizes.map((prize) => (
-                  <li key={prize.id} className="text-[10px] font-bold text-emerald-300">
-                    {t("raffles.prizeWon", { prize: prize.name })}
-                  </li>
-                ))}
-              </ul>
-            </div>
+        <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-amber-400" />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-amber-400 mb-0.5">
+              {t("raffles.congratulations")}
+            </p>
+            <p className="text-[10px] font-bold text-white/80">
+              {t("raffles.youWonBanner")}
+            </p>
           </div>
         </div>
       )}
 
-      <div className="relative grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {prizes.map((prize) => {
           const winner = getPrizeWinner(prize);
           const won = hasPrizeWinner(prize);
-          const isCurrentUserWinner = Boolean(
-            currentUserId && winner && winner.id === currentUserId
-          );
+          const isCurrentUserWinner = Boolean(currentUserId && winner && winner.id === currentUserId);
 
           return (
             <div
               key={prize.id}
-              className={`flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border p-5 transition-all ${
+              className={`flex flex-col gap-3 rounded-2xl border p-4 transition-all ${
                 won
                   ? isCurrentUserWinner
-                    ? "border-amber-400/40 bg-amber-500/5 shadow-[0_0_30px_rgba(251,191,36,0.08)]"
-                    : "border-emerald-500/25 bg-emerald-500/5"
+                    ? "border-amber-400/40 bg-amber-500/5 shadow-[0_0_20px_rgba(251,191,36,0.05)]"
+                    : "border-white/5 bg-[#0e0c1b]/50"
                   : "border-white/5 bg-white/[0.02] opacity-60"
               }`}
             >
-              <PrizeThumb prize={prize} className="w-24 h-24 sm:w-28 sm:h-28" />
+              <div className="flex items-center gap-3">
+                <PrizeThumb prize={prize} className="w-16 h-16 rounded-xl" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-black text-white/90 uppercase tracking-wider truncate">
+                    {formatItemName(prize.name)}
+                  </p>
+                  <p className="text-xs font-black text-emerald-400 mt-1">${prize.price.toFixed(2)}</p>
+                </div>
+              </div>
 
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-black text-white uppercase tracking-wide truncate">
-                  {prize.name}
-                </p>
-                <p className="text-sm font-black text-emerald-400 mt-1">${prize.price.toFixed(2)}</p>
-
-                {won && winner ? (
-                  <div className="mt-4 flex items-center gap-3">
-                    <WinnerAvatar winner={winner} size="lg" />
+              {won && winner ? (
+                <div className="flex items-center justify-between mt-1 pt-3 border-t border-white/5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <WinnerAvatar winner={winner} size="sm" />
                     <div className="min-w-0">
-                      <span className="block text-[9px] font-black uppercase text-emerald-400 tracking-wider">
-                        {t("raffles.wonBy")}
-                      </span>
-                      <span className="block text-sm font-black text-white truncate">
-                        {winner.name || "Steam User"}
-                      </span>
-                      {prize.winningTicket && (
-                        <span className="block text-[10px] font-mono text-[#84849b] mt-0.5">
-                          {t("raffles.ticketNumber", { number: prize.winningTicket.ticketNumber })}
-                        </span>
-                      )}
+                      <p className="text-[9px] font-black uppercase text-white/50 tracking-wider mb-0.5">{t("raffles.wonBy")}</p>
+                      <p className="text-[10px] font-bold text-white truncate">{winner.name || "Steam User"}</p>
                     </div>
                   </div>
-                ) : (
-                  <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
+                  {prize.winningTicket && (
+                    <div className="text-right shrink-0 ml-2">
+                      <p className="text-[9px] font-black uppercase text-white/50 tracking-wider mb-0.5">Ticket</p>
+                      <p className="text-[10px] font-mono text-white/80">#{prize.winningTicket.ticketNumber}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-1 pt-3 border-t border-white/5 flex items-center justify-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-white/30">
                     {t("raffles.noWinnerAssigned")}
                   </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           );
         })}

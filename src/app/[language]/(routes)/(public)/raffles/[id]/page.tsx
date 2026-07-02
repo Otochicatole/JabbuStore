@@ -78,6 +78,17 @@ function getRarityStyle(rarity: string | null) {
   return "from-white/5 border-white/5 text-[#84849b]";
 }
 
+export function getExteriorAbbr(exterior: string | null) {
+  if (!exterior) return null;
+  const ext = exterior.toLowerCase();
+  if (ext.includes("factory")) return "FN";
+  if (ext.includes("minimal")) return "MW";
+  if (ext.includes("field")) return "FT";
+  if (ext.includes("well")) return "WW";
+  if (ext.includes("battle")) return "BS";
+  return exterior;
+}
+
 function RaffleDetailsContent() {
   const { id } = useParams();
   const router = useRouter();
@@ -219,10 +230,10 @@ function RaffleDetailsContent() {
                 tickets={raffle.tickets}
                 winner={winningPositions[currentPrizeIndex].winner!}
                 prize={{
-                  name: `Puesto ${winningPositions[currentPrizeIndex].position}`,
+                  name: t("raffles.position", { position: winningPositions[currentPrizeIndex].position }),
                   price: winningPositions[currentPrizeIndex].prizes.reduce((acc: number, p: any) => acc + p.price, 0),
                   iconUrl: winningPositions[currentPrizeIndex].prizes[0]?.iconUrl,
-                  exterior: `${winningPositions[currentPrizeIndex].prizes.length} Ítems`,
+                  exterior: t("raffles.itemsCount", { count: winningPositions[currentPrizeIndex].prizes.length }),
                   items: winningPositions[currentPrizeIndex].prizes
                 }}
                 prizeIndex={currentPrizeIndex}
@@ -373,17 +384,14 @@ function RaffleDetailsContent() {
                           <span className="text-accent mr-1">#{prize.position || 1}</span>
                           {prize.name}
                         </h4>
-                        {prize.exterior && (
-                          <span className="inline-block text-[8px] font-black uppercase tracking-wider bg-white/10 text-white/95 px-1.5 py-0.5 rounded-sm border border-white/5 mt-1.5">
-                            {prize.exterior}
-                          </span>
-                        )}
-                        {prize.float !== null && (
-                          <span className="block text-[8px] font-mono text-accent bg-accent/5 border border-accent/10 w-fit px-1.5 py-0.5 rounded-sm mt-1.5">
-                            Float: {prize.float.toFixed(10)}
-                          </span>
-                        )}
-                        <span className="block text-xs font-black text-emerald-400 mt-2">
+                        <div className="flex items-center gap-2 mt-1.5">
+                          {prize.exterior && (
+                            <span className="inline-block text-[10px] font-black uppercase tracking-widest bg-white/10 text-white px-2 py-0.5 rounded-md border border-white/10">
+                              {getExteriorAbbr(prize.exterior)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="block text-sm font-black text-emerald-400 mt-2">
                           ${prize.price.toFixed(2)}
                         </span>
                       </div>

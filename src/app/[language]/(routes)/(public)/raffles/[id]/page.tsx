@@ -91,7 +91,8 @@ function RaffleDetailsContent() {
   const [ticketCount, setTicketCount] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
-  const [rouletteWinner, setRouletteWinner] = useState<UserProfile | null>(null);
+  const [winningPrizes, setWinningPrizes] = useState<RafflePrize[]>([]);
+  const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
 
   useEffect(() => {
     fetchWithAuth(`${BACKEND_URL}/users/me`)
@@ -111,9 +112,10 @@ function RaffleDetailsContent() {
 
         // Check if finished and has a winner
         if (data.status === "FINISHED") {
-          const wonPrize = data.prizes.find((p: any) => p.winnerId && p.winner);
-          if (wonPrize) {
-            setRouletteWinner(wonPrize.winner);
+          const wonPrizes = data.prizes.filter((p: any) => p.winnerId && p.winner);
+          if (wonPrizes.length > 0) {
+            setWinningPrizes(wonPrizes);
+            setCurrentPrizeIndex(0);
             setShowAnimation(true);
           }
         }
@@ -186,7 +188,7 @@ function RaffleDetailsContent() {
 
   return (
     <AnimatePresence mode="wait">
-      {showAnimation && rouletteWinner ? (
+      {showAnimation && winningPrizes.length > 0 ? (
         <motion.div
           key="roulette"
           initial={{ opacity: 0 }}
@@ -196,9 +198,19 @@ function RaffleDetailsContent() {
           className="fixed inset-0 z-50 bg-[#0e0c1b]"
         >
           <RaffleRoulette
+            key={winningPrizes[currentPrizeIndex].id}
             tickets={raffle.tickets}
-            winner={rouletteWinner}
-            onAnimationEnd={() => setShowAnimation(false)}
+            winner={winningPrizes[currentPrizeIndex].winner!}
+            prize={winningPrizes[currentPrizeIndex]}
+            prizeIndex={currentPrizeIndex}
+            totalPrizes={winningPrizes.length}
+            onAnimationEnd={() => {
+              if (currentPrizeIndex < winningPrizes.length - 1) {
+                setCurrentPrizeIndex((c) => c + 1);
+              } else {
+                setShowAnimation(false);
+              }
+            }}
           />
         </motion.div>
       ) : (

@@ -18,6 +18,9 @@ interface Ticket {
 interface RaffleRouletteProps {
   tickets: Ticket[];
   winner: UserProfile;
+  prize?: any;
+  prizeIndex?: number;
+  totalPrizes?: number;
   onAnimationEnd: () => void;
 }
 
@@ -33,6 +36,9 @@ const ANIMATION_DURATION = 8000; // 8 seconds
 export function RaffleRoulette({
   tickets,
   winner,
+  prize,
+  prizeIndex,
+  totalPrizes,
   onAnimationEnd,
 }: RaffleRouletteProps) {
   const [cards, setCards] = useState<UserProfile[]>([]);
@@ -208,6 +214,35 @@ export function RaffleRoulette({
           className="w-24 accent-accent cursor-pointer"
         />
       </div>
+
+      {/* Top Banner for the Prize */}
+      {prize && (
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-2 duration-500">
+          {totalPrizes && totalPrizes > 1 && (
+            <span className="px-3 py-1 bg-accent/20 border border-accent/30 rounded-full text-[10px] font-black uppercase text-accent tracking-widest shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]">
+              Sorteando Premio {prizeIndex !== undefined ? prizeIndex + 1 : 1} de {totalPrizes}
+            </span>
+          )}
+          <div className="flex items-center gap-4 bg-black/60 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl">
+            {prize.iconUrl && (
+              <img src={prize.iconUrl} alt={prize.name} className="w-12 h-12 object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+            )}
+            <div className="flex flex-col">
+              <span className="text-white font-black uppercase tracking-wider text-sm">{prize.name}</span>
+              <div className="flex items-center gap-2 mt-1">
+                {prize.exterior && (
+                  <span className="text-[9px] font-bold uppercase text-white/70 bg-white/10 px-1.5 py-0.5 rounded-sm">
+                    {prize.exterior}
+                  </span>
+                )}
+                <span className="text-[10px] font-bold text-emerald-400">
+                  ${prize.price.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Skip Button */}
       <button

@@ -25,6 +25,7 @@ import {
   AdminPage,
   AdminSection,
 } from "@/features/admin/ui/AdminShell";
+import { RaffleAdminWinnersList } from "@/features/admin/raffles/ui/RaffleAdminWinnersList";
 import {
   RaffleManageActions,
   type RaffleManageData,
@@ -39,7 +40,9 @@ interface RafflePrize {
   exterior: string | null;
   float: number | null;
   provider: string;
-  winner?: { name: string; avatar: string | null } | null;
+  winnerId?: string | null;
+  winner?: { id?: string; name: string | null; steamId?: string | null; avatar: string | null; tradeUrl?: string | null } | null;
+  winningTicket?: { ticketNumber: number } | null;
 }
 
 interface Raffle {
@@ -50,6 +53,7 @@ interface Raffle {
   ticketPrice: number;
   maxTickets: number | null;
   status: string;
+  isPublic?: boolean;
   createdAt: string;
   prizes: RafflePrize[];
   tickets: { id: string; status: string; ticketNumber: number; userId: string }[];
@@ -251,6 +255,7 @@ function RafflesAdminContent() {
               name: raffle.name,
               description: raffle.description,
               status: raffle.status,
+              isPublic: raffle.isPublic,
               drawDate: raffle.drawDate,
               ticketPrice: raffle.ticketPrice,
               maxTickets: raffle.maxTickets,
@@ -271,6 +276,11 @@ function RafflesAdminContent() {
                       >
                         {raffle.status}
                       </span>
+                      {isFinished && raffle.isPublic === false && (
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-[3px] border bg-[#84849b]/10 text-[#84849b] border-[#84849b]/20">
+                          {t("admin.raffles.hiddenFromClient")}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-[#84849b] line-clamp-2 max-w-2xl">
                       {raffle.description || t("raffles.noDescription") || "Sin descripción."}
@@ -358,9 +368,9 @@ function RafflesAdminContent() {
                   />
 
                   {isFinished && (
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-                      Sorteo finalizado — {raffle.prizes.filter((p) => p.winner).length}/{raffle.prizes.length} premios entregados
-                    </span>
+                    <div className="w-full">
+                      <RaffleAdminWinnersList prizes={raffle.prizes} t={t} />
+                    </div>
                   )}
                 </div>
               </AdminSection>

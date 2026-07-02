@@ -6,12 +6,10 @@ import { Loader2, Ticket, Gift, Calendar, AlertCircle } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { BACKEND_URL } from "@/shared/lib/api";
+import { RaffleWinnersSection } from "@/features/raffles/ui/RaffleWinnersSection";
+import type { RafflePrizeWithWinner } from "@/features/raffles/types";
 
-interface RafflePrize {
-  id: string;
-  name: string;
-  price: number;
-  iconUrl: string | null;
+interface RafflePrize extends RafflePrizeWithWinner {
   exterior: string | null;
   float: number | null;
   provider: string;
@@ -29,14 +27,16 @@ interface Raffle {
   tickets: { id: string; status: string }[];
 }
 
+
 function TimeRemaining({ drawDate }: { drawDate: string }) {
+  const { t } = useI18n();
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
     const calculateTime = () => {
       const difference = +new Date(drawDate) - +new Date();
       if (difference <= 0) {
-        setTimeLeft("Comenzando sorteo...");
+        setTimeLeft(t("raffles.drawStarting"));
         return;
       }
 
@@ -54,10 +54,11 @@ function TimeRemaining({ drawDate }: { drawDate: string }) {
     calculateTime();
     const interval = setInterval(calculateTime, 60000);
     return () => clearInterval(interval);
-  }, [drawDate]);
+  }, [drawDate, t]);
 
   return <span>{timeLeft}</span>;
 }
+
 
 function RafflesListContent() {
   const { t } = useI18n();
@@ -184,7 +185,7 @@ function RafflesListContent() {
                     {raffle.name}
                   </h3>
                   <p className="text-xs text-[#84849b] line-clamp-2 mb-4 min-h-[2rem]">
-                    {raffle.description || "Sin descripción proporcionada."}
+                    {raffle.description || t("raffles.noDescription")}
                   </p>
                 </div>
 
@@ -235,10 +236,15 @@ function RafflesListContent() {
             </div>
             
             {/* Action Bar */}
-            <div className="px-5 py-3 border-t border-white/5 bg-white/[0.01] flex items-center justify-center shrink-0">
-              <span className="text-[9px] font-black uppercase tracking-widest text-accent group-hover:text-white transition-colors">
-                {isFinished ? "Ver ganadores & premios" : "Participar ahora"} &rarr;
-              </span>
+            <div className="border-t border-white/5 bg-white/[0.01] shrink-0">
+              {isFinished && (
+                <RaffleWinnersSection prizes={raffle.prizes} variant="compact" t={t} />
+              )}
+              <div className="px-5 py-3 flex items-center justify-center">
+                <span className="text-[9px] font-black uppercase tracking-widest text-accent group-hover:text-white transition-colors">
+                  {isFinished ? t("raffles.viewWinners") : t("raffles.participateNow")} &rarr;
+                </span>
+              </div>
             </div>
           </Link>
         );

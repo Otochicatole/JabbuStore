@@ -320,8 +320,8 @@ export function RaffleOrderDetailPage({ raffleId, orderId }: RaffleOrderDetailPa
         <AdminEmptyState title={error} />
       ) : !detail ? (
         <AdminEmptyState
-          title="Orden no encontrada"
-          description="La orden no existe o no pertenece a este sorteo."
+          title={t("admin.rafflePurchases.orderNotFound")}
+          description={t("admin.rafflePurchases.orderNotFoundDesc")}
         />
       ) : (
         <div className="space-y-5">

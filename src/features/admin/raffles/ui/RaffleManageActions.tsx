@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Pencil, Play, RotateCcw, Trash2, X } from "lucide-react";
+import { Loader2, Eye, EyeOff, Pencil, Play, RotateCcw, Trash2, X } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
@@ -11,6 +11,7 @@ export interface RaffleManageData {
   name: string;
   description?: string | null;
   status: string;
+  isPublic?: boolean;
   drawDate: string;
   ticketPrice: number;
   maxTickets: number | null;
@@ -24,7 +25,7 @@ interface RaffleManageActionsProps {
   layout?: "toolbar" | "compact";
 }
 
-type PendingConfirmAction = "reactivate" | "cancel" | "draw" | "delete" | null;
+type PendingConfirmAction = "reactivate" | "cancel" | "draw" | "delete" | "hide" | "show" | null;
 
 function toDatetimeLocalValue(iso: string) {
   const date = new Date(iso);
@@ -56,6 +57,7 @@ export function RaffleManageActions({
   const isCancelled = raffle.status === "CANCELLED";
   const isPending = raffle.status === "PENDING";
   const isActive = raffle.status === "ACTIVE";
+  const isPublic = raffle.isPublic !== false;
   const hasSoldChances = (raffle.soldChances ?? 0) > 0;
   const canEdit = !isFinished;
   const canManage = !isFinished;
@@ -167,6 +169,17 @@ export function RaffleManageActions({
     }
   };
 
+  const executeSetVisibility = async (nextIsPublic: boolean) => {
+    const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/${raffle.id}/visibility`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPublic: nextIsPublic }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.error || t("common.error"));
+    refresh();
+  };
+
   const handleConfirmAction = async () => {
     if (!pendingAction || isActionLoading) return;
 
@@ -176,6 +189,8 @@ export function RaffleManageActions({
       if (pendingAction === "cancel") await executeCancel();
       if (pendingAction === "draw") await executeDraw();
       if (pendingAction === "delete") await executeDelete();
+      if (pendingAction === "hide") await executeSetVisibility(false);
+      if (pendingAction === "show") await executeSetVisibility(true);
       setPendingAction(null);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : t("common.error"));
@@ -213,7 +228,21 @@ export function RaffleManageActions({
                 type: "error" as const,
                 confirmLabel: t("admin.rafflePurchases.deleteRaffle"),
               }
-            : null;
+            : pendingAction === "hide"
+              ? {
+                  title: t("admin.raffles.hideFromClient"),
+                  message: t("admin.raffles.confirmHideFromClient"),
+                  type: "confirm" as const,
+                  confirmLabel: t("admin.raffles.hideFromClient"),
+                }
+              : pendingAction === "show"
+                ? {
+                    title: t("admin.raffles.showOnClient"),
+                    message: t("admin.raffles.confirmShowOnClient"),
+                    type: "confirm" as const,
+                    confirmLabel: t("admin.raffles.showOnClient"),
+                  }
+                : null;
 
   const buttonBase =
     layout === "compact"
@@ -284,6 +313,28 @@ export function RaffleManageActions({
           >
             <Trash2 className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
             {t("raffles.cancelRaffle")}
+          </button>
+        )}
+
+        {isFinished && isPublic && (
+          <button
+            type="button"
+            onClick={() => setPendingAction("hide")}
+            className={`${buttonBase} bg-amber-500/10 hover:bg-amber-500/20 text-amber-400`}
+          >
+            <EyeOff className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+            {t("admin.raffles.hideFromClient")}
+          </button>
+        )}
+
+        {isFinished && !isPublic && (
+          <button
+            type="button"
+            onClick={() => setPendingAction("show")}
+            className={`${buttonBase} bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400`}
+          >
+            <Eye className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+            {t("admin.raffles.showOnClient")}
           </button>
         )}
       </div>

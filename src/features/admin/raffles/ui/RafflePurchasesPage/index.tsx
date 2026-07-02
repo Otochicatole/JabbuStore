@@ -82,13 +82,13 @@ function getOrderStatusTone(status: string) {
   return "border-orange-500/20 bg-orange-500/10 text-orange-400";
 }
 
-function getOrderStatusLabel(status: string) {
+function getOrderStatusLabel(status: string, t: (key: string) => string) {
   switch (status) {
-    case "PENDING_PAYMENT": return "Pago pendiente";
-    case "PAID": return "Pagado";
-    case "TRADE_PENDING": return "Procesando";
-    case "COMPLETED": return "Completado";
-    case "CANCELLED": return "Cancelado";
+    case "PENDING_PAYMENT": return t("admin.rafflePurchases.statusPendingPayment");
+    case "PAID": return t("admin.rafflePurchases.statusPaid");
+    case "TRADE_PENDING": return t("admin.rafflePurchases.workflowProcessing");
+    case "COMPLETED": return t("admin.rafflePurchases.statusCompleted");
+    case "CANCELLED": return t("admin.rafflePurchases.statusCancelled");
     default: return status.replaceAll("_", " ");
   }
 }
@@ -99,10 +99,12 @@ function RaffleCard({
   raffle,
   selected,
   onClick,
+  t,
 }: {
   raffle: RaffleSummary;
   selected: boolean;
   onClick: () => void;
+  t: (key: string) => string;
 }) {
   const pct = raffle.maxTickets
     ? Math.min(100, Math.round((raffle.soldChances / raffle.maxTickets) * 100))
@@ -135,7 +137,7 @@ function RaffleCard({
       <div className="flex items-center justify-between text-[10px] font-bold text-[#84849b] uppercase tracking-wider mb-2">
         <span className="flex items-center gap-1">
           <Ticket className="w-3 h-3" />
-          {raffle.soldChances} {raffle.maxTickets ? `/ ${raffle.maxTickets}` : "vendidas"}
+          {raffle.soldChances} {raffle.maxTickets ? `/ ${raffle.maxTickets}` : t("raffles.sold")}
         </span>
         <span className="text-emerald-400 font-mono">${raffle.revenue.toFixed(2)}</span>
       </div>
@@ -173,7 +175,7 @@ function RaffleCard({
 
 // ── Order card (right pane) ─────────────────────────────────────────────────
 
-function RaffleOrderCard({ order }: { order: RaffleOrder }) {
+function RaffleOrderCard({ order, t }: { order: RaffleOrder; t: (key: string) => string }) {
   return (
     <div className="rounded-[3px] border border-white/5 bg-[#110f1e]/35 p-4 hover:border-white/10 transition-colors">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -192,7 +194,7 @@ function RaffleOrderCard({ order }: { order: RaffleOrder }) {
           )}
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-white">
-              {order.user?.name || "Usuario Steam"}
+              {order.user?.name || t("admin.rafflePurchases.steamUser")}
             </p>
             <p className="truncate text-[10px] font-mono text-accent">
               {order.user?.steamId || order.id}
@@ -203,7 +205,7 @@ function RaffleOrderCard({ order }: { order: RaffleOrder }) {
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex lg:items-center lg:gap-5">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Orden</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnOrder")}</p>
             <p className="font-mono text-xs font-bold text-white/80">{order.id.slice(0, 8)}</p>
           </div>
 
@@ -213,7 +215,7 @@ function RaffleOrderCard({ order }: { order: RaffleOrder }) {
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Chances</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnChances")}</p>
             <p className="text-sm font-black text-white flex items-center gap-1">
               <Ticket className="w-3 h-3 text-accent" />
               {order.ticketsCount}
@@ -221,11 +223,11 @@ function RaffleOrderCard({ order }: { order: RaffleOrder }) {
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Estado</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnStatus")}</p>
             <span
               className={`inline-flex rounded-[3px] border px-2 py-1 text-[9px] font-black uppercase tracking-wider ${getOrderStatusTone(order.status)}`}
             >
-              {getOrderStatusLabel(order.status)}
+              {getOrderStatusLabel(order.status, t)}
             </span>
           </div>
         </div>
@@ -288,11 +290,11 @@ function RafflePurchasesContent() {
     setRafflesError(null);
     try {
       const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/summaries`);
-      if (!res.ok) throw new Error("Error al cargar los sorteos.");
+      if (!res.ok) throw new Error(t("admin.rafflePurchases.errorLoadRaffles"));
       const data = await res.json();
       setRaffles(data);
     } catch (err: any) {
-      setRafflesError(err.message || "Error al cargar.");
+      setRafflesError(err.message || t("admin.rafflePurchases.errorLoadRaffles"));
     } finally {
       setLoadingRaffles(false);
     }
@@ -304,12 +306,12 @@ function RafflePurchasesContent() {
     setOrdersError(null);
     try {
       const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/${raffleId}/orders`);
-      if (!res.ok) throw new Error("Error al cargar las órdenes.");
+      if (!res.ok) throw new Error(t("admin.rafflePurchases.errorLoadOrders"));
       const data = await res.json();
       setSelectedRaffleName(data.raffle?.name ?? null);
       setOrders(data.orders ?? []);
     } catch (err: any) {
-      setOrdersError(err.message || "Error al cargar.");
+      setOrdersError(err.message || t("admin.rafflePurchases.errorLoadOrders"));
     } finally {
       setLoadingOrders(false);
     }
@@ -380,7 +382,7 @@ function RafflePurchasesContent() {
           {loadingRaffles ? (
             <AdminLoadingState />
           ) : raffles.length === 0 ? (
-            <AdminEmptyState title="No hay sorteos" />
+            <AdminEmptyState title={t("admin.rafflePurchases.noRaffles")} />
           ) : (
             <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
               {raffles.map((r) => (
@@ -389,6 +391,7 @@ function RafflePurchasesContent() {
                   raffle={r}
                   selected={selectedRaffleId === r.id}
                   onClick={() => setSelectedRaffleId(r.id)}
+                  t={t}
                 />
               ))}
             </div>
@@ -402,7 +405,7 @@ function RafflePurchasesContent() {
               <ChevronRight className="w-8 h-8 text-[#84849b] mb-3" />
               <p className="text-sm font-black text-white">{t("admin.rafflePurchases.selectRaffle")}</p>
               <p className="text-xs text-[#84849b] mt-1">
-                Selecciona un sorteo de la lista para ver sus órdenes de compra
+                {t("admin.rafflePurchases.selectRaffleHint")}
               </p>
             </AdminSection>
           ) : (
@@ -429,7 +432,7 @@ function RafflePurchasesContent() {
                     tone="blue"
                   />
                   <AdminStatCard
-                    label="Promedio por orden"
+                    label={t("admin.rafflePurchases.avgOrder")}
                     value={`$${isFinite(avgOrder) ? avgOrder.toFixed(2) : "0.00"}`}
                     icon={Hash}
                     tone="yellow"
@@ -448,12 +451,12 @@ function RafflePurchasesContent() {
                   onChange={setStatusFilter}
                   className="w-full md:w-48"
                   options={[
-                    { value: "all", label: "Todos los estados" },
-                    { value: "PENDING_PAYMENT", label: "Pago pendiente" },
-                    { value: "PAID", label: "Pagado" },
-                    { value: "TRADE_PENDING", label: "Procesando" },
-                    { value: "COMPLETED", label: "Completado" },
-                    { value: "CANCELLED", label: "Cancelado" },
+                    { value: "all", label: t("admin.rafflePurchases.allStatuses") },
+                    { value: "PENDING_PAYMENT", label: t("admin.rafflePurchases.statusPendingPayment") },
+                    { value: "PAID", label: t("admin.rafflePurchases.statusPaid") },
+                    { value: "TRADE_PENDING", label: t("admin.rafflePurchases.workflowProcessing") },
+                    { value: "COMPLETED", label: t("admin.rafflePurchases.statusCompleted") },
+                    { value: "CANCELLED", label: t("admin.rafflePurchases.statusCancelled") },
                   ]}
                 />
                 <AdminSelect
@@ -461,7 +464,7 @@ function RafflePurchasesContent() {
                   onChange={setPaymentFilter}
                   className="w-full md:w-48"
                   options={[
-                    { value: "all", label: "Todos los métodos" },
+                    { value: "all", label: t("admin.rafflePurchases.allPayments") },
                     { value: "mercado_pago", label: "Mercado Pago" },
                     { value: "paypal", label: "PayPal" },
                     { value: "nowpayments", label: "Crypto (NOWPayments)" },
@@ -489,12 +492,12 @@ function RafflePurchasesContent() {
                 <AdminEmptyState
                   icon={Ticket}
                   title={t("admin.rafflePurchases.empty")}
-                  description="No hay órdenes de chance que coincidan con los filtros seleccionados."
+                  description={t("admin.rafflePurchases.selectRaffleHint")}
                 />
               ) : (
                 <div className="space-y-3">
                   {filteredOrders.map((order) => (
-                    <RaffleOrderCard key={order.id} order={order} />
+                    <RaffleOrderCard key={order.id} order={order} t={t} />
                   ))}
                 </div>
               )}

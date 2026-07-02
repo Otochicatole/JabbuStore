@@ -53,11 +53,11 @@ export function RafflePurchasesListPage() {
     setError(null);
     try {
       const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/orders`);
-      if (!res.ok) throw new Error("Error al cargar las órdenes.");
+      if (!res.ok) throw new Error(t("admin.rafflePurchases.errorLoadOrders"));
       const data = await res.json();
       setOrders(data.orders ?? []);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error al cargar.");
+      setError(err instanceof Error ? err.message : t("admin.rafflePurchases.errorLoadOrders"));
     } finally {
       setLoading(false);
     }
@@ -171,7 +171,7 @@ export function RafflePurchasesListPage() {
             { value: "all", label: t("admin.rafflePurchases.allStatuses") },
             { value: "PENDING_PAYMENT", label: t("admin.rafflePurchases.workflowPending") },
             { value: "PAID", label: t("admin.rafflePurchases.workflowPaid") },
-            { value: "TRADE_PENDING", label: "Procesando" },
+            { value: "TRADE_PENDING", label: t("admin.rafflePurchases.workflowProcessing") },
             { value: "COMPLETED", label: t("admin.rafflePurchases.workflowCompleted") },
             { value: "CANCELLED", label: t("admin.rafflePurchases.cancelOrder") },
           ]}

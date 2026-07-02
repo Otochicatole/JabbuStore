@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ExternalLink, Ticket, UserRound } from "lucide-react";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export interface RafflePurchaseOrder {
   id: string;
@@ -27,18 +28,18 @@ function getOrderStatusTone(status: string) {
   return "border-orange-500/20 bg-orange-500/10 text-orange-400";
 }
 
-function getOrderStatusLabel(status: string) {
+function getOrderStatusLabel(status: string, t: (key: string) => string) {
   switch (status) {
     case "PENDING_PAYMENT":
-      return "Pago pendiente";
+      return t("admin.rafflePurchases.statusPendingPayment");
     case "PAID":
-      return "Pagado";
+      return t("admin.rafflePurchases.statusPaid");
     case "TRADE_PENDING":
-      return "Procesando";
+      return t("admin.rafflePurchases.workflowProcessing");
     case "COMPLETED":
-      return "Completado";
+      return t("admin.rafflePurchases.statusCompleted");
     case "CANCELLED":
-      return "Cancelado";
+      return t("admin.rafflePurchases.statusCancelled");
     default:
       return status.replaceAll("_", " ");
   }
@@ -53,6 +54,7 @@ export function RafflePurchaseOrderCard({
   detailHref: string;
   showRaffle?: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-[3px] border border-white/5 bg-[#110f1e]/35 p-4 hover:border-white/10 transition-colors">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -70,7 +72,7 @@ export function RafflePurchaseOrderCard({
           )}
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-white">
-              {order.user?.name || "Usuario Steam"}
+              {order.user?.name || t("admin.rafflePurchases.steamUser")}
             </p>
             <p className="truncate text-[10px] font-mono text-accent">
               {order.user?.steamId || order.id}
@@ -85,17 +87,17 @@ export function RafflePurchaseOrderCard({
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex lg:items-center lg:gap-5">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Orden</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnOrder")}</p>
             <p className="font-mono text-xs font-bold text-white/80">{order.id.slice(0, 8)}</p>
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Total</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnTotal")}</p>
             <p className="text-sm font-black text-emerald-400">${order.totalPrice.toFixed(2)}</p>
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Chances</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnChances")}</p>
             <p className="text-sm font-black text-white flex items-center gap-1">
               <Ticket className="w-3 h-3 text-accent" />
               {order.ticketsCount}
@@ -103,11 +105,11 @@ export function RafflePurchaseOrderCard({
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Estado</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnStatus")}</p>
             <span
               className={`inline-flex rounded-[3px] border px-2 py-1 text-[9px] font-black uppercase tracking-wider ${getOrderStatusTone(order.status)}`}
             >
-              {getOrderStatusLabel(order.status)}
+              {getOrderStatusLabel(order.status, t)}
             </span>
           </div>
         </div>
@@ -117,7 +119,7 @@ export function RafflePurchaseOrderCard({
           className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-[3px] bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-wider transition-colors"
         >
           <ExternalLink className="w-3 h-3" />
-          Ver
+          {t("admin.rafflePurchases.orderView")}
         </Link>
       </div>
 

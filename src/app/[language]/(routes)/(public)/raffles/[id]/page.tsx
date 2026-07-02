@@ -20,6 +20,8 @@ import {
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
+import { RaffleWinnersSection } from "@/features/raffles/ui/RaffleWinnersSection";
+import { hasPrizeWinner } from "@/features/raffles/types";
 
 interface UserProfile {
   id: string;
@@ -38,6 +40,7 @@ interface RafflePrize {
   float: number | null;
   pattern: number | null;
   provider: string;
+  winnerId?: string | null;
   winner: UserProfile | null;
   winningTicket: { ticketNumber: number } | null;
 }
@@ -124,9 +127,9 @@ function RaffleDetailsContent() {
       <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-4">
         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
         <h3 className="text-base font-black uppercase text-white tracking-wider mb-2">
-          Error al cargar sorteo
+          {t("raffles.loadError")}
         </h3>
-        <p className="text-xs text-[#84849b] max-w-sm mb-6">{error || "Sorteo no encontrado."}</p>
+        <p className="text-xs text-[#84849b] max-w-sm mb-6">{error || t("raffles.notFound")}</p>
         <Link
           href={localizePath("/raffles")}
           className="px-5 py-2.5 rounded-xl bg-accent text-xs font-black uppercase tracking-widest text-white hover:bg-accent/90"
@@ -156,7 +159,7 @@ function RaffleDetailsContent() {
 
   const handlePurchase = () => {
     if (!userProfile) {
-      alert("Debes iniciar sesión con tu cuenta de Steam para poder comprar chances.");
+      alert(t("raffles.loginRequiredAlert"));
       return;
     }
     setIsSubmitting(true);
@@ -211,7 +214,7 @@ function RaffleDetailsContent() {
             </div>
 
             <p className="text-xs sm:text-sm text-[#84849b] leading-relaxed">
-              {raffle.description || "Sin descripción proporcionada para este sorteo."}
+              {raffle.description || t("raffles.noDescription")}
             </p>
 
             <div className="flex flex-wrap items-center gap-6 mt-6 pt-6 border-t border-white/5">
@@ -235,7 +238,7 @@ function RaffleDetailsContent() {
                 </div>
                 <div>
                   <span className="block text-[8px] font-black uppercase text-[#84849b] tracking-wider">
-                    Chances vendidas
+                    {t("raffles.soldChances")}
                   </span>
                   <span className="text-xs font-mono font-bold text-white/95">
                     {soldTickets.length}
@@ -247,7 +250,7 @@ function RaffleDetailsContent() {
               {raffle.maxTickets && (
                 <div className="flex-1 max-w-xs">
                   <div className="flex justify-between text-[10px] font-bold text-[#84849b] uppercase tracking-wider mb-1.5">
-                    <span>Disponibles: {remainingChances}</span>
+                    <span>{t("raffles.remainingAvailable", { count: remainingChances ?? 0 })}</span>
                     <span>{Math.min(100, Math.round((soldTickets.length / raffle.maxTickets) * 100))}%</span>
                   </div>
                   <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
@@ -263,6 +266,16 @@ function RaffleDetailsContent() {
             </div>
           </section>
 
+          {isFinished && (
+            <RaffleWinnersSection
+              prizes={raffle.prizes}
+              currentUserId={userProfile?.id}
+              drawDate={raffle.drawDate}
+              variant="hero"
+              t={t}
+            />
+          )}
+
           {/* Prizes */}
           <section className="space-y-4">
             <h2 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
@@ -272,7 +285,7 @@ function RaffleDetailsContent() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {raffle.prizes.map((prize) => {
-                const hasWinner = prize.winner !== null;
+                const hasWinner = hasPrizeWinner(prize);
                 const rarityStyle = getRarityStyle(prize.rarity);
 
                 return (
@@ -313,7 +326,7 @@ function RaffleDetailsContent() {
                       </div>
                     </div>
 
-                    {hasWinner && (
+                    {hasWinner && !isFinished && (
                       <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-3">
                         <div className="relative w-8 h-8 rounded-full overflow-hidden border border-emerald-500/30 shrink-0">
                           {prize.winner?.avatar ? (
@@ -335,7 +348,7 @@ function RaffleDetailsContent() {
                           </span>
                           {prize.winningTicket && (
                             <span className="block text-[8px] font-mono text-[#84849b] uppercase">
-                              Chance N° {prize.winningTicket.ticketNumber}
+                              {t("raffles.ticketNumber", { number: prize.winningTicket.ticketNumber })}
                             </span>
                           )}
                         </div>
@@ -354,10 +367,10 @@ function RaffleDetailsContent() {
             <section className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6 text-center">
               <Ban className="w-8 h-8 text-red-400 mx-auto mb-3" />
               <h3 className="text-sm font-black uppercase text-red-400 mb-1">
-                Sorteo cancelado
+                {t("raffles.cancelledTitle")}
               </h3>
               <p className="text-xs text-[#84849b]">
-                Este sorteo fue cancelado. Las chances ya vendidas serán reembolsadas.
+                {t("raffles.cancelledDesc")}
               </p>
             </section>
           )}
@@ -369,7 +382,7 @@ function RaffleDetailsContent() {
                 {t("raffles.status.pending")}
               </h3>
               <p className="text-xs text-[#84849b]">
-                Este sorteo aún no está activo. La venta de chances comenzará pronto.
+                {t("raffles.pendingDesc")}
               </p>
             </section>
           )}
@@ -407,7 +420,9 @@ function RaffleDetailsContent() {
 
                   {remainingChances !== null && (
                     <p className="text-[9px] text-[#84849b] font-bold uppercase tracking-wider mt-2">
-                      Máx. {remainingChances} {remainingChances === 1 ? "chance disponible" : "chances disponibles"}
+                      {remainingChances === 1
+                        ? t("raffles.maxAvailableOne", { count: remainingChances })
+                        : t("raffles.maxAvailable", { count: remainingChances, unit: t("raffles.chances") })}
                     </p>
                   )}
                 </div>
@@ -466,9 +481,9 @@ function RaffleDetailsContent() {
           {isActive && isSoldOut && (
             <section className="bg-card border border-white/5 rounded-3xl p-6 text-center">
               <Ticket className="w-8 h-8 text-[#84849b] mx-auto mb-3 opacity-40" />
-              <h3 className="text-sm font-black uppercase text-white mb-1">Sold out</h3>
+              <h3 className="text-sm font-black uppercase text-white mb-1">{t("raffles.soldOutTitle")}</h3>
               <p className="text-xs text-[#84849b]">
-                Todas las chances fueron vendidas. ¡El sorteo está completo!
+                {t("raffles.soldOutDesc")}
               </p>
             </section>
           )}
@@ -479,15 +494,15 @@ function RaffleDetailsContent() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
               <h3 className="text-sm font-black uppercase tracking-widest text-white mb-4 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                Tus chances ({myTickets.length})
+                {t("raffles.myChances", { count: myTickets.length })}
               </h3>
               <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1">
-                {myTickets.map((t) => (
+                {myTickets.map((ticket) => (
                   <span
-                    key={t.id}
+                    key={ticket.id}
                     className="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono font-black text-emerald-400 tracking-wide"
                   >
-                    N° {t.ticketNumber}
+                    {t("raffles.ticketNumber", { number: ticket.ticketNumber })}
                   </span>
                 ))}
               </div>
@@ -506,7 +521,6 @@ export default function RaffleDetailsPage() {
         fallback={
           <div className="flex flex-col items-center justify-center min-h-[50vh] text-white">
             <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
-            <p className="text-xs text-[#8984a1] font-bold uppercase tracking-widest">Cargando...</p>
           </div>
         }
       >

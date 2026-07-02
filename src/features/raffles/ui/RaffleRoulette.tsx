@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { User as UserIcon } from "lucide-react";
+import { User as UserIcon, Volume2, VolumeX } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface UserProfile {
@@ -44,19 +44,40 @@ export function RaffleRoulette({
   const spinAudioRef = useRef<HTMLAudioElement | null>(null);
   const winAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Volume state
+  const [volume, setVolume] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('raffle_volume');
+      return saved !== null ? parseFloat(saved) : 1;
+    }
+    return 1;
+  });
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('raffle_muted') === 'true';
+    }
+    return false;
+  });
+
   useEffect(() => {
     spinAudioRef.current = new Audio("/sounds/raffles.mp3");
     winAudioRef.current = new Audio("/sounds/win.mp3");
-    
-    if (winAudioRef.current) {
-      winAudioRef.current.volume = 0.5;
-    }
 
     return () => {
       if (spinAudioRef.current) spinAudioRef.current.pause();
       if (winAudioRef.current) winAudioRef.current.pause();
     };
   }, []);
+
+  // Sync volume
+  useEffect(() => {
+    localStorage.setItem('raffle_volume', volume.toString());
+    localStorage.setItem('raffle_muted', isMuted.toString());
+    
+    const effectiveVolume = isMuted ? 0 : volume;
+    if (spinAudioRef.current) spinAudioRef.current.volume = effectiveVolume;
+    if (winAudioRef.current) winAudioRef.current.volume = effectiveVolume * 0.5;
+  }, [volume, isMuted]);
 
   // Calculate random offset only once on mount
   const [randomOffset] = useState(() => {
@@ -164,6 +185,29 @@ export function RaffleRoulette({
         ref={canvasRef}
         className="absolute inset-0 w-full h-full pointer-events-none z-30"
       />
+
+      {/* Audio Controls */}
+      <div className="absolute top-6 left-6 z-[60] flex items-center gap-3 bg-black/40 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-md">
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="text-white/70 hover:text-white transition-colors cursor-pointer"
+        >
+          {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={isMuted ? 0 : volume}
+          onChange={(e) => {
+            const val = parseFloat(e.target.value);
+            setVolume(val);
+            if (val > 0) setIsMuted(false);
+          }}
+          className="w-24 accent-accent cursor-pointer"
+        />
+      </div>
 
       {/* Skip Button */}
       <button

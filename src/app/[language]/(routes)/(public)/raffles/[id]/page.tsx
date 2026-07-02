@@ -91,7 +91,7 @@ function RaffleDetailsContent() {
   const [ticketCount, setTicketCount] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
-  const [winningPrizes, setWinningPrizes] = useState<RafflePrize[]>([]);
+  const [winningPositions, setWinningPositions] = useState<{position: number; winner: any; prizes: any[]}[]>([]);
   const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
 
   useEffect(() => {
@@ -114,7 +114,16 @@ function RaffleDetailsContent() {
         if (data.status === "FINISHED") {
           const wonPrizes = data.prizes.filter((p: any) => p.winnerId && p.winner);
           if (wonPrizes.length > 0) {
-            setWinningPrizes(wonPrizes);
+            const positionsMap = new Map<number, any>();
+            wonPrizes.forEach((p: any) => {
+              const pos = p.position || 1;
+              if (!positionsMap.has(pos)) {
+                positionsMap.set(pos, { position: pos, winner: p.winner, prizes: [] });
+              }
+              positionsMap.get(pos).prizes.push(p);
+            });
+            const positions = Array.from(positionsMap.values()).sort((a, b) => a.position - b.position);
+            setWinningPositions(positions);
             setCurrentPrizeIndex(0);
             setShowAnimation(true);
           }
@@ -188,7 +197,7 @@ function RaffleDetailsContent() {
 
   return (
     <AnimatePresence mode="wait">
-      {showAnimation && winningPrizes.length > 0 ? (
+      {showAnimation && winningPositions.length > 0 ? (
         <motion.div
           key="roulette"
           initial={{ opacity: 0 }}
@@ -199,7 +208,7 @@ function RaffleDetailsContent() {
         >
           <AnimatePresence mode="wait">
             <motion.div
-              key={winningPrizes[currentPrizeIndex].id}
+              key={winningPositions[currentPrizeIndex].position}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
@@ -208,12 +217,18 @@ function RaffleDetailsContent() {
             >
               <RaffleRoulette
                 tickets={raffle.tickets}
-                winner={winningPrizes[currentPrizeIndex].winner!}
-                prize={winningPrizes[currentPrizeIndex]}
+                winner={winningPositions[currentPrizeIndex].winner!}
+                prize={{
+                  name: `Puesto ${winningPositions[currentPrizeIndex].position}`,
+                  price: winningPositions[currentPrizeIndex].prizes.reduce((acc: number, p: any) => acc + p.price, 0),
+                  iconUrl: winningPositions[currentPrizeIndex].prizes[0]?.iconUrl,
+                  exterior: `${winningPositions[currentPrizeIndex].prizes.length} Ítems`,
+                  items: winningPositions[currentPrizeIndex].prizes
+                }}
                 prizeIndex={currentPrizeIndex}
-                totalPrizes={winningPrizes.length}
+                totalPrizes={winningPositions.length}
                 onAnimationEnd={() => {
-                  if (currentPrizeIndex < winningPrizes.length - 1) {
+                  if (currentPrizeIndex < winningPositions.length - 1) {
                     setCurrentPrizeIndex((c) => c + 1);
                   } else {
                     setShowAnimation(false);
@@ -355,6 +370,7 @@ function RaffleDetailsContent() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">
+                          <span className="text-accent mr-1">#{prize.position || 1}</span>
                           {prize.name}
                         </h4>
                         {prize.exterior && (

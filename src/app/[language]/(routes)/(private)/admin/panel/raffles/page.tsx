@@ -97,7 +97,7 @@ function RafflesAdminContent() {
   const [formDrawDate, setFormDrawDate] = useState("");
   const [formPrice, setFormPrice] = useState("1.00");
   const [formMaxTickets, setFormMaxTickets] = useState("");
-  const [selectedPrizes, setSelectedPrizes] = useState<CatalogItem[]>([]);
+  const [selectedPrizes, setSelectedPrizes] = useState<{item: CatalogItem, position: number}[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -154,8 +154,8 @@ function RafflesAdminContent() {
 
   const toggleSelectPrize = (item: CatalogItem) => {
     setSelectedPrizes((prev) => {
-      const exists = prev.some((p) => p.id === item.id);
-      return exists ? prev.filter((p) => p.id !== item.id) : [...prev, item];
+      const exists = prev.some((p) => p.item.id === item.id);
+      return exists ? prev.filter((p) => p.item.id !== item.id) : [...prev, { item, position: 1 }];
     });
   };
 
@@ -178,7 +178,7 @@ function RafflesAdminContent() {
         drawDate: new Date(formDrawDate).toISOString(),
         ticketPrice: Number(formPrice),
         maxTickets: formMaxTickets ? Number(formMaxTickets) : null,
-        prizes: selectedPrizes.map((p) => ({ assetId: p.id })),
+        prizes: selectedPrizes.map((p) => ({ assetId: p.item.id, position: p.position })),
       };
 
       const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin`, {
@@ -491,31 +491,44 @@ function RafflesAdminContent() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-44 overflow-y-auto pr-1">
+                  <div className="flex flex-col gap-3 max-h-44 overflow-y-auto pr-1">
                     {selectedPrizes.map((p) => (
                       <div
-                        key={p.id}
+                        key={p.item.id}
                         className="flex items-center justify-between p-3 rounded-[3px] bg-[#0b0818] border border-white/5 gap-3"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <img
-                            src={p.imageUrl}
-                            alt={p.name}
+                            src={p.item.imageUrl}
+                            alt={p.item.name}
                             className="w-8 h-8 object-contain shrink-0"
                           />
                           <span className="text-[10px] font-black text-white uppercase truncate tracking-wide">
-                            {p.name}
+                            {p.item.name}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedPrizes((prev) => prev.filter((x) => x.id !== p.id))
-                          }
-                          className="text-red-400 hover:text-red-300 cursor-pointer"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider">Puesto</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={p.position}
+                            onChange={(e) => {
+                              const pos = parseInt(e.target.value) || 1;
+                              setSelectedPrizes(prev => prev.map(x => x.item.id === p.item.id ? {...x, position: pos} : x));
+                            }}
+                            className="w-12 bg-[#141221] border border-white/5 rounded-[3px] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-accent"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedPrizes((prev) => prev.filter((x) => x.item.id !== p.item.id))
+                            }
+                            className="text-red-400 hover:text-red-300 cursor-pointer ml-2"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -604,7 +617,7 @@ function RafflesAdminContent() {
               ) : (
                 <div className="grid grid-cols-1 gap-2.5">
                   {filteredCatalog.map((item) => {
-                    const isSelected = selectedPrizes.some((p) => p.id === item.id);
+                    const isSelected = selectedPrizes.some((p) => p.item.id === item.id);
                     return (
                       <button
                         key={item.id}

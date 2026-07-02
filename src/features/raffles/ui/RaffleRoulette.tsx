@@ -166,7 +166,7 @@ export function RaffleRoulette({
 
     setTimeout(() => {
       onAnimationEnd();
-    }, ANIMATION_DURATION + 10000);
+    }, ANIMATION_DURATION + 6000);
   };
 
   const handleSkip = () => {

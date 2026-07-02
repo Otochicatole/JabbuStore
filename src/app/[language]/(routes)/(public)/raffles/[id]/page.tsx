@@ -268,9 +268,9 @@ function RaffleDetailsContent() {
         </Link>
       </div>
 
-      <div className={`grid grid-cols-1 ${hasSidebar ? "lg:grid-cols-12" : "max-w-5xl mx-auto"} gap-8 items-start`}>
-        {/* Left: Info + Prizes */}
-        <div className={`${hasSidebar ? "lg:col-span-8" : "w-full"} space-y-8`}>
+      <div className={`grid grid-cols-1 ${hasSidebar ? "lg:grid-cols-12" : "max-w-5xl mx-auto"} gap-y-8 lg:gap-8 items-start`}>
+        {/* 1. Main Info (Left on desktop, First on mobile) */}
+        <div className={`${hasSidebar ? "lg:col-span-8 lg:col-start-1" : "w-full"}`}>
           {/* Main Info */}
           <section className="p-6 sm:p-8 rounded-3xl bg-card border border-white/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
@@ -375,6 +375,140 @@ function RaffleDetailsContent() {
               )}
             </div>
           </section>
+        </div>
+
+        {/* 2. Action widget (Right on desktop, Second on mobile) */}
+        {hasSidebar && (
+          <div className="lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:sticky lg:top-28 space-y-6">
+            {isCancelled && (
+              <section className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6 text-center">
+                <Ban className="w-8 h-8 text-red-400 mx-auto mb-3" />
+                <h3 className="text-sm font-black uppercase text-red-400 mb-1">
+                  {t("raffles.cancelledTitle")}
+                </h3>
+                <p className="text-xs text-[#84849b]">
+                  {t("raffles.cancelledDesc")}
+                </p>
+              </section>
+            )}
+
+            {isPending && !isCancelled && (
+              <section className="bg-amber-500/5 border border-amber-500/10 rounded-3xl p-6 text-center">
+                <Clock className="w-8 h-8 text-amber-400 mx-auto mb-3" />
+                <h3 className="text-sm font-black uppercase text-amber-400 mb-1">
+                  {t("raffles.status.pending")}
+                </h3>
+                <p className="text-xs text-[#84849b]">
+                  {t("raffles.pendingDesc")}
+                </p>
+              </section>
+            )}
+
+            {isActive && !isSoldOut && (
+              <section className="bg-card border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <h3 className="text-sm font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2">
+                  <Ticket className="w-4 h-4 text-accent" />
+                  {t("raffles.buyChances")}
+                </h3>
+
+                <div className="space-y-6">
+                  <div>
+                    <span className="block text-[9px] font-bold text-[#84849b] uppercase tracking-wider mb-2">
+                      {t("raffles.howManyChances")}
+                    </span>
+
+                    <div className="flex items-center justify-between border border-white/5 rounded-2xl bg-background/50 p-2 max-w-[200px]">
+                      <button
+                        onClick={decrementCount}
+                        className="w-9 h-9 rounded-xl hover:bg-white/5 text-white/60 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                        disabled={ticketCount <= 1}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="text-sm font-mono font-black text-white">{ticketCount}</span>
+                      <button
+                        onClick={incrementCount}
+                        className="w-9 h-9 rounded-xl hover:bg-white/5 text-white/60 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                        disabled={maxTicketCount > 0 && ticketCount >= maxTicketCount}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {remainingChances !== null && (
+                      <p className="text-[9px] text-[#84849b] font-bold uppercase tracking-wider mt-2">
+                        {remainingChances === 1
+                          ? t("raffles.maxAvailableOne", { count: remainingChances })
+                          : t("raffles.maxAvailable", { count: remainingChances, unit: t("raffles.chances") })}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                    <div>
+                      <span className="text-[9px] font-bold text-[#84849b] uppercase tracking-widest">
+                        {t("raffles.totalPrice")}
+                      </span>
+                      <span className="block text-lg font-black text-white">
+                        ${(raffle.ticketPrice * ticketCount).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-[8px] font-black text-accent uppercase tracking-wider">
+                        ${raffle.ticketPrice.toFixed(2)} c/u
+                      </span>
+                    </div>
+                  </div>
+
+                  {userProfile ? (
+                    <button
+                      onClick={handlePurchase}
+                      disabled={isSubmitting}
+                      className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-white bg-accent hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Ticket className="w-4 h-4" />
+                          {t("raffles.buyTickets")}
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="text-center p-4 border border-white/5 rounded-2xl bg-white/[0.01]">
+                      <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider mb-2">
+                        {t("raffles.loginToParticipate")}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.location.href = `${BACKEND_URL}/auth/steam`;
+                        }}
+                        className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-white transition-colors cursor-pointer"
+                      >
+                        {t("raffles.connectAccount")} &rarr;
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {isActive && isSoldOut && (
+              <section className="bg-card border border-white/5 rounded-3xl p-6 text-center">
+                <Ticket className="w-8 h-8 text-[#84849b] mx-auto mb-3 opacity-40" />
+                <h3 className="text-sm font-black uppercase text-white mb-1">{t("raffles.soldOutTitle")}</h3>
+                <p className="text-xs text-[#84849b]">
+                  {t("raffles.soldOutDesc")}
+                </p>
+              </section>
+            )}
+          </div>
+        )}
+
+        {/* 3. Prizes (Left on desktop, Third on mobile) */}
+        <div className={`${hasSidebar ? "lg:col-span-8 lg:col-start-1" : "w-full"} space-y-8`}>
 
           {isFinished && (
             <RaffleWinnersSection
@@ -468,137 +602,6 @@ function RaffleDetailsContent() {
             </div>
           </section>
         </div>
-
-        {/* Right: Action widget */}
-        {hasSidebar && (
-          <div className="lg:col-span-4 lg:sticky lg:top-28 space-y-6">
-          {isCancelled && (
-            <section className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6 text-center">
-              <Ban className="w-8 h-8 text-red-400 mx-auto mb-3" />
-              <h3 className="text-sm font-black uppercase text-red-400 mb-1">
-                {t("raffles.cancelledTitle")}
-              </h3>
-              <p className="text-xs text-[#84849b]">
-                {t("raffles.cancelledDesc")}
-              </p>
-            </section>
-          )}
-
-          {isPending && !isCancelled && (
-            <section className="bg-amber-500/5 border border-amber-500/10 rounded-3xl p-6 text-center">
-              <Clock className="w-8 h-8 text-amber-400 mx-auto mb-3" />
-              <h3 className="text-sm font-black uppercase text-amber-400 mb-1">
-                {t("raffles.status.pending")}
-              </h3>
-              <p className="text-xs text-[#84849b]">
-                {t("raffles.pendingDesc")}
-              </p>
-            </section>
-          )}
-
-          {isActive && !isSoldOut && (
-            <section className="bg-card border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-              <h3 className="text-sm font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2">
-                <Ticket className="w-4 h-4 text-accent" />
-                {t("raffles.buyChances")}
-              </h3>
-
-              <div className="space-y-6">
-                <div>
-                  <span className="block text-[9px] font-bold text-[#84849b] uppercase tracking-wider mb-2">
-                    {t("raffles.howManyChances")}
-                  </span>
-
-                  <div className="flex items-center justify-between border border-white/5 rounded-2xl bg-background/50 p-2 max-w-[200px]">
-                    <button
-                      onClick={decrementCount}
-                      className="w-9 h-9 rounded-xl hover:bg-white/5 text-white/60 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                      disabled={ticketCount <= 1}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="text-sm font-mono font-black text-white">{ticketCount}</span>
-                    <button
-                      onClick={incrementCount}
-                      className="w-9 h-9 rounded-xl hover:bg-white/5 text-white/60 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                      disabled={maxTicketCount > 0 && ticketCount >= maxTicketCount}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {remainingChances !== null && (
-                    <p className="text-[9px] text-[#84849b] font-bold uppercase tracking-wider mt-2">
-                      {remainingChances === 1
-                        ? t("raffles.maxAvailableOne", { count: remainingChances })
-                        : t("raffles.maxAvailable", { count: remainingChances, unit: t("raffles.chances") })}
-                    </p>
-                  )}
-                </div>
-
-                <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                  <div>
-                    <span className="text-[9px] font-bold text-[#84849b] uppercase tracking-widest">
-                      {t("raffles.totalPrice")}
-                    </span>
-                    <span className="block text-lg font-black text-white">
-                      ${(raffle.ticketPrice * ticketCount).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="block text-[8px] font-black text-accent uppercase tracking-wider">
-                      ${raffle.ticketPrice.toFixed(2)} c/u
-                    </span>
-                  </div>
-                </div>
-
-                {userProfile ? (
-                  <button
-                    onClick={handlePurchase}
-                    disabled={isSubmitting}
-                    className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-white bg-accent hover:bg-accent/90 transition-all shadow-xl shadow-accent/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Ticket className="w-4 h-4" />
-                        {t("raffles.buyTickets")}
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <div className="text-center p-4 border border-white/5 rounded-2xl bg-white/[0.01]">
-                    <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider mb-2">
-                      {t("raffles.loginToParticipate")}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        window.location.href = `${BACKEND_URL}/auth/steam`;
-                      }}
-                      className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-white transition-colors cursor-pointer"
-                    >
-                      {t("raffles.connectAccount")} &rarr;
-                    </button>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {isActive && isSoldOut && (
-            <section className="bg-card border border-white/5 rounded-3xl p-6 text-center">
-              <Ticket className="w-8 h-8 text-[#84849b] mx-auto mb-3 opacity-40" />
-              <h3 className="text-sm font-black uppercase text-white mb-1">{t("raffles.soldOutTitle")}</h3>
-              <p className="text-xs text-[#84849b]">
-                {t("raffles.soldOutDesc")}
-              </p>
-            </section>
-          )}
-
-        </div>
-        )}
       </div>
     </motion.div>
     )}

@@ -22,6 +22,8 @@ import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { RaffleWinnersSection } from "@/features/raffles/ui/RaffleWinnersSection";
 import { hasPrizeWinner } from "@/features/raffles/types";
+import { RaffleRoulette } from "@/features/raffles/ui/RaffleRoulette";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface UserProfile {
   id: string;
@@ -88,6 +90,8 @@ function RaffleDetailsContent() {
   const [error, setError] = useState<string | null>(null);
   const [ticketCount, setTicketCount] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [rouletteWinner, setRouletteWinner] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     fetchWithAuth(`${BACKEND_URL}/users/me`)
@@ -102,7 +106,17 @@ function RaffleDetailsContent() {
           headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
         });
         if (!res.ok) throw new Error("No se pudo cargar la información del sorteo.");
-        setRaffle(await res.json());
+        const data = await res.json();
+        setRaffle(data);
+
+        // Check if finished and has a winner
+        if (data.status === "FINISHED") {
+          const wonPrize = data.prizes.find((p: any) => p.winnerId && p.winner);
+          if (wonPrize) {
+            setRouletteWinner(wonPrize.winner);
+            setShowAnimation(true);
+          }
+        }
       } catch (err: any) {
         setError(err.message || "Error al cargar.");
       } finally {
@@ -171,7 +185,30 @@ function RaffleDetailsContent() {
     setTicketCount((c) => Math.min(c + 1, maxTicketCount > 0 ? maxTicketCount : c + 1));
 
   return (
-    <div className="space-y-8">
+    <AnimatePresence mode="wait">
+      {showAnimation && rouletteWinner ? (
+        <motion.div
+          key="roulette"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: 1.05 }}
+          transition={{ duration: 0.5 }}
+          className="fixed inset-0 z-50 bg-[#0e0c1b]"
+        >
+          <RaffleRoulette
+            tickets={raffle.tickets}
+            winner={rouletteWinner}
+            onAnimationEnd={() => setShowAnimation(false)}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="content"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="space-y-8"
+        >
       <Link
         href={localizePath("/raffles")}
         className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-white transition-colors uppercase tracking-widest"
@@ -510,7 +547,9 @@ function RaffleDetailsContent() {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
+    )}
+    </AnimatePresence>
   );
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { User as UserIcon } from "lucide-react";
+import confetti from "canvas-confetti";
 
 interface UserProfile {
   id: string;
@@ -39,6 +40,7 @@ export function RaffleRoulette({
   const [hasStarted, setHasStarted] = useState(false);
   const [hasStopped, setHasStopped] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const spinAudioRef = useRef<HTMLAudioElement | null>(null);
   const winAudioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -99,6 +101,33 @@ export function RaffleRoulette({
     setTimeout(() => {
       setHasStopped(true);
       if (spinAudioRef.current) spinAudioRef.current.pause();
+
+      // Trigger confetti from the custom canvas, behind the z-40 winning card
+      if (canvasRef.current) {
+        const myConfetti = confetti.create(canvasRef.current, {
+          resize: true,
+          useWorker: true
+        });
+
+        myConfetti({
+          particleCount: 150,
+          spread: 100,
+          origin: { y: 0.5, x: 0.5 },
+          startVelocity: 45,
+          colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a']
+        });
+
+        myConfetti({
+          particleCount: 80,
+          spread: 360,
+          origin: { y: 0.5, x: 0.5 },
+          colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'],
+          ticks: 200,
+          gravity: 1.2,
+          scalar: 1.5,
+          shapes: ['square']
+        });
+      }
       
       setTimeout(() => {
         if (winAudioRef.current) {
@@ -130,6 +159,12 @@ export function RaffleRoulette({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0e0c1b] overflow-hidden">
+      {/* Custom Confetti Canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none z-30"
+      />
+
       {/* Skip Button */}
       <button
         onClick={handleSkip}

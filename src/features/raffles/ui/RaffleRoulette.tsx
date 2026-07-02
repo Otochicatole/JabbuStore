@@ -155,7 +155,7 @@ export function RaffleRoulette({
           winAudioRef.current.currentTime = 0;
           winAudioRef.current.play().catch(e => console.error("Error playing win sound:", e));
         }
-      }, 300);
+      }, 200);
     }, ANIMATION_DURATION);
 
     setTimeout(() => {

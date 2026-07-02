@@ -256,7 +256,7 @@ export function RaffleRoulette({
       <div className="absolute top-1/2 left-1/2 w-1 h-[460px] bg-accent z-20 transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_15px_rgba(var(--accent-rgb),0.5)]" />
 
       {/* Roulette container */}
-      <div className="relative w-full">
+      <div className="relative w-full border-t border-b border-white/10 py-6 bg-black/10">
         {/* Gradients for edges */}
         <div className="absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-[#0e0c1b] to-transparent z-10" />
         <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-[#0e0c1b] to-transparent z-10" />

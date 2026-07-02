@@ -197,21 +197,31 @@ function RaffleDetailsContent() {
           transition={{ duration: 0.5 }}
           className="fixed inset-0 z-50 bg-[#0e0c1b]"
         >
-          <RaffleRoulette
-            key={winningPrizes[currentPrizeIndex].id}
-            tickets={raffle.tickets}
-            winner={winningPrizes[currentPrizeIndex].winner!}
-            prize={winningPrizes[currentPrizeIndex]}
-            prizeIndex={currentPrizeIndex}
-            totalPrizes={winningPrizes.length}
-            onAnimationEnd={() => {
-              if (currentPrizeIndex < winningPrizes.length - 1) {
-                setCurrentPrizeIndex((c) => c + 1);
-              } else {
-                setShowAnimation(false);
-              }
-            }}
-          />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={winningPrizes[currentPrizeIndex].id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              transition={{ duration: 0.5 }}
+              className="absolute inset-0"
+            >
+              <RaffleRoulette
+                tickets={raffle.tickets}
+                winner={winningPrizes[currentPrizeIndex].winner!}
+                prize={winningPrizes[currentPrizeIndex]}
+                prizeIndex={currentPrizeIndex}
+                totalPrizes={winningPrizes.length}
+                onAnimationEnd={() => {
+                  if (currentPrizeIndex < winningPrizes.length - 1) {
+                    setCurrentPrizeIndex((c) => c + 1);
+                  } else {
+                    setShowAnimation(false);
+                  }
+                }}
+              />
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
       ) : (
         <motion.div

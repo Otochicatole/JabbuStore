@@ -1201,4 +1201,6 @@ export const br = {
   "purchases.raffleChancesInOrder": "{count} chances neste pedido",
   "purchases.userChancesInRaffle": "Você tem {count} chances no total neste sorteio",
   "purchases.viewRaffle": "Ver sorteio",
+  "admin.searchRaffles": "Buscar sorteios por nome...",
+  "admin.allStatuses": "Todos os status",
 } as const;

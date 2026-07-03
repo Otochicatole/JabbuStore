@@ -30,6 +30,7 @@ import {
   RaffleManageActions,
   type RaffleManageData,
 } from "@/features/admin/raffles/ui/RaffleManageActions";
+import { AdminSelect } from "@/shared/components/AdminSelect";
 
 interface RafflePrize {
   id: string;
@@ -105,6 +106,9 @@ function RafflesAdminContent() {
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [pickerTab, setPickerTab] = useState<"bot" | "youpin">("bot");
+
+  const [raffleSearchQuery, setRaffleSearchQuery] = useState("");
+  const [raffleStatusFilter, setRaffleStatusFilter] = useState("ALL");
 
   const fetchRaffles = async () => {
     setLoading(true);
@@ -210,6 +214,12 @@ function RafflesAdminContent() {
     `${item.weapon} ${item.name}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const filteredRaffles = raffles.filter((raffle) => {
+    const matchesSearch = raffle.name.toLowerCase().includes(raffleSearchQuery.toLowerCase());
+    const matchesStatus = raffleStatusFilter === "ALL" || raffle.status === raffleStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="space-y-6">
       <AdminHeader
@@ -227,6 +237,33 @@ function RafflesAdminContent() {
         }
       />
 
+      {/* Filters */}
+      {!loading && raffles.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#84849b]" />
+            <input
+              type="text"
+              placeholder={t("admin.searchRaffles") || "Buscar sorteos por nombre..."}
+              value={raffleSearchQuery}
+              onChange={(e) => setRaffleSearchQuery(e.target.value)}
+              className="w-full bg-[#141221] border border-white/5 rounded-[3px] pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent placeholder:text-[#84849b]"
+            />
+          </div>
+          <AdminSelect
+            value={raffleStatusFilter}
+            onChange={(value) => setRaffleStatusFilter(value)}
+            options={[
+              { value: "ALL", label: t("admin.allStatuses") || "Todos los estados" },
+              { value: "ACTIVE", label: "Activo" },
+              { value: "PENDING", label: "Pendiente" },
+              { value: "FINISHED", label: "Finalizado" },
+              { value: "CANCELLED", label: "Cancelado" }
+            ]}
+          />
+        </div>
+      )}
+
       {error && <AdminAlert>{error}</AdminAlert>}
 
       {loading ? (
@@ -241,9 +278,15 @@ function RafflesAdminContent() {
             </AdminButton>
           }
         />
+      ) : filteredRaffles.length === 0 ? (
+        <div className="text-center py-10 bg-[#0f0d1e] border border-white/5 rounded-[3px]">
+          <p className="text-xs text-[#84849b] font-bold uppercase tracking-wider">
+            No se encontraron sorteos con esos filtros.
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {raffles.map((raffle) => {
+          {filteredRaffles.map((raffle) => {
             const isFinished = raffle.status === "FINISHED";
             const soldTickets = raffle.tickets.filter((t) => t.status === "PAID").length;
             const pct = raffle.maxTickets

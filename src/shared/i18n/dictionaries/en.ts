@@ -1202,4 +1202,6 @@ export const en = {
   "purchases.raffleChancesInOrder": "{count} chances in this order",
   "purchases.userChancesInRaffle": "You have {count} chances total in this raffle",
   "purchases.viewRaffle": "View raffle",
+  "admin.searchRaffles": "Search raffles by name...",
+  "admin.allStatuses": "All statuses",
 } as const;

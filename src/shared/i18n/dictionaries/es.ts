@@ -1203,4 +1203,6 @@ export const es = {
   "purchases.raffleChancesInOrder": "{count} chances en esta orden",
   "purchases.userChancesInRaffle": "Tenés {count} chances en total en este sorteo",
   "purchases.viewRaffle": "Ver sorteo",
+  "admin.searchRaffles": "Buscar sorteos por nombre...",
+  "admin.allStatuses": "Todos los estados",
 } as const;

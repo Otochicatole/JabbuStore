@@ -179,6 +179,17 @@ export function OrderDetailItem({
               ★ Especial
             </span>
           )}
+          {finalExterior && (
+            item.float !== null && item.float !== undefined ? (
+              <span className="text-[7.5px] font-black uppercase tracking-wider bg-blue-500/15 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded-[2px] shadow-[0_0_8px_rgba(59,130,246,0.1)]">
+                {t("admin.orders.specificFloat") || "Float Específico"}
+              </span>
+            ) : (
+              <span className="text-[7.5px] font-black uppercase tracking-wider bg-neutral-500/15 text-neutral-400 border border-neutral-500/30 px-1.5 py-0.5 rounded-[2px]">
+                {t("admin.orders.anyFloat") || "Cualquier Float"}
+              </span>
+            )
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-[9px] font-mono text-[#84849b]">

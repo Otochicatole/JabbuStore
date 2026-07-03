@@ -196,7 +196,7 @@ export function SellOrderDetailItem({
             Float Registrado
           </span>
           <span className="text-[10px] text-white/35 font-mono mt-1 font-bold">
-            N/A (Sujeto a entrega)
+            {t("admin.orders.chooseAnyFloat") || "A Criterio (Cualquiera)"}
           </span>
         </div>
       )}

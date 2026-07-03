@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Copy, Check, ExternalLink } from "lucide-react";
-import { rarityColors, getItemRarity, getItemExterior, hashCode } from "@/features/admin/shared/utils";
+import { getItemRarity, getItemExterior } from "@/features/admin/shared/utils";
 import { buildYoupinItemUrl } from "@/shared/lib/youpin";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { OrderItem } from "@/features/admin/domain/types";
@@ -62,69 +62,8 @@ export function OrderDetailItem({
     name: item.name,
   });
 
-  // Deterministic fallback for Youpin resell items if database float/pattern is null
-  let displayFloat = finalFloat;
-  let displayPattern = finalPattern;
-
-  if (
-    finalProvider === "youpin" &&
-    (displayFloat === null || displayPattern === null)
-  ) {
-    const hash = Math.abs(hashCode(item.assetId));
-    if (displayPattern === null) {
-      displayPattern = (hash % 999) + 1;
-    }
-    if (displayFloat === null) {
-      const ext = (finalExterior || "").toLowerCase();
-      let minF = 0.0;
-      let maxF = 0.07;
-      let hasFloat = true;
-
-      if (
-        ext.includes("recién") ||
-        ext.includes("factory") ||
-        ext.includes("fn")
-      ) {
-        minF = 0.0;
-        maxF = 0.07;
-      } else if (
-        ext.includes("casi") ||
-        ext.includes("minimal") ||
-        ext.includes("mw")
-      ) {
-        minF = 0.07;
-        maxF = 0.15;
-      } else if (
-        ext.includes("algo") ||
-        ext.includes("field") ||
-        ext.includes("ft")
-      ) {
-        minF = 0.15;
-        maxF = 0.38;
-      } else if (
-        ext.includes("bastante") ||
-        ext.includes("well") ||
-        ext.includes("ww")
-      ) {
-        minF = 0.38;
-        maxF = 0.45;
-      } else if (
-        ext.includes("deplorable") ||
-        ext.includes("battle") ||
-        ext.includes("bs")
-      ) {
-        minF = 0.45;
-        maxF = 0.99;
-      } else {
-        hasFloat = false;
-      }
-
-      if (hasFloat) {
-        const fraction = (hash % 1000000) / 1000000;
-        displayFloat = minF + fraction * (maxF - minF);
-      }
-    }
-  }
+  const displayFloat = item.float !== null && item.float !== undefined ? item.float : null;
+  const displayPattern = item.pattern !== null && item.pattern !== undefined ? item.pattern : null;
 
   const isPhysical = finalProvider === "bots" || finalProvider === "user";
   const isStatTrak = item.name.includes("StatTrak™") || item.name.includes("StatTrak");
@@ -328,7 +267,7 @@ export function OrderDetailItem({
             Float Registrado
           </span>
           <span className="text-[10px] text-white/35 font-mono mt-1 font-bold">
-            N/A (Sujeto a entrega)
+            {t("admin.orders.chooseAnyFloat") || "A Criterio (Cualquiera)"}
           </span>
         </div>
       )}

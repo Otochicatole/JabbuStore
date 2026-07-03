@@ -704,6 +704,7 @@ export function useCheckout() {
                     rarity: skin?.rarity || "common",
                     exterior: skin?.exterior || null,
                     provider: skin?.provider || "bot",
+                    isSpecific: skin?.isSpecific !== false,
                   };
                 });
               }

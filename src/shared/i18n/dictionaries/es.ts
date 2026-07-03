@@ -1209,4 +1209,6 @@ export const es = {
   "admin.statusPending": "Pendiente",
   "admin.statusFinished": "Finalizado",
   "admin.statusCancelled": "Cancelado",
+  "raffles.drawingSoon": "Poco tiempo restante",
+  "raffles.drawingNow": "Sorteo en curso"
 } as const;

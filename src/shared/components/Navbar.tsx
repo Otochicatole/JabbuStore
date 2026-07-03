@@ -14,6 +14,8 @@ import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { NotificationBell } from "@/features/notifications/ui/NotificationBell";
+import { useUpcomingDraws } from "@/shared/hooks/useUpcomingDraws";
+import { Radio } from "lucide-react";
 
 const NAV_LINKS = [
   { labelKey: "nav.home", path: "/" },
@@ -39,6 +41,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
   const { t } = useI18n();
   const { items } = useCart();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { closestDraw } = useUpcomingDraws(10); // 10 minutos
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -98,6 +101,18 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
 
   return (
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
+      {closestDraw && (
+        <div className="w-full bg-accent text-white px-4 py-2 text-center text-xs font-black tracking-widest uppercase flex items-center justify-center gap-3 animate-pulse">
+          <Radio className="w-4 h-4 animate-ping" />
+          <span>¡Sorteo en vivo! {closestDraw.name} está por comenzar</span>
+          <Link
+            href={localizePath(`/raffles/${closestDraw.id}/live`)}
+            className="ml-2 bg-white text-accent px-3 py-1 rounded-full hover:bg-white/90 transition-colors"
+          >
+            Ver Ahora
+          </Link>
+        </div>
+      )}
       <div className="mx-auto flex h-16 max-w-full items-center justify-between gap-2 px-3 sm:px-6">
         <Link
           href={localizePath("/")}

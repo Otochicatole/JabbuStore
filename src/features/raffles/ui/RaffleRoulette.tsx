@@ -22,6 +22,7 @@ interface RaffleRouletteProps {
   prize?: any;
   prizeIndex?: number;
   totalPrizes?: number;
+  autoStart?: boolean;
   onAnimationEnd: () => void;
 }
 
@@ -36,6 +37,7 @@ export function RaffleRoulette({
   prize,
   prizeIndex,
   totalPrizes,
+  autoStart = false,
   onAnimationEnd,
 }: RaffleRouletteProps) {
   const [cards, setCards] = useState<UserProfile[]>([]);
@@ -185,6 +187,16 @@ export function RaffleRoulette({
       onAnimationEnd();
     }, ANIMATION_DURATION + 6000);
   };
+
+  useEffect(() => {
+    if (autoStart && cards.length > 0 && !hasStarted) {
+      // Small delay to let the UI mount completely before animating
+      const t = setTimeout(() => {
+        handleStart();
+      }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [autoStart, cards.length, hasStarted]);
 
   const handleSkip = () => {
     if (spinAudioRef.current) spinAudioRef.current.pause();
@@ -447,7 +459,7 @@ export function RaffleRoulette({
       </div>
 
       {/* Start Button */}
-      {!hasStarted && (
+      {!hasStarted && !autoStart && (
         <div className="absolute bottom-8 sm:bottom-16 left-1/2 -translate-x-1/2 z-[60]">
           <button
             onClick={handleStart}

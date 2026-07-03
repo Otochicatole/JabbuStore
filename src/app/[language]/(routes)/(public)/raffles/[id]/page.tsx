@@ -154,7 +154,6 @@ function RaffleDetailsContent() {
             const positions = Array.from(positionsMap.values()).sort((a, b) => a.position - b.position);
             setWinningPositions(positions);
             setCurrentPrizeIndex(0);
-            setShowAnimation(true);
           }
         }
       } catch (err: any) {

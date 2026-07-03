@@ -123,6 +123,24 @@ function RaffleDetailsContent() {
 
         // Check if finished and has a winner
         if (data.status === "FINISHED") {
+          try {
+            const winnersRes = await fetch(`${BACKEND_URL}/raffles/${id}/winners`, {
+              headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+            });
+            if (winnersRes.ok) {
+              const winnersData = await winnersRes.json();
+              data.prizes = data.prizes.map((p: any) => {
+                const wInfo = winnersData.find((w: any) => w.prizeId === p.id);
+                if (wInfo) {
+                  return { ...p, winner: wInfo.winner, winningTicket: wInfo.winningTicket, winnerId: wInfo.winner.id };
+                }
+                return p;
+              });
+            }
+          } catch (e) {
+            console.error("Failed to fetch winners", e);
+          }
+
           const wonPrizes = data.prizes.filter((p: any) => p.winnerId && p.winner);
           if (wonPrizes.length > 0) {
             const positionsMap = new Map<number, any>();

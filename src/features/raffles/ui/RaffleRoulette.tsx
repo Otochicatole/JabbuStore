@@ -51,15 +51,15 @@ export function RaffleRoulette({
 
   // Volume state
   const [volume, setVolume] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('raffle_volume');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("raffle_volume");
       return saved !== null ? parseFloat(saved) : 1;
     }
     return 1;
   });
   const [isMuted, setIsMuted] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('raffle_muted') === 'true';
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("raffle_muted") === "true";
     }
     return false;
   });
@@ -69,8 +69,8 @@ export function RaffleRoulette({
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     handleResize(); // Initial check
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const cardWidth = isMobile ? 140 : 220;
@@ -90,9 +90,9 @@ export function RaffleRoulette({
 
   // Sync volume
   useEffect(() => {
-    localStorage.setItem('raffle_volume', volume.toString());
-    localStorage.setItem('raffle_muted', isMuted.toString());
-    
+    localStorage.setItem("raffle_volume", volume.toString());
+    localStorage.setItem("raffle_muted", isMuted.toString());
+
     const effectiveVolume = isMuted ? 0 : volume;
     if (spinAudioRef.current) spinAudioRef.current.volume = effectiveVolume;
     if (winAudioRef.current) winAudioRef.current.volume = effectiveVolume * 0.5;
@@ -135,7 +135,9 @@ export function RaffleRoulette({
 
     if (spinAudioRef.current) {
       spinAudioRef.current.currentTime = 0;
-      spinAudioRef.current.play().catch(e => console.error("Error playing spin sound:", e));
+      spinAudioRef.current
+        .play()
+        .catch((e) => console.error("Error playing spin sound:", e));
     }
 
     setTimeout(() => {
@@ -146,7 +148,7 @@ export function RaffleRoulette({
       if (canvasRef.current) {
         const myConfetti = confetti.create(canvasRef.current, {
           resize: true,
-          useWorker: true
+          useWorker: true,
         });
 
         myConfetti({
@@ -154,25 +156,27 @@ export function RaffleRoulette({
           spread: 100,
           origin: { y: 0.5, x: 0.5 },
           startVelocity: 45,
-          colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a']
+          colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"],
         });
 
         myConfetti({
           particleCount: 80,
           spread: 360,
           origin: { y: 0.5, x: 0.5 },
-          colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'],
+          colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"],
           ticks: 200,
           gravity: 1.2,
           scalar: 1.5,
-          shapes: ['square']
+          shapes: ["square"],
         });
       }
-      
+
       setTimeout(() => {
         if (winAudioRef.current) {
           winAudioRef.current.currentTime = 0;
-          winAudioRef.current.play().catch(e => console.error("Error playing win sound:", e));
+          winAudioRef.current
+            .play()
+            .catch((e) => console.error("Error playing win sound:", e));
         }
       }, 200);
     }, ANIMATION_DURATION);
@@ -211,7 +215,11 @@ export function RaffleRoulette({
           onClick={() => setIsMuted(!isMuted)}
           className="text-white/70 hover:text-white transition-colors cursor-pointer"
         >
-          {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
+          {isMuted || volume === 0 ? (
+            <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
+          ) : (
+            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+          )}
         </button>
         <input
           type="range"
@@ -233,23 +241,32 @@ export function RaffleRoulette({
         <div className="absolute top-[72px] sm:top-6 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-2 duration-500 w-full max-w-[90vw] sm:max-w-none">
           {totalPrizes && totalPrizes > 1 && (
             <span className="px-3 py-1 bg-accent/20 border border-accent/30 rounded-full text-[10px] font-black uppercase text-accent tracking-widest shadow-[0_0_15px_rgba(var(--accent-rgb),0.3)]">
-              {t("raffles.drawingPrize", { current: prizeIndex !== undefined ? prizeIndex + 1 : 1, total: totalPrizes })}
+              {t("raffles.drawingPrize", {
+                current: prizeIndex !== undefined ? prizeIndex + 1 : 1,
+                total: totalPrizes,
+              })}
             </span>
           )}
           <div className="relative w-full sm:w-auto">
             <button
               onClick={() => setIsPrizeListOpen(!isPrizeListOpen)}
-              className={`cursor-pointer flex items-center justify-between w-full sm:min-w-[280px] gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border backdrop-blur-xl shadow-2xl transition-all duration-300 ${isPrizeListOpen ? 'bg-[#14121d] border-accent/40 shadow-[0_0_30px_rgba(var(--accent-rgb),0.15)]' : 'bg-[#14121d]/80 border-white/5 hover:bg-[#14121d] hover:border-white/10'}`}
+              className={`cursor-pointer flex items-center justify-between w-full sm:min-w-[280px] gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border backdrop-blur-xl shadow-2xl transition-all duration-300 ${isPrizeListOpen ? "bg-[#14121d] border-accent/40 shadow-[0_0_30px_rgba(var(--accent-rgb),0.15)]" : "bg-[#14121d]/80 border-white/5 hover:bg-[#14121d] hover:border-white/10"}`}
             >
               <div className="flex items-center gap-4">
                 {prize.iconUrl && (
                   <div className="relative w-12 h-12 flex items-center justify-center">
                     <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full" />
-                    <img src={prize.iconUrl} alt={prize.name} className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+                    <img
+                      src={prize.iconUrl}
+                      alt={prize.name}
+                      className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                    />
                   </div>
                 )}
                 <div className="flex flex-col text-left">
-                  <span className="text-white font-black uppercase tracking-wider text-xs sm:text-sm leading-none mb-1 sm:mb-1.5 truncate max-w-[150px] sm:max-w-none">{prize.name}</span>
+                  <span className="text-white font-black uppercase tracking-wider text-xs sm:text-sm leading-none mb-1 sm:mb-1.5 truncate max-w-[150px] sm:max-w-none">
+                    {prize.name}
+                  </span>
                   <div className="flex items-center gap-2">
                     {prize.exterior && (
                       <span className="text-[9px] font-black uppercase text-white/80 bg-white/10 px-1.5 py-0.5 rounded-[4px] border border-white/5">
@@ -264,7 +281,9 @@ export function RaffleRoulette({
               </div>
               {prize.items && prize.items.length > 0 && (
                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/5 shrink-0 ml-2">
-                  <ChevronDown className={`w-4 h-4 text-white/70 transition-transform duration-300 ${isPrizeListOpen ? 'rotate-180 text-accent' : ''}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 text-white/70 transition-transform duration-300 ${isPrizeListOpen ? "rotate-180 text-accent" : ""}`}
+                  />
                 </div>
               )}
             </button>
@@ -274,21 +293,34 @@ export function RaffleRoulette({
               <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[#0e0c1b]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[70] animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex flex-col gap-2 max-h-[280px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                   {prize.items.map((item: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-accent/10 hover:border-accent/30 transition-all group">
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-accent/10 hover:border-accent/30 transition-all group"
+                    >
                       <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center shrink-0 p-1 relative overflow-hidden">
                         {/* Glow effect on hover */}
                         <div className="absolute inset-0 bg-accent/20 opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
                         {item.iconUrl && (
-                          <img src={item.iconUrl} alt={item.name} className="relative z-10 w-full h-full object-contain" />
+                          <img
+                            src={item.iconUrl}
+                            alt={item.name}
+                            className="relative z-10 w-full h-full object-contain"
+                          />
                         )}
                       </div>
                       <div className="flex flex-col min-w-0 flex-1">
-                        <span className="text-xs font-black text-white truncate uppercase tracking-wide">{item.name}</span>
+                        <span className="text-xs font-black text-white truncate uppercase tracking-wide">
+                          {item.name}
+                        </span>
                         <div className="flex items-center gap-2 mt-0.5">
                           {item.exterior && (
-                            <span className="text-[8px] font-bold text-white/50 uppercase">{item.exterior}</span>
+                            <span className="text-[8px] font-bold text-white/50 uppercase">
+                              {item.exterior}
+                            </span>
                           )}
-                          <span className="text-[10px] text-emerald-400 font-black">${item.price.toFixed(2)}</span>
+                          <span className="text-[10px] text-emerald-400 font-black">
+                            ${item.price.toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -332,15 +364,18 @@ export function RaffleRoulette({
             const isWinner = idx === WINNER_INDEX;
             const isLeft = idx < WINNER_INDEX;
             const isRight = idx > WINNER_INDEX;
-            
+
             let extraClasses = "z-0 scale-100 translate-x-0";
             if (hasStopped) {
               if (isWinner) {
-                extraClasses = "scale-[1.35] z-40 shadow-[0_0_60px_rgba(var(--accent-rgb),0.8)] border-accent translate-x-0";
+                extraClasses =
+                  "scale-[1.35] z-40 shadow-[0_0_60px_rgba(var(--accent-rgb),0.8)] border-accent translate-x-0";
               } else if (isLeft) {
-                extraClasses = "-translate-x-[50px] z-10 opacity-30 scale-[0.90]";
+                extraClasses =
+                  "-translate-x-[50px] z-10 opacity-30 scale-[0.90]";
               } else if (isRight) {
-                extraClasses = "translate-x-[50px] z-10 opacity-30 scale-[0.90]";
+                extraClasses =
+                  "translate-x-[50px] z-10 opacity-30 scale-[0.90]";
               }
             }
 

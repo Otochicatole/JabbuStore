@@ -41,7 +41,7 @@ interface RafflePrize {
   float: number | null;
   provider: string;
   winnerId?: string | null;
-  winner?: { id?: string; name: string | null; steamId?: string | null; avatar: string | null; tradeUrl?: string | null } | null;
+  winner?: { id: string; name: string | null; steamId: string | null; avatar: string | null; tradeUrl?: string | null } | null;
   winningTicket?: { ticketNumber: number } | null;
 }
 

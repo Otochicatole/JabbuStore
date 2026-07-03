@@ -79,6 +79,29 @@ function RafflesListContent() {
           throw new Error("Error al obtener los sorteos");
         }
         const data = await response.json();
+
+        // Fetch winners for all finished raffles
+        const finishedRaffles = data.filter((r: any) => r.status === "FINISHED");
+        await Promise.all(finishedRaffles.map(async (raffle: any) => {
+          try {
+            const winnersRes = await fetch(`${BACKEND_URL}/raffles/${raffle.id}/winners`, {
+              headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+            });
+            if (winnersRes.ok) {
+              const winnersData = await winnersRes.json();
+              raffle.prizes = raffle.prizes.map((p: any) => {
+                const wInfo = winnersData.find((w: any) => w.prizeId === p.id);
+                if (wInfo) {
+                  return { ...p, winner: wInfo.winner, winningTicket: wInfo.winningTicket, winnerId: wInfo.winner.id };
+                }
+                return p;
+              });
+            }
+          } catch (e) {
+            console.error("Failed to fetch winners for raffle", raffle.id, e);
+          }
+        }));
+
         setRaffles(data);
       } catch (err: any) {
         console.error("Error fetching raffles:", err);

@@ -300,81 +300,85 @@ function RafflesAdminContent() {
 
       {/* Creation Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
           <form
             onSubmit={handleCreateRaffle}
-            className="w-full max-w-2xl bg-[#0f0d1e] border border-white/5 rounded-[3px] p-6 relative flex flex-col max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="w-full max-w-3xl bg-linear-to-b from-[#1a172c] to-[#0f0d1e] border border-white/10 rounded-2xl p-8 relative flex flex-col max-h-[90vh] overflow-y-auto shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]"
           >
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(false)}
-              className="absolute top-5 right-5 text-white/50 hover:text-white cursor-pointer"
+              className="absolute top-6 right-6 text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-base font-black uppercase tracking-tight text-white mb-6">
+            <h2 className="text-xl font-black uppercase tracking-tight text-white mb-8 flex items-center gap-3">
+              <Gift className="w-6 h-6 text-accent" />
               {t("raffles.createRaffle")}
             </h2>
 
-            <div className="space-y-5 flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-6 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                    {t("raffles.name")}
+                  <label className="text-[11px] font-black uppercase text-[#84849b] tracking-wider ml-1">
+                    {t("raffles.name")} *
                   </label>
                   <input
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     required
-                    className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent focus:bg-white/[0.03] transition-all placeholder:text-white/20"
                     placeholder="ej. Sorteo Cuchillo Mariposa"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                    {t("raffles.adminDrawDate")}
+                  <label className="text-[11px] font-black uppercase text-[#84849b] tracking-wider ml-1">
+                    {t("raffles.adminDrawDate")} *
                   </label>
                   <input
                     type="datetime-local"
                     value={formDrawDate}
                     onChange={(e) => setFormDrawDate(e.target.value)}
                     required
-                    className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent focus:bg-white/[0.03] transition-all [color-scheme:dark]"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
+                <label className="text-[11px] font-black uppercase text-[#84849b] tracking-wider ml-1">
                   {t("raffles.desc")}
                 </label>
                 <textarea
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
-                  className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent h-20 resize-none"
-                  placeholder="Condiciones del sorteo..."
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent focus:bg-white/[0.03] transition-all h-28 resize-none placeholder:text-white/20"
+                  placeholder="Condiciones del sorteo, información adicional..."
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                    {t("raffles.ticketPriceLabel")}
+                  <label className="text-[11px] font-black uppercase text-[#84849b] tracking-wider ml-1">
+                    {t("raffles.ticketPriceLabel")} *
                   </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.10"
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
-                    required
-                    className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.10"
+                      value={formPrice}
+                      onChange={(e) => setFormPrice(e.target.value)}
+                      required
+                      className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-5 py-4 text-sm text-white focus:outline-none focus:border-accent focus:bg-white/[0.03] transition-all"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
+                  <label className="text-[11px] font-black uppercase text-[#84849b] tracking-wider ml-1">
                     {t("raffles.maxTicketsLabel")}
                   </label>
                   <input
@@ -382,52 +386,55 @@ function RafflesAdminContent() {
                     min="1"
                     value={formMaxTickets}
                     onChange={(e) => setFormMaxTickets(e.target.value)}
-                    className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent focus:bg-white/[0.03] transition-all placeholder:text-white/20"
                     placeholder="Sin límite"
                   />
                 </div>
               </div>
 
               {/* Prizes selection */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-4 pt-4 border-t border-white/5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
+                  <label className="text-[11px] font-black uppercase text-white tracking-wider ml-1">
                     {t("raffles.prizesTitle")} ({selectedPrizes.length})
                   </label>
                   <button
                     type="button"
                     onClick={handleOpenPicker}
-                    className="text-xs font-black text-accent hover:text-white uppercase tracking-wider cursor-pointer"
+                    className="text-xs font-black text-accent hover:text-white uppercase tracking-wider cursor-pointer bg-accent/10 hover:bg-accent/20 px-3 py-1.5 rounded-lg transition-colors border border-accent/20"
                   >
                     + {t("raffles.selectPrizes")}
                   </button>
                 </div>
 
                 {selectedPrizes.length === 0 ? (
-                  <div className="p-6 text-center border border-dashed border-white/5 rounded-[3px] bg-white/1">
-                    <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider">
+                  <div className="p-10 text-center border-2 border-dashed border-white/10 rounded-xl bg-black/20">
+                    <Package className="w-8 h-8 text-white/20 mx-auto mb-3" />
+                    <p className="text-xs font-bold text-[#84849b] uppercase tracking-wider">
                       {t("raffles.noPrizesSelected")}
                     </p>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-3 max-h-44 overflow-y-auto pr-1">
+                  <div className="flex flex-col gap-3 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
                     {selectedPrizes.map((p) => (
                       <div
                         key={p.item.id}
-                        className="flex items-center justify-between p-3 rounded-[3px] bg-[#0b0818] border border-white/5 gap-3"
+                        className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/10 gap-4 transition-colors hover:border-white/20"
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img
-                            src={p.item.imageUrl}
-                            alt={p.item.name}
-                            className="w-8 h-8 object-contain shrink-0"
-                          />
-                          <span className="text-[10px] font-black text-white uppercase truncate tracking-wide">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-12 h-12 bg-white/5 rounded-lg p-1.5 border border-white/5">
+                            <img
+                              src={p.item.imageUrl}
+                              alt={p.item.name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <span className="text-xs font-black text-white uppercase truncate tracking-wide">
                             {p.item.name}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider">Puesto</span>
+                        <div className="flex items-center gap-3 bg-black/40 px-3 py-2 rounded-lg border border-white/5">
+                          <span className="text-[10px] font-black text-[#84849b] uppercase tracking-widest">Posición</span>
                           <input
                             type="number"
                             min="1"
@@ -436,16 +443,16 @@ function RafflesAdminContent() {
                               const pos = parseInt(e.target.value) || 1;
                               setSelectedPrizes(prev => prev.map(x => x.item.id === p.item.id ? {...x, position: pos} : x));
                             }}
-                            className="w-12 bg-[#141221] border border-white/5 rounded-[3px] px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-accent"
+                            className="w-14 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm font-black text-white text-center focus:outline-none focus:border-accent focus:bg-white/10 transition-colors"
                           />
                           <button
                             type="button"
                             onClick={() =>
                               setSelectedPrizes((prev) => prev.filter((x) => x.item.id !== p.item.id))
                             }
-                            className="text-red-400 hover:text-red-300 cursor-pointer ml-2"
+                            className="text-red-400 hover:text-red-300 cursor-pointer ml-1 p-1 bg-red-400/10 hover:bg-red-400/20 rounded-md transition-colors"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -455,20 +462,20 @@ function RafflesAdminContent() {
               </div>
             </div>
 
-            <div className="mt-8 pt-4 border-t border-white/5 flex items-center justify-end gap-3 shrink-0">
+            <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-end gap-4 shrink-0 bg-black/20 -mx-8 -mb-8 px-8 py-6 rounded-b-2xl">
               <button
                 type="button"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="px-4 py-2.5 rounded-[3px] hover:bg-white/5 text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
+                className="px-6 py-3 rounded-xl hover:bg-white/5 text-xs font-black text-white uppercase tracking-widest cursor-pointer transition-colors"
               >
                 {t("common.cancel") || "Cancelar"}
               </button>
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-5 py-2.5 rounded-[3px] bg-accent hover:bg-accent/90 text-xs font-black uppercase text-white tracking-widest transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-8 py-3 rounded-xl bg-accent hover:bg-accent/90 text-xs font-black uppercase text-white tracking-widest transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("raffles.save")}
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("raffles.save") || "Crear Sorteo"}
               </button>
             </div>
           </form>

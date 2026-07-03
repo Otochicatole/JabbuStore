@@ -6,6 +6,7 @@ import {
   countPrizeWinners,
   getPrizeWinner,
   hasPrizeWinner,
+  getUniqueWinners,
   type RafflePrizeWithWinner,
 } from "@/features/raffles/types";
 
@@ -83,20 +84,16 @@ export function RaffleWinnersSection({
   if (variant === "compact") {
     if (winnersCount === 0) return null;
 
-    const winnerPrizes = prizes.filter(hasPrizeWinner).slice(0, 3);
+    const uniqueWinners = getUniqueWinners(prizes).slice(0, 3);
 
     return (
       <div className="px-5 pb-3 flex flex-col items-center gap-2">
         <div className="flex items-center -space-x-2">
-          {winnerPrizes.map((prize) => {
-            const winner = getPrizeWinner(prize);
-            if (!winner) return null;
-            return (
-              <div key={prize.id} className="ring-2 ring-[#0e0c1b] rounded-full">
-                <WinnerAvatar winner={winner} size="sm" />
-              </div>
-            );
-          })}
+          {uniqueWinners.map((winner) => (
+            <div key={winner.id} className="ring-2 ring-[#0e0c1b] rounded-full">
+              <WinnerAvatar winner={winner} size="sm" />
+            </div>
+          ))}
         </div>
         <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400">
           {t("raffles.winnersCount", { count: winnersCount })}

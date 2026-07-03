@@ -28,6 +28,17 @@ export function getPrizeWinner(prize: RafflePrizeWithWinner): RaffleWinnerUser |
   return prize.winner ?? null;
 }
 
+export function getUniqueWinners(prizes: RafflePrizeWithWinner[]): RaffleWinnerUser[] {
+  const map = new Map<string, RaffleWinnerUser>();
+  for (const p of prizes) {
+    const winner = getPrizeWinner(p);
+    if (winner && winner.id && !map.has(winner.id)) {
+      map.set(winner.id, winner);
+    }
+  }
+  return Array.from(map.values());
+}
+
 export function countPrizeWinners(prizes: RafflePrizeWithWinner[]) {
-  return prizes.filter(hasPrizeWinner).length;
+  return getUniqueWinners(prizes).length;
 }

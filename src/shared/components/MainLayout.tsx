@@ -12,6 +12,7 @@ import { TicketNotificationProvider } from "@/features/tickets/ui/TicketNotifica
 import { NotificationProvider } from "@/features/notifications/context/NotificationContext";
 import { ProfileCompletionModal } from "@/shared/components/ProfileCompletionModal";
 import { DEFAULT_LOCALE, isLocale, stripLocaleFromPathname } from "@/shared/i18n/routing";
+import { ActiveRafflesWidget } from "@/features/raffles/ui/ActiveRafflesWidget";
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -48,6 +49,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
                   <Navbar onOpenCart={() => setIsCartOpen(true)} />
                   <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
                   <ProfileCompletionModal />
+                  <ActiveRafflesWidget />
                   {children}
                 </div>
               </TicketNotificationProvider>

@@ -1203,4 +1203,8 @@ export const br = {
   "purchases.viewRaffle": "Ver sorteio",
   "admin.searchRaffles": "Buscar sorteios por nome...",
   "admin.allStatuses": "Todos os status",
+  "admin.statusActive": "Ativo",
+  "admin.statusPending": "Pendente",
+  "admin.statusFinished": "Finalizado",
+  "admin.statusCancelled": "Cancelado",
 } as const;

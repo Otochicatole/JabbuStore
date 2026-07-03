@@ -255,10 +255,10 @@ function RafflesAdminContent() {
             onChange={(value) => setRaffleStatusFilter(value)}
             options={[
               { value: "ALL", label: t("admin.allStatuses") || "Todos los estados" },
-              { value: "ACTIVE", label: "Activo" },
-              { value: "PENDING", label: "Pendiente" },
-              { value: "FINISHED", label: "Finalizado" },
-              { value: "CANCELLED", label: "Cancelado" }
+              { value: "ACTIVE", label: t("admin.statusActive") || "Activo" },
+              { value: "PENDING", label: t("admin.statusPending") || "Pendiente" },
+              { value: "FINISHED", label: t("admin.statusFinished") || "Finalizado" },
+              { value: "CANCELLED", label: t("admin.statusCancelled") || "Cancelado" }
             ]}
           />
         </div>

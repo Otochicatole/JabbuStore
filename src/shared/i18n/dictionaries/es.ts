@@ -1205,4 +1205,8 @@ export const es = {
   "purchases.viewRaffle": "Ver sorteo",
   "admin.searchRaffles": "Buscar sorteos por nombre...",
   "admin.allStatuses": "Todos los estados",
+  "admin.statusActive": "Activo",
+  "admin.statusPending": "Pendiente",
+  "admin.statusFinished": "Finalizado",
+  "admin.statusCancelled": "Cancelado",
 } as const;

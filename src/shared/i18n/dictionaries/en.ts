@@ -1204,4 +1204,8 @@ export const en = {
   "purchases.viewRaffle": "View raffle",
   "admin.searchRaffles": "Search raffles by name...",
   "admin.allStatuses": "All statuses",
+  "admin.statusActive": "Active",
+  "admin.statusPending": "Pending",
+  "admin.statusFinished": "Finished",
+  "admin.statusCancelled": "Cancelled",
 } as const;

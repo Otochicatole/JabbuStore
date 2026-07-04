@@ -194,7 +194,7 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
                 <div className="flex items-center gap-2 text-white/60">
                   <Users className="w-4 h-4 text-accent" />
                   <span className="text-sm font-bold uppercase tracking-wider">
-                    {raffle.tickets?.length || 0} Participantes
+                    {raffle.tickets?.length || 0} Chances Vendidas
                   </span>
                 </div>
               </div>

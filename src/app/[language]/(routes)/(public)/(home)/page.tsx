@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/shared/components/Button";
@@ -13,10 +14,12 @@ import {
   CheckCircle,
   Lock,
   Sparkles,
+  MoreHorizontal,
+  Globe,
 } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
 const stats = [
   { labelKey: "home.stats.activeUsers", value: "150K+" },
@@ -40,11 +43,87 @@ const staggerContainer = {
   }
 };
 
+const recommendations = [
+  {
+    name: "Brian Marchese",
+    date: "17 de julio de 2025",
+    text: "Super recomendable y buena onda",
+    avatarColor: "bg-blue-600",
+  },
+  {
+    name: "Gastón Marino",
+    date: "23 de mayo de 2025",
+    text: "Le vendi una faka de 500usds, rápido y confiable.",
+    avatarColor: "bg-purple-600",
+  },
+  {
+    name: "Ramiro Moldes",
+    date: "5 de mayo de 2025",
+    text: "seguro y altoke gracias pa 😄",
+    avatarColor: "bg-emerald-600",
+  },
+  {
+    name: "Luca Caporale",
+    date: "22 de abril de 2025",
+    text: "Un crack, rapido, buena cotizacion, vendi por 800usd, super confiable.",
+    avatarColor: "bg-amber-600",
+  },
+  {
+    name: "Maxi Martinotti",
+    date: "22 de marzo de 2025",
+    text: "Tipazo, rápido y confiable",
+    avatarColor: "bg-pink-600",
+  },
+  {
+    name: "Lucio Raffo",
+    date: "10 de marzo de 2025",
+    text: "+rep rapido y confiablee!",
+    avatarColor: "bg-indigo-600",
+  },
+  {
+    name: "Francisco Alvarez Lamas",
+    date: "5 de marzo de 2025",
+    text: "+Rep . Rápido y buena atención!! 😎💪",
+    avatarColor: "bg-teal-600",
+  },
+  {
+    name: "Matii Gonzalez",
+    date: "5 de febrero de 2025",
+    text: "+rep a este crack, perfecta atencion",
+    avatarColor: "bg-cyan-600",
+  },
+  {
+    name: "Feitan Gabis",
+    date: "19 de diciembre de 2024",
+    text: "+rep Le confie unos guantes de 1k y no me scameo, me salvo las deudas y las fiestas! Tipazo, encima madrugador",
+    avatarColor: "bg-rose-600",
+  },
+  {
+    name: "Ezequiel Iglesias",
+    date: "1 de noviembre de 2024",
+    text: "+rep 100% confiable, Mariposa Case hardened vendida y todo recibido al instante!",
+    avatarColor: "bg-violet-600",
+  },
+  {
+    name: "Jaime Velasquez",
+    date: "17 de octubre de 2024",
+    text: "+Rep Un genio! Oferta increible y mucha confianza 💥💥",
+    avatarColor: "bg-orange-600",
+  },
+  {
+    name: "Julián Benítez",
+    date: "31 de julio de 2024",
+    text: "+rep 100% profesional, toda la paciencia y sin vueltas. Vendí faka, guantes y AK, todo de 10.",
+    avatarColor: "bg-fuchsia-600",
+  },
+];
+
 export default function Home() {
   const { t } = useI18n();
   const localizePath = useLocalizedPath();
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const [showAll, setShowAll] = useState(false);
 
   const scrollToContent = () => {
     const nextSection = document.getElementById("stats-section");
@@ -416,6 +495,74 @@ export default function Home() {
               </p>
             </motion.div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* --- SECTION 5: RECOMMENDATIONS --- */}
+      <section className="relative z-10 max-w-7xl mx-auto w-full px-6 py-20 border-t border-white/5">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center max-w-2xl mx-auto mb-16"
+        >
+          <div className="inline-flex items-center justify-center gap-2 mb-4">
+            <span className="w-8 h-[1px] bg-accent"></span>
+            <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em]">Feedback</span>
+            <span className="w-8 h-[1px] bg-accent"></span>
+          </div>
+          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-white mb-6">
+            {t("home.recommendations.title")}
+          </h2>
+          <p className="text-white/50 text-base md:text-lg leading-relaxed">
+            {t("home.recommendations.desc")}
+          </p>
+        </motion.div>
+
+        {/* Scrollable Vertical List */}
+        <div className="max-w-3xl mx-auto w-full bg-[#110e1a]/40 border border-white/5 rounded-[2rem] p-4 sm:p-6 shadow-2xl backdrop-blur-md">
+          <div className="max-h-[500px] overflow-y-auto pr-2 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            {recommendations.map((rec) => {
+              const initials = rec.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+              return (
+                <div
+                  key={rec.name}
+                  className="bg-[#242526]/30 border border-white/5 hover:border-accent/30 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 text-left transition-all duration-300 relative group"
+                >
+                  {/* Glow Effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
+
+                  {/* Profile Header */}
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm text-white shrink-0 shadow-inner ${rec.avatarColor}`}>
+                      {initials}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <div className="text-xs font-bold text-white leading-tight">
+                        {rec.name}{" "}
+                        <span className="text-white/50 font-normal text-[11px]">recomienda</span>{" "}
+                        <span className="text-accent font-black">JabbuStore.</span>
+                      </div>
+                      <div className="text-[10px] text-white/35 flex items-center gap-1 mt-1 font-semibold">
+                        <span>{rec.date}</span>
+                        <span>·</span>
+                        <Globe className="w-3 h-3 text-white/30" />
+                      </div>
+                    </div>
+                    <button className="ml-auto text-white/30 hover:text-white transition-colors cursor-pointer p-1">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Recommendation Text */}
+                  <p className="text-[13px] sm:text-[14px] text-white/95 font-medium leading-relaxed break-words relative z-10 pl-1 py-1">
+                    {rec.text}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

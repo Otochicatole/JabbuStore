@@ -1210,5 +1210,7 @@ export const es = {
   "admin.statusFinished": "Finalizado",
   "admin.statusCancelled": "Cancelado",
   "raffles.drawingSoon": "Poco tiempo restante",
-  "raffles.drawingNow": "Sorteo en curso"
+  "raffles.drawingNow": "Sorteo en curso",
+  "home.recommendations.title": "Opiniones de la Comunidad",
+  "home.recommendations.desc": "Cientos de usuarios confían en nosotros para comerciar sus skins de CS2. Mira estas recomendaciones de nuestra comunidad oficial en Facebook."
 } as const;

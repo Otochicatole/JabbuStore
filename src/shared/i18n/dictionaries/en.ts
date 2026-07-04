@@ -1208,4 +1208,8 @@ export const en = {
   "admin.statusPending": "Pending",
   "admin.statusFinished": "Finished",
   "admin.statusCancelled": "Cancelled",
+  "raffles.drawingSoon": "Drawing soon",
+  "raffles.drawingNow": "Drawing in progress",
+  "home.recommendations.title": "What Our Community Says",
+  "home.recommendations.desc": "Hundreds of users trust us to trade their CS2 skins. Check out these recommendations from our official Facebook community page.",
 } as const;

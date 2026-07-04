@@ -81,8 +81,19 @@ export function RaffleRoulette({
   const itemSize = cardWidth + cardGap;
 
   useEffect(() => {
-    spinAudioRef.current = new Audio("/sounds/raffles.mp3");
-    winAudioRef.current = new Audio("/sounds/win.mp3");
+    try {
+      spinAudioRef.current = new Audio("/sounds/raffles.mp3");
+      winAudioRef.current = new Audio("/sounds/win.mp3");
+
+      spinAudioRef.current.addEventListener("error", () => {
+        spinAudioRef.current = null;
+      });
+      winAudioRef.current.addEventListener("error", () => {
+        winAudioRef.current = null;
+      });
+    } catch (e) {
+      console.warn("Audio not supported");
+    }
 
     return () => {
       if (spinAudioRef.current) spinAudioRef.current.pause();
@@ -440,7 +451,12 @@ export function RaffleRoulette({
                       <img
                         src={user.avatar}
                         alt={user.name || "User"}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover bg-[#131124]"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
+                        }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

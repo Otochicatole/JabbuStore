@@ -48,7 +48,7 @@ interface RaffleSummary {
 interface RaffleOrder {
   id: string;
   userId: string;
-  user: { name: string | null; steamId: string | null; avatar: string | null } | null;
+  user: { name: string | null; steamId: string | null; avatar: string | null; isFake?: boolean } | null;
   status: string;
   totalPrice: number;
   paymentMethod: string | null;
@@ -185,7 +185,12 @@ function RaffleOrderCard({ order, t }: { order: RaffleOrder; t: (key: string) =>
             <img
               src={order.user.avatar}
               alt=""
-              className="h-10 w-10 shrink-0 rounded-[3px] border border-white/10"
+              className="h-10 w-10 shrink-0 rounded-[3px] border border-white/10 bg-[#131124] object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
+              }}
             />
           ) : (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] border border-white/10 bg-white/3 text-[#84849b]">
@@ -193,9 +198,16 @@ function RaffleOrderCard({ order, t }: { order: RaffleOrder; t: (key: string) =>
             </div>
           )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-white">
-              {order.user?.name || t("admin.rafflePurchases.steamUser")}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-black text-white">
+                {order.user?.name || t("admin.rafflePurchases.steamUser")}
+              </p>
+              {order.user?.isFake && (
+                <span className="px-1.5 py-0.5 text-[9px] bg-red-500/20 text-red-400 font-black uppercase rounded tracking-wider border border-red-500/30">
+                  [BOT]
+                </span>
+              )}
+            </div>
             <p className="truncate text-[10px] font-mono text-accent">
               {order.user?.steamId || order.id}
             </p>

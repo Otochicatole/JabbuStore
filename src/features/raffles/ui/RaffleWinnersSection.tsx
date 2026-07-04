@@ -45,7 +45,16 @@ function WinnerAvatar({
       className={`${sizeClass} rounded-full overflow-hidden border-2 border-emerald-400/50 bg-emerald-500/10 shrink-0 shadow-[0_0_20px_rgba(16,185,129,0.25)]`}
     >
       {winner.avatar ? (
-        <img src={winner.avatar} alt={winner.name || ""} className="w-full h-full object-cover" />
+        <img
+          src={winner.avatar}
+          alt={winner.name || ""}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
+          }}
+        />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-emerald-400/70">
           <UserIcon className={iconSize} />

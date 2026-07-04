@@ -592,7 +592,12 @@ function RaffleDetailsContent() {
                             <img
                               src={prize.winner.avatar}
                               alt={prize.winner.name || ""}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover bg-[#131124]"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null;
+                                target.src = "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
+                              }}
                             />
                           ) : (
                             <UserIcon className="w-4 h-4 text-muted absolute inset-0 m-auto" />

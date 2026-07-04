@@ -121,9 +121,16 @@ export function RaffleAdminWinnersList({ prizes, t }: RaffleAdminWinnersListProp
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[9px] font-bold text-emerald-400 truncate">
-                          {winner.name || winner.steamId || "Steam User"}
-                        </p>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <p className="text-[9px] font-bold text-emerald-400 truncate">
+                            {winner.name || winner.steamId || "Steam User"}
+                          </p>
+                          {(winner as any).isFake && (
+                            <span className="px-1 py-0.5 text-[8px] bg-red-500/20 text-red-400 font-black uppercase rounded tracking-wider border border-red-500/30 shrink-0 leading-none">
+                              [BOT]
+                            </span>
+                          )}
+                        </div>
                         {prize.winningTicket && (
                           <p className="text-[8px] font-mono text-[#84849b]">
                             {t("raffles.ticketNumber", { number: prize.winningTicket.ticketNumber })}

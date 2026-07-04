@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { BACKEND_URL } from "@/shared/lib/api";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/shared/components/Button";
@@ -21,7 +22,7 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
-const stats = [
+const initialStats = [
   { labelKey: "home.stats.activeUsers", value: "150K+" },
   { labelKey: "home.stats.availableSkins", value: "45K+" },
   { labelKey: "home.stats.transactions", value: "2.5M+" },
@@ -124,6 +125,26 @@ export default function Home() {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const [showAll, setShowAll] = useState(false);
+  const [stats, setStats] = useState(initialStats);
+
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/marketplace/settings/public`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (data.homeStatsActiveUsers) {
+          setStats([
+            { labelKey: "home.stats.activeUsers", value: data.homeStatsActiveUsers },
+            { labelKey: "home.stats.availableSkins", value: data.homeStatsAvailableSkins },
+            { labelKey: "home.stats.transactions", value: data.homeStatsTransactions },
+            { labelKey: "home.stats.onlineSupport", value: data.homeStatsOnlineSupport },
+          ]);
+        }
+      })
+      .catch((err) => console.error("Error fetching public stats:", err));
+  }, []);
 
   const scrollToContent = () => {
     const nextSection = document.getElementById("stats-section");

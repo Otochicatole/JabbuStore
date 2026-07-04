@@ -3,6 +3,7 @@ import {
   CreditCard,
   KeyRound,
   Landmark,
+  LayoutDashboard,
   RefreshCw,
   ShieldCheck,
   TrendingUp,
@@ -40,4 +41,5 @@ export const TABS: {
   { id: "credenciales", icon: KeyRound },
   { id: "transferencia", icon: Landmark },
   { id: "sync", icon: RefreshCw },
+  { id: "homeStats", icon: LayoutDashboard },
 ];

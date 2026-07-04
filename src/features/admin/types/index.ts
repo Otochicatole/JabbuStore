@@ -22,7 +22,8 @@ export type Tab =
   | "credenciales"
   | "transferencia"
   | "webhook"
-  | "sync";
+  | "sync"
+  | "homeStats";
 
 export type PriceCatalogStatus = {
   exists: boolean;

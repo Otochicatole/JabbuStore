@@ -18,6 +18,7 @@ import { TransferTab } from "./TransferTab";
 import { WebhookTab } from "./WebhookTab";
 import { CredentialsTab } from "./CredentialsTab";
 import { SyncTab } from "./SyncTab";
+import { HomeStatsTab } from "./HomeStatsTab";
 
 export interface SettingsState {
   globalPriceModifierType: string;
@@ -42,6 +43,10 @@ export interface SettingsState {
   manualCryptoAddress: string;
   manualCryptoNetwork: string;
   manualCryptoInstructions: string;
+  homeStatsActiveUsers: string;
+  homeStatsAvailableSkins: string;
+  homeStatsTransactions: string;
+  homeStatsOnlineSupport: string;
 }
 
 
@@ -71,6 +76,10 @@ export function AdminSettings() {
     manualCryptoAddress: "",
     manualCryptoNetwork: "",
     manualCryptoInstructions: "",
+    homeStatsActiveUsers: "150K+",
+    homeStatsAvailableSkins: "45K+",
+    homeStatsTransactions: "2.5M+",
+    homeStatsOnlineSupport: "24/7",
   });
 
   const [loading, setLoading] = useState(true);
@@ -82,12 +91,14 @@ export function AdminSettings() {
   const [savingWebhook, setSavingWebhook] = useState(false);
   const [savingPaymentMethods, setSavingPaymentMethods] = useState(false);
   const [savingManualTransfer, setSavingManualTransfer] = useState(false);
+  const [savingHomeStats, setSavingHomeStats] = useState(false);
   const [savedPricing, setSavedPricing] = useState(false);
   const [savedUserSell, setSavedUserSell] = useState(false);
   const [savedResell, setSavedResell] = useState(false);
   const [savedWebhook, setSavedWebhook] = useState(false);
   const [savedPaymentMethods, setSavedPaymentMethods] = useState(false);
   const [savedManualTransfer, setSavedManualTransfer] = useState(false);
+  const [savedHomeStats, setSavedHomeStats] = useState(false);
 
   const getTabLabel = (tabId: Tab) => {
     const labels: Record<Tab, string> = {
@@ -100,6 +111,7 @@ export function AdminSettings() {
       transferencia: t("admin.settings.transfer"),
       webhook: t("admin.settings.webhook"),
       sync: t("admin.settings.sync"),
+      homeStats: t("admin.settings.homeStats", { defaultValue: "Estadísticas del Home" }),
     };
     return labels[tabId] || tabId;
   };
@@ -306,46 +318,65 @@ export function AdminSettings() {
     }
   };
 
-  const handleManualTransferSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveManualTransfer = async () => {
     setSavingManualTransfer(true);
     try {
-      const res = await fetch(
-        `${BACKEND_URL}/admin/marketplace/settings/manual-transfer`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Tunnel-Skip-AntiPhishing-Page": "true",
-          },
-          body: JSON.stringify({
-            manualTransferEnabled: settings.manualTransferEnabled,
-            manualBankAlias: settings.manualBankAlias || null,
-            manualBankCbu: settings.manualBankCbu || null,
-            manualBankHolder: settings.manualBankHolder || null,
-            manualBankInstructions: settings.manualBankInstructions || null,
-            manualCryptoAddress: settings.manualCryptoAddress || null,
-            manualCryptoNetwork: settings.manualCryptoNetwork || null,
-            manualCryptoInstructions: settings.manualCryptoInstructions || null,
-          }),
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/manual-transfer`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
-      );
-      if (!res.ok) throw new Error();
-      const saved = await res.json();
-      setSettings((prev) => ({
-        ...prev,
-        ...saved,
-        resellModifierType: saved.resellModifierType ?? saved.marketModifierType ?? prev.resellModifierType,
-        resellModifierValue: saved.resellModifierValue ?? saved.marketModifierValue ?? prev.resellModifierValue,
-        resellModifierEnabled: saved.resellModifierEnabled ?? saved.marketModifierEnabled ?? prev.resellModifierEnabled,
-      }));
+        body: JSON.stringify({
+          manualTransferEnabled: settings.manualTransferEnabled,
+          manualBankAlias: settings.manualBankAlias,
+          manualBankCbu: settings.manualBankCbu,
+          manualBankHolder: settings.manualBankHolder,
+          manualBankInstructions: settings.manualBankInstructions,
+          manualCryptoAddress: settings.manualCryptoAddress,
+          manualCryptoNetwork: settings.manualCryptoNetwork,
+          manualCryptoInstructions: settings.manualCryptoInstructions,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error guardando settings de transferencia manual");
+      
       setSavedManualTransfer(true);
-      setTimeout(() => setSavedManualTransfer(false), 2500);
-    } catch (err) {
-      console.error(err);
+      setTimeout(() => setSavedManualTransfer(false), 2000);
+    } catch (error) {
+      console.error(error);
+      alert("Error guardando configuración de transferencia");
     } finally {
       setSavingManualTransfer(false);
+    }
+  };
+
+  const handleSaveHomeStats = async () => {
+    setSavingHomeStats(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/home-stats`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+        body: JSON.stringify({
+          homeStatsActiveUsers: settings.homeStatsActiveUsers,
+          homeStatsAvailableSkins: settings.homeStatsAvailableSkins,
+          homeStatsTransactions: settings.homeStatsTransactions,
+          homeStatsOnlineSupport: settings.homeStatsOnlineSupport,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error guardando settings de estadísticas del home");
+      
+      setSavedHomeStats(true);
+      setTimeout(() => setSavedHomeStats(false), 2000);
+    } catch (error) {
+      console.error(error);
+      alert("Error guardando estadísticas");
+    } finally {
+      setSavingHomeStats(false);
     }
   };
 
@@ -467,12 +498,22 @@ export function AdminSettings() {
           setSettings={setSettings}
           saving={savingManualTransfer}
           saved={savedManualTransfer}
-          onSubmit={handleManualTransferSubmit}
+          onSubmit={handleSaveManualTransfer}
         />
       )}
 
       {activeTab === "sync" && (
         <SyncTab />
+      )}
+
+      {activeTab === "homeStats" && (
+        <HomeStatsTab
+          settings={settings}
+          setSettings={setSettings}
+          onSave={handleSaveHomeStats}
+          isSaving={savingHomeStats}
+          isSaved={savedHomeStats}
+        />
       )}
     </AdminPage>
   );

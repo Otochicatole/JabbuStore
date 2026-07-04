@@ -25,11 +25,30 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [drawState, setDrawState] = useState<"WAITING" | "STARTING" | "DRAWING" | "FINISHED">("WAITING");
   
-  // States for roulette
+  // States for sequential roulette rounds
+  const [allWinners, setAllWinners] = useState<any[]>([]);
+  const [currentRoundIndex, setCurrentRoundIndex] = useState<number>(0);
   const [winner, setWinner] = useState<any>(null);
   const [winningPrize, setWinningPrize] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<string>("");
 
+  // Update current winner and prize when round index or winners list changes
+  useEffect(() => {
+    if (allWinners.length > 0 && raffle) {
+      const currentWinner = allWinners[currentRoundIndex];
+      if (currentWinner) {
+        setWinner({
+          id: currentWinner.winnerId,
+          name: currentWinner.user?.name || "Ganador",
+          avatar: currentWinner.user?.avatar || null,
+        });
+        const prize = raffle.prizes?.find((p: any) => p.id === currentWinner.prizeId);
+        setWinningPrize(prize);
+      }
+    }
+  }, [allWinners, currentRoundIndex, raffle]);
+
+  // Real-time countdown timer
   useEffect(() => {
     if (!raffle) return;
     const interval = setInterval(() => {
@@ -93,16 +112,9 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
     });
 
     s.on("raffle:live:result", (data: any) => {
-      // data.winners has the list of winners.
-      // We will just animate the main prize for simplicity.
       if (data.winners && data.winners.length > 0) {
-        const mainWinner = data.winners[0];
-        setWinner({
-          id: mainWinner.winnerId,
-          name: mainWinner.user?.name || "Ganador", 
-          avatar: mainWinner.user?.avatar || null
-        });
-        setWinningPrize(mainWinner.prizeId);
+        setAllWinners(data.winners);
+        setCurrentRoundIndex(0);
         setDrawState("DRAWING");
       } else {
         setDrawState("FINISHED");
@@ -129,11 +141,20 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
   }
 
   const handleAnimationEnd = () => {
-    setDrawState("FINISHED");
-    // After it finishes, redirect to the normal raffle page to see all winners
-    setTimeout(() => {
-      router.push(localizePath(`/raffles/${id}`));
-    }, 5000);
+    const nextIndex = currentRoundIndex + 1;
+    if (nextIndex < allWinners.length) {
+      setDrawState("STARTING");
+      // Give a 2.5s transition before the next round begins
+      setTimeout(() => {
+        setCurrentRoundIndex(nextIndex);
+        setDrawState("DRAWING");
+      }, 2500);
+    } else {
+      setDrawState("FINISHED");
+      setTimeout(() => {
+        router.push(localizePath(`/raffles/${id}`));
+      }, 5000);
+    }
   };
 
   return (
@@ -207,12 +228,16 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
       )}
 
       {drawState === "STARTING" && (
-        <div className="text-center animate-pulse">
+        <div className="text-center animate-pulse flex flex-col items-center gap-4">
+          <Sparkles className="w-12 h-12 text-accent" />
           <h1 className="text-4xl sm:text-6xl font-black text-transparent bg-clip-text bg-linear-to-r from-accent to-fuchsia-500 uppercase tracking-tighter">
-            ¡Prepárate!
+            {currentRoundIndex > 0 ? "¡Siguiente Premio!" : "¡Prepárate!"}
           </h1>
-          <p className="text-white/60 font-bold uppercase tracking-widest mt-4">
-            Generando resultados...
+          <p className="text-white/60 font-bold uppercase tracking-widest text-sm">
+            {currentRoundIndex > 0 
+              ? `Preparando ronda ${currentRoundIndex + 1} de ${allWinners.length}...`
+              : "Generando resultados..."
+            }
           </p>
         </div>
       )}
@@ -222,6 +247,9 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
           <RaffleRoulette
             tickets={raffle.tickets || []}
             winner={winner}
+            prize={winningPrize}
+            prizeIndex={currentRoundIndex}
+            totalPrizes={allWinners.length}
             autoStart={true}
             onAnimationEnd={handleAnimationEnd}
           />

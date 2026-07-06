@@ -1,5 +1,6 @@
-import { AdminBotsPanel } from "@/features/admin/ui/AdminBotsPanel";
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
+import { AdminPage } from "@/features/admin/ui/AdminShell";
+import { BotsPage } from "@/features/admin/bots/ui/BotsPage";
 
 export default async function AdminBotsPage({
   params,
@@ -10,8 +11,8 @@ export default async function AdminBotsPage({
   await requireAdmin(language);
 
   return (
-    <div className="p-4 md:p-8">
-      <AdminBotsPanel />
-    </div>
+    <AdminPage>
+      <BotsPage />
+    </AdminPage>
   );
 }

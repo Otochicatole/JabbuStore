@@ -1,4 +1,4 @@
-import { AdminSettings } from "@/features/admin/ui/AdminSettings";
+import { AdminSettings } from "@/features/admin/settings/ui/AdminSettings";
 import { requireAdmin } from "@/features/admin/auth/requireAdmin";
 
 export default async function AdminSettingsPage({

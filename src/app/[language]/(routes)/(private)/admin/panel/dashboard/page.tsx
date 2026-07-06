@@ -1,16 +1,26 @@
-import { requireAdmin } from "@/features/admin/auth/requireAdmin";
-import type { StoreItem } from "@/features/admin/domain/types";
+import { redirect } from "next/navigation";
 
-import { AdminDashboardClient } from "./AdminDashboardClient";
+const TAB_ROUTES: Record<string, string> = {
+  inventory: "inventory",
+  market: "market",
+  purchases: "purchases",
+  listings: "listings",
+  quotes: "quotes",
+  tickets: "tickets",
+  bots: "bots",
+  settings: "settings",
+};
 
-export default async function AdminDashboardPage({
+export default async function AdminLegacyPanelRedirectPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ language: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { language } = await params;
-  const adminUser = await requireAdmin(language);
-  const initialItems: StoreItem[] = [];
+  const { tab } = await searchParams;
+  const route = tab ? TAB_ROUTES[tab] : null;
 
-  return <AdminDashboardClient initialItems={initialItems} adminUser={adminUser} />;
+  redirect(`/${language}/admin/panel/${route || "inventory"}`);
 }

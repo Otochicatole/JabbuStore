@@ -3,47 +3,31 @@ import { ArrowDownLeft, ArrowUpRight, Loader2 } from "lucide-react";
 import type { PurchaseTab, Translate } from "./helpers";
 
 interface PurchasesHeaderProps {
-  activeTab: PurchaseTab;
+  mode: "buy" | "sell";
   loading: boolean;
   onRefresh: () => void;
-  onTabChange: (tab: PurchaseTab) => void;
   t: Translate;
 }
 
 export function PurchasesHeader({
-  activeTab,
+  mode,
   loading,
   onRefresh,
-  onTabChange,
   t,
 }: PurchasesHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
       <div>
         <h1 className="text-3xl font-black uppercase tracking-tight text-white flex items-center gap-3">
-          {t("purchases.title")}
+          {mode === "buy" ? t("purchases.title") : t("listings.title")}
         </h1>
         <p className="text-sm text-[#84849b] mt-1.5 font-medium">
-          {t("purchases.description")}
+          {mode === "buy" ? t("purchases.description") : t("listings.description")}
         </p>
       </div>
 
       <div className="flex flex-col sm:items-end gap-3 shrink-0 w-full md:w-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
-          <div className="flex bg-[#110f1e]/80 border border-white/5 p-1 rounded-[3px] w-full sm:w-fit justify-between">
-            <TabButton active={activeTab === "all"} onClick={() => onTabChange("all")}>
-              {t("purchases.all")}
-            </TabButton>
-            <TabButton active={activeTab === "buy"} onClick={() => onTabChange("buy")}>
-              <ArrowDownLeft className="w-3 h-3 text-emerald-400 shrink-0" />
-              {t("purchases.buys")}
-            </TabButton>
-            <TabButton active={activeTab === "sell"} onClick={() => onTabChange("sell")}>
-              <ArrowUpRight className="w-3 h-3 text-purple-400 shrink-0" />
-              {t("purchases.sells")}
-            </TabButton>
-          </div>
-
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full justify-end">
           <button
             onClick={onRefresh}
             disabled={loading}

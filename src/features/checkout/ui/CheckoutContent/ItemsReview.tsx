@@ -1,11 +1,47 @@
 import React from 'react';
-import { Coins } from 'lucide-react';
+import { Coins, Ticket } from 'lucide-react';
 import { CheckoutItem } from '../../domain/types';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 
 interface ItemsReviewProps {
   items: CheckoutItem[];
   selectedMethod: string | null;
+}
+
+function isRaffleCheckoutItem(item: CheckoutItem): boolean {
+  return (
+    item.provider === "raffle" ||
+    item.assetId.toLowerCase().startsWith("raffle-ticket-")
+  );
+}
+
+function ItemThumbnail({ item }: { item: CheckoutItem }) {
+  if (isRaffleCheckoutItem(item)) {
+    return (
+      <div className="w-full h-full bg-accent/10 rounded-lg flex items-center justify-center">
+        <Ticket className="w-6 h-6 text-accent" />
+      </div>
+    );
+  }
+
+  if (item.iconUrl) {
+    return (
+      <img
+        src={item.iconUrl}
+        alt={item.name}
+        className="w-full h-full object-contain"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = "none";
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="w-full h-full bg-accent/10 rounded flex items-center justify-center">
+      <Coins className="w-5 h-5 text-accent" />
+    </div>
+  );
 }
 
 function ItemSpecs({ item }: { item: CheckoutItem }) {
@@ -58,19 +94,21 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
         {items.map((item) => (
           <div key={item.assetId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-2xl bg-background/50 border border-white/5">
             <div className="flex items-center gap-4 min-w-0">
-              <div className="relative w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center p-1.5 shrink-0">
-                {item.iconUrl ? (
-                  <img src={item.iconUrl} alt={item.name} className="w-full h-full object-contain" />
-                ) : (
-                  <div className="w-full h-full bg-accent/10 rounded flex items-center justify-center">
-                    <Coins className="w-5 h-5 text-accent" />
-                  </div>
-                )}
+              <div className="relative w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center p-1.5 shrink-0 overflow-hidden">
+                <ItemThumbnail item={item} />
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">{item.name}</h4>
-                <p className="text-[9px] text-[#84849b] font-mono mt-1 uppercase truncate sm:break-all">Asset: {item.assetId}</p>
-                <ItemSpecs item={item} />
+                {!isRaffleCheckoutItem(item) && (
+                  <p className="text-[9px] text-[#84849b] font-mono mt-1 uppercase truncate sm:break-all">Asset: {item.assetId}</p>
+                )}
+                {isRaffleCheckoutItem(item) ? (
+                  <p className="text-[9px] text-accent font-bold uppercase tracking-wider mt-1">
+                    Sorteo CS2
+                  </p>
+                ) : (
+                  <ItemSpecs item={item} />
+                )}
               </div>
             </div>
             <div className="text-left sm:text-right shrink-0">

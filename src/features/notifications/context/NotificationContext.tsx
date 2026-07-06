@@ -10,7 +10,8 @@ import {
   useState,
   Suspense,
 } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell, X, MessageSquare, ShoppingBag, Info, XCircle, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
@@ -38,11 +39,110 @@ export function useNotifications() {
   return context;
 }
 
+function getNotificationTheme(resolvedTitle: string, resolvedContent: string, type: string) {
+  const t = resolvedTitle.toLowerCase();
+  const c = resolvedContent.toLowerCase();
+  
+  // 1. Support/Tickets -> Pink
+  if (type === "TICKET_MESSAGE" || t.includes("ticket") || t.includes("soporte")) {
+    return {
+      name: "ticket",
+      color: "pink",
+      textClass: "text-pink-400",
+      bgFadeClass: "from-pink-500/10 via-pink-500/[0.02]",
+      borderClass: "border-pink-500/20 hover:border-pink-500/40",
+      toastBgClass: "from-pink-500/10 via-[#160b21]/95 to-[#160b21]/95 hover:from-pink-500/15",
+      shadowClass: "shadow-[0_15px_40px_rgba(236,72,153,0.15)]",
+      iconBgClass: "bg-pink-500/10 border-pink-500/20 text-pink-400"
+    };
+  }
+  
+  // 2. Critical/Error/Red -> Cancellations or rejections
+  if (
+    t.includes("cancelada") || 
+    t.includes("rechazada") || 
+    t.includes("error") || 
+    t.includes("cancel") || 
+    t.includes("reject") ||
+    c.includes("cancelada") ||
+    c.includes("rechazada")
+  ) {
+    return {
+      name: "error",
+      color: "red",
+      textClass: "text-red-400",
+      bgFadeClass: "from-red-500/10 via-red-500/[0.02] to-transparent",
+      borderClass: "border-red-500/20 hover:border-red-500/40",
+      toastBgClass: "from-red-500/10 via-[#1f0b0b]/95 to-[#1f0b0b]/95 hover:from-red-500/15",
+      shadowClass: "shadow-[0_15px_40px_rgba(239,68,68,0.15)]",
+      iconBgClass: "bg-red-500/10 border-red-500/20 text-red-400"
+    };
+  }
+  
+  // 3. Security/Warning/Orange -> Trade bot assigned or pending trade
+  if (
+    t.includes("bot") || 
+    t.includes("seguridad") || 
+    t.includes("security") || 
+    t.includes("pendiente") || 
+    t.includes("pending") ||
+    t.includes("trade") ||
+    c.includes("bot oficial")
+  ) {
+    return {
+      name: "warning",
+      color: "orange",
+      textClass: "text-orange-400",
+      bgFadeClass: "from-orange-500/10 via-orange-500/[0.02] to-transparent",
+      borderClass: "border-orange-500/20 hover:border-orange-500/40",
+      toastBgClass: "from-orange-500/10 via-[#21140b]/95 to-[#21140b]/95 hover:from-orange-500/15",
+      shadowClass: "shadow-[0_15px_40px_rgba(249,115,22,0.15)]",
+      iconBgClass: "bg-orange-500/10 border-orange-500/20 text-orange-400"
+    };
+  }
+  
+  // 4. Success/Green -> Approved, completed, paid
+  if (
+    t.includes("aprobada") || 
+    t.includes("completada") || 
+    t.includes("pagada") || 
+    t.includes("éxito") || 
+    t.includes("success") || 
+    t.includes("approved") || 
+    t.includes("completed") || 
+    t.includes("paid")
+  ) {
+    return {
+      name: "success",
+      color: "emerald",
+      textClass: "text-emerald-400",
+      bgFadeClass: "from-emerald-500/10 via-emerald-500/[0.02] to-transparent",
+      borderClass: "border-emerald-500/20 hover:border-emerald-500/40",
+      toastBgClass: "from-emerald-500/10 via-[#081714]/95 to-[#081714]/95 hover:from-emerald-500/15",
+      shadowClass: "shadow-[0_15px_40px_rgba(16,185,129,0.15)]",
+      iconBgClass: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+    };
+  }
+  
+  // 5. Default/System/Blue -> General info
+  return {
+    name: "info",
+    color: "accent",
+    textClass: "text-accent",
+    bgFadeClass: "from-accent/10 via-accent/[0.02] to-transparent",
+    borderClass: "border-accent/25 hover:border-accent/40",
+    toastBgClass: "from-accent/10 via-[#0c071d]/95 to-[#0c071d]/95 hover:from-accent/15",
+    shadowClass: "shadow-[0_15px_40px_rgba(217,70,239,0.15)]",
+    iconBgClass: "bg-accent/10 border-accent/25 text-accent"
+  };
+}
+
 interface ToastPayload {
   id: string;
   title: string;
   content: string;
   link: string | null;
+  type: string;
 }
 
 function NotificationProviderContent({
@@ -75,21 +175,33 @@ function NotificationProviderContent({
   // Play a premium micro-sound alert
   const playSound = useCallback(() => {
     try {
-      const context = audioContextRef.current;
-      if (!context || context.state !== "running") return;
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      const now = context.currentTime;
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(880, now);
-      oscillator.frequency.setValueAtTime(1100, now + 0.08);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.1, now + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(now);
-      oscillator.stop(now + 0.21);
+      let context = audioContextRef.current;
+      if (!context) {
+        context = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioContextRef.current = context;
+      }
+      
+      const play = () => {
+        const oscillator = context!.createOscillator();
+        const gain = context!.createGain();
+        const now = context!.currentTime;
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, now);
+        oscillator.frequency.setValueAtTime(1100, now + 0.08);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.1, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+        oscillator.connect(gain);
+        gain.connect(context!.destination);
+        oscillator.start(now);
+        oscillator.stop(now + 0.21);
+      };
+
+      if (context.state === "suspended") {
+        context.resume().then(play).catch(() => {});
+      } else {
+        play();
+      }
     } catch {
       // Audio context might fail on some browsers before interaction
     }
@@ -188,6 +300,7 @@ function NotificationProviderContent({
           title: notification.title,
           content: notification.content,
           link: notification.link,
+          type: notification.type,
         },
       ]);
 
@@ -295,37 +408,85 @@ function NotificationProviderContent({
     <NotificationContext.Provider value={value}>
       {children}
       {/* Real-time notification toasts overlay */}
-      <div className="pointer-events-none fixed bottom-4 right-4 z-[250] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2 sm:bottom-6 sm:right-6">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            role="status"
-            className="pointer-events-auto flex cursor-pointer gap-3 rounded-xl border border-accent/25 bg-[#120e24]/95 p-4 text-white shadow-2xl shadow-black/80 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => handleToastClick(toast)}
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-accent">
-              <Bell className="h-4.5 w-4.5 animate-bounce" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-accent">
-                {t("notifications.newAlert") || "Notificación"}
-              </p>
-              <p className="truncate text-xs font-black">{toast.title}</p>
-              <p className="mt-1 line-clamp-2 text-[11px] text-white/70">{toast.content}</p>
-            </div>
-            <button
-              type="button"
-              className="h-fit cursor-pointer rounded-full p-1 text-white/30 hover:bg-white/10 hover:text-white"
-              aria-label="Dismiss"
-              onClick={(event) => {
-                event.stopPropagation();
-                removeToast(toast.id);
-              }}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
+      <div className="pointer-events-none fixed bottom-4 right-4 z-[250] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2.5 sm:bottom-6 sm:right-6">
+        <AnimatePresence>
+          {toasts.map((toast) => {
+            const resolvedTitle = t(toast.title) || toast.title;
+            let resolvedContent = "";
+            try {
+              const parsed = JSON.parse(toast.content);
+              resolvedContent = t(parsed.key, parsed.params) || toast.content;
+            } catch {
+              resolvedContent = t(toast.content) || toast.content;
+            }
+
+            const theme = getNotificationTheme(resolvedTitle, resolvedContent, toast.type);
+            
+            // Icon selection based on theme
+            const toastIcon = theme.name === "ticket" ? (
+              <MessageSquare className="h-4.5 w-4.5 text-pink-400" />
+            ) : theme.name === "error" ? (
+              <XCircle className="h-4.5 w-4.5 text-red-400" />
+            ) : theme.name === "warning" ? (
+              <ShieldCheck className="h-4.5 w-4.5 text-orange-400" />
+            ) : theme.name === "success" ? (
+              <ShoppingBag className="h-4.5 w-4.5 text-emerald-400" />
+            ) : (
+              <Bell className="h-4.5 w-4.5 text-accent animate-pulse" />
+            );
+
+            // Tag text selection
+            const tagText = theme.name === "ticket" 
+              ? t("notifications.ticketAlert") || "Mensaje de Soporte"
+              : theme.name === "error" 
+              ? t("notifications.errorAlert") || "Fallo en Operación"
+              : theme.name === "warning" 
+              ? t("notifications.warningAlert") || "Alerta de Seguridad"
+              : theme.name === "success" 
+              ? t("notifications.orderAlert") || "Actualización de Orden"
+              : t("notifications.newAlert") || "Notificación";
+
+            return (
+              <motion.div
+                key={toast.id}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                role="status"
+                className={`pointer-events-auto relative flex cursor-pointer gap-3.5 rounded-xl border p-4 text-white backdrop-blur-xl transition-all duration-300 ${theme.borderClass} ${theme.toastBgClass} ${theme.shadowClass}`}
+                onClick={() => handleToastClick(toast)}
+              >
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${theme.iconBgClass}`}>
+                  {toastIcon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[9.5px] font-black uppercase tracking-widest ${theme.textClass}`}>
+                    {tagText}
+                  </p>
+                  <p className="truncate text-xs font-black mt-0.5 text-white/95">
+                    {resolvedTitle}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-[10.5px] leading-relaxed text-white/60">
+                    {resolvedContent}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="h-fit cursor-pointer rounded-full p-1 text-white/30 hover:bg-white/10 hover:text-white transition-colors"
+                  aria-label="Dismiss"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeToast(toast.id);
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
     </NotificationContext.Provider>
   );

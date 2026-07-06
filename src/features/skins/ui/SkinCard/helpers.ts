@@ -82,3 +82,14 @@ export const getExteriorLabelKey = (exterior: string | null | undefined) => {
     return "filters.condition.battleScarred";
   return null;
 };
+
+export const getExteriorAbbreviation = (exterior: string | null | undefined): string => {
+  if (!exterior) return "";
+  const ext = exterior.toLowerCase();
+  if (ext.includes("factory") || ext.includes("fn") || ext.includes("recién")) return "FN";
+  if (ext.includes("minimal") || ext.includes("mw") || ext.includes("casi")) return "MW";
+  if (ext.includes("field") || ext.includes("ft") || ext.includes("algo")) return "FT";
+  if (ext.includes("well") || ext.includes("ww") || ext.includes("bastante")) return "WW";
+  if (ext.includes("battle") || ext.includes("bs") || ext.includes("deplorable")) return "BS";
+  return "";
+};

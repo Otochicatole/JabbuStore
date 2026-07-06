@@ -8,8 +8,8 @@ import { SortDropdown } from "@/features/skins/ui/SortDropdown";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { Loader2 } from "lucide-react";
 
-function BuyPageContent() {
-  const { skins, pagination, loading, error, refetch } = useSkins();
+function ExpressPageContent() {
+  const { skins, pagination, loading, error, refetch } = useSkins("express");
   const { t } = useI18n();
 
   return (
@@ -23,13 +23,13 @@ function BuyPageContent() {
         {/* Main Content */}
         <section className="flex flex-col w-full">
           <header className="mb-6">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter">{t("buy.title")}</h1>
-            <p className="text-xs sm:text-sm text-[#84849b] mt-0.5">{t("buy.description")}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter">{t("express.title")}</h1>
+            <p className="text-xs sm:text-sm text-[#84849b] mt-0.5">{t("express.description")}</p>
           </header>
 
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-white/5 p-3 rounded-[3px]">
             <span className="text-[10px] sm:text-xs font-bold text-[#84849b] uppercase tracking-widest block sm:inline">
-              {loading ? t("buy.loadingCatalog") : t("buy.results", { count: pagination.total })}
+              {loading ? t("express.loadingCatalog") : t("express.results", { count: pagination.total })}
             </span>
             <div className="flex items-center gap-2">
               <span className="hidden sm:inline text-[9px] font-black uppercase text-[#84849b] tracking-wider">{t("filters.sort")}:</span>
@@ -44,7 +44,7 @@ function BuyPageContent() {
   );
 }
 
-export default function BuyPage() {
+export default function ExpressPage() {
   return (
     <Suspense fallback={
       <div className="flex flex-col items-center justify-center min-h-screen pt-28 text-white font-sans">
@@ -52,7 +52,7 @@ export default function BuyPage() {
         <p className="text-xs text-[#8984a1] font-bold uppercase tracking-widest">Cargando...</p>
       </div>
     }>
-      <BuyPageContent />
+      <ExpressPageContent />
     </Suspense>
   );
 }

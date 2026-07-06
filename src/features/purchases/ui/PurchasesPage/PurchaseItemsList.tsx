@@ -1,4 +1,5 @@
-import { Tag } from "lucide-react";
+import Link from "next/link";
+import { Tag, Ticket } from "lucide-react";
 
 import type { OrderItem } from "@/features/purchases/types";
 
@@ -7,9 +8,75 @@ import { getDisplayFloatData, rarityColors, type Translate } from "./helpers";
 interface PurchaseItemsListProps {
   items: OrderItem[];
   t: Translate;
+  raffleId?: string | null;
+  raffleName?: string | null;
+  ticketsCount?: number | null;
+  userChancesInRaffle?: number | null;
+  localizePath?: (path: string) => string;
 }
 
-export function PurchaseItemsList({ items, t }: PurchaseItemsListProps) {
+export function PurchaseItemsList({
+  items,
+  t,
+  raffleId,
+  raffleName,
+  ticketsCount,
+  userChancesInRaffle,
+  localizePath,
+}: PurchaseItemsListProps) {
+  const isRaffleOrder =
+    Boolean(raffleId) || (items.length > 0 && items.every((i) => i.provider === "raffle"));
+
+  if (isRaffleOrder) {
+    const chancesInOrder = ticketsCount ?? items.length;
+    const showTotal =
+      userChancesInRaffle != null && userChancesInRaffle > chancesInOrder;
+
+    return (
+      <div className="space-y-3">
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-2 block pt-2">
+          {t("purchases.includedItems", { count: chancesInOrder })}
+        </h4>
+        <div className="flex flex-col gap-3 bg-[#0d0b16] p-4 rounded-[3px] border border-accent/10 hover:border-accent/20 transition-colors relative overflow-hidden">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-10 bg-accent/5 rounded-lg flex items-center justify-center shrink-0">
+              <Ticket className="w-5 h-5 text-accent" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-xs font-black text-white block">
+                {t("purchases.raffleChancesInOrder", { count: chancesInOrder })}
+                {raffleName ? ` — "${raffleName}"` : ""}
+              </span>
+              {showTotal && (
+                <span className="text-[10px] font-bold text-emerald-400 block mt-1">
+                  {t("purchases.userChancesInRaffle", { count: userChancesInRaffle })}
+                </span>
+              )}
+              <span className="text-[9px] font-mono text-accent block mt-0.5 uppercase tracking-wider">
+                Sorteo CS2
+              </span>
+            </div>
+            <div className="shrink-0 text-right">
+              <span className="text-xs font-black text-accent block">
+                ${items.reduce((s, i) => s + i.price, 0).toLocaleString()} USD
+              </span>
+              <span className="text-[8px] text-[#84849b] font-mono uppercase">
+                {t("purchases.unitPrice")}
+              </span>
+            </div>
+          </div>
+          {raffleId && localizePath && (
+            <Link
+              href={localizePath(`/raffles/${raffleId}`)}
+              className="text-[10px] font-black uppercase tracking-wider text-accent hover:text-white transition-colors"
+            >
+              {t("purchases.viewRaffle")} →
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-3">
       <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-2 block pt-2">
@@ -36,7 +103,7 @@ function PurchaseItemCard({ item, t }: { item: OrderItem; t: Translate }) {
         rarityColors[finalRarity] || ""
       }`}
     >
-      <div className="w-16 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1.5 overflow-hidden flex-shrink-0 shadow-inner">
+      <div className="w-16 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1.5 overflow-hidden shrink-0 shadow-inner">
         {item.iconUrl ? (
           <img
             src={item.iconUrl}

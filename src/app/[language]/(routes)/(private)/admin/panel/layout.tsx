@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Bot,
   Settings,
@@ -14,7 +14,9 @@ import {
   Tag,
   Globe,
   MessageSquare,
-  type LucideIcon,
+  DollarSign,
+  Gift,
+  TicketPlus,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -36,21 +38,13 @@ function SidebarNav({
   navItems: NavItem[];
   setIsSidebarOpen: (o: boolean) => void;
 }) {
-  const searchParams = useSearchParams();
-  const currentTab = searchParams.get("tab") || "inventory";
   const localizePath = useLocalizedPath();
   const normalizedPathname = stripLocaleFromPathname(pathname);
 
   return (
     <nav className="space-y-1">
       {navItems.map((item) => {
-        const itemPath = item.href.split("?")[0];
-        const itemTab = new URLSearchParams(item.href.split("?")[1]).get(
-          "tab",
-        );
-
-        const isActive =
-          normalizedPathname === itemPath && (!itemTab || currentTab === itemTab);
+        const isActive = normalizedPathname === item.href;
 
         return (
           <Link
@@ -119,28 +113,43 @@ export default function AdminLayout({
   const navItems = [
     {
       name: t("admin.inventoryBots"),
-      href: "/admin/panel/dashboard?tab=inventory",
+      href: "/admin/panel/inventory",
       icon: Database,
     },
     {
       name: t("admin.marketCatalog"),
-      href: "/admin/panel/dashboard?tab=market",
+      href: "/admin/panel/market",
       icon: Globe,
     },
     {
       name: t("admin.purchaseRequests"),
-      href: "/admin/panel/dashboard?tab=purchases",
+      href: "/admin/panel/purchases",
       icon: ShoppingBag,
     },
     {
       name: t("admin.sellRequests"),
-      href: "/admin/panel/dashboard?tab=listings",
+      href: "/admin/panel/listings",
       icon: Tag,
     },
     {
+      name: t("admin.quotes"),
+      href: "/admin/panel/quotes",
+      icon: DollarSign,
+    },
+    {
       name: t("tickets.adminNav"),
-      href: "/admin/panel/dashboard?tab=tickets",
+      href: "/admin/panel/tickets",
       icon: MessageSquare,
+    },
+    {
+      name: t("admin.raffles"),
+      href: "/admin/panel/raffles",
+      icon: Gift,
+    },
+    {
+      name: t("admin.rafflePurchases"),
+      href: "/admin/panel/raffle-purchases",
+      icon: TicketPlus,
     },
     { name: t("admin.botManagement"), href: "/admin/panel/bots", icon: Bot },
     {

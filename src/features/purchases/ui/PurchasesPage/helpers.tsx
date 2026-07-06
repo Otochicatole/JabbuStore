@@ -33,19 +33,28 @@ export function getOrdersFetchErrorMessage(error: unknown, t: Translate) {
   return t("purchases.error.loadOrders");
 }
 
-export function getStatusConfig(status: Order["status"], orderType: Order["type"], t: Translate) {
+export function getStatusConfig(status: Order["status"], orderType: Order["type"], t: Translate, order?: Order) {
   const isSell = orderType === "SELL";
+  const isRaffle = order ? isRaffleOrder(order) : false;
 
   switch (status) {
     case "PENDING_PAYMENT":
       return {
-        label: isSell ? t("purchases.status.sellPendingApproval") : t("purchases.status.paymentPending"),
+        label: isRaffle
+          ? t("purchases.status.raffle.paymentPending")
+          : isSell
+            ? t("purchases.status.sellPendingApproval")
+            : t("purchases.status.paymentPending"),
         color: "text-orange-400 bg-orange-500/10 border-orange-500/20",
         icon: <Clock className="w-3.5 h-3.5 text-orange-400" />,
       };
     case "PAID":
       return {
-        label: isSell ? t("purchases.status.tradeConfirmedPendingPayment") : t("purchases.status.paid"),
+        label: isRaffle
+          ? t("purchases.status.raffle.assigningChances")
+          : isSell
+            ? t("purchases.status.tradeConfirmedPendingPayment")
+            : t("purchases.status.paid"),
         color: isSell
           ? "text-purple-400 bg-purple-500/10 border-purple-500/20"
           : "text-blue-400 bg-blue-500/10 border-blue-500/20",
@@ -57,7 +66,11 @@ export function getStatusConfig(status: Order["status"], orderType: Order["type"
       };
     case "TRADE_PENDING":
       return {
-        label: isSell ? t("purchases.status.sellApprovedSendTrade") : t("purchases.status.tradePending"),
+        label: isRaffle
+          ? t("purchases.status.raffle.assigningChances")
+          : isSell
+            ? t("purchases.status.sellApprovedSendTrade")
+            : t("purchases.status.tradePending"),
         color: isSell
           ? "text-blue-400 bg-blue-500/10 border-blue-500/20 animate-pulse"
           : "text-purple-400 bg-purple-500/10 border-purple-500/20",
@@ -69,7 +82,11 @@ export function getStatusConfig(status: Order["status"], orderType: Order["type"
       };
     case "COMPLETED":
       return {
-        label: isSell ? t("purchases.status.sellCompletedPaid") : t("purchases.status.completed"),
+        label: isRaffle
+          ? t("purchases.status.raffle.completed")
+          : isSell
+            ? t("purchases.status.sellCompletedPaid")
+            : t("purchases.status.completed"),
         color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
         icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />,
       };
@@ -93,7 +110,89 @@ export function getPaymentMethodLabel(paymentMethod: string | null | undefined, 
   return t(`paymentMethod.${paymentMethod}.name`);
 }
 
+export function normalizeOrderMetadata(metadata: unknown): Record<string, any> | null {
+  if (!metadata) return null;
+  if (typeof metadata === "string") {
+    try {
+      const parsed = JSON.parse(metadata);
+      return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+        ? (parsed as Record<string, any>)
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof metadata === "object" && !Array.isArray(metadata)) {
+    return metadata as Record<string, any>;
+  }
+  return null;
+}
+
+function getRaffleItems(order: Order) {
+  return (
+    order.items?.filter(
+      (item) => item.provider === "raffle" || item.assetId?.startsWith("raffle-ticket-")
+    ) ?? []
+  );
+}
+
+function extractRaffleIdFromAssetId(assetId: string) {
+  if (!assetId.startsWith("raffle-ticket-")) return null;
+  const withoutPrefix = assetId.slice("raffle-ticket-".length);
+  return withoutPrefix.replace(/-\d+$/, "") || null;
+}
+
+export function getRaffleOrderContext(order: Order) {
+  const metadata = normalizeOrderMetadata(order.metadata);
+  const raffleItems = getRaffleItems(order);
+
+  let raffleId =
+    typeof metadata?.raffleId === "string" ? metadata.raffleId : undefined;
+  let raffleName =
+    typeof metadata?.raffleName === "string" ? metadata.raffleName : undefined;
+  let ticketsCount =
+    typeof metadata?.ticketsCount === "number" ? metadata.ticketsCount : undefined;
+  const userChancesInRaffle =
+    typeof metadata?.userChancesInRaffle === "number"
+      ? metadata.userChancesInRaffle
+      : undefined;
+
+  if (!raffleId && raffleItems[0]?.assetId) {
+    raffleId = extractRaffleIdFromAssetId(raffleItems[0].assetId) ?? undefined;
+  }
+
+  if (!ticketsCount && raffleItems.length > 0) {
+    ticketsCount = raffleItems.length;
+  }
+
+  if (!raffleName && raffleItems[0]?.name) {
+    const match = raffleItems[0].name.match(/Sorteo:\s*(.+)$/i);
+    if (match?.[1]) {
+      raffleName = match[1].trim();
+    }
+  }
+
+  return {
+    isRaffle: Boolean(raffleId) || raffleItems.length > 0,
+    raffleId: raffleId ?? null,
+    raffleName: raffleName ?? null,
+    ticketsCount: ticketsCount ?? null,
+    userChancesInRaffle: userChancesInRaffle ?? null,
+  };
+}
+
+export function isRaffleOrder(order: Order) {
+  return getRaffleOrderContext(order).isRaffle;
+}
+
 export function getCurrentPurchaseStep(order: Order) {
+  if (isRaffleOrder(order)) {
+    if (order.status === "PENDING_PAYMENT") return 1;
+    if (order.status === "PAID" || order.status === "TRADE_PENDING") return 2;
+    if (order.status === "COMPLETED") return 3;
+    return 0;
+  }
+
   if (order.type === "BUY") {
     if (order.status === "PENDING_PAYMENT") return 1;
     if (order.status === "PAID") return 2;

@@ -67,6 +67,8 @@ export interface Order {
   items: OrderItem[];
   createdAt: string;
   paymentMethod?: string | null;
+  botId?: string | null;
+  bot?: { id: string; name: string; steamId: string; tradeUrl: string | null } | null;
   metadata?: {
     firstName?: string | null;
     lastName?: string | null;
@@ -84,6 +86,11 @@ export interface Order {
     adminPaymentProof?: PaymentProofMetadata | null;
     manualTransferType?: "bank" | "crypto" | string | null;
     manualTransferSnapshot?: ManualTransferSnapshot | null;
+    raffleId?: string | null;
+    raffleName?: string | null;
+    raffleTicketPrice?: number | null;
+    ticketsCount?: number | null;
+    userChancesInRaffle?: number | null;
   } | null;
 }
 
@@ -108,7 +115,9 @@ export interface AdminUser {
   role: string;
 }
 
-export interface AdminDashboardProps {
-  initialItems: StoreItem[];
-  adminUser: AdminUser;
+export interface AdminBotOption {
+  id: string;
+  name: string;
+  steamId: string;
+  isActive: boolean;
 }

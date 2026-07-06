@@ -14,8 +14,6 @@ function SellPageContent() {
   const [isSellBasketOpen, setIsSellBasketOpen] = useState(false);
   const { t } = useI18n();
 
-  const totalValue = inventoryItems.reduce((sum, item) => sum + item.price, 0);
-  const selectedTotal = selectedItems.reduce((sum, item) => sum + item.price, 0);
 
   return (
     <main className="mx-auto max-w-full px-4 sm:px-6 pt-24 pb-20 overflow-x-hidden">
@@ -35,23 +33,7 @@ function SellPageContent() {
               <p className="text-xs sm:text-sm text-[#84849b] mt-0.5">{t("sell.description")}</p>
             </div>
 
-            {/* Inventory Value Stats */}
-            <div className="bg-card border border-white/5 p-3 px-4 sm:px-6 rounded-[3px] flex items-center gap-4 sm:gap-6 shadow-lg shadow-black/20 font-sans w-full md:w-auto justify-between sm:justify-end">
-              <div className="text-left sm:text-right">
-                <p className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest mb-1">{t("sell.totalValue")}</p>
-                <p className="text-base sm:text-lg lg:text-xl font-black text-white tracking-tighter">
-                  {loading ? t("sell.calculating") : `$${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                  <span className="text-[9px] sm:text-[10px] text-muted ml-0.5 font-bold"> USD</span>
-                </p>
-              </div>
-              <div className="h-8 sm:h-10 w-[1px] bg-white/5" />
-              <div className="text-right">
-                <p className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest mb-1">{t("common.items")}</p>
-                <p className="text-base sm:text-lg lg:text-xl font-black text-accent tracking-tighter">
-                  {loading ? "..." : inventoryItems.length}
-                </p>
-              </div>
-            </div>
+
           </header>
 
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-white/5 p-3 rounded-[3px]">
@@ -129,7 +111,7 @@ function SellPageContent() {
                     {t("sell.summary")}
                   </p>
                   <p className="truncate text-xs font-bold text-white">
-                    {selectedItems.length} item{selectedItems.length === 1 ? "" : "s"} · ${selectedTotal.toLocaleString()} USD
+                    {selectedItems.length} item{selectedItems.length === 1 ? "" : "s"}
                   </p>
                 </div>
                 <button

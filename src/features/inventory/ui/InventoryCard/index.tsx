@@ -67,9 +67,8 @@ export const InventoryCard = ({
       skin.name.toLowerCase().includes("storage unit") ||
       skin.name.toLowerCase().includes("unidad de almacenamiento"));
 
-  const isBelowMinimum =
-    variant === "sell" && skin.price < minSellPrice && !isUnsellable;
-  const isDisabled = isBelowMinimum || isUnsellable;
+  const isBelowMinimum = false;
+  const isDisabled = isUnsellable;
 
   const toggleSelection = () => {
     if (variant === "simple") return;
@@ -95,7 +94,7 @@ export const InventoryCard = ({
         <div className="absolute inset-0 z-10 rounded-2xl backdrop-blur-[2px] bg-black/30 flex flex-col items-center justify-center gap-1.5 pointer-events-none">
           <Lock className="w-5 h-5 text-white/60" />
           <p className="text-[9px] font-black text-white/60 uppercase tracking-widest text-center px-3">
-            {isUnsellable ? "NO VENDIBLE" : `MÍN. $${minSellPrice.toFixed(2)}`}
+            NO VENDIBLE
           </p>
         </div>
       )}
@@ -187,16 +186,12 @@ export const InventoryCard = ({
       />
 
       {/* Price Section */}
-      {variant === "sell" && (
+      {variant === "sell" && isUnsellable && (
         <div className="flex flex-col gap-0.5 mb-3 mt-auto pt-3 border-t border-white/5">
           <div className="text-lg font-black text-white tracking-tight leading-none">
-            {isUnsellable ? (
-              <span className="text-sm text-white/30 italic font-medium">
-                No comerciable
-              </span>
-            ) : (
-              `$${skin.price.toLocaleString()} USD`
-            )}
+            <span className="text-sm text-white/30 italic font-medium">
+              No comerciable
+            </span>
           </div>
         </div>
       )}

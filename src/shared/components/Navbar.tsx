@@ -14,11 +14,15 @@ import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { NotificationBell } from "@/features/notifications/ui/NotificationBell";
+import { useUpcomingDraws } from "@/shared/hooks/useUpcomingDraws";
+import { Radio } from "lucide-react";
 
 const NAV_LINKS = [
   { labelKey: "nav.home", path: "/" },
-  { labelKey: "nav.buy", path: "/buy" },
+  { labelKey: "nav.express", path: "/buy" },
+  { labelKey: "nav.market", path: "/market" },
   { labelKey: "nav.sell", path: "/sell" },
+  { labelKey: "nav.raffles", path: "/raffles" },
 ];
 
 interface UserProfile {
@@ -37,6 +41,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
   const { t } = useI18n();
   const { items } = useCart();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { closestDraw } = useUpcomingDraws(10); // 10 minutos
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -96,6 +101,18 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
 
   return (
     <nav className="fixed top-0 left-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
+      {closestDraw && (
+        <div className="w-full bg-accent text-white px-4 py-2 text-center text-xs font-black tracking-widest uppercase flex items-center justify-center gap-3 animate-pulse">
+          <Radio className="w-4 h-4 animate-ping" />
+          <span>¡Sorteo en vivo! {closestDraw.name} está por comenzar</span>
+          <Link
+            href={localizePath(`/raffles/${closestDraw.id}/live`)}
+            className="ml-2 bg-white text-accent px-3 py-1 rounded-full hover:bg-white/90 transition-colors"
+          >
+            Ver Ahora
+          </Link>
+        </div>
+      )}
       <div className="mx-auto flex h-16 max-w-full items-center justify-between gap-2 px-3 sm:px-6">
         <Link
           href={localizePath("/")}
@@ -266,6 +283,50 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                         />
                       </svg>
                       {t("nav.purchases")}
+                    </Link>
+
+                    <Link
+                      href={localizePath("/listings")}
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] text-xs font-semibold text-white/60 hover:text-white transition-all duration-300"
+                    >
+                      <svg
+                        className="w-4 h-4 text-accent/80"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      {t("nav.listings")}
+                    </Link>
+
+                    <Link
+                      href={localizePath("/quotes")}
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.03] text-xs font-semibold text-white/60 hover:text-white transition-all duration-300"
+                    >
+                      <svg
+                        className="w-4 h-4 text-accent/80"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {t("nav.quotes")}
                     </Link>
 
                     <Link

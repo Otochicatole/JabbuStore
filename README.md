@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JabbuStore - Frontend Documentation
 
-## Getting Started
+## Descripción General
+JabbuStore es el frontend de una plataforma de comercio electrónico orientada a la venta de artículos (probablemente relacionados con CS2, dado el contexto del backend). Está construida utilizando las últimas tecnologías web para garantizar un rendimiento óptimo y una experiencia de usuario fluida y reactiva.
 
-First, run the development server:
+## Stack Tecnológico
+* **Framework:** Next.js (v16.2)
+* **Librería UI:** React (v19)
+* **Estilos:** TailwindCSS
+* **Animaciones:** Framer Motion
+* **Iconos:** Lucide React
+* **Comunicación en Tiempo Real:** Socket.io-client
+* **Pagos:** MercadoPago SDK React
+* **Lenguaje:** TypeScript
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Características Principales
+* **Renderizado Optimizado:** Utiliza Next.js para renderizado del lado del servidor (SSR) y generación de sitios estáticos (SSG) donde sea conveniente.
+* **Diseño Responsivo y Moderno:** Interfaz estilizada con TailwindCSS y animaciones fluidas con Framer Motion.
+* **Integración de Pagos:** Flujo de pagos integrado directamente con MercadoPago.
+* **Actualizaciones en Tiempo Real:** Conexión por WebSockets mediante Socket.io para mantener sincronizado el estado (ej. inventario, notificaciones de compra).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts Disponibles
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+En el directorio del proyecto, puedes ejecutar:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* `bun run dev` o `npm run dev`: Inicia el servidor de desarrollo en modo local.
+* `bun run build` o `npm run build`: Construye la aplicación para producción.
+* `bun run start` o `npm run start`: Inicia el servidor de producción.
+* `bun run lint` o `npm run lint`: Ejecuta el linter (ESLint) para analizar el código.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estructura de Proyecto (Convenciones de Next.js)
+El proyecto sigue la estructura estándar de Next.js (App Router o Pages Router dependiendo de la implementación interna), utilizando TypeScript para un tipado estricto.

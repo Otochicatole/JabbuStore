@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 
 export default function SellSkinComponent({ skinId, inventoryPrice }: { skinId: string, inventoryPrice: number }) {
   const { t } = useI18n();
@@ -10,12 +11,10 @@ export default function SellSkinComponent({ skinId, inventoryPrice }: { skinId: 
 
   const handleSell = async () => {
     try {
-      const res = await fetch("http://localhost:3001/api/marketplace/listings", {
+      const res = await fetchWithAuth(`${BACKEND_URL}/marketplace/listings`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Assumes credentials are sent or token
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           skinId,

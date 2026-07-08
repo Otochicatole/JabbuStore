@@ -1,6 +1,36 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+function splitConfig(value?: string) {
+  return (value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getHostFromUrlOrHost(value: string | null) {
+  if (!value) return null;
+  try {
+    return new URL(value).host.toLowerCase();
+  } catch {
+    return value.trim().toLowerCase();
+  }
+}
+
+function configuredFrontendHosts() {
+  const hosts = splitConfig(process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.FRONTEND_URL)
+    .map(getHostFromUrlOrHost)
+    .filter((value): value is string => Boolean(value));
+  const apiHost = getHostFromUrlOrHost(process.env.NEXT_PUBLIC_API_URL || null);
+  if (apiHost?.endsWith(".devtunnels.ms")) {
+    hosts.push(apiHost.replace("-3001.", "-3000."));
+  }
+  if (process.env.NODE_ENV !== "production") {
+    hosts.push("localhost:3000", "127.0.0.1:3000");
+  }
+  return hosts;
+}
+
 export async function POST(request: Request) {
   const requestUrl = new URL(request.url);
   const origin = request.headers.get("origin");
@@ -14,10 +44,13 @@ export async function POST(request: Request) {
     host,
     forwardedHost,
     new URL(forwardedOrigin).host,
-  ].filter((value): value is string => Boolean(value)));
+    ...configuredFrontendHosts(),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.toLowerCase()));
   let originHost: string | null = null;
   try {
-    originHost = origin ? new URL(origin).host : null;
+    originHost = origin ? new URL(origin).host.toLowerCase() : null;
   } catch {
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   }
@@ -43,6 +76,9 @@ export async function POST(request: Request) {
     headers: {
       Cookie: `${cookieName}=${encodeURIComponent(token)}`,
       "Content-Type": "application/json",
+      Origin: origin || forwardedOrigin,
+      "X-Forwarded-Host": host || requestUrl.host,
+      "X-Forwarded-Proto": protocol,
       "X-Ticket-Actor": actor,
       "X-Tunnel-Skip-AntiPhishing-Page": "true",
     },

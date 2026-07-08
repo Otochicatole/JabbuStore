@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Navbar } from "@/shared/components/Navbar";
 import { CartProvider } from "@/features/cart/context/CartContext";
 import { InventoryProvider } from "@/features/inventory/context/InventoryContext";
@@ -25,38 +25,42 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   if (isAdminRoute) {
     return (
       <I18nProvider initialLocale={locale}>
-        <CartProvider>
-          <FilterProvider>
-            <InventoryProvider>
-              <div className="min-h-screen min-w-0 bg-background overflow-x-hidden">
-                {children}
-              </div>
-            </InventoryProvider>
-          </FilterProvider>
-        </CartProvider>
+        <Suspense fallback={null}>
+          <CartProvider>
+            <FilterProvider>
+              <InventoryProvider>
+                <div className="min-h-screen min-w-0 bg-background overflow-x-hidden">
+                  {children}
+                </div>
+              </InventoryProvider>
+            </FilterProvider>
+          </CartProvider>
+        </Suspense>
       </I18nProvider>
     );
   }
 
   return (
     <I18nProvider initialLocale={locale}>
-      <CartProvider>
-        <FilterProvider>
-          <InventoryProvider>
-            <NotificationProvider actor="USER" enabled>
-              <TicketNotificationProvider actor="USER" enabled>
-                <div className="min-h-screen min-w-0 overflow-x-hidden">
-                  <Navbar onOpenCart={() => setIsCartOpen(true)} />
-                  <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-                  <ProfileCompletionModal />
-                  <ActiveRafflesWidget />
-                  {children}
-                </div>
-              </TicketNotificationProvider>
-            </NotificationProvider>
-          </InventoryProvider>
-        </FilterProvider>
-      </CartProvider>
+      <Suspense fallback={null}>
+        <CartProvider>
+          <FilterProvider>
+            <InventoryProvider>
+              <NotificationProvider actor="USER" enabled>
+                <TicketNotificationProvider actor="USER" enabled>
+                  <div className="min-h-screen min-w-0 overflow-x-hidden">
+                    <Navbar onOpenCart={() => setIsCartOpen(true)} />
+                    <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+                    <ProfileCompletionModal />
+                    <ActiveRafflesWidget />
+                    {children}
+                  </div>
+                </TicketNotificationProvider>
+              </NotificationProvider>
+            </InventoryProvider>
+          </FilterProvider>
+        </CartProvider>
+      </Suspense>
     </I18nProvider>
   );
 };

@@ -8,6 +8,7 @@ export interface RaffleWinnerUser {
 
 export interface RafflePrizeWithWinner {
   id: string;
+  position?: number | null;
   name: string;
   price: number;
   iconUrl: string | null;

@@ -171,7 +171,7 @@ export function useCheckout() {
       status,
       orderId,
       method,
-      token,
+      hasToken: Boolean(token),
       alreadyProcessed: processedRef.current
     });
 
@@ -184,7 +184,7 @@ export function useCheckout() {
         if (method === "paypal") {
           setLoading(true);
           try {
-            console.log("[useCheckout] posting to PayPal webhook endpoint with token:", token);
+            console.log("[useCheckout] posting to PayPal webhook endpoint.");
             const res = await fetchWithAuth(`${BACKEND_URL}/orders/webhook/paypal`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -523,7 +523,7 @@ export function useCheckout() {
             network: null,
           };
 
-          sendDebugLog("metadataPayload prepared: " + JSON.stringify(metadataPayload));
+          sendDebugLog("metadataPayload prepared.");
           sendDebugLog("items in state count: " + items.length + ", cartItems count: " + cartItems.length);
           setPaymentStep(2);
 
@@ -593,7 +593,15 @@ export function useCheckout() {
 
           sendDebugLog("fetchWithAuth response status: " + res.status);
           const data = await res.json();
-          sendDebugLog("fetchWithAuth response JSON: " + JSON.stringify(data));
+          sendDebugLog(
+            "fetchWithAuth response JSON: " +
+              JSON.stringify({
+                id: data?.id,
+                status: data?.status,
+                hasPaymentUrl: Boolean(data?.paymentUrl),
+                hasError: Boolean(data?.error),
+              }),
+          );
           
           if (!res.ok) {
             throw new Error(

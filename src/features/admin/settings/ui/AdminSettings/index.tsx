@@ -127,6 +127,7 @@ export function AdminSettings() {
       transferencia: t("admin.settings.transferDesc"),
       webhook: t("admin.settings.webhookDesc"),
       sync: t("admin.settings.syncDesc"),
+      homeStats: t("admin.settings.homeStatsDesc", { defaultValue: "Configura los números visibles en el home." }),
     };
     return descriptions[tabId] || "";
   };
@@ -325,7 +326,6 @@ export function AdminSettings() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
         body: JSON.stringify({
           manualTransferEnabled: settings.manualTransferEnabled,
@@ -358,7 +358,6 @@ export function AdminSettings() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
         body: JSON.stringify({
           homeStatsActiveUsers: settings.homeStatsActiveUsers,

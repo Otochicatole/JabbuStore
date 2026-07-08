@@ -12,23 +12,23 @@
     "@mercadopago/sdk-react": "^1.0.7",
     "@types/canvas-confetti": "^1.9.0",
     "canvas-confetti": "^1.9.4",
-    "framer-motion": "^12.38.0",
-    "lucide-react": "^1.14.0",
+    "framer-motion": "^12.42.2",
+    "lucide-react": "^1.23.0",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@tailwindcss/postcss": "^4.3.2",
+    "@types/node": "^20.19.43",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^9",
+    "eslint": "^9.39.4",
     "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "tailwindcss": "^4.3.2",
+    "typescript": "^5.9.3"
   },
   "ignoreScripts": [
     "sharp",
@@ -39,6 +39,8 @@
     "unrs-resolver"
   ],
   "overrides": {
+    "@babel/core": "7.29.7",
+    "js-yaml": "5.2.1",
     "postcss": "8.5.10"
   }
 }

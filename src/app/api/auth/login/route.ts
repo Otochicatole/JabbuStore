@@ -24,20 +24,22 @@ export async function POST(request: Request) {
     }
 
     const res = NextResponse.json({ admin: data.admin });
+    const requestUrl = new URL(request.url);
+    const protocol =
+      request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ||
+      requestUrl.protocol.replace(':', '');
+    const isHttps = protocol === 'https';
 
-    // Establecer la cookie de sesión de forma 100% segura
-    // Usamos secure: true y sameSite: 'none' siempre porque localhost es un entorno seguro 
-    // y los túneles HTTPS lo requieren obligatoriamente para no descartar la cookie.
     res.cookies.set('admin_token', data.token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: isHttps,
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60, // 24 horas
       path: '/',
     });
 
     return res;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('BFF Login error:', err);
     return NextResponse.json(
       { error: 'Error interno en el servidor del frontend' },

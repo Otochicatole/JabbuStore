@@ -34,6 +34,7 @@ interface UserProfile {
 
 interface RafflePrize {
   id: string;
+  position?: number | null;
   name: string;
   price: number;
   iconUrl: string | null;
@@ -45,6 +46,18 @@ interface RafflePrize {
   winnerId?: string | null;
   winner: UserProfile | null;
   winningTicket: { ticketNumber: number } | null;
+}
+
+interface RaffleWinnerResponse {
+  prizeId: string;
+  winner: UserProfile;
+  winningTicket: { ticketNumber: number } | null;
+}
+
+interface WinningPosition {
+  position: number;
+  winner: UserProfile;
+  prizes: RafflePrize[];
 }
 
 interface RaffleTicket {
@@ -102,7 +115,7 @@ function RaffleDetailsContent() {
   const [ticketCount, setTicketCount] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
-  const [winningPositions, setWinningPositions] = useState<{position: number; winner: any; prizes: any[]}[]>([]);
+  const [winningPositions, setWinningPositions] = useState<WinningPosition[]>([]);
   const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
 
   useEffect(() => {
@@ -118,7 +131,7 @@ function RaffleDetailsContent() {
           headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
         });
         if (!res.ok) throw new Error("No se pudo cargar la información del sorteo.");
-        const data = await res.json();
+        const data = (await res.json()) as Raffle;
         setRaffle(data);
 
         // Check if finished and has a winner
@@ -128,9 +141,9 @@ function RaffleDetailsContent() {
               headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
             });
             if (winnersRes.ok) {
-              const winnersData = await winnersRes.json();
-              data.prizes = data.prizes.map((p: any) => {
-                const wInfo = winnersData.find((w: any) => w.prizeId === p.id);
+              const winnersData = (await winnersRes.json()) as RaffleWinnerResponse[];
+              data.prizes = data.prizes.map((p) => {
+                const wInfo = winnersData.find((w) => w.prizeId === p.id);
                 if (wInfo) {
                   return { ...p, winner: wInfo.winner, winningTicket: wInfo.winningTicket, winnerId: wInfo.winner.id };
                 }
@@ -141,23 +154,23 @@ function RaffleDetailsContent() {
             console.error("Failed to fetch winners", e);
           }
 
-          const wonPrizes = data.prizes.filter((p: any) => p.winnerId && p.winner);
+          const wonPrizes = data.prizes.filter((p) => p.winnerId && p.winner);
           if (wonPrizes.length > 0) {
-            const positionsMap = new Map<number, any>();
-            wonPrizes.forEach((p: any) => {
+            const positionsMap = new Map<number, WinningPosition>();
+            wonPrizes.forEach((p) => {
               const pos = p.position || 1;
               if (!positionsMap.has(pos)) {
-                positionsMap.set(pos, { position: pos, winner: p.winner, prizes: [] });
+                positionsMap.set(pos, { position: pos, winner: p.winner!, prizes: [] });
               }
-              positionsMap.get(pos).prizes.push(p);
+              positionsMap.get(pos)!.prizes.push(p);
             });
             const positions = Array.from(positionsMap.values()).sort((a, b) => a.position - b.position);
             setWinningPositions(positions);
             setCurrentPrizeIndex(0);
           }
         }
-      } catch (err: any) {
-        setError(err.message || "Error al cargar.");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Error al cargar.");
       } finally {
         setLoading(false);
       }
@@ -250,7 +263,7 @@ function RaffleDetailsContent() {
                 winner={winningPositions[currentPrizeIndex].winner!}
                 prize={{
                   name: t("raffles.position", { position: winningPositions[currentPrizeIndex].position }),
-                  price: winningPositions[currentPrizeIndex].prizes.reduce((acc: number, p: any) => acc + p.price, 0),
+                  price: winningPositions[currentPrizeIndex].prizes.reduce((acc, p) => acc + p.price, 0),
                   iconUrl: winningPositions[currentPrizeIndex].prizes[0]?.iconUrl,
                   exterior: t("raffles.itemsCount", { count: winningPositions[currentPrizeIndex].prizes.length }),
                   items: winningPositions[currentPrizeIndex].prizes

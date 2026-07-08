@@ -20,6 +20,79 @@ const HOP_BY_HOP_HEADERS = [
   'trailer',
 ];
 
+const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+function splitConfig(value?: string) {
+  return (value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getForwardedHost(req: NextRequest) {
+  return req.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+}
+
+function getForwardedProtocol(req: NextRequest, requestUrl: URL) {
+  return req.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || requestUrl.protocol.replace(':', '');
+}
+
+function getHostFromHeader(value: string | null) {
+  if (!value) return null;
+  try {
+    return new URL(value).host.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function getHostFromUrlOrHost(value: string | null) {
+  if (!value) return null;
+  return getHostFromHeader(value) || value.trim().toLowerCase();
+}
+
+function configuredFrontendHosts() {
+  const hosts = splitConfig(process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.FRONTEND_URL)
+    .map(getHostFromUrlOrHost)
+    .filter((value): value is string => Boolean(value));
+  const backendPublicHost = getHostFromHeader(BACKEND_PUBLIC_URL);
+  if (backendPublicHost?.endsWith('.devtunnels.ms')) {
+    hosts.push(backendPublicHost.replace('-3001.', '-3000.'));
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    hosts.push('localhost:3000', '127.0.0.1:3000');
+  }
+  return hosts;
+}
+
+function isAllowedMutationOrigin(req: NextRequest, requestUrl: URL) {
+  if (!UNSAFE_METHODS.has(req.method.toUpperCase())) {
+    return true;
+  }
+
+  const forwardedHost = getForwardedHost(req);
+  const host = forwardedHost || req.headers.get('host');
+  const protocol = getForwardedProtocol(req, requestUrl);
+  const forwardedOrigin = host ? `${protocol}://${host}` : requestUrl.origin;
+  const allowedHosts = new Set(
+    [
+      requestUrl.host,
+      host,
+      forwardedHost,
+      getHostFromHeader(forwardedOrigin),
+      ...configuredFrontendHosts(),
+    ]
+      .filter((value): value is string => Boolean(value))
+      .map((value) => value.toLowerCase()),
+  );
+
+  const originHost = getHostFromHeader(req.headers.get('origin'));
+  const refererHost = getHostFromHeader(req.headers.get('referer'));
+  const requestHost = originHost || refererHost;
+
+  return Boolean(requestHost && allowedHosts.has(requestHost));
+}
+
 async function handleProxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const resolvedParams = await params;
   const path = resolvedParams.path.join('/');
@@ -31,6 +104,10 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
   }
 
   const url = new URL(req.url);
+  if (!isAllowedMutationOrigin(req, url)) {
+    return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 });
+  }
+
   const searchParams = url.searchParams.toString();
   const query = searchParams ? `?${searchParams}` : '';
 

@@ -17,6 +17,7 @@ import {
   DollarSign,
   Gift,
   TicketPlus,
+  Star,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -135,6 +136,11 @@ export default function AdminLayout({
       name: t("admin.quotes"),
       href: "/admin/panel/quotes",
       icon: DollarSign,
+    },
+    {
+      name: t("admin.reviews.nav"),
+      href: "/admin/panel/reviews",
+      icon: Star,
     },
     {
       name: t("tickets.adminNav"),

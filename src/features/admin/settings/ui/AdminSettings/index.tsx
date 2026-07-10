@@ -19,6 +19,7 @@ import { WebhookTab } from "./WebhookTab";
 import { CredentialsTab } from "./CredentialsTab";
 import { SyncTab } from "./SyncTab";
 import { HomeStatsTab } from "./HomeStatsTab";
+import { SponsorsTab } from "./SponsorsTab";
 
 export interface SettingsState {
   globalPriceModifierType: string;
@@ -112,6 +113,7 @@ export function AdminSettings() {
       webhook: t("admin.settings.webhook"),
       sync: t("admin.settings.sync"),
       homeStats: t("admin.settings.homeStats", { defaultValue: "Estadísticas del Home" }),
+      sponsors: t("admin.settings.sponsors", { defaultValue: "Sponsors" }),
     };
     return labels[tabId] || tabId;
   };
@@ -128,6 +130,7 @@ export function AdminSettings() {
       webhook: t("admin.settings.webhookDesc"),
       sync: t("admin.settings.syncDesc"),
       homeStats: t("admin.settings.homeStatsDesc", { defaultValue: "Configura los números visibles en el home." }),
+      sponsors: t("admin.settings.sponsorsDesc", { defaultValue: "Gestiona los sponsors visibles en el home." }),
     };
     return descriptions[tabId] || "";
   };
@@ -514,6 +517,8 @@ export function AdminSettings() {
           isSaved={savedHomeStats}
         />
       )}
+
+      {activeTab === "sponsors" && <SponsorsTab />}
     </AdminPage>
   );
 }

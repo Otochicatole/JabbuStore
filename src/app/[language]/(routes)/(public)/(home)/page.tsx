@@ -17,6 +17,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { HomeReviewsSection } from "@/features/reviews/ui/HomeReviewsSection";
+import { HomeSponsorsSection } from "@/features/sponsors/ui/HomeSponsorsSection";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -443,6 +444,7 @@ export default function Home() {
       </section>
 
       {/* --- SECTION 5: RECOMMENDATIONS --- */}
+      <HomeSponsorsSection />
       <HomeReviewsSection />
 
       {/* --- SECTION 6: FINAL CTA BANNER --- */}

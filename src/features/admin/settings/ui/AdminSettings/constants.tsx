@@ -1,13 +1,12 @@
 import {
   Coins,
   CreditCard,
+  Handshake,
   KeyRound,
   Landmark,
   LayoutDashboard,
   RefreshCw,
-  ShieldCheck,
   TrendingUp,
-  Users,
   Webhook,
 } from "lucide-react";
 
@@ -42,4 +41,5 @@ export const TABS: {
   { id: "transferencia", icon: Landmark },
   { id: "sync", icon: RefreshCw },
   { id: "homeStats", icon: LayoutDashboard },
+  { id: "sponsors", icon: Handshake },
 ];

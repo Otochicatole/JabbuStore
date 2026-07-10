@@ -23,7 +23,8 @@ export type Tab =
   | "transferencia"
   | "webhook"
   | "sync"
-  | "homeStats";
+  | "homeStats"
+  | "sponsors";
 
 export type PriceCatalogStatus = {
   exists: boolean;

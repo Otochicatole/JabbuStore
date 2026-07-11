@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { ExternalLink, Ticket, UserRound } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import type { PaymentQuoteSnapshot } from "@/features/admin/domain/types";
+
+interface RaffleOrderMetadata extends Record<string, unknown> {
+  paymentQuote?: PaymentQuoteSnapshot | null;
+}
 
 export interface RafflePurchaseOrder {
   id: string;
@@ -16,7 +21,7 @@ export interface RafflePurchaseOrder {
   raffleTickets: number[];
   raffleId: string;
   raffle: { id: string; name: string; status: string };
-  metadata: Record<string, unknown> | null;
+  metadata: RaffleOrderMetadata | null;
   items: { id: string; name: string; iconUrl: string | null; price: number }[];
 }
 
@@ -55,6 +60,12 @@ export function RafflePurchaseOrderCard({
   showRaffle?: boolean;
 }) {
   const { t } = useI18n();
+  const arsSettlement =
+    order.metadata?.paymentQuote?.settlement?.currency === "ARS" &&
+    typeof order.metadata.paymentQuote.settlement.amount === "number"
+      ? order.metadata.paymentQuote.settlement.amount
+      : null;
+
   return (
     <div className="rounded-[3px] border border-white/5 bg-[#110f1e]/35 p-4 hover:border-white/10 transition-colors">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -94,6 +105,11 @@ export function RafflePurchaseOrderCard({
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnTotal")}</p>
             <p className="text-sm font-black text-emerald-400">${order.totalPrice.toFixed(2)}</p>
+            {arsSettlement !== null && (
+              <p className="text-[10px] font-bold text-emerald-300">
+                {formatArs(arsSettlement)} ARS
+              </p>
+            )}
           </div>
 
           <div>
@@ -129,4 +145,11 @@ export function RafflePurchaseOrderCard({
       </div>
     </div>
   );
+}
+
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

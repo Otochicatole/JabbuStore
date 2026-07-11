@@ -35,6 +35,12 @@ export function PurchaseOrderCard({
   const raffleContext = getRaffleOrderContext(order);
   const isRaffle = raffleContext.isRaffle;
   const statusConfig = getStatusConfig(order.status, order.type, t, order);
+  const paymentQuote = order.metadata?.paymentQuote;
+  const arsSettlement =
+    paymentQuote?.settlement?.currency === "ARS" &&
+    typeof paymentQuote.settlement.amount === "number"
+      ? paymentQuote.settlement.amount
+      : null;
 
   return (
     <motion.div
@@ -100,6 +106,11 @@ export function PurchaseOrderCard({
             <span className="text-sm sm:text-base font-black text-white">
               ${order.totalPrice.toLocaleString()} USD
             </span>
+            {arsSettlement !== null && (
+              <span className="block text-[10px] font-bold text-emerald-400">
+                {formatArs(arsSettlement)} ARS
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -151,4 +162,11 @@ export function PurchaseOrderCard({
       </AnimatePresence>
     </motion.div>
   );
+}
+
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

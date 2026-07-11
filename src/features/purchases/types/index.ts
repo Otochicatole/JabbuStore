@@ -13,6 +13,27 @@ export interface OrderItem {
   provider?: string | null;
 }
 
+export interface PaymentQuoteSnapshot {
+  base?: {
+    currency?: "USD" | string;
+    amount?: number | null;
+  } | null;
+  settlement?: {
+    currency?: "ARS" | "USD" | "USDT" | string;
+    amount?: number | null;
+  } | null;
+  rate?: {
+    source?: string | null;
+    kind?: "oficial" | "blue" | "cripto" | string | null;
+    side?: string | null;
+    value?: number | null;
+    fetchedAt?: string | null;
+    providerUpdatedAt?: string | null;
+  } | null;
+  expiresAt?: string | null;
+  quotedAt?: string | null;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -37,6 +58,7 @@ export interface Order {
     mpPaymentId?: string | null;
     paypalPaymentId?: string | null;
     nowpaymentsPaymentId?: string | null;
+    paymentQuote?: PaymentQuoteSnapshot | null;
     buyerPaymentProof?: PaymentProofInfo | null;
     adminPaymentProof?: PaymentProofInfo | null;
     manualTransferType?: "bank" | "crypto" | string | null;

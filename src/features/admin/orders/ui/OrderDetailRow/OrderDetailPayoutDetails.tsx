@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { CreditCard, ExternalLink, Copy, Check, FileText } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
-import { BACKEND_URL } from "@/shared/lib/api";
 import { Order } from "@/features/admin/domain/types";
 
 interface OrderDetailPayoutDetailsProps {
@@ -28,10 +27,13 @@ export function OrderDetailPayoutDetails({
 
   const isManualTransfer = order.paymentMethod === "manual_transfer";
   const manualTransferSnapshot = order.metadata?.manualTransferSnapshot;
+  const paymentQuote = order.metadata?.paymentQuote;
+  const arsQuote =
+    paymentQuote?.settlement?.currency === "ARS" &&
+    typeof paymentQuote.settlement.amount === "number"
+      ? paymentQuote
+      : null;
   const buyerProof = order.metadata?.buyerPaymentProof || null;
-  const buyerProofUrl = buyerProof
-    ? `${BACKEND_URL}/orders/${order.id}/payment-proof/buyer`
-    : null;
 
   return (
     <div className="mb-6 bg-white/[0.01] border border-white/5 p-5 space-y-4 rounded-[3px]">
@@ -329,6 +331,40 @@ export function OrderDetailPayoutDetails({
       </div>
 
       <div className="pt-3 border-t border-white/5">
+        {arsQuote && (
+          <div className="mb-4 p-4 bg-accent/10 border border-accent/20 rounded-[3px]">
+            <h5 className="text-[9px] font-black uppercase text-accent tracking-wider font-mono mb-2">
+              {t("checkout.paymentQuote")}
+            </h5>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[10px]">
+              <div>
+                <span className="text-[#84849b] uppercase block">
+                  {t("checkout.payInArs")}
+                </span>
+                <span className="font-black text-emerald-300">
+                  {formatArs(arsQuote.settlement?.amount || 0)} ARS
+                </span>
+              </div>
+              <div>
+                <span className="text-[#84849b] uppercase block">
+                  {t("checkout.baseAmount")}
+                </span>
+                <span className="font-bold text-white">
+                  ${Number(arsQuote.base?.amount || order.totalPrice).toFixed(2)} USD
+                </span>
+              </div>
+              <div>
+                <span className="text-[#84849b] uppercase block">
+                  {t("checkout.exchangeRate")}
+                </span>
+                <span className="font-bold text-white">
+                  {t(`checkout.rateKind.${arsQuote.rate?.kind || "blue"}`)} · {formatArs(arsQuote.rate?.value || 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isManualTransfer && (
           <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[3px]">
             <h5 className="text-[9px] font-black uppercase text-emerald-300 tracking-wider font-mono mb-2">
@@ -407,4 +443,11 @@ export function OrderDetailPayoutDetails({
       </div>
     </div>
   );
+}
+
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

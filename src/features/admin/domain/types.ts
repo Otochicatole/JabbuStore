@@ -57,6 +57,27 @@ export interface ManualTransferSnapshot {
   } | null;
 }
 
+export interface PaymentQuoteSnapshot {
+  base?: {
+    currency?: "USD" | string;
+    amount?: number | null;
+  } | null;
+  settlement?: {
+    currency?: "ARS" | "USD" | "USDT" | string;
+    amount?: number | null;
+  } | null;
+  rate?: {
+    source?: string | null;
+    kind?: "oficial" | "blue" | "cripto" | string | null;
+    side?: string | null;
+    value?: number | null;
+    fetchedAt?: string | null;
+    providerUpdatedAt?: string | null;
+  } | null;
+  expiresAt?: string | null;
+  quotedAt?: string | null;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -82,6 +103,7 @@ export interface Order {
     mpPaymentId?: string | null;
     nowpaymentsPaymentId?: string | null;
     paypalPaymentId?: string | null;
+    paymentQuote?: PaymentQuoteSnapshot | null;
     buyerPaymentProof?: PaymentProofMetadata | null;
     adminPaymentProof?: PaymentProofMetadata | null;
     manualTransferType?: "bank" | "crypto" | string | null;

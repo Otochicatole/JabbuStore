@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/context/CartContext";
 import { useInventory } from "@/features/inventory/context/InventoryContext";
@@ -11,6 +11,7 @@ import {
   CheckoutFormData,
   FormErrors,
   ManualTransferSettings,
+  PaymentQuote,
 } from "../../domain/types";
 import { PAYMENT_METHODS } from "../../domain/constants";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -31,6 +32,23 @@ const PAYMENT_PROOF_ALLOWED_TYPES = new Set([
   "image/gif",
   "application/pdf",
 ]);
+
+function requiresArsPaymentQuote(
+  checkoutType: "buy" | "sell" | "raffle",
+  selectedMethod: string | null,
+  manualTransferType: "bank" | "crypto",
+) {
+  return (
+    (checkoutType === "buy" || checkoutType === "raffle") &&
+    (selectedMethod === "mercado_pago" ||
+      (selectedMethod === "manual_transfer" && manualTransferType === "bank"))
+  );
+}
+
+function isPaymentQuoteExpired(paymentQuote: PaymentQuote | null) {
+  if (!paymentQuote?.expiresAt) return false;
+  return new Date(paymentQuote.expiresAt).getTime() <= Date.now() + 5000;
+}
 
 export function useCheckout() {
   const { t } = useI18n();
@@ -68,6 +86,9 @@ export function useCheckout() {
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [manualTransferSettings, setManualTransferSettings] =
     useState<ManualTransferSettings | null>(null);
+  const [paymentQuote, setPaymentQuote] = useState<PaymentQuote | null>(null);
+  const [paymentQuoteLoading, setPaymentQuoteLoading] = useState(false);
+  const [paymentQuoteError, setPaymentQuoteError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     firstName: "",
@@ -391,6 +412,101 @@ export function useCheckout() {
     validateCheckout();
   }, [checkoutType, cartItems, sellItems, searchParams, t, isSuccess]);
 
+  const buildPaymentQuotePayload = useCallback(() => {
+    if (!isBuyLikeCheckout || !selectedMethod || loading || isSuccess) {
+      return null;
+    }
+
+    const manualTransferType =
+      selectedMethod === "manual_transfer" ? formData.manualTransferType : null;
+
+    if (checkoutType === "raffle") {
+      const raffleId = searchParams.get("raffleId");
+      if (!raffleId) return null;
+      return {
+        type: "raffle",
+        raffleId,
+        ticketsCount: Number(searchParams.get("tickets") || 1),
+        paymentMethod: selectedMethod,
+        manualTransferType,
+      };
+    }
+
+    if (checkoutType === "buy") {
+      if (cartItems.length === 0 || items.length === 0) return null;
+      return {
+        type: "BUY",
+        itemIds: cartItems.map((i) => i.skin.id),
+        items: cartItems.map((i) => ({
+          assetId: i.skin.id,
+          float: i.skin.float !== undefined ? i.skin.float : null,
+          pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
+          isSpecific: i.skin.isSpecific !== false,
+        })),
+        paymentMethod: selectedMethod,
+        manualTransferType,
+      };
+    }
+
+    return null;
+  }, [
+    cartItems,
+    checkoutType,
+    formData.manualTransferType,
+    isBuyLikeCheckout,
+    isSuccess,
+    items.length,
+    loading,
+    searchParams,
+    selectedMethod,
+  ]);
+
+  const loadPaymentQuote = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const payload = buildPaymentQuotePayload();
+      if (!payload) {
+        setPaymentQuote(null);
+        setPaymentQuoteError(null);
+        return null;
+      }
+
+      if (!options?.silent) {
+        setPaymentQuoteLoading(true);
+      }
+      setPaymentQuoteError(null);
+
+      try {
+        const response = await fetchWithAuth(`${BACKEND_URL}/orders/payment-quote`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.error || t("checkout.error.paymentQuote"));
+        }
+
+        setPaymentQuote(data);
+        return data as PaymentQuote;
+      } catch (err: unknown) {
+        const message = getErrorMessage(err, t("checkout.error.paymentQuote"));
+        setPaymentQuote(null);
+        setPaymentQuoteError(message);
+        return null;
+      } finally {
+        if (!options?.silent) {
+          setPaymentQuoteLoading(false);
+        }
+      }
+    },
+    [buildPaymentQuotePayload, t],
+  );
+
+  useEffect(() => {
+    void Promise.resolve().then(() => loadPaymentQuote());
+  }, [loadPaymentQuote]);
+
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
 
@@ -476,7 +592,7 @@ export function useCheckout() {
     }
   };
 
-  const handleSubmitCheckout = () => {
+  const handleSubmitCheckout = async () => {
     if (!selectedMethod) return;
     
     const sendDebugLog = (msg: string) => {
@@ -499,6 +615,28 @@ export function useCheckout() {
     }
 
     sendDebugLog("validateForm passed. Proceeding with checkout.");
+
+    const quoteRequired = requiresArsPaymentQuote(
+      checkoutType,
+      selectedMethod,
+      formData.manualTransferType,
+    );
+    let paymentQuoteForSubmit = paymentQuote;
+    if (
+      quoteRequired &&
+      (!paymentQuoteForSubmit?.quoteToken || isPaymentQuoteExpired(paymentQuoteForSubmit))
+    ) {
+      paymentQuoteForSubmit = await loadPaymentQuote({ silent: true });
+    }
+
+    if (quoteRequired && !paymentQuoteForSubmit?.quoteToken) {
+      setError(paymentQuoteError || t("checkout.error.paymentQuoteRequired"));
+      return;
+    }
+
+    const paymentQuoteTokenForSubmit = quoteRequired
+      ? paymentQuoteForSubmit?.quoteToken
+      : null;
 
     // Buy orders using external payment providers use the real redirect flow.
     if ((checkoutType === "buy" || checkoutType === "raffle") && (selectedMethod === "mercado_pago" || selectedMethod === "nowpayments" || selectedMethod === "paypal")) {
@@ -579,6 +717,7 @@ export function useCheckout() {
               itemIds: items.map((i) => i.assetId),
               items: detailedItems,
               paymentMethod: selectedMethod,
+              paymentQuoteToken: paymentQuoteTokenForSubmit,
               metadata: {
                 ...metadataPayload,
                 ...(checkoutType === "raffle"
@@ -724,6 +863,7 @@ export function useCheckout() {
                   itemIds: items.map((i) => i.assetId),
                   items: detailedItems,
                   paymentMethod: selectedMethod,
+                  paymentQuoteToken: paymentQuoteTokenForSubmit,
                   metadata: {
                     ...metadataPayload,
                     ...(checkoutType === "raffle"
@@ -817,6 +957,9 @@ export function useCheckout() {
     setFormData,
     formErrors,
     manualTransferSettings,
+    paymentQuote,
+    paymentQuoteLoading,
+    paymentQuoteError,
     handleSubmitCheckout,
     router,
   };

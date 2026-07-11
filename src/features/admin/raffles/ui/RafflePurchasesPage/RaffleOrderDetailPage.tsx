@@ -34,20 +34,22 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 
 const STATUS_UPDATE_TIMEOUT_MS = 15000;
 
-function normalizeOrderMetadata(metadata: unknown): Record<string, any> | null {
+type RaffleOrderMetadata = NonNullable<Order["metadata"]> & Record<string, unknown>;
+
+function normalizeOrderMetadata(metadata: unknown): RaffleOrderMetadata | null {
   if (!metadata) return null;
   if (typeof metadata === "string") {
     try {
       const parsed = JSON.parse(metadata);
       return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-        ? (parsed as Record<string, any>)
+        ? (parsed as RaffleOrderMetadata)
         : null;
     } catch {
       return null;
     }
   }
   if (typeof metadata === "object" && !Array.isArray(metadata)) {
-    return metadata as Record<string, any>;
+    return metadata as RaffleOrderMetadata;
   }
   return null;
 }
@@ -69,7 +71,7 @@ interface RaffleOrderDetailResponse {
     totalPrice: number;
     paymentMethod: string | null;
     createdAt: string;
-    metadata: Record<string, any> | null;
+    metadata: RaffleOrderMetadata | null;
     ticketsCount: number;
   };
   buyer: {
@@ -286,6 +288,11 @@ export function RaffleOrderDetailPage({ raffleId, orderId }: RaffleOrderDetailPa
     detail?.order.status === "CANCELLED" ||
     detail?.order.status === "COMPLETED" ||
     detail?.order.status === "PAID";
+  const arsSettlement =
+    detail?.order.metadata?.paymentQuote?.settlement?.currency === "ARS" &&
+    typeof detail.order.metadata.paymentQuote.settlement.amount === "number"
+      ? detail.order.metadata.paymentQuote.settlement.amount
+      : null;
 
   return (
     <div className="space-y-6">
@@ -409,6 +416,11 @@ export function RaffleOrderDetailPage({ raffleId, orderId }: RaffleOrderDetailPa
               <p className="text-2xl font-black text-emerald-400">
                 ${detail.order.totalPrice.toFixed(2)} USD
               </p>
+              {arsSettlement !== null && (
+                <p className="mt-1 text-xs font-black text-emerald-300">
+                  {formatArs(arsSettlement)} ARS
+                </p>
+              )}
               <p className="mt-2 text-[10px] font-mono text-[#84849b]">
                 {new Date(detail.order.createdAt).toLocaleString()}
               </p>
@@ -590,4 +602,11 @@ export function RaffleOrderDetailPage({ raffleId, orderId }: RaffleOrderDetailPa
       )}
     </div>
   );
+}
+
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

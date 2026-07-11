@@ -18,7 +18,7 @@ function getStatusTone(status: string) {
   return "border-orange-500/20 bg-orange-500/10 text-orange-400";
 }
 
-function getStatusLabel(status: string, t: (key: any) => string) {
+function getStatusLabel(status: string, t: (key: string) => string) {
   switch (status) {
     case 'PENDING_PAYMENT': return t("purchases.status.paymentPending");
     case 'PAID': return t("purchases.status.paid");
@@ -34,6 +34,11 @@ export function AdminOrderListCard({ order, kind, onOpen }: AdminOrderListCardPr
   const actorLabel = kind === "purchase" ? t("admin.orders.buyer") : t("admin.sellOrders.seller");
   const totalLabel = kind === "purchase" ? t("admin.orders.totalAmount") : t("admin.sellOrders.amountToPay");
   const previewItems = order.items.slice(0, 3);
+  const arsSettlement =
+    order.metadata?.paymentQuote?.settlement?.currency === "ARS" &&
+    typeof order.metadata.paymentQuote.settlement.amount === "number"
+      ? order.metadata.paymentQuote.settlement.amount
+      : null;
 
   return (
     <button
@@ -83,6 +88,11 @@ export function AdminOrderListCard({ order, kind, onOpen }: AdminOrderListCardPr
             <p className="text-sm font-black text-emerald-400">
               ${order.totalPrice.toLocaleString()} USD
             </p>
+            {arsSettlement !== null && (
+              <p className="text-[10px] font-bold text-emerald-300">
+                {formatArs(arsSettlement)} ARS
+              </p>
+            )}
           </div>
 
           <div>
@@ -121,4 +131,11 @@ export function AdminOrderListCard({ order, kind, onOpen }: AdminOrderListCardPr
       </div>
     </button>
   );
+}
+
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

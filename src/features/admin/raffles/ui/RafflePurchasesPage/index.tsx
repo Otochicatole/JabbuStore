@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useCallback, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Ticket,
@@ -27,6 +27,11 @@ import {
   AdminStatCard,
   AdminToolbar,
 } from "@/features/admin/ui/AdminShell";
+import type { PaymentQuoteSnapshot } from "@/features/admin/domain/types";
+
+interface RaffleOrderMetadata extends Record<string, unknown> {
+  paymentQuote?: PaymentQuoteSnapshot | null;
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -55,7 +60,7 @@ interface RaffleOrder {
   createdAt: string;
   ticketsCount: number;
   raffleTickets: number[];
-  metadata: Record<string, any> | null;
+  metadata: RaffleOrderMetadata | null;
   items: { id: string; name: string; iconUrl: string | null; price: number }[];
 }
 
@@ -176,6 +181,12 @@ function RaffleCard({
 // ── Order card (right pane) ─────────────────────────────────────────────────
 
 function RaffleOrderCard({ order, t }: { order: RaffleOrder; t: (key: string) => string }) {
+  const arsSettlement =
+    order.metadata?.paymentQuote?.settlement?.currency === "ARS" &&
+    typeof order.metadata.paymentQuote.settlement.amount === "number"
+      ? order.metadata.paymentQuote.settlement.amount
+      : null;
+
   return (
     <div className="rounded-[3px] border border-white/5 bg-[#110f1e]/35 p-4 hover:border-white/10 transition-colors">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -224,6 +235,11 @@ function RaffleOrderCard({ order, t }: { order: RaffleOrder; t: (key: string) =>
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Total</p>
             <p className="text-sm font-black text-emerald-400">${order.totalPrice.toFixed(2)}</p>
+            {arsSettlement !== null && (
+              <p className="text-[10px] font-bold text-emerald-300">
+                {formatArs(arsSettlement)} ARS
+              </p>
+            )}
           </div>
 
           <div>
@@ -272,6 +288,13 @@ function RaffleOrderCard({ order, t }: { order: RaffleOrder; t: (key: string) =>
   );
 }
 
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 // ── Main page ───────────────────────────────────────────────────────────────
 
 function RafflePurchasesContent() {
@@ -297,7 +320,7 @@ function RafflePurchasesContent() {
   const [paymentFilter, setPaymentFilter] = useState("all");
 
   // Fetch raffle summaries
-  const fetchRaffles = async () => {
+  const fetchRaffles = useCallback(async () => {
     setLoadingRaffles(true);
     setRafflesError(null);
     try {
@@ -305,15 +328,17 @@ function RafflePurchasesContent() {
       if (!res.ok) throw new Error(t("admin.rafflePurchases.errorLoadRaffles"));
       const data = await res.json();
       setRaffles(data);
-    } catch (err: any) {
-      setRafflesError(err.message || t("admin.rafflePurchases.errorLoadRaffles"));
+    } catch (err: unknown) {
+      setRafflesError(
+        err instanceof Error ? err.message : t("admin.rafflePurchases.errorLoadRaffles"),
+      );
     } finally {
       setLoadingRaffles(false);
     }
-  };
+  }, [t]);
 
   // Fetch orders for the selected raffle
-  const fetchOrders = async (raffleId: string) => {
+  const fetchOrders = useCallback(async (raffleId: string) => {
     setLoadingOrders(true);
     setOrdersError(null);
     try {
@@ -322,26 +347,28 @@ function RafflePurchasesContent() {
       const data = await res.json();
       setSelectedRaffleName(data.raffle?.name ?? null);
       setOrders(data.orders ?? []);
-    } catch (err: any) {
-      setOrdersError(err.message || t("admin.rafflePurchases.errorLoadOrders"));
+    } catch (err: unknown) {
+      setOrdersError(
+        err instanceof Error ? err.message : t("admin.rafflePurchases.errorLoadOrders"),
+      );
     } finally {
       setLoadingOrders(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
-    fetchRaffles();
-  }, []);
+    void Promise.resolve().then(() => fetchRaffles());
+  }, [fetchRaffles]);
 
   useEffect(() => {
     if (selectedRaffleId) {
-      fetchOrders(selectedRaffleId);
+      void Promise.resolve().then(() => fetchOrders(selectedRaffleId));
       // Keep URL in sync
       const url = new URL(window.location.href);
       url.searchParams.set("raffleId", selectedRaffleId);
       router.replace(url.pathname + url.search, { scroll: false });
     }
-  }, [selectedRaffleId]);
+  }, [fetchOrders, router, selectedRaffleId]);
 
   // Stats for selected raffle
   const selectedRaffle = raffles.find((r) => r.id === selectedRaffleId);

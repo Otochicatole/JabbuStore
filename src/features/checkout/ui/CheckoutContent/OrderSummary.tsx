@@ -1,6 +1,7 @@
 import React from 'react';
-import { DollarSign, ArrowRight } from 'lucide-react';
+import { DollarSign, ArrowRight, Loader2 } from 'lucide-react';
 import { useI18n } from '@/shared/i18n/I18nProvider';
+import type { PaymentQuote } from '../../domain/types';
 
 interface OrderSummaryProps {
   itemsCount: number;
@@ -8,6 +9,10 @@ interface OrderSummaryProps {
   selectedMethod: string | null;
   isProcessingPayment: boolean;
   checkoutType: "buy" | "sell";
+  paymentQuote: PaymentQuote | null;
+  paymentQuoteLoading: boolean;
+  paymentQuoteError: string | null;
+  manualTransferType: "bank" | "crypto";
   onSubmit: () => void;
 }
 
@@ -17,9 +22,24 @@ export function OrderSummary({
   selectedMethod,
   isProcessingPayment,
   checkoutType,
+  paymentQuote,
+  paymentQuoteLoading,
+  paymentQuoteError,
+  manualTransferType,
   onSubmit
 }: OrderSummaryProps) {
   const { t } = useI18n();
+  const requiresArsQuote =
+    checkoutType === "buy" &&
+    (selectedMethod === "mercado_pago" ||
+      (selectedMethod === "manual_transfer" && manualTransferType === "bank"));
+  const arsQuote = paymentQuote?.settlement.currency === "ARS" ? paymentQuote : null;
+  const cryptoQuote = paymentQuote?.settlement.currency === "USDT" ? paymentQuote : null;
+  const finalAmountLabel = arsQuote
+    ? `${formatArs(arsQuote.settlement.amount)} ARS`
+    : cryptoQuote
+      ? `${cryptoQuote.settlement.amount.toFixed(2)} USDT`
+      : `$${totalPrice.toFixed(2)} USD`;
 
   return (
     <div className="bg-card border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl">
@@ -38,12 +58,57 @@ export function OrderSummary({
           <span>{t("checkout.orderValidation")}</span>
           <span className="text-emerald-400">Server-side</span>
         </div>
+        {requiresArsQuote && paymentQuoteLoading && (
+          <div className="flex items-center justify-between gap-3 text-xs text-[#84849b] font-semibold">
+            <span>{t("checkout.paymentQuote")}</span>
+            <span className="inline-flex items-center gap-1 text-accent">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              {t("checkout.updatingQuote")}
+            </span>
+          </div>
+        )}
+        {requiresArsQuote && paymentQuoteError && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-[10px] font-bold uppercase tracking-wider text-red-200">
+            {paymentQuoteError}
+          </div>
+        )}
+        {arsQuote && (
+          <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+              <span className="text-[#84849b]">{t("checkout.exchangeRate")}</span>
+              <span className="text-white text-right">
+                {t(`checkout.rateKind.${arsQuote.rate?.kind || "blue"}`)} · {formatArs(arsQuote.rate?.value || 0)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+              <span className="text-[#84849b]">{t("checkout.payInArs")}</span>
+              <span className="text-emerald-400 text-right font-black">
+                {formatArs(arsQuote.settlement.amount)} ARS
+              </span>
+            </div>
+            {arsQuote.expiresAt && (
+              <p className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
+                {t("checkout.quoteExpiresAt", {
+                  time: new Date(arsQuote.expiresAt).toLocaleTimeString("es-AR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }),
+                })}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between mb-8">
         <div>
           <span className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">{t("checkout.finalAmount")}</span>
-          <span className="text-2xl font-black text-white block tracking-tighter mt-1">${totalPrice.toFixed(2)} USD</span>
+          <span className="text-2xl font-black text-white block tracking-tighter mt-1">{finalAmountLabel}</span>
+          {arsQuote && (
+            <span className="text-[10px] font-bold text-[#84849b] block mt-1">
+              {t("checkout.baseAmountUsd", { amount: totalPrice.toFixed(2) })}
+            </span>
+          )}
         </div>
         <div className="p-3 bg-accent/10 rounded-full flex items-center justify-center">
           <DollarSign className="w-6 h-6 text-accent" />
@@ -72,3 +137,10 @@ export function OrderSummary({
   );
 }
 export default OrderSummary;
+
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}

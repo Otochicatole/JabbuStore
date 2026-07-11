@@ -99,6 +99,11 @@ export function OrderDetailRow({
   const canCancel = order.status === "PENDING_PAYMENT" || order.status === "CANCELLED";
   const buyerProof = order.metadata?.buyerPaymentProof;
   const buyerProofUrl = buyerProof ? `${BACKEND_URL}/orders/${order.id}/payment-proof/buyer` : null;
+  const arsSettlement =
+    order.metadata?.paymentQuote?.settlement?.currency === "ARS" &&
+    typeof order.metadata.paymentQuote.settlement.amount === "number"
+      ? order.metadata.paymentQuote.settlement.amount
+      : null;
   const assignedBotLabel = order.bot ? `${order.bot.name} (${order.bot.steamId.slice(-4)})` : t("admin.common.notAssigned") || "Not assigned";
   const statusLabel =
     order.status === "PENDING_PAYMENT"
@@ -158,6 +163,11 @@ export function OrderDetailRow({
                 {t("admin.orders.totalAmount")}
               </span>
               <p className="text-lg font-black leading-none text-emerald-400">${order.totalPrice.toLocaleString()} USD</p>
+              {arsSettlement !== null && (
+                <p className="mt-1 text-[10px] font-bold text-emerald-300">
+                  {formatArs(arsSettlement)} ARS
+                </p>
+              )}
               <p className="mt-1 text-[10px] font-bold text-white/35">{statusLabel}</p>
             </div>
             <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
@@ -535,4 +545,11 @@ export function OrderDetailRow({
       />
     </div>
   );
+}
+
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

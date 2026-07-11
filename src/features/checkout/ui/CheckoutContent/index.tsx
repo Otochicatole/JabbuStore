@@ -33,6 +33,9 @@ export function CheckoutContent() {
     setFormData,
     formErrors,
     manualTransferSettings,
+    paymentQuote,
+    paymentQuoteLoading,
+    paymentQuoteError,
     handleSubmitCheckout,
     router,
   } = useCheckout();
@@ -140,6 +143,10 @@ export function CheckoutContent() {
             selectedMethod={selectedMethod}
             isProcessingPayment={isProcessingPayment}
             checkoutType={subCheckoutType}
+            paymentQuote={paymentQuote}
+            paymentQuoteLoading={paymentQuoteLoading}
+            paymentQuoteError={paymentQuoteError}
+            manualTransferType={formData.manualTransferType}
             onSubmit={handleSubmitCheckout}
           />
           {(checkoutType === "buy" || checkoutType === "raffle") && !selectedMethod && (

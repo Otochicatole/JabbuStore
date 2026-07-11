@@ -48,3 +48,29 @@ export interface ManualTransferSettings {
   manualCryptoNetwork: string | null;
   manualCryptoInstructions: string | null;
 }
+
+export interface PaymentQuote {
+  base: {
+    currency: "USD";
+    amount: number;
+  };
+  settlement: {
+    currency: "ARS" | "USD" | "USDT";
+    amount: number;
+  };
+  rate: {
+    source: "DOLARAPI";
+    kind: "oficial" | "blue" | "cripto";
+    side: "venta";
+    value: number;
+    casa: string | null;
+    name: string | null;
+    fetchedAt: string;
+    providerUpdatedAt: string | null;
+  } | null;
+  paymentMethod: string;
+  manualTransferType: "bank" | "crypto" | null;
+  quotedAt: string;
+  expiresAt: string | null;
+  quoteToken?: string;
+}

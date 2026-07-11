@@ -88,6 +88,13 @@ export function PurchaseDetailsPanels({
 }
 
 function PaymentInfoPanel({ order, t }: { order: Order; t: Translate }) {
+  const paymentQuote = order.metadata?.paymentQuote;
+  const arsQuote =
+    paymentQuote?.settlement?.currency === "ARS" &&
+    typeof paymentQuote.settlement.amount === "number"
+      ? paymentQuote
+      : null;
+
   return (
     <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px]">
       <span className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-3">
@@ -99,6 +106,31 @@ function PaymentInfoPanel({ order, t }: { order: Order; t: Translate }) {
           {getPaymentMethodLabel(order.paymentMethod, t)}
         </span>
       </div>
+
+      {arsQuote && (
+        <div className="mt-3 rounded-[3px] border border-accent/20 bg-accent/10 p-3 text-[9.5px]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <span className="text-[#84849b] uppercase block">{t("checkout.payInArs")}</span>
+              <span className="font-black text-emerald-300">
+                {formatArs(arsQuote.settlement?.amount || 0)} ARS
+              </span>
+            </div>
+            <div>
+              <span className="text-[#84849b] uppercase block">{t("checkout.baseAmount")}</span>
+              <span className="font-bold text-white">
+                ${Number(arsQuote.base?.amount || order.totalPrice).toFixed(2)} USD
+              </span>
+            </div>
+            <div>
+              <span className="text-[#84849b] uppercase block">{t("checkout.exchangeRate")}</span>
+              <span className="font-bold text-white">
+                {t(`checkout.rateKind.${arsQuote.rate?.kind || "blue"}`)} · {formatArs(arsQuote.rate?.value || 0)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {order.paymentMethod === "mercado_pago" && (
         <PaymentFields
@@ -128,6 +160,13 @@ function PaymentInfoPanel({ order, t }: { order: Order; t: Translate }) {
       )}
     </div>
   );
+}
+
+function formatArs(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function PaymentFields({ fields }: { fields: [string, string][] }) {

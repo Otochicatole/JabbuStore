@@ -1004,6 +1004,7 @@ export const br = {
   "skinCard.modal.syncRealTime": "Os dados são atualizados e sincronizados em tempo real.",
   "skinCard.modal.availableStock": "Estoque Disponível",
   "skinCard.modal.averagePrice": "Preço Médio",
+  "skinCard.modal.lowestStockPrice": "Menor preço em estoque",
   "skinCard.modal.category": "Categoria",
   "skinCard.modal.rarity": "Raridade",
   "skinCard.modal.condition": "Condição",

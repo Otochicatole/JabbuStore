@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, ShoppingCart, Trash2, Eye } from "lucide-react";
+import { X, ShoppingCart, Eye } from "lucide-react";
 import { Skin } from "../../domain/skin";
+import { CartItem } from "../../../cart/domain/cart";
 import { InspectInGameButton } from "./InspectInGameButton";
 import { SkinImage } from "@/shared/components/SkinImage";
+import type { TranslationParams } from "@/shared/i18n/types";
 import { getFloatColorClass } from "./helpers";
 
 interface SkinCardModalProps {
@@ -11,15 +13,14 @@ interface SkinCardModalProps {
   skinsInGroup: Skin[];
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
-  totalQuantityInCart: number;
   addToCart: (skin: Skin) => void;
   removeFromCart: (id: string) => void;
-  items: any[];
+  items: CartItem[];
   translateExterior: (
     exterior: string | null | undefined,
     fallback: string,
   ) => string;
-  t: (key: string, params?: any) => string;
+  t: (key: string, params?: TranslationParams) => string;
 }
 
 const getRarityDetails = (rarity: string) => {
@@ -68,7 +69,6 @@ export const SkinCardModal = ({
   skinsInGroup,
   isModalOpen,
   setIsModalOpen,
-  totalQuantityInCart,
   addToCart,
   removeFromCart,
   items,
@@ -78,12 +78,6 @@ export const SkinCardModal = ({
   const [activeTab, setActiveTab] = useState<"details" | "stock">("details");
   const theoreticalFloat = getTheoreticalFloat(skin.exterior);
   const exteriorAbbr = getExteriorAbbreviation(skin.exterior);
-
-  useEffect(() => {
-    if (isModalOpen) {
-      setActiveTab("details");
-    }
-  }, [isModalOpen]);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -98,9 +92,9 @@ export const SkinCardModal = ({
 
   if (!isModalOpen) return null;
 
-  const avgPrice =
+  const lowestAvailableStockPrice =
     skinsInGroup.length > 0
-      ? skinsInGroup.reduce((sum, s) => sum + s.price, 0) / skinsInGroup.length
+      ? Math.min(...skinsInGroup.map((s) => s.price))
       : skin.price;
 
   return createPortal(
@@ -257,12 +251,12 @@ export const SkinCardModal = ({
               <div className="flex flex-col gap-4 mt-6 pt-4 border-t border-white/5">
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">
-                    {t("skinCard.modal.averagePrice")}
+                    {t("skinCard.modal.lowestStockPrice")}
                   </span>
                   <div className="flex items-baseline gap-1 font-mono">
                     <span className="text-3xl font-black text-white">
                       $
-                      {avgPrice.toLocaleString(undefined, {
+                      {lowestAvailableStockPrice.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}

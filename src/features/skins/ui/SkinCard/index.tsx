@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Skin } from "../../domain/skin";
 import { useCart } from "../../../cart/context/CartContext";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -26,6 +26,11 @@ export interface SkinCardProps {
   priority?: boolean;
 }
 
+const sortByLowestPrice = (a: Skin, b: Skin) => {
+  const priceDifference = a.price - b.price;
+  return priceDifference !== 0 ? priceDifference : a.id.localeCompare(b.id);
+};
+
 export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   const { addToCart, items, removeFromCart } = useCart();
   const { t } = useI18n();
@@ -38,15 +43,20 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
     return () => window.clearTimeout(timeoutId);
   }, []);
 
-  if (!skinsInGroup || skinsInGroup.length === 0) return null;
+  const sortedSkinsInGroup = useMemo(
+    () => [...(skinsInGroup ?? [])].sort(sortByLowestPrice),
+    [skinsInGroup],
+  );
 
-  const skin = skinsInGroup[0]!;
+  if (sortedSkinsInGroup.length === 0) return null;
+
+  const skin = sortedSkinsInGroup[0]!;
   const conditionLabel = t(getConditionLabelKey(skin.float));
   const translateExterior = (exterior: string | null | undefined, fallback: string) => {
     const labelKey = getExteriorLabelKey(exterior);
     return labelKey ? t(labelKey) : fallback;
   };
-  const isMultiple = skinsInGroup.length >= 2;
+  const isMultiple = sortedSkinsInGroup.length >= 2;
 
   const floatCompatibleCategories = [
     "knife",
@@ -72,7 +82,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
     skin.float === undefined;
 
   const cartItemsInGroup = items.filter((item) =>
-    skinsInGroup.some((s) => s.id === item.skin.id),
+    sortedSkinsInGroup.some((s) => s.id === item.skin.id),
   );
   const totalQuantityInCart = cartItemsInGroup.length;
   const isInCart = totalQuantityInCart > 0;
@@ -86,7 +96,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   };
 
   const handleIncrement = () => {
-    const nextAvailable = skinsInGroup.find(
+    const nextAvailable = sortedSkinsInGroup.find(
       (s) => !items.some((item) => item.skin.id === s.id),
     );
     if (nextAvailable) {
@@ -116,7 +126,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
 
       <SkinCardInfoPanel
         skin={skin}
-        skinsInGroup={skinsInGroup}
+        skinsInGroup={sortedSkinsInGroup}
         isMultiple={isMultiple}
         showFloatsModalTrigger={showFloatsModalTrigger}
         conditionLabel={conditionLabel}
@@ -130,7 +140,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
         skin={skin}
         isMultiple={isMultiple}
         priority={priority}
-        skinsInGroupCount={skinsInGroup.length}
+        skinsInGroupCount={sortedSkinsInGroup.length}
       />
 
       {/* Rarity Divider (stuck perfectly to the bottom of the image container) */}
@@ -146,7 +156,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
         isMultiple={true}
         showFloatsModalTrigger={showFloatsModalTrigger}
         totalQuantityInCart={totalQuantityInCart}
-        skinsInGroupLength={skinsInGroup.length}
+        skinsInGroupLength={sortedSkinsInGroup.length}
         handleActionClick={handleActionClick}
         handleIncrement={handleIncrement}
         handleDecrement={handleDecrement}
@@ -160,10 +170,9 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
       {mounted && isModalOpen && (
         <SkinCardModal
           skin={skin}
-          skinsInGroup={skinsInGroup}
+          skinsInGroup={sortedSkinsInGroup}
           isModalOpen={isModalOpen}
           setIsModalOpen={setIsModalOpen}
-          totalQuantityInCart={totalQuantityInCart}
           addToCart={addToCart}
           removeFromCart={removeFromCart}
           items={items}

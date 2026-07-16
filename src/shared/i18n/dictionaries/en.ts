@@ -1004,6 +1004,7 @@ export const en = {
   "skinCard.modal.syncRealTime": "Data is gathered and synchronized in real-time.",
   "skinCard.modal.availableStock": "Available Stock",
   "skinCard.modal.averagePrice": "Average Price",
+  "skinCard.modal.lowestStockPrice": "Lowest stock price",
   "skinCard.modal.category": "Category",
   "skinCard.modal.rarity": "Rarity",
   "skinCard.modal.condition": "Condition",

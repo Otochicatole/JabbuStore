@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Skin, SkinPagination } from '../../domain/skin';
 import { SkinCard } from '../SkinCard';
@@ -65,49 +65,6 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const gridRef = useRef<HTMLDivElement>(null);
-  const lastFilterSignatureRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    const signature = JSON.stringify({
-      searchQuery: filters.searchQuery,
-      minPrice: filters.minPrice,
-      maxPrice: filters.maxPrice,
-      selectedCategories: filters.selectedCategories,
-      selectedConditions: filters.selectedConditions,
-      sortOption: filters.sortOption,
-      immediateTradeOnly: filters.immediateTradeOnly,
-      groupSameItems: filters.groupSameItems,
-    });
-
-    if (lastFilterSignatureRef.current === null) {
-      lastFilterSignatureRef.current = signature;
-      return;
-    }
-
-    if (lastFilterSignatureRef.current === signature) return;
-    lastFilterSignatureRef.current = signature;
-
-    const currentPageParam = Number.parseInt(searchParams.get("page") ?? "1", 10) || 1;
-    if (currentPageParam <= 1 || !pathname) return;
-
-    const nextParams = new URLSearchParams(searchParams.toString());
-    nextParams.delete("page");
-    router.replace(nextParams.toString() ? `${pathname}?${nextParams}` : pathname, {
-      scroll: false,
-    });
-  }, [
-    filters.groupSameItems,
-    filters.immediateTradeOnly,
-    filters.maxPrice,
-    filters.minPrice,
-    filters.searchQuery,
-    filters.selectedCategories,
-    filters.selectedConditions,
-    filters.sortOption,
-    pathname,
-    router,
-    searchParams,
-  ]);
 
   const groupedSkins = useMemo(() => {
     return skins.map((skin) => skin.variants && skin.variants.length > 0 ? skin.variants : [skin]);

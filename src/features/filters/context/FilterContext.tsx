@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useCallback,
   useEffect,
+  useRef,
   Suspense,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -48,7 +49,7 @@ const defaultState: FilterState = {
   groupSameItems: true,
 };
 
-const FILTER_ROUTES = new Set(["/buy", "/sell"]);
+const FILTER_ROUTES = new Set(["/buy", "/market", "/sell"]);
 const FILTER_QUERY_KEYS = [
   "search",
   "minPrice",
@@ -200,6 +201,10 @@ function writeFilterStateToSearchParams(
   return next;
 }
 
+function getFilterSignature(state: FilterState): string {
+  return JSON.stringify(state);
+}
+
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
 const FilterUrlSync = ({
@@ -223,7 +228,7 @@ const FilterUrlSync = ({
   applyFilterState: (s: FilterState) => void;
   shouldSyncUrl: boolean;
   pathname: string | null;
-  router: any;
+  router: ReturnType<typeof useRouter>;
   searchQuery: string;
   minPrice: string;
   maxPrice: string;
@@ -234,11 +239,18 @@ const FilterUrlSync = ({
   groupSameItems: boolean;
 }) => {
   const searchParams = useSearchParams();
+  const locationKey = pathname
+    ? `${pathname}?${searchParams.toString()}`
+    : "";
+  const hydratedLocationRef = useRef<string | null>(null);
+  const lastFilterSignatureRef = useRef<string | null>(null);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     if (!shouldSyncUrl) {
+      hydratedLocationRef.current = null;
+      lastFilterSignatureRef.current = null;
       timer = setTimeout(() => {
         applyFilterState(defaultState);
         setUrlHydrated(false);
@@ -249,24 +261,32 @@ const FilterUrlSync = ({
     }
 
     timer = setTimeout(() => {
-      applyFilterState(
-        filterStateFromSearchParams(
-          new URLSearchParams(searchParams.toString()),
-        ),
+      const stateFromUrl = filterStateFromSearchParams(
+        new URLSearchParams(searchParams.toString()),
       );
+      hydratedLocationRef.current = locationKey;
+      lastFilterSignatureRef.current = getFilterSignature(stateFromUrl);
+      applyFilterState(stateFromUrl);
       setUrlHydrated(true);
     }, 0);
 
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [applyFilterState, pathname, searchParams, shouldSyncUrl]);
+  }, [
+    applyFilterState,
+    locationKey,
+    searchParams,
+    setUrlHydrated,
+    shouldSyncUrl,
+  ]);
 
   useEffect(() => {
     if (!shouldSyncUrl || !urlHydrated || !pathname) return;
+    if (hydratedLocationRef.current !== locationKey) return;
 
     const currentParams = new URLSearchParams(searchParams.toString());
-    const nextParams = writeFilterStateToSearchParams(currentParams, {
+    const currentState: FilterState = {
       searchQuery,
       minPrice,
       maxPrice,
@@ -275,7 +295,18 @@ const FilterUrlSync = ({
       sortOption,
       immediateTradeOnly,
       groupSameItems,
-    });
+    };
+    const nextSignature = getFilterSignature(currentState);
+    const filtersChanged =
+      lastFilterSignatureRef.current !== null &&
+      lastFilterSignatureRef.current !== nextSignature;
+    lastFilterSignatureRef.current = nextSignature;
+
+    const nextParams = writeFilterStateToSearchParams(
+      currentParams,
+      currentState,
+    );
+    if (filtersChanged) nextParams.delete("page");
 
     const currentQuery = currentParams.toString();
     const nextQuery = nextParams.toString();
@@ -293,6 +324,7 @@ const FilterUrlSync = ({
     sortOption,
     immediateTradeOnly,
     groupSameItems,
+    locationKey,
     pathname,
     router,
     searchParams,

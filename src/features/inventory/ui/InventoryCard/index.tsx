@@ -100,14 +100,14 @@ export const InventoryCard = ({
       )}
       {/* 1. Item Name at the very top */}
       <div className="mb-2">
-        <h2 className="text-[9.5px] font-black text-white leading-tight line-clamp-1 uppercase tracking-tight">
+        <h2 className="text-[9.5px] font-black text-white leading-normal line-clamp-1 uppercase tracking-tight py-0.5">
           {skin.isStatTrak && (
-            <span className="text-[#cf6a32] font-black mr-1 border border-[#cf6a32]/30 px-1 py-0.2 rounded-[3px] bg-[#cf6a32]/10 text-[9px]">
+            <span className="text-[#cf6a32] font-black mr-1 border border-[#cf6a32]/30 px-1.5 py-[1px] rounded-md bg-[#cf6a32]/10 text-[9px] inline-block leading-none align-middle">
               ST™
             </span>
           )}
           {skin.isSouvenir && (
-            <span className="text-[#e4ae39] font-black mr-1 border border-[#e4ae39]/30 px-1 py-0.2 rounded-[3px] bg-[#e4ae39]/10 text-[9px]">
+            <span className="text-[#e4ae39] font-black mr-1 border border-[#e4ae39]/30 px-1.5 py-[1px] rounded-md bg-[#e4ae39]/10 text-[9px] inline-block leading-none align-middle">
               SV
             </span>
           )}

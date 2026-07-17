@@ -247,15 +247,15 @@ export default function Home() {
               <motion.div
                 key={s.labelKey}
                 variants={fadeIn}
-                className="relative group"
+                className="relative group flex flex-col items-center text-center"
               >
-                <div className="absolute -left-4 md:-left-6 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-accent/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                <div className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 tracking-tighter drop-shadow-sm group-hover:scale-105 origin-left transition-transform duration-300">
+                <div className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 tracking-tighter drop-shadow-sm group-hover:scale-105 transition-transform duration-300">
                   {s.value}
                 </div>
-                <div className="text-[11px] font-black uppercase tracking-[0.2em] text-accent/80 mt-3 flex items-center gap-2">
+                <div className="text-[11px] font-black uppercase tracking-[0.2em] text-accent/80 mt-3 flex items-center justify-center gap-2">
                   <span className="w-4 h-[1px] bg-accent/50"></span>
                   {t(s.labelKey)}
+                  <span className="w-4 h-[1px] bg-accent/50"></span>
                 </div>
               </motion.div>
             ))}

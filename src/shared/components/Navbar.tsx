@@ -126,7 +126,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           </span>
         </Link>
 
-        <div className="hidden relative items-center md:flex gap-1">
+        <div className="hidden relative items-center nav:flex gap-1">
           {NAV_LINKS.map((link) => {
             const isActive = normalizedPathname === link.path;
             return (
@@ -408,7 +408,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           {/* Mobile Hamburguer Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex shrink-0 items-center justify-center p-2 rounded-[3px] border border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/70 hover:text-white transition-all md:hidden cursor-pointer focus:outline-none"
+            className="flex shrink-0 items-center justify-center p-2 rounded-[3px] border border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/70 hover:text-white transition-all nav:hidden cursor-pointer focus:outline-none"
           >
             {isMobileMenuOpen ? (
               <X className="w-5 h-5" />
@@ -427,7 +427,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="border-t border-white/5 bg-background/95 backdrop-blur-lg md:hidden overflow-hidden"
+            className="border-t border-white/5 bg-background/95 backdrop-blur-lg nav:hidden overflow-hidden"
           >
             <div className="flex flex-col p-4 space-y-2">
               {!isLoading && !isLoggedIn && (

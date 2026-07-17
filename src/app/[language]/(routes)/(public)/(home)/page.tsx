@@ -116,7 +116,7 @@ export default function Home() {
               </div>
             </motion.div>
 
-            <motion.h1 variants={fadeIn} className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-[0.95] text-white">
+            <motion.h1 variants={fadeIn} className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-[0.95] text-white">
               {t("home.hero.title")}
               <br />
               <span className="relative inline-block mt-2">
@@ -227,25 +227,7 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 1 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 cursor-pointer group"
-          onClick={scrollToContent}
-        >
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 group-hover:text-accent transition-colors">
-            Scroll to explore
-          </span>
-          <div className="w-8 h-12 border-2 border-white/20 rounded-full flex justify-center p-1 group-hover:border-accent/50 transition-colors">
-            <motion.div 
-              animate={{ y: [0, 16, 0], opacity: [1, 0, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-1.5 h-1.5 bg-white rounded-full group-hover:bg-accent"
-            />
-          </div>
-        </motion.div>
+
       </section>
 
       {/* --- SECTION 2: STATS ROW --- */}
@@ -267,7 +249,7 @@ export default function Home() {
                 variants={fadeIn}
                 className="relative group"
               >
-                <div className="absolute -left-6 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-accent/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute -left-4 md:-left-6 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-accent/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
                 <div className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 tracking-tighter drop-shadow-sm group-hover:scale-105 origin-left transition-transform duration-300">
                   {s.value}
                 </div>
@@ -311,7 +293,7 @@ export default function Home() {
           className="grid md:grid-cols-3 gap-8"
         >
           {/* Card 1: Security */}
-          <motion.div variants={fadeIn} className="bg-white/5 border border-white/5 hover:border-accent/40 rounded-3xl p-10 flex flex-col gap-8 transition-all duration-500 hover:-translate-y-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] group relative overflow-hidden backdrop-blur-sm">
+          <motion.div variants={fadeIn} className="bg-white/5 border border-white/5 hover:border-accent/40 rounded-3xl p-6 sm:p-10 flex flex-col gap-8 transition-all duration-500 hover:-translate-y-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] group relative overflow-hidden backdrop-blur-sm">
             <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl group-hover:bg-accent/20 group-hover:scale-150 transition-all duration-700" />
             <div className="w-16 h-16 bg-gradient-to-br from-accent/20 to-transparent border border-accent/30 flex items-center justify-center text-accent rounded-2xl shrink-0 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(217,70,239,0.4)] transition-all duration-300">
               <Shield className="w-8 h-8" />
@@ -327,7 +309,7 @@ export default function Home() {
           </motion.div>
 
           {/* Card 2: Payouts */}
-          <motion.div variants={fadeIn} className="bg-white/5 border border-white/5 hover:border-fuchsia-500/40 rounded-3xl p-10 flex flex-col gap-8 transition-all duration-500 hover:-translate-y-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] group relative overflow-hidden backdrop-blur-sm">
+          <motion.div variants={fadeIn} className="bg-white/5 border border-white/5 hover:border-fuchsia-500/40 rounded-3xl p-6 sm:p-10 flex flex-col gap-8 transition-all duration-500 hover:-translate-y-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] group relative overflow-hidden backdrop-blur-sm">
             <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/10 rounded-full blur-3xl group-hover:bg-fuchsia-500/20 group-hover:scale-150 transition-all duration-700" />
             <div className="w-16 h-16 bg-gradient-to-br from-fuchsia-500/20 to-transparent border border-fuchsia-500/30 flex items-center justify-center text-fuchsia-400 rounded-2xl shrink-0 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(217,70,239,0.4)] transition-all duration-300">
               <Zap className="w-8 h-8" />
@@ -343,7 +325,7 @@ export default function Home() {
           </motion.div>
 
           {/* Card 3: Live Market */}
-          <motion.div variants={fadeIn} className="bg-white/5 border border-white/5 hover:border-blue-500/40 rounded-3xl p-10 flex flex-col gap-8 transition-all duration-500 hover:-translate-y-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] group relative overflow-hidden backdrop-blur-sm">
+          <motion.div variants={fadeIn} className="bg-white/5 border border-white/5 hover:border-blue-500/40 rounded-3xl p-6 sm:p-10 flex flex-col gap-8 transition-all duration-500 hover:-translate-y-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] group relative overflow-hidden backdrop-blur-sm">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 group-hover:scale-150 transition-all duration-700" />
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-transparent border border-blue-500/30 flex items-center justify-center text-blue-400 rounded-2xl shrink-0 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all duration-300">
               <TrendingUp className="w-8 h-8" />
@@ -457,7 +439,7 @@ export default function Home() {
           transition={{ duration: 0.8 }}
           className="max-w-5xl mx-auto"
         >
-          <div className="relative overflow-hidden bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-[3rem] p-16 md:p-24 shadow-[0_0_100px_rgba(217,70,239,0.1)] backdrop-blur-xl">
+          <div className="relative overflow-hidden bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-[3rem] p-6 sm:p-16 md:p-24 shadow-[0_0_100px_rgba(217,70,239,0.1)] backdrop-blur-xl">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/20 rounded-full blur-[80px]" />
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-[80px]" />

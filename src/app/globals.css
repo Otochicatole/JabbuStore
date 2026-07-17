@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+    --breakpoint-nav: 1200px;
     --color-background: #191527;
     --color-card: #211c33;
     --color-accent: #d946ef;

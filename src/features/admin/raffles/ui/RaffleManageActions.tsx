@@ -361,16 +361,14 @@ export function RaffleManageActions({
           </button>
         )}
 
-        {isCancelled && (
-          <button
-            type="button"
-            onClick={() => setPendingAction("delete")}
-            className={`${buttonBase} bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-500/20`}
-          >
-            <Trash2 className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
-            {t("admin.rafflePurchases.deleteRaffle")}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setPendingAction("delete")}
+          className={`${buttonBase} bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-500/20`}
+        >
+          <Trash2 className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+          {t("admin.rafflePurchases.deleteRaffle")}
+        </button>
 
         {canManage && isActive && (
           <button

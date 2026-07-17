@@ -394,6 +394,15 @@ export default function Home() {
               </p>
             </motion.div>
 
+            {/* Mobile Separator 1 */}
+            <motion.div 
+              initial={{ scaleY: 0 }}
+              whileInView={{ scaleY: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, ease: "easeInOut" }}
+              className="block md:hidden w-[2px] h-12 bg-gradient-to-b from-accent to-blue-500 mx-auto -my-6 relative z-0 origin-top" 
+            />
+
             {/* Step 2 */}
             <motion.div variants={fadeIn} className="flex flex-col items-center text-center relative z-10 group">
               <div className="w-24 h-24 bg-[#050308] border border-blue-500/30 rounded-3xl flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_50px_rgba(59,130,246,0.4)] group-hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
@@ -407,6 +416,15 @@ export default function Home() {
                 {t("home.howitworks.step2.desc")}
               </p>
             </motion.div>
+
+            {/* Mobile Separator 2 */}
+            <motion.div 
+              initial={{ scaleY: 0 }}
+              whileInView={{ scaleY: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, ease: "easeInOut" }}
+              className="block md:hidden w-[2px] h-12 bg-gradient-to-b from-blue-500 to-fuchsia-500 mx-auto -my-6 relative z-0 origin-top" 
+            />
 
             {/* Step 3 */}
             <motion.div variants={fadeIn} className="flex flex-col items-center text-center relative z-10 group">

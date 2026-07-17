@@ -174,6 +174,7 @@ export const br = {
   "filters.searchAndFilters": "Busca e Filtros",
   "filters.filterCatalog": "Filtrar Catálogo",
   "filters.searchFilters": "Filtros de Busca",
+  "filters.apply": "Aplicar filtros",
   "filters.category.knives": "Facas",
   "filters.category.gloves": "Luvas",
   "filters.category.pistols": "Pistolas",

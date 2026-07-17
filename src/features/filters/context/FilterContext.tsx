@@ -2,18 +2,23 @@
 
 import React, {
   createContext,
-  useContext,
-  useState,
-  ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useRef,
+  useState,
+  type ReactNode,
   Suspense,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 
-export type SortOption = "Precio: Mayor a Menor" | "Precio: Menor a Mayor" | "Float: Menor a Mayor" | "Float: Mayor a Menor" | "Más recientes";
+export type SortOption =
+  | "Precio: Mayor a Menor"
+  | "Precio: Menor a Mayor"
+  | "Float: Menor a Mayor"
+  | "Float: Mayor a Menor"
+  | "Más recientes";
 
 export interface FilterState {
   searchQuery: string;
@@ -27,18 +32,22 @@ export interface FilterState {
 }
 
 interface FilterContextType extends FilterState {
-  setSearchQuery: (v: string) => void;
-  setMinPrice: (v: string) => void;
-  setMaxPrice: (v: string) => void;
-  toggleCategory: (cat: string) => void;
-  toggleCondition: (cond: string) => void;
-  setSortOption: (opt: SortOption) => void;
-  setImmediateTradeOnly: (v: boolean) => void;
-  setGroupSameItems: (v: boolean) => void;
+  filterState: FilterState;
+  filtersReady: boolean;
+  atomicCommitVersion: number;
+  setSearchQuery: (value: string) => void;
+  setMinPrice: (value: string) => void;
+  setMaxPrice: (value: string) => void;
+  toggleCategory: (category: string) => void;
+  toggleCondition: (condition: string) => void;
+  setSortOption: (option: SortOption) => void;
+  setImmediateTradeOnly: (value: boolean) => void;
+  setGroupSameItems: (value: boolean) => void;
+  replaceFilters: (state: FilterState) => void;
   clearFilters: () => void;
 }
 
-const defaultState: FilterState = {
+const DEFAULT_FILTER_STATE: FilterState = {
   searchQuery: "",
   minPrice: "",
   maxPrice: "",
@@ -48,6 +57,18 @@ const defaultState: FilterState = {
   immediateTradeOnly: false,
   groupSameItems: true,
 };
+
+export function cloneFilterState(state: FilterState): FilterState {
+  return {
+    ...state,
+    selectedCategories: [...state.selectedCategories],
+    selectedConditions: [...state.selectedConditions],
+  };
+}
+
+export function createDefaultFilterState(): FilterState {
+  return cloneFilterState(DEFAULT_FILTER_STATE);
+}
 
 const FILTER_ROUTES = new Set(["/buy", "/market", "/sell"]);
 const FILTER_QUERY_KEYS = [
@@ -138,7 +159,7 @@ function parseSortOption(value: string | null): SortOption {
 
   return SORT_OPTIONS.includes(value as SortOption)
     ? (value as SortOption)
-    : defaultState.sortOption;
+    : DEFAULT_FILTER_STATE.sortOption;
 }
 
 function labelsFromTokens(values: string[], tokenToLabel: Record<string, string>): string[] {
@@ -149,11 +170,11 @@ function tokensFromLabels(values: string[], labelToToken: Record<string, string>
   return values.map((value) => labelToToken[value] ?? value);
 }
 
-function filterStateFromSearchParams(params: URLSearchParams): FilterState {
+export function filterStateFromSearchParams(params: URLSearchParams): FilterState {
   return {
-    searchQuery: params.get("search") ?? params.get("q") ?? defaultState.searchQuery,
-    minPrice: params.get("minPrice") ?? params.get("min") ?? defaultState.minPrice,
-    maxPrice: params.get("maxPrice") ?? params.get("max") ?? defaultState.maxPrice,
+    searchQuery: params.get("search") ?? params.get("q") ?? DEFAULT_FILTER_STATE.searchQuery,
+    minPrice: params.get("minPrice") ?? params.get("min") ?? DEFAULT_FILTER_STATE.minPrice,
+    maxPrice: params.get("maxPrice") ?? params.get("max") ?? DEFAULT_FILTER_STATE.maxPrice,
     selectedCategories: labelsFromTokens(
       parseListParam(params.get("categories") ?? params.get("cat")),
       CATEGORY_TOKEN_TO_LABEL,
@@ -192,7 +213,7 @@ function writeFilterStateToSearchParams(
       tokensFromLabels(state.selectedConditions, CONDITION_LABEL_TO_TOKEN).join(","),
     );
   }
-  if (state.sortOption !== defaultState.sortOption) {
+  if (state.sortOption !== DEFAULT_FILTER_STATE.sortOption) {
     next.set("sort", SORT_LABEL_TO_TOKEN[state.sortOption]);
   }
   if (state.immediateTradeOnly) next.set("immediate", "1");
@@ -201,8 +222,26 @@ function writeFilterStateToSearchParams(
   return next;
 }
 
-function getFilterSignature(state: FilterState): string {
+export function getFilterSignature(state: FilterState): string {
   return JSON.stringify(state);
+}
+
+export function getDelayedFilterSignature(state: FilterState): string {
+  return JSON.stringify({
+    searchQuery: state.searchQuery,
+    minPrice: state.minPrice,
+    maxPrice: state.maxPrice,
+  });
+}
+
+export function getImmediateFilterSignature(state: FilterState): string {
+  return JSON.stringify({
+    selectedCategories: state.selectedCategories,
+    selectedConditions: state.selectedConditions,
+    sortOption: state.sortOption,
+    immediateTradeOnly: state.immediateTradeOnly,
+    groupSameItems: state.groupSameItems,
+  });
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -214,36 +253,25 @@ const FilterUrlSync = ({
   shouldSyncUrl,
   pathname,
   router,
-  searchQuery,
-  minPrice,
-  maxPrice,
-  selectedCategories,
-  selectedConditions,
-  sortOption,
-  immediateTradeOnly,
-  groupSameItems,
+  filterState,
+  atomicCommitVersion,
 }: {
   urlHydrated: boolean;
-  setUrlHydrated: (v: boolean) => void;
-  applyFilterState: (s: FilterState) => void;
+  setUrlHydrated: (value: boolean) => void;
+  applyFilterState: (state: FilterState) => void;
   shouldSyncUrl: boolean;
   pathname: string | null;
   router: ReturnType<typeof useRouter>;
-  searchQuery: string;
-  minPrice: string;
-  maxPrice: string;
-  selectedCategories: string[];
-  selectedConditions: string[];
-  sortOption: SortOption;
-  immediateTradeOnly: boolean;
-  groupSameItems: boolean;
+  filterState: FilterState;
+  atomicCommitVersion: number;
 }) => {
   const searchParams = useSearchParams();
-  const locationKey = pathname
-    ? `${pathname}?${searchParams.toString()}`
-    : "";
+  const locationKey = pathname ? `${pathname}?${searchParams.toString()}` : "";
   const hydratedLocationRef = useRef<string | null>(null);
   const lastFilterSignatureRef = useRef<string | null>(null);
+  const observedFilterStateRef = useRef<FilterState | null>(null);
+  const observedAtomicCommitRef = useRef(atomicCommitVersion);
+  const selfWrittenLocationsRef = useRef(new Set<string>());
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -251,8 +279,10 @@ const FilterUrlSync = ({
     if (!shouldSyncUrl) {
       hydratedLocationRef.current = null;
       lastFilterSignatureRef.current = null;
+      observedFilterStateRef.current = null;
+      selfWrittenLocationsRef.current.clear();
       timer = setTimeout(() => {
-        applyFilterState(defaultState);
+        applyFilterState(createDefaultFilterState());
         setUrlHydrated(false);
       }, 0);
       return () => {
@@ -264,9 +294,16 @@ const FilterUrlSync = ({
       const stateFromUrl = filterStateFromSearchParams(
         new URLSearchParams(searchParams.toString()),
       );
+      const urlSignature = getFilterSignature(stateFromUrl);
+      const isSelfWritten = selfWrittenLocationsRef.current.delete(locationKey);
+
       hydratedLocationRef.current = locationKey;
-      lastFilterSignatureRef.current = getFilterSignature(stateFromUrl);
-      applyFilterState(stateFromUrl);
+      if (!isSelfWritten && lastFilterSignatureRef.current !== urlSignature) {
+        lastFilterSignatureRef.current = urlSignature;
+        applyFilterState(stateFromUrl);
+      } else if (lastFilterSignatureRef.current === null) {
+        lastFilterSignatureRef.current = urlSignature;
+      }
       setUrlHydrated(true);
     }, 0);
 
@@ -285,45 +322,50 @@ const FilterUrlSync = ({
     if (!shouldSyncUrl || !urlHydrated || !pathname) return;
     if (hydratedLocationRef.current !== locationKey) return;
 
-    const currentParams = new URLSearchParams(searchParams.toString());
-    const currentState: FilterState = {
-      searchQuery,
-      minPrice,
-      maxPrice,
-      selectedCategories,
-      selectedConditions,
-      sortOption,
-      immediateTradeOnly,
-      groupSameItems,
-    };
-    const nextSignature = getFilterSignature(currentState);
-    const filtersChanged =
-      lastFilterSignatureRef.current !== null &&
-      lastFilterSignatureRef.current !== nextSignature;
-    lastFilterSignatureRef.current = nextSignature;
+    const previousState = observedFilterStateRef.current;
+    const isAtomicCommit = observedAtomicCommitRef.current !== atomicCommitVersion;
+    observedFilterStateRef.current = cloneFilterState(filterState);
+    observedAtomicCommitRef.current = atomicCommitVersion;
 
-    const nextParams = writeFilterStateToSearchParams(
-      currentParams,
-      currentState,
-    );
-    if (filtersChanged) nextParams.delete("page");
+    const onlyDelayedFieldsChanged =
+      !isAtomicCommit &&
+      previousState !== null &&
+      getDelayedFilterSignature(previousState) !== getDelayedFilterSignature(filterState) &&
+      getImmediateFilterSignature(previousState) === getImmediateFilterSignature(filterState);
 
-    const currentQuery = currentParams.toString();
-    const nextQuery = nextParams.toString();
-    if (currentQuery === nextQuery) return;
+    const timer = setTimeout(() => {
+      const currentParams = new URLSearchParams(searchParams.toString());
+      const nextSignature = getFilterSignature(filterState);
+      const filtersChanged =
+        lastFilterSignatureRef.current !== null &&
+        lastFilterSignatureRef.current !== nextSignature;
+      const nextParams = writeFilterStateToSearchParams(currentParams, filterState);
 
-    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
-      scroll: false,
-    });
+      if (filtersChanged) nextParams.delete("page");
+
+      const currentQuery = currentParams.toString();
+      const nextQuery = nextParams.toString();
+      lastFilterSignatureRef.current = nextSignature;
+      if (currentQuery === nextQuery) return;
+
+      const nextLocationKey = `${pathname}?${nextQuery}`;
+      const selfWrittenLocations = selfWrittenLocationsRef.current;
+      selfWrittenLocations.add(nextLocationKey);
+      while (selfWrittenLocations.size > 25) {
+        const oldestLocation = selfWrittenLocations.values().next().value;
+        if (typeof oldestLocation !== "string") break;
+        selfWrittenLocations.delete(oldestLocation);
+      }
+
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+        scroll: false,
+      });
+    }, onlyDelayedFieldsChanged ? 300 : 0);
+
+    return () => clearTimeout(timer);
   }, [
-    searchQuery,
-    minPrice,
-    maxPrice,
-    selectedCategories,
-    selectedConditions,
-    sortOption,
-    immediateTradeOnly,
-    groupSameItems,
+    atomicCommitVersion,
+    filterState,
     locationKey,
     pathname,
     router,
@@ -339,55 +381,112 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
   const shouldSyncUrl = FILTER_ROUTES.has(stripLocaleFromPathname(pathname));
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState<SortOption>("Precio: Mayor a Menor");
-  const [immediateTradeOnly, setImmediateTradeOnly] = useState(false);
-  const [groupSameItems, setGroupSameItems] = useState(true);
+  const [{ filterState, atomicCommitVersion }, setFilterStore] = useState(() => ({
+    filterState: createDefaultFilterState(),
+    atomicCommitVersion: 0,
+  }));
   const [urlHydrated, setUrlHydrated] = useState(false);
 
   const applyFilterState = useCallback((state: FilterState) => {
-    setSearchQuery(state.searchQuery);
-    setMinPrice(state.minPrice);
-    setMaxPrice(state.maxPrice);
-    setSelectedCategories(state.selectedCategories);
-    setSelectedConditions(state.selectedConditions);
-    setSortOption(state.sortOption);
-    setImmediateTradeOnly(state.immediateTradeOnly);
-    setGroupSameItems(state.groupSameItems);
+    setFilterStore((current) => ({
+      ...current,
+      filterState: cloneFilterState(state),
+    }));
   }, []);
 
-  const toggleCategory = useCallback((cat: string) => {
-    setSelectedCategories(prev =>
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    );
+  const replaceFilters = useCallback((state: FilterState) => {
+    setFilterStore((current) => ({
+      filterState: cloneFilterState(state),
+      atomicCommitVersion: current.atomicCommitVersion + 1,
+    }));
   }, []);
 
-  const toggleCondition = useCallback((cond: string) => {
-    setSelectedConditions(prev =>
-      prev.includes(cond) ? prev.filter(c => c !== cond) : [...prev, cond]
-    );
+  const setSearchQuery = useCallback((searchQuery: string) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: { ...current.filterState, searchQuery },
+    }));
+  }, []);
+
+  const setMinPrice = useCallback((minPrice: string) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: { ...current.filterState, minPrice },
+    }));
+  }, []);
+
+  const setMaxPrice = useCallback((maxPrice: string) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: { ...current.filterState, maxPrice },
+    }));
+  }, []);
+
+  const toggleCategory = useCallback((category: string) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: {
+        ...current.filterState,
+        selectedCategories: current.filterState.selectedCategories.includes(category)
+          ? current.filterState.selectedCategories.filter((item) => item !== category)
+          : [...current.filterState.selectedCategories, category],
+      },
+    }));
+  }, []);
+
+  const toggleCondition = useCallback((condition: string) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: {
+        ...current.filterState,
+        selectedConditions: current.filterState.selectedConditions.includes(condition)
+          ? current.filterState.selectedConditions.filter((item) => item !== condition)
+          : [...current.filterState.selectedConditions, condition],
+      },
+    }));
+  }, []);
+
+  const setSortOption = useCallback((sortOption: SortOption) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: { ...current.filterState, sortOption },
+    }));
+  }, []);
+
+  const setImmediateTradeOnly = useCallback((immediateTradeOnly: boolean) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: { ...current.filterState, immediateTradeOnly },
+    }));
+  }, []);
+
+  const setGroupSameItems = useCallback((groupSameItems: boolean) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: { ...current.filterState, groupSameItems },
+    }));
   }, []);
 
   const clearFilters = useCallback(() => {
-    applyFilterState(defaultState);
-  }, [applyFilterState]);
+    replaceFilters(createDefaultFilterState());
+  }, [replaceFilters]);
 
   return (
     <FilterContext.Provider
       value={{
-        searchQuery, setSearchQuery,
-        minPrice, setMinPrice,
-        maxPrice, setMaxPrice,
-        selectedCategories, toggleCategory,
-        selectedConditions, toggleCondition,
-        sortOption, setSortOption,
-        immediateTradeOnly, setImmediateTradeOnly,
-        groupSameItems, setGroupSameItems,
+        ...filterState,
+        filterState,
+        filtersReady: !shouldSyncUrl || urlHydrated,
+        atomicCommitVersion,
+        setSearchQuery,
+        setMinPrice,
+        setMaxPrice,
+        toggleCategory,
+        toggleCondition,
+        setSortOption,
+        setImmediateTradeOnly,
+        setGroupSameItems,
+        replaceFilters,
         clearFilters,
       }}
     >
@@ -399,14 +498,8 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
           shouldSyncUrl={shouldSyncUrl}
           pathname={pathname}
           router={router}
-          searchQuery={searchQuery}
-          minPrice={minPrice}
-          maxPrice={maxPrice}
-          selectedCategories={selectedCategories}
-          selectedConditions={selectedConditions}
-          sortOption={sortOption}
-          immediateTradeOnly={immediateTradeOnly}
-          groupSameItems={groupSameItems}
+          filterState={filterState}
+          atomicCommitVersion={atomicCommitVersion}
         />
       </Suspense>
       {children}
@@ -415,7 +508,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useFilters = () => {
-  const ctx = useContext(FilterContext);
-  if (!ctx) throw new Error("useFilters must be used inside FilterProvider");
-  return ctx;
+  const context = useContext(FilterContext);
+  if (!context) throw new Error("useFilters must be used inside FilterProvider");
+  return context;
 };

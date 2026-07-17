@@ -142,6 +142,8 @@ const emptyPagination = (query?: SkinCatalogQuery): SkinPagination => ({
 });
 
 export class ApiSkinRepository implements SkinRepository {
+  constructor(private readonly signal?: AbortSignal) {}
+
   async getSkins(query?: SkinCatalogQuery): Promise<SkinCatalogResult> {
     try {
       const response = await fetch(`${BACKEND_URL}/catalog/items?${buildCatalogQuery(query)}`, {
@@ -150,6 +152,7 @@ export class ApiSkinRepository implements SkinRepository {
           Accept: "application/json",
         },
         credentials: "include",
+        signal: this.signal,
       });
 
       if (!response.ok) {
@@ -162,6 +165,7 @@ export class ApiSkinRepository implements SkinRepository {
         pagination: data.pagination ?? emptyPagination(query),
       };
     } catch (error) {
+      if (this.signal?.aborted) throw error;
       console.error("Error in ApiSkinRepository.getSkins:", error);
       return {
         items: [],
@@ -176,6 +180,7 @@ export class ApiSkinRepository implements SkinRepository {
       const skins = result.items.flatMap((s) => s.variants ?? [s]);
       return skins.find((s) => s.id === id) || null;
     } catch (error) {
+      if (this.signal?.aborted) throw error;
       console.error("Error in ApiSkinRepository.getSkinById:", error);
       return null;
     }

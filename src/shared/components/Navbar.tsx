@@ -118,9 +118,13 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           href={localizePath("/")}
           className="flex min-w-0 items-center gap-2 text-white no-underline cursor-pointer group"
         >
-          <div className="h-8 w-8 rounded-sm bg-accent flex items-center justify-center font-black text-white text-xs transition-transform group-hover:scale-110">
-            JS
-          </div>
+          <Image 
+            src="/logo.webp" 
+            alt="JabbuStore Logo" 
+            width={32} 
+            height={32} 
+            className="transition-transform group-hover:scale-110 object-contain rounded-md border border-white/10 shadow-sm" 
+          />
           <span className="hidden sm:inline text-lg font-black tracking-tight uppercase">
             Jabbu<span className="text-accent">Store</span>
           </span>

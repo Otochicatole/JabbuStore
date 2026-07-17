@@ -490,9 +490,13 @@ export default function Home() {
       <footer className="relative z-10 border-t border-white/5 bg-black px-6 py-10">
         <div className="mx-auto flex max-w-7xl flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center font-black text-white text-sm rounded-xl shadow-[0_0_20px_rgba(217,70,239,0.3)]">
-              JS
-            </div>
+            <Image 
+              src="/logo.webp" 
+              alt="JabbuStore Logo" 
+              width={40} 
+              height={40} 
+              className="object-contain rounded-md border border-white/10 shadow-sm" 
+            />
             <span className="text-lg font-black uppercase tracking-widest text-white">
               Jabbu<span className="text-accent">Store</span>
             </span>

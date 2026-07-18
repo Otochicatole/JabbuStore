@@ -41,7 +41,11 @@ export async function getTicketSocket(actor: TicketActor) {
   if (!socket) {
     socket = io(socketOrigin(), {
       autoConnect: false,
-      transports: ["websocket"],
+      path: "/socket.io/",
+      // Start with the proxy-friendly transport and upgrade to WebSocket when
+      // the production reverse proxy forwards the Upgrade headers correctly.
+      transports: ["polling", "websocket"],
+      upgrade: true,
       auth: { token },
       reconnection: true,
       reconnectionAttempts: Infinity,

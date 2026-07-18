@@ -16,6 +16,7 @@ import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { NotificationBell } from "@/features/notifications/ui/NotificationBell";
 import { useUpcomingDraws } from "@/shared/hooks/useUpcomingDraws";
 import { Radio } from "lucide-react";
+import { CurrencySelector } from "@/features/currency/ui/CurrencySelector";
 
 const NAV_LINKS = [
   { labelKey: "nav.home", path: "/" },
@@ -151,6 +152,11 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           {!isLoading && !isLoggedIn && (
             <div className="hidden sm:block">
+              <CurrencySelector compact />
+            </div>
+          )}
+          {!isLoading && !isLoggedIn && (
+            <div className="hidden sm:block">
               <LanguageSwitcher compact />
             </div>
           )}
@@ -241,6 +247,11 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
                       {t("language.label")}
                     </span>
                     <LanguageSwitcher compact />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-white/40">{t("currency.label")}</span>
+                    <CurrencySelector compact />
                   </div>
 
                   {/* Links and Options */}
@@ -412,6 +423,7 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
           {/* Mobile Hamburguer Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? t("common.close") : t("nav.menu")}
             className="flex shrink-0 items-center justify-center p-2 rounded-[3px] border border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/70 hover:text-white transition-all nav:hidden cursor-pointer focus:outline-none"
           >
             {isMobileMenuOpen ? (
@@ -434,6 +446,11 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
             className="border-t border-white/5 bg-background/95 backdrop-blur-lg nav:hidden overflow-hidden"
           >
             <div className="flex flex-col p-4 space-y-2">
+              {!isLoading && !isLoggedIn && (
+                <div className="flex justify-center pb-2">
+                  <CurrencySelector />
+                </div>
+              )}
               {!isLoading && !isLoggedIn && (
                 <div className="flex justify-center pb-2">
                   <LanguageSwitcher compact />

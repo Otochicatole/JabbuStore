@@ -21,6 +21,8 @@ import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
+import { Money } from "@/features/currency/ui/Money";
+import { useCurrency } from "@/features/currency/context/CurrencyContext";
 
 interface QuoteItem {
   id: string;
@@ -44,6 +46,7 @@ interface Quote {
 
 export function QuotesPage() {
   const { t } = useI18n();
+  const { effectiveCurrency } = useCurrency();
   const router = useRouter();
   const localizePath = useLocalizedPath();
 
@@ -334,11 +337,14 @@ export function QuotesPage() {
                       <span className="text-[8px] text-[#84849b] font-mono block uppercase tracking-widest">
                         Total Cotizado
                       </span>
-                      <span className="text-sm font-black text-white">
-                        {quote.status === "PENDING"
-                          ? "Pendiente"
-                          : `$${totalQuoted.toLocaleString()} USD`}
-                      </span>
+                      {quote.status === "PENDING" ? (
+                        <span className="text-sm font-black text-white">Pendiente</span>
+                      ) : (
+                        <>
+                          <Money amountUsd={totalQuoted} approximate={effectiveCurrency !== "USD"} className="block text-sm font-black text-white" />
+                          {effectiveCurrency !== "USD" && <span className="block text-[9px] font-bold text-white/40">${totalQuoted.toFixed(2)} USD</span>}
+                        </>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
@@ -423,9 +429,11 @@ export function QuotesPage() {
                                 <p className="text-[9px] text-[#84849b] uppercase tracking-widest font-sans font-bold">
                                   Precio
                                 </p>
-                                <p className="text-xs font-black text-white mt-0.5">
-                                  {item.price !== null ? `$${item.price.toFixed(2)}` : "A cotizar"}
-                                </p>
+                                {item.price !== null ? (
+                                  <Money amountUsd={item.price} approximate={effectiveCurrency !== "USD"} className="text-xs font-black text-white mt-0.5" />
+                                ) : (
+                                  <p className="text-xs font-black text-white mt-0.5">A cotizar</p>
+                                )}
                               </div>
                             </div>
                           ))}

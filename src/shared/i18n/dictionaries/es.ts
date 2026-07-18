@@ -1294,5 +1294,11 @@ export const es = {
   "admin.sponsors.error.create": "No se pudo crear el sponsor.",
   "admin.sponsors.error.update": "No se pudo actualizar el sponsor.",
   "admin.sponsors.error.reorder": "No se pudo reordenar los sponsors.",
-  "admin.sponsors.error.delete": "No se pudo eliminar el sponsor."
+  "admin.sponsors.error.delete": "No se pudo eliminar el sponsor.",
+  "currency.label": "Moneda",
+  "nav.menu": "Menu",
+  "currency.unavailable": "La conversion de moneda no esta disponible. Los precios se muestran en USD.",
+  "currency.estimated": "Equivalente estimado",
+  "profile.preferredCurrency": "Moneda preferida",
+  "profile.preferredCurrencyHelp": "Los precios de la tienda se mostraran en esta moneda."
 } as const;

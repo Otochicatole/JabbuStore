@@ -4,6 +4,7 @@ import { Tag, Ticket } from "lucide-react";
 import type { OrderItem } from "@/features/purchases/types";
 
 import { getDisplayFloatData, rarityColors, type Translate } from "./helpers";
+import { Money } from "@/features/currency/ui/Money";
 
 interface PurchaseItemsListProps {
   items: OrderItem[];
@@ -57,9 +58,7 @@ export function PurchaseItemsList({
               </span>
             </div>
             <div className="shrink-0 text-right">
-              <span className="text-xs font-black text-accent block">
-                ${items.reduce((s, i) => s + i.price, 0).toLocaleString()} USD
-              </span>
+              <Money amountUsd={items.reduce((sum, item) => sum + item.price, 0)} approximate className="text-xs font-black text-accent block" />
               <span className="text-[8px] text-[#84849b] font-mono uppercase">
                 {t("purchases.unitPrice")}
               </span>
@@ -142,9 +141,7 @@ function PurchaseItemCard({ item, t }: { item: OrderItem; t: Translate }) {
       <FloatDisplay displayFloat={displayFloat} t={t} />
 
       <div className="text-right ml-auto">
-        <span className="text-xs font-black text-accent block">
-          ${item.price.toLocaleString()} USD
-        </span>
+        <Money amountUsd={item.price} approximate className="text-xs font-black text-accent block" />
         <span className="text-[8px] text-[#84849b] font-mono uppercase">
           {t("purchases.unitPrice")}
         </span>

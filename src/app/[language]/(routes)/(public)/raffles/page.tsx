@@ -8,6 +8,7 @@ import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { RaffleWinnersSection } from "@/features/raffles/ui/RaffleWinnersSection";
 import type { RafflePrizeWithWinner } from "@/features/raffles/types";
+import { Money } from "@/features/currency/ui/Money";
 
 interface RafflePrize extends RafflePrizeWithWinner {
   exterior: string | null;
@@ -237,7 +238,7 @@ function RafflesListContent() {
                   <div className="flex items-center justify-between gap-4 pt-1">
                     <div className="flex flex-col">
                       <span className="text-[9px] font-bold text-[#84849b] uppercase tracking-widest">{t("raffles.ticketPrice")}</span>
-                      <span className="text-sm font-black text-white">${raffle.ticketPrice.toFixed(2)}</span>
+                      <Money amountUsd={raffle.ticketPrice} className="text-sm font-black text-white" />
                     </div>
 
                     <div className="flex flex-col items-end text-right">

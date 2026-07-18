@@ -1291,4 +1291,10 @@ export const br = {
   "admin.sponsors.error.update": "Não foi possível atualizar o sponsor.",
   "admin.sponsors.error.reorder": "Não foi possível reordenar os sponsors.",
   "admin.sponsors.error.delete": "Não foi possível excluir o sponsor.",
+  "currency.label": "Moeda",
+  "nav.menu": "Menu",
+  "currency.unavailable": "A conversão de moeda não está disponível. Os preços são exibidos em USD.",
+  "currency.estimated": "Equivalente estimado",
+  "profile.preferredCurrency": "Moeda preferida",
+  "profile.preferredCurrencyHelp": "Os preços da loja serão exibidos nesta moeda.",
 } as const;

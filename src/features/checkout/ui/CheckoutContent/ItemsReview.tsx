@@ -2,6 +2,7 @@ import React from 'react';
 import { Coins, Ticket } from 'lucide-react';
 import { CheckoutItem } from '../../domain/types';
 import { useI18n } from '@/shared/i18n/I18nProvider';
+import { Money } from '@/features/currency/ui/Money';
 
 interface ItemsReviewProps {
   items: CheckoutItem[];
@@ -112,7 +113,7 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
               </div>
             </div>
             <div className="text-left sm:text-right shrink-0">
-              <p className="text-xs font-black text-white">${item.price.toFixed(2)}</p>
+              <Money amountUsd={item.price} className="text-xs font-black text-white" />
               <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">{t("checkout.ready")}</p>
             </div>
           </div>

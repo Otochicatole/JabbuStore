@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { User as UserIcon, Volume2, VolumeX, ChevronDown } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { Money } from "@/features/currency/ui/Money";
 
 interface UserProfile {
   id: string;
@@ -296,9 +297,7 @@ export function RaffleRoulette({
                         {prize.exterior}
                       </span>
                     )}
-                    <span className="text-[10px] font-black text-emerald-400">
-                      ${prize.price.toFixed(2)}
-                    </span>
+                    <Money amountUsd={prize.price} className="text-[10px] font-black text-emerald-400" />
                   </div>
                 </div>
               </div>
@@ -341,9 +340,7 @@ export function RaffleRoulette({
                               {item.exterior}
                             </span>
                           )}
-                          <span className="text-[10px] text-emerald-400 font-black">
-                            ${item.price.toFixed(2)}
-                          </span>
+                          <Money amountUsd={item.price} className="text-[10px] text-emerald-400 font-black" />
                         </div>
                       </div>
                     </div>

@@ -1294,4 +1294,10 @@ export const en = {
   "admin.sponsors.error.update": "Could not update the sponsor.",
   "admin.sponsors.error.reorder": "Could not reorder sponsors.",
   "admin.sponsors.error.delete": "Could not delete the sponsor.",
+  "currency.label": "Currency",
+  "nav.menu": "Menu",
+  "currency.unavailable": "Currency conversion is unavailable. Prices are shown in USD.",
+  "currency.estimated": "Estimated equivalent",
+  "profile.preferredCurrency": "Preferred currency",
+  "profile.preferredCurrencyHelp": "Prices across the store will be displayed in this currency.",
 } as const;

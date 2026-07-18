@@ -13,6 +13,7 @@ import { NotificationProvider } from "@/features/notifications/context/Notificat
 import { ProfileCompletionModal } from "@/shared/components/ProfileCompletionModal";
 import { DEFAULT_LOCALE, isLocale, stripLocaleFromPathname } from "@/shared/i18n/routing";
 import { ActiveRafflesWidget } from "@/features/raffles/ui/ActiveRafflesWidget";
+import { CurrencyProvider } from "@/features/currency/context/CurrencyContext";
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -43,6 +44,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <I18nProvider initialLocale={locale}>
       <Suspense fallback={null}>
+        <CurrencyProvider>
         <CartProvider>
           <FilterProvider>
             <InventoryProvider>
@@ -60,6 +62,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
             </InventoryProvider>
           </FilterProvider>
         </CartProvider>
+        </CurrencyProvider>
       </Suspense>
     </I18nProvider>
   );

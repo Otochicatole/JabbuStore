@@ -13,6 +13,8 @@ interface AdminSelectProps {
   value: string;
   onChange: (value: string) => void;
   options: Option[];
+  disabled?: boolean;
+  ariaLabel?: string;
   className?: string;
   buttonClassName?: string;
   menuClassName?: string;
@@ -23,6 +25,8 @@ export function AdminSelect({
   value,
   onChange,
   options,
+  disabled = false,
+  ariaLabel,
   className,
   buttonClassName,
   menuClassName,
@@ -48,13 +52,17 @@ export function AdminSelect({
     <div className={`${className || "w-full sm:w-auto min-w-0 sm:min-w-[180px]"} min-w-0 ${isOpen ? 'relative z-50' : 'relative z-20'}`} ref={containerRef}>
       <button
         type="button"
+        aria-label={ariaLabel}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={
           buttonClassName
-            ? `${buttonClassName} ${isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : ''}`
+            ? `${buttonClassName} ${isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : ''} ${disabled ? 'cursor-wait opacity-50' : ''}`
             : `flex h-10 min-w-0 items-center justify-between gap-2 px-3 py-2 bg-white/[0.025] border transition-all duration-300 rounded-[3px] max-w-full group cursor-pointer flex-1 sm:flex-initial w-full ${
                 isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : 'border-white/5 hover:border-white/10'
-              }`
+              } ${disabled ? 'cursor-wait opacity-50' : ''}`
         }
       >
         <span className={buttonClassName ? "truncate min-w-0 text-left" : "min-w-0 text-[10px] sm:text-xs font-black text-white uppercase tracking-tight truncate max-w-[180px]"}>
@@ -67,6 +75,8 @@ export function AdminSelect({
         {isOpen && (
           <>
             <motion.div
+              role="listbox"
+              aria-label={ariaLabel}
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -80,6 +90,8 @@ export function AdminSelect({
                   <button
                     key={option.value}
                     type="button"
+                    role="option"
+                    aria-selected={value === option.value}
                     onClick={() => {
                       onChange(option.value);
                       setIsOpen(false);

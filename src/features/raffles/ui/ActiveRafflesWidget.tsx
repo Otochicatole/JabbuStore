@@ -7,6 +7,7 @@ import Link from "next/link";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { Money } from "@/features/currency/ui/Money";
 
 interface RafflePrize {
   id: string;
@@ -217,7 +218,7 @@ export function ActiveRafflesWidget() {
                         <div className="flex items-center gap-2">
                           <Ticket className="w-3.5 h-3.5 text-[#8984a1]" />
                           <span className="text-[10px] font-bold text-[#8984a1] uppercase tracking-widest">
-                            Valor: <span className="text-white">${raffle.ticketPrice.toFixed(2)}</span>
+                            Valor: <Money amountUsd={raffle.ticketPrice} className="text-white" />
                           </span>
                         </div>
                       </div>

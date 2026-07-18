@@ -2,6 +2,8 @@ import React from 'react';
 import { DollarSign, ArrowRight, Loader2 } from 'lucide-react';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 import type { PaymentQuote } from '../../domain/types';
+import { Money } from '@/features/currency/ui/Money';
+import { useCurrency } from '@/features/currency/context/CurrencyContext';
 
 interface OrderSummaryProps {
   itemsCount: number;
@@ -29,14 +31,16 @@ export function OrderSummary({
   onSubmit
 }: OrderSummaryProps) {
   const { t } = useI18n();
+  const { effectiveCurrency, formatCurrencyAmount } = useCurrency();
   const requiresArsQuote =
     checkoutType === "buy" &&
     (selectedMethod === "mercado_pago" ||
       (selectedMethod === "manual_transfer" && manualTransferType === "bank"));
   const arsQuote = paymentQuote?.settlement.currency === "ARS" ? paymentQuote : null;
   const cryptoQuote = paymentQuote?.settlement.currency === "USDT" ? paymentQuote : null;
+  const settlementCurrency = arsQuote ? "ARS" : cryptoQuote ? "USDT" : "USD";
   const finalAmountLabel = arsQuote
-    ? `${formatArs(arsQuote.settlement.amount)} ARS`
+    ? formatCurrencyAmount(arsQuote.settlement.amount, "ARS")
     : cryptoQuote
       ? `${cryptoQuote.settlement.amount.toFixed(2)} USDT`
       : `$${totalPrice.toFixed(2)} USD`;
@@ -48,7 +52,7 @@ export function OrderSummary({
       <div className="space-y-4 font-sans border-b border-white/5 pb-6 mb-6">
         <div className="flex items-center justify-between text-xs text-[#84849b] font-semibold">
           <span>{t("common.subtotal")} ({itemsCount} {t("common.items")})</span>
-          <span className="text-white">${totalPrice.toFixed(2)}</span>
+          <Money amountUsd={totalPrice} className="text-white" />
         </div>
         <div className="flex items-center justify-between text-xs text-[#84849b] font-semibold">
           <span>{t("checkout.gatewayFee")}</span>
@@ -83,7 +87,7 @@ export function OrderSummary({
             <div className="flex items-center justify-between gap-3 text-xs font-semibold">
               <span className="text-[#84849b]">{t("checkout.payInArs")}</span>
               <span className="text-emerald-400 text-right font-black">
-                {formatArs(arsQuote.settlement.amount)} ARS
+                {formatCurrencyAmount(arsQuote.settlement.amount, "ARS")}
               </span>
             </div>
             {arsQuote.expiresAt && (
@@ -104,6 +108,11 @@ export function OrderSummary({
         <div>
           <span className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">{t("checkout.finalAmount")}</span>
           <span className="text-2xl font-black text-white block tracking-tighter mt-1">{finalAmountLabel}</span>
+          {effectiveCurrency !== settlementCurrency && (
+            <span className="block mt-1 text-[10px] font-bold text-accent">
+              {t("currency.estimated")}: <Money amountUsd={totalPrice} approximate />
+            </span>
+          )}
           {arsQuote && (
             <span className="text-[10px] font-bold text-[#84849b] block mt-1">
               {t("checkout.baseAmountUsd", { amount: totalPrice.toFixed(2) })}

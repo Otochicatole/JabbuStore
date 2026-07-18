@@ -1,3 +1,5 @@
+import type { DisplayCurrency } from "@/features/currency/domain/currency";
+
 export interface UserProfile {
   id: string;
   name: string | null;
@@ -6,4 +8,5 @@ export interface UserProfile {
   avatar: string | null;
   profileUrl: string | null;
   tradeUrl: string | null;
+  preferredCurrency: DisplayCurrency;
 }

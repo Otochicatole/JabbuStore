@@ -1,4 +1,5 @@
 import React from "react";
+import { Money } from "@/features/currency/ui/Money";
 
 interface SkinCardPriceProps {
   price: number;
@@ -7,10 +8,7 @@ interface SkinCardPriceProps {
 export const SkinCardPrice = ({ price }: SkinCardPriceProps) => {
   return (
     <div className="flex flex-col gap-0.5 mb-3 mt-auto pt-3 border-t border-white/5">
-      <div className="text-lg font-black text-white tracking-tight leading-none">
-        ${price.toLocaleString()}{" "}
-        <span className="text-[10px] text-[#84849b] ml-0.5">USD</span>
-      </div>
+      <Money amountUsd={price} className="text-lg font-black text-white tracking-tight leading-none" />
     </div>
   );
 };

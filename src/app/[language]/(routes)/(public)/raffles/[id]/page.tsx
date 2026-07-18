@@ -24,6 +24,7 @@ import { RaffleWinnersSection } from "@/features/raffles/ui/RaffleWinnersSection
 import { hasPrizeWinner } from "@/features/raffles/types";
 import { RaffleRoulette } from "@/features/raffles/ui/RaffleRoulette";
 import { AnimatePresence, motion } from "framer-motion";
+import { Money } from "@/features/currency/ui/Money";
 
 interface UserProfile {
   id: string;
@@ -479,13 +480,11 @@ function RaffleDetailsContent() {
                       <span className="text-[9px] font-bold text-[#84849b] uppercase tracking-widest">
                         {t("raffles.totalPrice")}
                       </span>
-                      <span className="block text-lg font-black text-white">
-                        ${(raffle.ticketPrice * ticketCount).toFixed(2)}
-                      </span>
+                      <Money amountUsd={raffle.ticketPrice * ticketCount} className="block text-lg font-black text-white" />
                     </div>
                     <div className="text-right">
                       <span className="block text-[8px] font-black text-accent uppercase tracking-wider">
-                        ${raffle.ticketPrice.toFixed(2)} c/u
+                        <Money amountUsd={raffle.ticketPrice} /> c/u
                       </span>
                     </div>
                   </div>
@@ -580,9 +579,7 @@ function RaffleDetailsContent() {
                             </span>
                           )}
                         </div>
-                        <span className="block text-sm font-black text-emerald-400 mt-2">
-                          ${prize.price.toFixed(2)}
-                        </span>
+                        <Money amountUsd={prize.price} className="block text-sm font-black text-emerald-400 mt-2" />
                       </div>
 
                       <div className="relative w-16 h-16 bg-white/5 rounded-xl flex items-center justify-center p-1 shrink-0">

@@ -9,6 +9,7 @@ import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { X, Search, ArrowUpDown, AlertCircle, Check, RefreshCw, Eye } from "lucide-react";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { Money } from "@/features/currency/ui/Money";
 
 interface FloatItem {
   id: string;
@@ -402,10 +403,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
                       <span className="text-[#84849b] uppercase font-bold text-[8px] block tracking-widest font-mono">
                         {t("skinCard.finalPrice")}
                       </span>
-                      <span className="text-base font-black text-white font-mono">
-                        ${f.displayPrice.toLocaleString()}{" "}
-                        <span className="text-[9px] text-[#84849b]">USD</span>
-                      </span>
+                      <Money amountUsd={f.displayPrice} className="text-base font-black text-white font-mono" />
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">

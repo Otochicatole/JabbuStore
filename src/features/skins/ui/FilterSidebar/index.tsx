@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ChevronRight, RotateCcw, Filter, X } from "lucide-react";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/features/filters/context/FilterContext";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import Image from "next/image";
+import { useCurrency } from "@/features/currency/context/CurrencyContext";
 
 const CATEGORIES = [
   { value: "Cuchillos", labelKey: "filters.category.knives", icon: "knives.webp" },
@@ -56,7 +57,51 @@ function FilterControls({
   onReset,
 }: FilterControlsProps) {
   const { t } = useI18n();
+  const { effectiveCurrency, convertUsd, displayToUsd } = useCurrency();
   const [isConditionOpen, setIsConditionOpen] = useState(false);
+  const toDisplayValue = useCallback((canonicalUsd: string) => {
+    if (!canonicalUsd.trim()) return "";
+    const parsed = Number(canonicalUsd);
+    if (!Number.isFinite(parsed)) return "";
+    return String(Number(convertUsd(parsed).toFixed(2)));
+  }, [convertUsd]);
+  const [displayMinPrice, setDisplayMinPrice] = useState(() => toDisplayValue(value.minPrice));
+  const [displayMaxPrice, setDisplayMaxPrice] = useState(() => toDisplayValue(value.maxPrice));
+  const lastMinUsd = useRef(value.minPrice);
+  const lastMaxUsd = useRef(value.maxPrice);
+  const previousCurrency = useRef(effectiveCurrency);
+
+  useEffect(() => {
+    const currencyChanged = previousCurrency.current !== effectiveCurrency;
+    if (currencyChanged || value.minPrice !== lastMinUsd.current) {
+      setDisplayMinPrice(toDisplayValue(value.minPrice));
+    }
+    if (currencyChanged || value.maxPrice !== lastMaxUsd.current) {
+      setDisplayMaxPrice(toDisplayValue(value.maxPrice));
+    }
+    previousCurrency.current = effectiveCurrency;
+    lastMinUsd.current = value.minPrice;
+    lastMaxUsd.current = value.maxPrice;
+  }, [effectiveCurrency, toDisplayValue, value.maxPrice, value.minPrice]);
+
+  const updateDisplayPrice = (
+    raw: string,
+    setDisplay: (next: string) => void,
+    lastUsd: React.MutableRefObject<string>,
+    onCanonicalChange: (next: string) => void,
+  ) => {
+    setDisplay(raw);
+    if (!raw.trim()) {
+      lastUsd.current = "";
+      onCanonicalChange("");
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return;
+    const canonicalUsd = String(Number(displayToUsd(parsed).toFixed(2)));
+    lastUsd.current = canonicalUsd;
+    onCanonicalChange(canonicalUsd);
+  };
 
   return (
     <>
@@ -92,13 +137,14 @@ function FilterControls({
       </div>
 
       <div className="border-b border-white/5 pb-5">
-        <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">{t("filters.priceRange")}</h3>
+        <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">{t("filters.priceRange")} ({effectiveCurrency})</h3>
         <div className="flex items-center gap-2">
           <input
             type="number"
             inputMode="decimal"
-            value={value.minPrice}
-            onChange={(event) => onMinPriceChange(event.target.value)}
+            min="0"
+            value={displayMinPrice}
+            onChange={(event) => updateDisplayPrice(event.target.value, setDisplayMinPrice, lastMinUsd, onMinPriceChange)}
             placeholder={t("filters.min")}
             className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
@@ -106,8 +152,9 @@ function FilterControls({
           <input
             type="number"
             inputMode="decimal"
-            value={value.maxPrice}
-            onChange={(event) => onMaxPriceChange(event.target.value)}
+            min="0"
+            value={displayMaxPrice}
+            onChange={(event) => updateDisplayPrice(event.target.value, setDisplayMaxPrice, lastMaxUsd, onMaxPriceChange)}
             placeholder={t("filters.max")}
             className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />

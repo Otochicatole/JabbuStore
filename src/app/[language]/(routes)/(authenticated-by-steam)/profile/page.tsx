@@ -17,6 +17,7 @@ import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 
 import type { UserProfile } from "@/features/users/types";
+import { CurrencySelector } from "@/features/currency/ui/CurrencySelector";
 
 export default function UserProfilePage() {
   const { t } = useI18n();
@@ -257,6 +258,16 @@ export default function UserProfilePage() {
                   <p className="text-[11px] text-white/70 leading-relaxed font-medium">
                     {t("profile.tradeUrlHelp")}
                   </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 border-t border-white/5 pt-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">{t("profile.preferredCurrency")}</p>
+                    <p className="mt-1 text-[11px] text-white/45">{t("profile.preferredCurrencyHelp")}</p>
+                  </div>
+                  <CurrencySelector />
                 </div>
               </div>
 

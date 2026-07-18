@@ -7,6 +7,7 @@ import { InspectInGameButton } from "./InspectInGameButton";
 import { SkinImage } from "@/shared/components/SkinImage";
 import type { TranslationParams } from "@/shared/i18n/types";
 import { getFloatColorClass } from "./helpers";
+import { Money } from "@/features/currency/ui/Money";
 
 interface SkinCardModalProps {
   skin: Skin;
@@ -253,18 +254,7 @@ export const SkinCardModal = ({
                   <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">
                     {t("skinCard.modal.lowestStockPrice")}
                   </span>
-                  <div className="flex items-baseline gap-1 font-mono">
-                    <span className="text-3xl font-black text-white">
-                      $
-                      {lowestAvailableStockPrice.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
-                    <span className="text-[10px] text-[#84849b] font-bold">
-                      USD
-                    </span>
-                  </div>
+                  <Money amountUsd={lowestAvailableStockPrice} className="text-3xl font-black text-white font-mono" />
                 </div>
 
                 {/* Buy and Inspect Actions */}
@@ -348,9 +338,7 @@ export const SkinCardModal = ({
                           <span className="text-[#84849b] uppercase font-bold text-[9px]">
                             {t("common.price")}:
                           </span>
-                          <span className="text-sm font-black text-white">
-                            ${s.price.toLocaleString()}
-                          </span>
+                          <Money amountUsd={s.price} className="text-sm font-black text-white" />
                         </div>
                       </div>
 

@@ -9,6 +9,7 @@ import {
   getUniqueWinners,
   type RafflePrizeWithWinner,
 } from "@/features/raffles/types";
+import { Money } from "@/features/currency/ui/Money";
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
@@ -242,7 +243,7 @@ export function RaffleWinnersSection({
                       {formatItemName(prize.name)}
                     </p>
                   </div>
-                  <p className="text-xs font-black text-emerald-400 mt-1">${prize.price.toFixed(2)}</p>
+                  <Money amountUsd={prize.price} className="text-xs font-black text-emerald-400 mt-1" />
                 </div>
               </div>
 

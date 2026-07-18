@@ -9,6 +9,8 @@ import { getRaffleOrderContext, getStatusConfig, type Translate } from "./helper
 import { PurchaseDetailsPanels } from "./PurchaseDetailsPanels";
 import { PurchaseItemsList } from "./PurchaseItemsList";
 import { PurchaseTimeline } from "./PurchaseTimeline";
+import { Money } from "@/features/currency/ui/Money";
+import { useCurrency } from "@/features/currency/context/CurrencyContext";
 
 interface PurchaseOrderCardProps {
   expanded: boolean;
@@ -31,6 +33,7 @@ export function PurchaseOrderCard({
 }: PurchaseOrderCardProps) {
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const { effectiveCurrency } = useCurrency();
   const isBuy = order.type === "BUY";
   const raffleContext = getRaffleOrderContext(order);
   const isRaffle = raffleContext.isRaffle;
@@ -110,6 +113,9 @@ export function PurchaseOrderCard({
               <span className="block text-[10px] font-bold text-emerald-400">
                 {formatArs(arsSettlement)} ARS
               </span>
+            )}
+            {effectiveCurrency !== "USD" && (
+              <Money amountUsd={order.totalPrice} approximate className="block text-[10px] font-bold text-accent" />
             )}
           </div>
 

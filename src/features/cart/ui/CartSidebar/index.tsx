@@ -9,6 +9,7 @@ import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { Money } from "@/features/currency/ui/Money";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { items, total, removeFromCart, clearCart, validateCartItems } = useCart();
@@ -112,7 +113,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                         
                       </div>
                       <div className="text-left sm:text-right shrink-0">
-                        <p className="text-sm font-black text-white tracking-tighter">${(item.skin.price * item.quantity).toLocaleString()}</p>
+                        <Money amountUsd={item.skin.price * item.quantity} className="text-sm font-black text-white tracking-tighter" />
                         <button 
                           onClick={() => removeFromCart(item.skin.id)}
                           className="mt-1 text-[10px] font-bold text-red-400/50 hover:text-red-400 transition-colors cursor-pointer"
@@ -131,7 +132,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
             <div className="mb-6 flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-muted uppercase tracking-widest">{t("cart.estimatedTotal")}</span>
-                <span className="text-3xl font-black text-white tracking-tighter">${total.toLocaleString()} <span className="text-sm text-muted">USDT</span></span>
+                <Money amountUsd={total} className="text-3xl font-black text-white tracking-tighter" />
               </div>
             </div>
 

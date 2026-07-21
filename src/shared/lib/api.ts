@@ -3,7 +3,12 @@
  * guardado en localStorage.
  */
 
-export const BACKEND_URL = typeof window !== 'undefined' ? '/api/proxy' : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+export const BACKEND_URL =
+  typeof window !== 'undefined'
+    ? '/api/proxy'
+    : process.env.BACKEND_INTERNAL_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:3001/api';
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;

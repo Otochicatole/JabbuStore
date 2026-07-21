@@ -193,15 +193,16 @@ export function useAdminBots() {
         },
       });
       const data = await res.json().catch(() => ({}));
+      const returnedCatalog = data.status ?? data.catalog;
       if (res.status === 409) {
-        setCatalogStatus(data.catalog ?? null);
-        setSyncError(data.message || t("admin.bots.catalogInProgress"));
+        if (returnedCatalog) setCatalogStatus(returnedCatalog);
+        setSyncMessage(data.message || t("admin.bots.catalogInProgress"));
         return;
       }
       if (!res.ok) {
         throw new Error(data.error || t("admin.bots.catalogDownloadError"));
       }
-      setCatalogStatus(data.catalog ?? null);
+      if (returnedCatalog) setCatalogStatus(returnedCatalog);
       setSyncMessage(data.message || t("admin.bots.catalogDownloadStarted"));
     } catch (e: unknown) {
       setSyncError(getErrorMessage(e, t("admin.bots.catalogDownloadError")));

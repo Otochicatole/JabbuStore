@@ -35,10 +35,12 @@ export function LoginForm() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const data = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
 
       if (!response.ok) {
-        throw new Error(data.error || t("admin.login.error"));
+        throw new Error(data?.error || t("admin.login.error"));
       }
 
       // Redirigir al panel. Al cargar, el servidor validará el JWT de la cookie de forma automática.

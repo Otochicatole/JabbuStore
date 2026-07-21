@@ -1,11 +1,47 @@
 import type {
   MarketSyncCompletionReason,
+  MarketSyncEtaConfidence,
   MarketSyncPhase,
+  MarketSyncRunStatus,
+  MarketSyncRunStatusView,
+  MarketSyncSlowReason,
   MarketSyncStatus,
   PriceCatalogStatus,
 } from "@/features/admin/types";
 
 export const DEFAULT_MARKET_SYNC_TARGET = 10_000;
+
+export type MarketSyncPollingHint = {
+  phase?: MarketSyncPhase;
+  quotaResetsAt?: string | null;
+  recommendedPollAfterMs?: number;
+};
+
+export const MARKET_SYNC_PHASE_LABEL_KEYS: Record<MarketSyncPhase, string> = {
+  idle: "admin.settings.syncPhase.idle",
+  refreshing_items_catalog: "admin.settings.syncPhase.refreshingItemsCatalog",
+  building_priority_queue: "admin.settings.syncPhase.buildingPriorityQueue",
+  collecting_assets: "admin.settings.syncPhase.collectingAssets",
+  waiting_rate_limit: "admin.settings.syncPhase.waitingRateLimit",
+  validating_snapshot: "admin.settings.syncPhase.validatingSnapshot",
+  saving_snapshot: "admin.settings.syncPhase.savingSnapshot",
+  publishing_database: "admin.settings.syncPhase.publishingDatabase",
+  syncing_bots: "admin.settings.syncPhase.syncingBots",
+  paused: "admin.settings.syncPhase.paused",
+  completed: "admin.settings.syncPhase.completed",
+  failed: "admin.settings.syncPhase.failed",
+  fetching_youpin: "admin.settings.syncPhase.collectingAssets",
+  downloading_assets: "admin.settings.syncPhase.collectingAssets",
+  saving_database: "admin.settings.syncPhase.publishingDatabase",
+};
+
+export const MARKET_SYNC_WARNING_KEYS: Readonly<Record<string, string>> = {
+  heartbeat_stale: "admin.settings.syncWarning.heartbeatStale",
+  high_timeout_rate: "admin.settings.syncWarning.highTimeoutRate",
+  deferred_candidates: "admin.settings.syncWarning.deferredCandidates",
+  eta_low_confidence: "admin.settings.syncWarning.etaLowConfidence",
+  quota_window_near_limit: "admin.settings.syncWarning.quotaWindowNearLimit",
+};
 
 const MARKET_SYNC_PHASES = new Set<MarketSyncPhase>([
   "idle",
@@ -29,6 +65,80 @@ const COMPLETION_REASONS = new Set<MarketSyncCompletionReason>([
   "target_reached",
   "catalog_exhausted",
 ]);
+
+const RUN_STATUSES = new Set<MarketSyncRunStatus>([
+  "running",
+  "paused",
+  "completed",
+  "failed",
+]);
+
+const ETA_CONFIDENCE_VALUES = new Set<MarketSyncEtaConfidence>([
+  "high",
+  "medium",
+  "low",
+  "unavailable",
+]);
+
+const SLOW_REASONS = new Set<MarketSyncSlowReason>([
+  "quota_wait",
+  "provider_latency",
+  "timeouts",
+  "retries",
+  "empty_catalog_results",
+  "adaptive_concurrency",
+  "paused",
+  "publishing_database",
+  "none",
+]);
+
+export function marketSyncBasePollingDelay(phase: MarketSyncPhase | undefined) {
+  if (phase === "collecting_assets" || phase === "downloading_assets") return 5_000;
+  if (
+    phase === "validating_snapshot" ||
+    phase === "saving_snapshot" ||
+    phase === "publishing_database" ||
+    phase === "saving_database"
+  ) {
+    return 2_000;
+  }
+  if (phase === "waiting_rate_limit" || phase === "paused") return 10_000;
+  return 2_000;
+}
+
+export function marketSyncPollingDelay(
+  hint: MarketSyncPollingHint,
+  nowMs = Date.now(),
+) {
+  const recommended = hint.recommendedPollAfterMs ?? 0;
+  if (recommended > 0) return Math.min(30_000, Math.max(1_000, recommended));
+  if (hint.phase !== "waiting_rate_limit" && hint.phase !== "paused") {
+    return marketSyncBasePollingDelay(hint.phase);
+  }
+
+  const resetTimestamp = hint.quotaResetsAt
+    ? Date.parse(hint.quotaResetsAt)
+    : Number.NaN;
+  if (!Number.isFinite(resetTimestamp)) return 10_000;
+
+  const remaining = resetTimestamp - nowMs;
+  return remaining > 0
+    ? Math.min(30_000, Math.max(5_000, remaining + 250))
+    : 5_000;
+}
+
+export function shouldPollMarketSyncStatus(status: MarketSyncStatus | null) {
+  if (status === null) return true;
+  if (status.phase === "waiting_rate_limit") return true;
+  if (
+    status.phase === "failed" ||
+    status.phase === "completed" ||
+    status.phase === "paused"
+  ) {
+    return false;
+  }
+  return Boolean(status.running || status.run?.status === "running");
+}
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === "object"
@@ -57,6 +167,213 @@ function nullableString(
     if (typeof value === "string" && value.length > 0) return value;
   }
   return null;
+}
+
+function nonNegativeNumber(
+  record: Record<string, unknown>,
+  keys: string[],
+  fallback = 0,
+): number {
+  return Math.max(0, numberValue(record, keys, fallback));
+}
+
+function nullableNumber(
+  record: Record<string, unknown>,
+  key: string,
+  fallback: number | null,
+): number | null {
+  if (!(key in record)) return fallback;
+  const value = record[key];
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.max(0, value)
+    : null;
+}
+
+function nullableStringField(
+  record: Record<string, unknown>,
+  key: string,
+  fallback: string | null,
+): string | null {
+  return key in record ? nullableString(record, [key]) : fallback;
+}
+
+export function normalizeMarketSyncRun(
+  value: unknown,
+  fallback?: MarketSyncRunStatusView | null,
+): MarketSyncRunStatusView | null {
+  const record = asRecord(value);
+  const id = nullableString(record, ["id"]) ?? fallback?.id ?? null;
+  if (!id) return fallback ?? null;
+
+  const base = fallback?.id === id ? fallback : null;
+  const statusValue = record.status;
+  const status =
+    typeof statusValue === "string" && RUN_STATUSES.has(statusValue as MarketSyncRunStatus)
+      ? (statusValue as MarketSyncRunStatus)
+      : base?.status ?? "running";
+  const elapsed = asRecord(record.elapsed);
+  const requests = asRecord(record.requests);
+  const latency = asRecord(requests.latencyMs);
+  const quota = asRecord(record.quota);
+  const concurrency = asRecord(record.concurrency);
+  const throughput = asRecord(record.throughput);
+  const etaConfidenceValue = throughput.etaConfidence;
+  const etaConfidence =
+    typeof etaConfidenceValue === "string" &&
+    ETA_CONFIDENCE_VALUES.has(etaConfidenceValue as MarketSyncEtaConfidence)
+      ? (etaConfidenceValue as MarketSyncEtaConfidence)
+      : base?.throughput.etaConfidence ?? "unavailable";
+  const slowReasonValue = record.slowReason;
+  const slowReason =
+    typeof slowReasonValue === "string" &&
+    SLOW_REASONS.has(slowReasonValue as MarketSyncSlowReason)
+      ? (slowReasonValue as MarketSyncSlowReason)
+      : base?.slowReason ?? "none";
+  const phases = Array.isArray(record.phases)
+    ? record.phases.flatMap((item) => {
+        const phaseRecord = asRecord(item);
+        const phase = phaseRecord.phase;
+        if (
+          typeof phase !== "string" ||
+          !MARKET_SYNC_PHASES.has(phase as MarketSyncPhase)
+        ) {
+          return [];
+        }
+        return [{
+          phase: phase as MarketSyncPhase,
+          durationMs: nonNegativeNumber(phaseRecord, ["durationMs"]),
+          entryCount: nonNegativeNumber(phaseRecord, ["entryCount"]),
+          current: phaseRecord.current === true,
+        }];
+      })
+    : base?.phases ?? [];
+  const warnings = Array.isArray(record.warnings)
+    ? record.warnings.filter((item): item is string => typeof item === "string")
+    : base?.warnings ?? [];
+
+  return {
+    id,
+    status,
+    resumed:
+      typeof record.resumed === "boolean" ? record.resumed : base?.resumed ?? false,
+    attemptCount: nonNegativeNumber(record, ["attemptCount"], base?.attemptCount ?? 1),
+    runStartedAt:
+      nullableString(record, ["runStartedAt"]) ?? base?.runStartedAt ?? "",
+    attemptStartedAt:
+      nullableString(record, ["attemptStartedAt"]) ?? base?.attemptStartedAt ?? "",
+    runFinishedAt: nullableStringField(
+      record,
+      "runFinishedAt",
+      base?.runFinishedAt ?? null,
+    ),
+    lastHeartbeatAt:
+      nullableString(record, ["lastHeartbeatAt"]) ?? base?.lastHeartbeatAt ?? "",
+    elapsed: {
+      wallMs: nonNegativeNumber(elapsed, ["wallMs"], base?.elapsed.wallMs ?? 0),
+      activeMs: nonNegativeNumber(elapsed, ["activeMs"], base?.elapsed.activeMs ?? 0),
+      pausedMs: nonNegativeNumber(elapsed, ["pausedMs"], base?.elapsed.pausedMs ?? 0),
+      quotaWaitMs: nonNegativeNumber(
+        elapsed,
+        ["quotaWaitMs"],
+        base?.elapsed.quotaWaitMs ?? 0,
+      ),
+      retryBackoffMs: nonNegativeNumber(
+        elapsed,
+        ["retryBackoffMs"],
+        base?.elapsed.retryBackoffMs ?? 0,
+      ),
+    },
+    phases,
+    requests: {
+      pages: nonNegativeNumber(requests, ["pages"], base?.requests.pages ?? 0),
+      attempts: nonNegativeNumber(requests, ["attempts"], base?.requests.attempts ?? 0),
+      succeeded: nonNegativeNumber(requests, ["succeeded"], base?.requests.succeeded ?? 0),
+      failed: nonNegativeNumber(requests, ["failed"], base?.requests.failed ?? 0),
+      retries: nonNegativeNumber(requests, ["retries"], base?.requests.retries ?? 0),
+      timeouts: nonNegativeNumber(requests, ["timeouts"], base?.requests.timeouts ?? 0),
+      emptyResponses: nonNegativeNumber(
+        requests,
+        ["emptyResponses"],
+        base?.requests.emptyResponses ?? 0,
+      ),
+      notFound: nonNegativeNumber(requests, ["notFound"], base?.requests.notFound ?? 0),
+      rateLimited: nonNegativeNumber(
+        requests,
+        ["rateLimited"],
+        base?.requests.rateLimited ?? 0,
+      ),
+      latencyMs: {
+        samples: nonNegativeNumber(latency, ["samples"], base?.requests.latencyMs.samples ?? 0),
+        average: nullableNumber(latency, "average", base?.requests.latencyMs.average ?? null),
+        maximum: nullableNumber(latency, "maximum", base?.requests.latencyMs.maximum ?? null),
+        p95Approx: nullableNumber(
+          latency,
+          "p95Approx",
+          base?.requests.latencyMs.p95Approx ?? null,
+        ),
+      },
+    },
+    quota: {
+      runUnitsUsed: nonNegativeNumber(quota, ["runUnitsUsed"], base?.quota.runUnitsUsed ?? 0),
+      creditsUsed: nonNegativeNumber(quota, ["creditsUsed"], base?.quota.creditsUsed ?? 0),
+      windowUnitsUsed: nonNegativeNumber(
+        quota,
+        ["windowUnitsUsed"],
+        base?.quota.windowUnitsUsed ?? 0,
+      ),
+      limit: nonNegativeNumber(quota, ["limit"], base?.quota.limit ?? 0),
+      resetsAt: nullableStringField(quota, "resetsAt", base?.quota.resetsAt ?? null),
+      waitCount: nonNegativeNumber(quota, ["waitCount"], base?.quota.waitCount ?? 0),
+    },
+    concurrency: {
+      configured: nonNegativeNumber(
+        concurrency,
+        ["configured"],
+        base?.concurrency.configured ?? 0,
+      ),
+      current: nonNegativeNumber(concurrency, ["current"], base?.concurrency.current ?? 0),
+      minimumUsed: nonNegativeNumber(
+        concurrency,
+        ["minimumUsed"],
+        base?.concurrency.minimumUsed ?? 0,
+      ),
+      peakInFlight: nonNegativeNumber(
+        concurrency,
+        ["peakInFlight"],
+        base?.concurrency.peakInFlight ?? 0,
+      ),
+      reductions: nonNegativeNumber(
+        concurrency,
+        ["reductions"],
+        base?.concurrency.reductions ?? 0,
+      ),
+    },
+    throughput: {
+      validAssetsPerMinute: nullableNumber(
+        throughput,
+        "validAssetsPerMinute",
+        base?.throughput.validAssetsPerMinute ?? null,
+      ),
+      etaSeconds: nullableNumber(
+        throughput,
+        "etaSeconds",
+        base?.throughput.etaSeconds ?? null,
+      ),
+      etaConfidence,
+    },
+    slowReason,
+    recommendedPollAfterMs: nonNegativeNumber(
+      record,
+      ["recommendedPollAfterMs"],
+      base?.recommendedPollAfterMs ?? 0,
+    ),
+    deferredCandidateCount: nonNegativeNumber(
+      record,
+      ["deferredCandidateCount"],
+      base?.deferredCandidateCount ?? 0,
+    ),
+    warnings,
+  };
 }
 
 function booleanValue(
@@ -197,6 +514,11 @@ export function normalizeMarketSyncStatus(
     record.lastPublished !== null &&
     typeof record.lastPublished === "object" &&
     typeof lastPublishedRecord.snapshotHash === "string";
+  const run = record.run === null
+    ? null
+    : record.run !== null && typeof record.run === "object"
+      ? normalizeMarketSyncRun(record.run, fallback?.run)
+      : fallback?.run ?? null;
 
   return {
     running:
@@ -295,6 +617,7 @@ export function normalizeMarketSyncStatus(
       null,
     lastError: nullableString(record, ["lastError", "error"]) ?? fallback?.lastError ?? null,
     completionReason,
+    run,
     itemsCatalog: hasItemsCatalog
       ? {
           fetchedAt: nullableString(itemsCatalogRecord, ["fetchedAt"]),

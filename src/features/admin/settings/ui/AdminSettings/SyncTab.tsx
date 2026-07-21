@@ -1,45 +1,77 @@
 "use client";
 
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
-import type { MarketSyncPhase, MarketSyncStatus, PriceCatalogStatus } from "@/features/admin/types";
+import type {
+  MarketSyncEtaConfidence,
+  MarketSyncSlowReason,
+  MarketSyncStatus,
+  PriceCatalogStatus,
+} from "@/features/admin/types";
 import { RUNTIME_CONFIG_LABELS } from "./constants";
 import { SectionHeader, FieldLabel, StyledInput } from "./FormControls";
 import { getErrorMessage } from "./helpers";
 import {
   createAcceptedPriceCatalogStatus,
   createAcceptedMarketSyncStatus,
+  MARKET_SYNC_PHASE_LABEL_KEYS,
+  MARKET_SYNC_WARNING_KEYS,
+  marketSyncBasePollingDelay,
+  marketSyncPollingDelay,
   normalizeMarketSyncStatus,
   normalizePriceCatalogStatus,
   priceCatalogStatusFromTriggerResponse,
+  shouldPollMarketSyncStatus,
   statusFromTriggerResponse,
 } from "./marketSync";
 
-const PHASE_LABELS: Record<MarketSyncPhase, string> = {
-  idle: "En espera",
-  refreshing_items_catalog: "Actualizando catálogo de precios",
-  building_priority_queue: "Ordenando skins por precio",
-  collecting_assets: "Recolectando assets",
-  waiting_rate_limit: "Esperando reinicio de cuota",
-  validating_snapshot: "Validando snapshot",
-  saving_snapshot: "Guardando snapshot",
-  publishing_database: "Publicando en la base de datos",
-  syncing_bots: "Actualizando bots",
-  paused: "Pausada; se reanudará desde el checkpoint",
-  completed: "Completada",
-  failed: "Fallida",
-  fetching_youpin: "Recolectando assets",
-  downloading_assets: "Recolectando assets",
-  saving_database: "Publicando en la base de datos",
+const SLOW_REASON_KEYS: Record<MarketSyncSlowReason, string> = {
+  quota_wait: "admin.settings.syncSlowReason.quotaWait",
+  provider_latency: "admin.settings.syncSlowReason.providerLatency",
+  timeouts: "admin.settings.syncSlowReason.timeouts",
+  retries: "admin.settings.syncSlowReason.retries",
+  empty_catalog_results: "admin.settings.syncSlowReason.emptyResults",
+  adaptive_concurrency: "admin.settings.syncSlowReason.adaptiveConcurrency",
+  paused: "admin.settings.syncSlowReason.paused",
+  publishing_database: "admin.settings.syncSlowReason.publishingDatabase",
+  none: "admin.settings.syncSlowReason.none",
+};
+
+const ETA_CONFIDENCE_KEYS: Record<MarketSyncEtaConfidence, string> = {
+  high: "admin.settings.syncEtaConfidence.high",
+  medium: "admin.settings.syncEtaConfidence.medium",
+  low: "admin.settings.syncEtaConfidence.low",
+  unavailable: "admin.settings.syncEtaConfidence.unavailable",
 };
 
 function formatDate(value: string | null) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toLocaleString("es-AR");
+}
+
+function formatDuration(valueMs: number) {
+  const totalSeconds = Math.max(0, Math.round(valueMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
+function formatLatency(value: number | null) {
+  if (value == null) return "—";
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}s`;
+  return `${Math.round(value)}ms`;
+}
+
+function percentage(part: number, total: number) {
+  if (total <= 0) return "0%";
+  return `${Math.round((part / total) * 100)}%`;
 }
 
 function responseRecord(value: unknown): Record<string, unknown> {
@@ -60,8 +92,7 @@ function responseMessage(value: unknown, fallback: string) {
 type RecursiveStatusPollingOptions = {
   enabled: boolean;
   intervalMs: number;
-  nextIntervalMs?: () => number;
-  poll: (signal: AbortSignal) => Promise<void>;
+  poll: (signal: AbortSignal) => Promise<number | null | void>;
   onError: (error: unknown) => void;
   timeoutMessage: string;
 };
@@ -69,11 +100,16 @@ type RecursiveStatusPollingOptions = {
 function useRecursiveStatusPolling({
   enabled,
   intervalMs,
-  nextIntervalMs,
   poll,
   onError,
   timeoutMessage,
 }: RecursiveStatusPollingOptions) {
+  const optionsRef = useRef({ intervalMs, poll, onError, timeoutMessage });
+
+  useEffect(() => {
+    optionsRef.current = { intervalMs, poll, onError, timeoutMessage };
+  }, [intervalMs, onError, poll, timeoutMessage]);
+
   useEffect(() => {
     if (!enabled) return;
 
@@ -99,14 +135,19 @@ function useRecursiveStatusPolling({
       }, 10_000);
 
       try {
-        await poll(requestController.signal);
+        const nextDelay = await optionsRef.current.poll(requestController.signal);
         consecutiveFailures = 0;
-        schedule(nextIntervalMs?.() ?? intervalMs);
+        if (nextDelay !== null) {
+          schedule(nextDelay ?? optionsRef.current.intervalMs);
+        }
       } catch (error: unknown) {
         if (cancelled) return;
         consecutiveFailures += 1;
-        onError(timedOut ? new Error(timeoutMessage) : error);
-        const baseRetryDelay = nextIntervalMs?.() ?? intervalMs;
+        const currentOptions = optionsRef.current;
+        currentOptions.onError(
+          timedOut ? new Error(currentOptions.timeoutMessage) : error,
+        );
+        const baseRetryDelay = currentOptions.intervalMs;
         const retryDelay = Math.min(
           30_000,
           baseRetryDelay * 2 ** Math.max(0, consecutiveFailures - 1),
@@ -127,22 +168,7 @@ function useRecursiveStatusPolling({
       if (requestTimer !== null) window.clearTimeout(requestTimer);
       requestController?.abort();
     };
-  }, [enabled, intervalMs, nextIntervalMs, onError, poll, timeoutMessage]);
-}
-
-function marketStatusPollingDelay(
-  phase: MarketSyncPhase | undefined,
-  quotaResetsAt: string | null | undefined,
-) {
-  if (phase !== "waiting_rate_limit" && phase !== "paused") return 2_000;
-
-  const resetTimestamp = quotaResetsAt ? Date.parse(quotaResetsAt) : Number.NaN;
-  if (!Number.isFinite(resetTimestamp)) return 10_000;
-
-  const remaining = resetTimestamp - Date.now();
-  return remaining > 0
-    ? Math.min(30_000, Math.max(5_000, remaining + 250))
-    : 5_000;
+  }, [enabled]);
 }
 
 function StatusUnavailableWarning({
@@ -178,16 +204,22 @@ function SyncStatusCard({
   status: MarketSyncStatus;
   statusConfirmed: boolean;
 }) {
+  const { t } = useI18n();
+  const run = status.run;
   const target = status.targetAssets > 0 ? status.targetAssets : 10_000;
   const progress = Math.min(100, Math.max(0, Math.round((status.validAssets / target) * 100)));
   const waiting = status.phase === "waiting_rate_limit";
-  const paused = status.phase === "paused";
+  const paused = status.phase === "paused" || run?.status === "paused";
   const exhausted = status.completionReason === "catalog_exhausted";
-  const failed = status.phase === "failed";
-  const completed = status.phase === "completed";
-  const active = status.running && !waiting;
-  const resetAt = formatDate(status.quotaResetsAt);
+  const failed = status.phase === "failed" || run?.status === "failed";
+  const completed = status.phase === "completed" || run?.status === "completed";
+  const active = (status.running || run?.status === "running") && !waiting;
+  const resetAt = formatDate(run?.quota.resetsAt ?? status.quotaResetsAt);
   const finishedAt = formatDate(status.lastFinishedAt);
+  const etaLabel = run?.throughput.etaSeconds != null &&
+    run.throughput.etaConfidence !== "unavailable"
+    ? `≈ ${formatDuration(run.throughput.etaSeconds * 1000)}`
+    : t("admin.settings.syncEtaCalculating");
   const tone = failed
     ? "bg-red-500/10 border-red-500/20 text-red-400"
     : waiting || paused || exhausted
@@ -218,7 +250,7 @@ function SyncStatusCard({
                       : "Sincronización en curso"}
             </p>
             <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
-              {PHASE_LABELS[status.phase]}
+              {t(MARKET_SYNC_PHASE_LABEL_KEYS[status.phase])}
             </p>
           </div>
         </div>
@@ -264,6 +296,203 @@ function SyncStatusCard({
         </div>
       </div>
 
+      {run ? (
+        <div className="space-y-3 rounded-[3px] border border-white/5 bg-black/10 p-3">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncElapsedWall")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {formatDuration(run.elapsed.wallMs)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncElapsedActive")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {formatDuration(run.elapsed.activeMs)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncElapsedPaused")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {formatDuration(run.elapsed.pausedMs)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncElapsedQuota")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {formatDuration(run.elapsed.quotaWaitMs)}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-3 lg:grid-cols-4">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncThroughput")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {run.throughput.validAssetsPerMinute == null
+                  ? t("admin.settings.syncMetricUnavailable")
+                  : t("admin.settings.syncAssetsPerMinute", {
+                      value: Math.round(run.throughput.validAssetsPerMinute).toLocaleString("es-AR"),
+                    })}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncEta")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">{etaLabel}</p>
+              <p className="mt-0.5 text-[9px] font-bold text-[#84849b]">
+                {t(ETA_CONFIDENCE_KEYS[run.throughput.etaConfidence])}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncRequests")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {run.requests.attempts.toLocaleString("es-AR")}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncEmptyRequests")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {run.requests.emptyResponses.toLocaleString("es-AR")} ({percentage(
+                  run.requests.emptyResponses,
+                  run.requests.attempts,
+                )})
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-3 lg:grid-cols-4">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncTimeouts")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {run.requests.timeouts.toLocaleString("es-AR")}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncRetries")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {run.requests.retries.toLocaleString("es-AR")}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncLatency")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {formatLatency(run.requests.latencyMs.average)} / p95 {formatLatency(
+                  run.requests.latencyMs.p95Approx,
+                )}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncConcurrency")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {run.concurrency.current.toLocaleString("es-AR")} / {run.concurrency.configured.toLocaleString("es-AR")}
+              </p>
+              {run.concurrency.reductions > 0 && (
+                <p className="mt-0.5 text-[9px] font-bold text-amber-300">
+                  {t("admin.settings.syncConcurrencyReductions", {
+                    count: run.concurrency.reductions,
+                  })}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <p className="border-t border-white/5 pt-3 font-mono text-[10px] text-[#84849b]">
+            {t("admin.settings.syncRunQuota", {
+              run: run.quota.runUnitsUsed.toLocaleString("es-AR"),
+              window: run.quota.windowUnitsUsed.toLocaleString("es-AR"),
+              limit: run.quota.limit.toLocaleString("es-AR"),
+            })}
+          </p>
+        </div>
+      ) : status.running ? (
+        <p className="rounded-[3px] border border-white/5 bg-black/10 p-3 text-[10px] font-bold text-[#84849b]">
+          {t("admin.settings.syncLegacyTelemetryUnavailable")}
+        </p>
+      ) : null}
+
+      {run && run.slowReason !== "none" && (
+        <div className="rounded-[3px] border border-amber-500/20 bg-amber-500/10 p-3 text-xs font-bold text-amber-200">
+          <p className="text-[9px] font-black uppercase tracking-wider text-amber-300">
+            {t("admin.settings.syncSlowReasonTitle")}
+          </p>
+          <p className="mt-1">{t(SLOW_REASON_KEYS[run.slowReason])}</p>
+        </div>
+      )}
+
+      {run && (run.deferredCandidateCount > 0 || run.warnings.length > 0) && (
+        <div className="rounded-[3px] border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-100">
+          <p className="font-black uppercase tracking-wider text-amber-300">
+            {t("admin.settings.syncWarningsTitle")}
+          </p>
+          {run.deferredCandidateCount > 0 && (
+            <p className="mt-1 font-bold text-amber-200">
+              {t("admin.settings.syncDeferredWarnings", {
+                count: run.deferredCandidateCount,
+              })}
+            </p>
+          )}
+          {run.warnings.length > 0 && (
+            <ul className="mt-2 list-disc space-y-1 pl-4 text-[10px] font-medium">
+              {run.warnings.slice(0, 3).map((warning, index) => (
+                <li key={`${index}-${warning}`} className="break-words">
+                  {MARKET_SYNC_WARNING_KEYS[warning]
+                    ? t(MARKET_SYNC_WARNING_KEYS[warning])
+                    : warning}
+                </li>
+              ))}
+            </ul>
+          )}
+          {run.warnings.length > 3 && (
+            <p className="mt-2 text-[10px] font-bold text-amber-200/70">
+              {t("admin.settings.syncMoreWarnings", { count: run.warnings.length - 3 })}
+            </p>
+          )}
+        </div>
+      )}
+
+      {run && run.phases.length > 0 && (
+        <details className="rounded-[3px] border border-white/5 bg-black/10 p-3 text-[10px] text-[#b4b4c5]">
+          <summary className="cursor-pointer font-black uppercase tracking-wider text-white">
+            {t("admin.settings.syncPhaseDurations")}
+          </summary>
+          <div className="mt-3 space-y-1.5">
+            {run.phases.map((phase) => (
+              <div key={phase.phase} className="flex items-center justify-between gap-3">
+                <span className={phase.current ? "font-black text-sky-300" : "font-bold"}>
+                  {t(MARKET_SYNC_PHASE_LABEL_KEYS[phase.phase])}
+                  {phase.entryCount > 1 ? ` ×${phase.entryCount}` : ""}
+                </span>
+                <span className="shrink-0 font-mono">{formatDuration(phase.durationMs)}</span>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
       {status.message && (
         <p className="text-xs font-medium leading-relaxed text-[#b4b4c5]">{status.message}</p>
       )}
@@ -274,9 +503,10 @@ function SyncStatusCard({
         </p>
       )}
 
-      {status.creditsUsed != null && status.creditsUsed > 0 && (
+      {(run?.quota.creditsUsed ?? status.creditsUsed ?? 0) > 0 && (
         <p className="font-mono text-[10px] text-[#84849b]">
-          Créditos informados por SteamWebAPI: {status.creditsUsed.toLocaleString("es-AR")}.
+          Créditos informados por SteamWebAPI:{" "}
+          {(run?.quota.creditsUsed ?? status.creditsUsed ?? 0).toLocaleString("es-AR")}.
         </p>
       )}
 
@@ -517,9 +747,16 @@ export function SyncTab() {
     if (!response.ok) {
       throw new Error(responseMessage(data, t("admin.settings.marketStatusRequestError")));
     }
-    setSyncStatus((current) => normalizeMarketSyncStatus(data, current));
+    const normalized = normalizeMarketSyncStatus(data);
+    setSyncStatus(normalized);
     setSyncStatusConfirmed(true);
     setSyncStatusError(null);
+    if (!shouldPollMarketSyncStatus(normalized)) return null;
+    return marketSyncPollingDelay({
+      phase: normalized.phase,
+      quotaResetsAt: normalized.run?.quota.resetsAt ?? normalized.quotaResetsAt,
+      recommendedPollAfterMs: normalized.run?.recommendedPollAfterMs ?? 0,
+    });
   }, [t]);
 
   const handleCatalogStatusError = useCallback((error: unknown) => {
@@ -547,20 +784,11 @@ export function SyncTab() {
     timeoutMessage: t("admin.settings.statusRequestTimeout"),
   });
 
-  const waitingForQuota = syncStatus?.phase === "waiting_rate_limit";
-  const recoverablePause = syncStatus?.phase === "paused" && Boolean(syncStatus.resumable);
-  const marketPollingEnabled =
-    syncStatus === null ||
-    (syncStatus.phase !== "failed" &&
-      (Boolean(syncStatus.running) || waitingForQuota || recoverablePause));
-  const getMarketPollingInterval = useCallback(
-    () => marketStatusPollingDelay(syncStatus?.phase, syncStatus?.quotaResetsAt),
-    [syncStatus?.phase, syncStatus?.quotaResetsAt],
-  );
+  const marketPollingEnabled = shouldPollMarketSyncStatus(syncStatus);
+  const marketPhase = syncStatus?.phase;
   useRecursiveStatusPolling({
     enabled: marketPollingEnabled,
-    intervalMs: waitingForQuota || recoverablePause ? 10_000 : 2_000,
-    nextIntervalMs: getMarketPollingInterval,
+    intervalMs: marketSyncBasePollingDelay(marketPhase),
     poll: fetchSyncStatus,
     onError: handleSyncStatusError,
     timeoutMessage: t("admin.settings.statusRequestTimeout"),

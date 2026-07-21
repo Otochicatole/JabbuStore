@@ -27,6 +27,23 @@ En el directorio del proyecto, puedes ejecutar:
 * `bun run build` o `npm run build`: Construye la aplicación para producción.
 * `bun run start` o `npm run start`: Inicia el servidor de producción.
 * `bun run lint` o `npm run lint`: Ejecuta el linter (ESLint) para analizar el código.
+* `bun run test:market-sync`: Valida la normalización compatible y la política de polling del estado del Global Market.
+
+## Diagnóstico de sincronización del Global Market
+
+El panel administrativo consume `GET /api/market/sync/status`. Cuando el backend
+incluye `run`, muestra métricas durables de la corrida: tiempos total, activo,
+pausado y de espera de cuota; rendimiento y ETA; consultas vacías, timeouts y
+reintentos; latencia, concurrencia efectiva, causas de lentitud y candidatos
+diferidos. Si `run` no existe, mantiene compatibilidad con el contrato anterior y
+continúa mostrando el progreso básico.
+
+El polling no usa un intervalo fijo: respeta `run.recommendedPollAfterMs` dentro
+de un rango seguro de 1 a 30 segundos. Como fallback consulta cada 5 segundos
+durante la recolección, cada 2 segundos durante validación/publicación y reduce
+la frecuencia mientras espera el reinicio de cuota. Las fases terminales y una
+corrida pausada detienen el polling; los errores HTTP aplican backoff sin solapar
+requests.
 
 ## Estructura de Proyecto (Convenciones de Next.js)
 El proyecto sigue la estructura estándar de Next.js (App Router o Pages Router dependiendo de la implementación interna), utilizando TypeScript para un tipado estricto.

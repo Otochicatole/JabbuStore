@@ -69,6 +69,86 @@ export type MarketSyncCompletionReason =
   | "target_reached"
   | "catalog_exhausted";
 
+export type MarketSyncRunStatus = "running" | "paused" | "completed" | "failed";
+
+export type MarketSyncEtaConfidence = "high" | "medium" | "low" | "unavailable";
+
+export type MarketSyncSlowReason =
+  | "quota_wait"
+  | "provider_latency"
+  | "timeouts"
+  | "retries"
+  | "empty_catalog_results"
+  | "adaptive_concurrency"
+  | "paused"
+  | "publishing_database"
+  | "none";
+
+export type MarketSyncRunStatusView = {
+  id: string;
+  status: MarketSyncRunStatus;
+  resumed: boolean;
+  attemptCount: number;
+  runStartedAt: string;
+  attemptStartedAt: string;
+  runFinishedAt: string | null;
+  lastHeartbeatAt: string;
+  elapsed: {
+    wallMs: number;
+    activeMs: number;
+    pausedMs: number;
+    quotaWaitMs: number;
+    retryBackoffMs: number;
+  };
+  phases: Array<{
+    phase: MarketSyncPhase;
+    durationMs: number;
+    entryCount: number;
+    current: boolean;
+  }>;
+  requests: {
+    pages: number;
+    attempts: number;
+    succeeded: number;
+    failed: number;
+    retries: number;
+    timeouts: number;
+    emptyResponses: number;
+    notFound: number;
+    rateLimited: number;
+    latencyMs: {
+      samples: number;
+      average: number | null;
+      maximum: number | null;
+      p95Approx: number | null;
+    };
+  };
+  quota: {
+    runUnitsUsed: number;
+    creditsUsed: number;
+    windowUnitsUsed: number;
+    limit: number;
+    resetsAt: string | null;
+    waitCount: number;
+  };
+  concurrency: {
+    configured: number;
+    current: number;
+    minimumUsed: number;
+    peakInFlight: number;
+    reductions: number;
+  };
+  throughput: {
+    validAssetsPerMinute: number | null;
+    etaSeconds: number | null;
+    etaConfidence: MarketSyncEtaConfidence;
+  };
+  slowReason: MarketSyncSlowReason;
+  recommendedPollAfterMs: number;
+  deferredCandidateCount: number;
+  warnings: string[];
+};
+
 export type LastPublishedMarketSnapshotStatus = {
   snapshotHash: string;
   rawAssets: number;
@@ -110,6 +190,8 @@ export type MarketSyncStatus = {
   lastSuccessfulAt: string | null;
   lastError: string | null;
   completionReason: MarketSyncCompletionReason | null;
+  /** Diagnóstico durable de la corrida actual; null con backends anteriores. */
+  run: MarketSyncRunStatusView | null;
   itemsCatalog: {
     fetchedAt: string | null;
     itemCount: number;

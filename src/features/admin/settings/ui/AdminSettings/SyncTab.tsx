@@ -427,7 +427,8 @@ function SyncStatusCard({
               <p className="mt-1 font-mono text-xs font-black text-white">
                 {run.concurrency.current.toLocaleString("es-AR")} / {run.concurrency.configured.toLocaleString("es-AR")}
               </p>
-              {run.concurrency.reductions > 0 && (
+              {run.concurrency.reductions > 0 &&
+                run.concurrency.current < run.concurrency.configured && (
                 <p className="mt-0.5 text-[9px] font-bold text-amber-300">
                   {t("admin.settings.syncConcurrencyReductions", {
                     count: run.concurrency.reductions,

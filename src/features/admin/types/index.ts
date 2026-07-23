@@ -73,6 +73,8 @@ export type MarketSyncRunStatus = "running" | "paused" | "completed" | "failed";
 
 export type MarketSyncEtaConfidence = "high" | "medium" | "low" | "unavailable";
 
+export type MarketSyncCircuitBreakerState = "closed" | "open" | "half_open";
+
 export type MarketSyncSlowReason =
   | "quota_wait"
   | "provider_latency"
@@ -142,6 +144,25 @@ export type MarketSyncRunStatusView = {
     validAssetsPerMinute: number | null;
     etaSeconds: number | null;
     etaConfidence: MarketSyncEtaConfidence;
+    targetDurationSeconds: number;
+    requiredAssetsPerMinute: number;
+    onTrack: boolean | null;
+    projectedCompletionAt: string | null;
+  };
+  workers: {
+    initial: number;
+    max: number;
+    effective: number;
+    required: number;
+    inFlight: number;
+    queueDepth: number;
+    /** Fracción entre 0 y 1 de los slots efectivos ocupados. */
+    utilization: number;
+  };
+  circuitBreaker: {
+    state: MarketSyncCircuitBreakerState;
+    openCount: number;
+    resumeAt: string | null;
   };
   slowReason: MarketSyncSlowReason;
   recommendedPollAfterMs: number;

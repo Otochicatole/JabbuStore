@@ -1,5 +1,6 @@
 import type {
   MarketSyncCompletionReason,
+  MarketSyncCircuitBreakerState,
   MarketSyncEtaConfidence,
   MarketSyncPhase,
   MarketSyncRunStatus,
@@ -41,6 +42,8 @@ export const MARKET_SYNC_WARNING_KEYS: Readonly<Record<string, string>> = {
   deferred_candidates: "admin.settings.syncWarning.deferredCandidates",
   eta_low_confidence: "admin.settings.syncWarning.etaLowConfidence",
   quota_window_near_limit: "admin.settings.syncWarning.quotaWindowNearLimit",
+  ten_minute_target_unreachable:
+    "admin.settings.syncWarning.tenMinuteTargetUnreachable",
 };
 
 const MARKET_SYNC_PHASES = new Set<MarketSyncPhase>([
@@ -78,6 +81,12 @@ const ETA_CONFIDENCE_VALUES = new Set<MarketSyncEtaConfidence>([
   "medium",
   "low",
   "unavailable",
+]);
+
+const CIRCUIT_BREAKER_STATES = new Set<MarketSyncCircuitBreakerState>([
+  "closed",
+  "open",
+  "half_open",
 ]);
 
 const SLOW_REASONS = new Set<MarketSyncSlowReason>([
@@ -197,6 +206,14 @@ function nullableStringField(
   return key in record ? nullableString(record, [key]) : fallback;
 }
 
+function unitInterval(
+  record: Record<string, unknown>,
+  key: string,
+  fallback: number,
+): number {
+  return Math.min(1, Math.max(0, numberValue(record, [key], fallback)));
+}
+
 export function normalizeMarketSyncRun(
   value: unknown,
   fallback?: MarketSyncRunStatusView | null,
@@ -217,6 +234,8 @@ export function normalizeMarketSyncRun(
   const quota = asRecord(record.quota);
   const concurrency = asRecord(record.concurrency);
   const throughput = asRecord(record.throughput);
+  const workers = asRecord(record.workers);
+  const circuitBreaker = asRecord(record.circuitBreaker);
   const etaConfidenceValue = throughput.etaConfidence;
   const etaConfidence =
     typeof etaConfidenceValue === "string" &&
@@ -250,6 +269,24 @@ export function normalizeMarketSyncRun(
   const warnings = Array.isArray(record.warnings)
     ? record.warnings.filter((item): item is string => typeof item === "string")
     : base?.warnings ?? [];
+  const circuitBreakerStateValue = circuitBreaker.state;
+  const circuitBreakerState =
+    typeof circuitBreakerStateValue === "string" &&
+    CIRCUIT_BREAKER_STATES.has(
+      circuitBreakerStateValue as MarketSyncCircuitBreakerState,
+    )
+      ? (circuitBreakerStateValue as MarketSyncCircuitBreakerState)
+      : base?.circuitBreaker.state ?? "closed";
+  const configuredConcurrency = nonNegativeNumber(
+    concurrency,
+    ["configured"],
+    base?.concurrency.configured ?? 0,
+  );
+  const currentConcurrency = nonNegativeNumber(
+    concurrency,
+    ["current"],
+    base?.concurrency.current ?? 0,
+  );
 
   return {
     id,
@@ -326,12 +363,8 @@ export function normalizeMarketSyncRun(
       waitCount: nonNegativeNumber(quota, ["waitCount"], base?.quota.waitCount ?? 0),
     },
     concurrency: {
-      configured: nonNegativeNumber(
-        concurrency,
-        ["configured"],
-        base?.concurrency.configured ?? 0,
-      ),
-      current: nonNegativeNumber(concurrency, ["current"], base?.concurrency.current ?? 0),
+      configured: configuredConcurrency,
+      current: currentConcurrency,
       minimumUsed: nonNegativeNumber(
         concurrency,
         ["minimumUsed"],
@@ -360,6 +393,75 @@ export function normalizeMarketSyncRun(
         base?.throughput.etaSeconds ?? null,
       ),
       etaConfidence,
+      targetDurationSeconds: nonNegativeNumber(
+        throughput,
+        ["targetDurationSeconds"],
+        base?.throughput.targetDurationSeconds ?? 600,
+      ),
+      requiredAssetsPerMinute: nonNegativeNumber(
+        throughput,
+        ["requiredAssetsPerMinute"],
+        base?.throughput.requiredAssetsPerMinute ?? 0,
+      ),
+      onTrack:
+        typeof throughput.onTrack === "boolean"
+          ? throughput.onTrack
+          : base?.throughput.onTrack ?? null,
+      projectedCompletionAt: nullableStringField(
+        throughput,
+        "projectedCompletionAt",
+        base?.throughput.projectedCompletionAt ?? null,
+      ),
+    },
+    workers: {
+      initial: nonNegativeNumber(
+        workers,
+        ["initial"],
+        base?.workers.initial ?? Math.min(6, configuredConcurrency),
+      ),
+      max: nonNegativeNumber(
+        workers,
+        ["max"],
+        base?.workers.max ?? configuredConcurrency,
+      ),
+      effective: nonNegativeNumber(
+        workers,
+        ["effective"],
+        base?.workers.effective ?? currentConcurrency,
+      ),
+      required: nonNegativeNumber(
+        workers,
+        ["required"],
+        base?.workers.required ?? 0,
+      ),
+      inFlight: nonNegativeNumber(
+        workers,
+        ["inFlight"],
+        base?.workers.inFlight ?? 0,
+      ),
+      queueDepth: nonNegativeNumber(
+        workers,
+        ["queueDepth"],
+        base?.workers.queueDepth ?? 0,
+      ),
+      utilization: unitInterval(
+        workers,
+        "utilization",
+        base?.workers.utilization ?? 0,
+      ),
+    },
+    circuitBreaker: {
+      state: circuitBreakerState,
+      openCount: nonNegativeNumber(
+        circuitBreaker,
+        ["openCount"],
+        base?.circuitBreaker.openCount ?? 0,
+      ),
+      resumeAt: nullableStringField(
+        circuitBreaker,
+        "resumeAt",
+        base?.circuitBreaker.resumeAt ?? null,
+      ),
     },
     slowReason,
     recommendedPollAfterMs: nonNegativeNumber(

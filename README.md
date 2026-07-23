@@ -35,8 +35,13 @@ El panel administrativo consume `GET /api/market/sync/status`. Cuando el backend
 incluye `run`, muestra métricas durables de la corrida: tiempos total, activo,
 pausado y de espera de cuota; rendimiento y ETA; consultas vacías, timeouts y
 reintentos; latencia, concurrencia efectiva, causas de lentitud y candidatos
-diferidos. Si `run` no existe, mantiene compatibilidad con el contrato anterior y
-continúa mostrando el progreso básico.
+diferidos. También presenta los workers activos y requeridos, la utilización y
+cola del pool, el estado del circuit breaker, la cuenta regresiva del objetivo de
+diez minutos y la finalización proyectada. Si SteamWebAPI no permite sostener el
+ritmo necesario, muestra la advertencia `ten_minute_target_unreachable`: los diez
+minutos son un SLO condicionado por el proveedor y no provocan la publicación de
+un snapshot parcial. Si `run` no existe, mantiene compatibilidad con el contrato
+anterior y continúa mostrando el progreso básico.
 
 El polling no usa un intervalo fijo: respeta `run.recommendedPollAfterMs` dentro
 de un rango seguro de 1 a 30 segundos. Como fallback consulta cada 5 segundos

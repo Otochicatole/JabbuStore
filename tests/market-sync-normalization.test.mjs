@@ -69,6 +69,24 @@ describe("normalizeMarketSyncStatus", () => {
         validAssetsPerMinute: 320,
         etaSeconds: 90,
         etaConfidence: "medium",
+        targetDurationSeconds: 600,
+        requiredAssetsPerMinute: 875,
+        onTrack: false,
+        projectedCompletionAt: "2026-07-21T00:03:30.000Z",
+      },
+      workers: {
+        initial: 6,
+        max: 48,
+        effective: 21,
+        required: 37,
+        inFlight: 20,
+        queueDepth: 900,
+        utilization: 0.952,
+      },
+      circuitBreaker: {
+        state: "half_open",
+        openCount: 2,
+        resumeAt: "2026-07-21T00:02:30.000Z",
       },
       slowReason: "adaptive_concurrency",
       recommendedPollAfterMs: 5_000,
@@ -85,11 +103,62 @@ describe("normalizeMarketSyncStatus", () => {
       recommendedPollAfterMs: 5_000,
       warnings: ["timeout diferido"],
       requests: { attempts: 20, emptyResponses: 5, timeouts: 2, retries: 3 },
-      throughput: { validAssetsPerMinute: 320, etaSeconds: 90, etaConfidence: "medium" },
+      throughput: {
+        validAssetsPerMinute: 320,
+        etaSeconds: 90,
+        etaConfidence: "medium",
+        targetDurationSeconds: 600,
+        requiredAssetsPerMinute: 875,
+        onTrack: false,
+      },
+      workers: {
+        initial: 6,
+        max: 48,
+        effective: 21,
+        required: 37,
+        inFlight: 20,
+        queueDepth: 900,
+        utilization: 0.952,
+      },
+      circuitBreaker: {
+        state: "half_open",
+        openCount: 2,
+        resumeAt: "2026-07-21T00:02:30.000Z",
+      },
     });
     expect(status.run.phases).toHaveLength(1);
     expect(status.run.elapsed.quotaWaitMs).toBe(0);
     expect(status.run.quota.creditsUsed).toBe(12.5);
+  });
+
+  it("aplica defaults compatibles cuando el backend no informa workers ni breaker", () => {
+    const status = statusWithRun({
+      id: "legacy-run",
+      status: "running",
+      concurrency: { configured: 3, current: 2 },
+      throughput: { etaConfidence: "unavailable" },
+    });
+
+    expect(status.run.workers).toEqual({
+      initial: 3,
+      max: 3,
+      effective: 2,
+      required: 0,
+      inFlight: 0,
+      queueDepth: 0,
+      utilization: 0,
+    });
+    expect(status.run.circuitBreaker).toEqual({
+      state: "closed",
+      openCount: 0,
+      resumeAt: null,
+    });
+    expect(status.run.throughput).toMatchObject({
+      targetDurationSeconds: 600,
+      requiredAssetsPerMinute: 0,
+      onTrack: null,
+      projectedCompletionAt: null,
+    });
   });
 
   it("un run null explícito limpia la telemetría anterior", () => {
@@ -156,6 +225,14 @@ describe("market sync translations", () => {
       ...new Set(Object.values(MARKET_SYNC_PHASE_LABEL_KEYS)),
       ...new Set(Object.values(MARKET_SYNC_WARNING_KEYS)),
       "admin.settings.syncWarningsTitle",
+      "admin.settings.syncWorkersActiveRequired",
+      "admin.settings.syncWorkersEffectiveMax",
+      "admin.settings.syncTargetCountdown",
+      "admin.settings.syncProjectedCompletion",
+      "admin.settings.syncCircuitBreakerTitle",
+      "admin.settings.syncCircuitBreaker.closed",
+      "admin.settings.syncCircuitBreaker.open",
+      "admin.settings.syncCircuitBreaker.halfOpen",
     ];
 
     for (const key of keys) {

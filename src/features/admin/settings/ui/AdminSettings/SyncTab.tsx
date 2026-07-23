@@ -6,6 +6,7 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import type {
+  MarketSyncCircuitBreakerState,
   MarketSyncEtaConfidence,
   MarketSyncSlowReason,
   MarketSyncStatus,
@@ -45,6 +46,12 @@ const ETA_CONFIDENCE_KEYS: Record<MarketSyncEtaConfidence, string> = {
   medium: "admin.settings.syncEtaConfidence.medium",
   low: "admin.settings.syncEtaConfidence.low",
   unavailable: "admin.settings.syncEtaConfidence.unavailable",
+};
+
+const CIRCUIT_BREAKER_KEYS: Record<MarketSyncCircuitBreakerState, string> = {
+  closed: "admin.settings.syncCircuitBreaker.closed",
+  open: "admin.settings.syncCircuitBreaker.open",
+  half_open: "admin.settings.syncCircuitBreaker.halfOpen",
 };
 
 function formatDate(value: string | null) {
@@ -220,6 +227,16 @@ function SyncStatusCard({
     run.throughput.etaConfidence !== "unavailable"
     ? `≈ ${formatDuration(run.throughput.etaSeconds * 1000)}`
     : t("admin.settings.syncEtaCalculating");
+  const targetCountdownMs = run
+    ? Math.max(
+        0,
+        run.throughput.targetDurationSeconds * 1_000 - run.elapsed.wallMs,
+      )
+    : 0;
+  const projectedCompletion = formatDate(
+    run?.throughput.projectedCompletionAt ?? null,
+  );
+  const breakerResumeAt = formatDate(run?.circuitBreaker.resumeAt ?? null);
   const tone = failed
     ? "bg-red-500/10 border-red-500/20 text-red-400"
     : waiting || paused || exhausted
@@ -420,6 +437,73 @@ function SyncStatusCard({
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-3 lg:grid-cols-4">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncWorkersActiveRequired")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {run.workers.inFlight.toLocaleString("es-AR")} /{" "}
+                {run.workers.required.toLocaleString("es-AR")}
+              </p>
+              <p className="mt-0.5 text-[9px] font-bold text-[#84849b]">
+                {t("admin.settings.syncWorkersUtilization", {
+                  value: Math.round(run.workers.utilization * 100),
+                })}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncWorkersEffectiveMax")}
+              </p>
+              <p className="mt-1 font-mono text-xs font-black text-white">
+                {run.workers.effective.toLocaleString("es-AR")} /{" "}
+                {run.workers.max.toLocaleString("es-AR")}
+              </p>
+              <p className="mt-0.5 text-[9px] font-bold text-[#84849b]">
+                {t("admin.settings.syncWorkersQueue", {
+                  count: run.workers.queueDepth.toLocaleString("es-AR"),
+                })}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncTargetCountdown")}
+              </p>
+              <p
+                className={`mt-1 font-mono text-xs font-black ${
+                  run.throughput.onTrack === false
+                    ? "text-amber-300"
+                    : "text-white"
+                }`}
+              >
+                {formatDuration(targetCountdownMs)}
+              </p>
+              <p className="mt-0.5 text-[9px] font-bold text-[#84849b]">
+                {run.throughput.onTrack == null
+                  ? t("admin.settings.syncTargetCalculating")
+                  : run.throughput.onTrack
+                    ? t("admin.settings.syncTargetOnTrack")
+                    : t("admin.settings.syncTargetOffTrack")}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                {t("admin.settings.syncProjectedCompletion")}
+              </p>
+              <p className="mt-1 text-xs font-black text-white">
+                {projectedCompletion ?? t("admin.settings.syncMetricUnavailable")}
+              </p>
+              <p className="mt-0.5 text-[9px] font-bold text-[#84849b]">
+                {t("admin.settings.syncRequiredRate", {
+                  value: Math.round(
+                    run.throughput.requiredAssetsPerMinute,
+                  ).toLocaleString("es-AR"),
+                })}
+              </p>
+            </div>
+          </div>
+
           <p className="border-t border-white/5 pt-3 font-mono text-[10px] text-[#84849b]">
             {t("admin.settings.syncRunQuota", {
               run: run.quota.runUnitsUsed.toLocaleString("es-AR"),
@@ -433,6 +517,29 @@ function SyncStatusCard({
           {t("admin.settings.syncLegacyTelemetryUnavailable")}
         </p>
       ) : null}
+
+      {run && run.circuitBreaker.state !== "closed" && (
+        <div className="rounded-[3px] border border-amber-500/20 bg-amber-500/10 p-3 text-xs font-bold text-amber-200">
+          <p className="text-[9px] font-black uppercase tracking-wider text-amber-300">
+            {t("admin.settings.syncCircuitBreakerTitle")}
+          </p>
+          <p className="mt-1">
+            {t(CIRCUIT_BREAKER_KEYS[run.circuitBreaker.state])}
+            {run.circuitBreaker.openCount > 0
+              ? ` · ${t("admin.settings.syncCircuitBreakerOpenCount", {
+                  count: run.circuitBreaker.openCount,
+                })}`
+              : ""}
+          </p>
+          {breakerResumeAt && (
+            <p className="mt-1 text-[10px] font-medium text-amber-100/80">
+              {t("admin.settings.syncCircuitBreakerResumeAt", {
+                value: breakerResumeAt,
+              })}
+            </p>
+          )}
+        </div>
+      )}
 
       {run && run.slowReason !== "none" && (
         <div className="rounded-[3px] border border-amber-500/20 bg-amber-500/10 p-3 text-xs font-bold text-amber-200">

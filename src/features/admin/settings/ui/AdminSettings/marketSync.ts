@@ -3,6 +3,7 @@ import type {
   MarketSyncCircuitBreakerState,
   MarketSyncEtaConfidence,
   MarketSyncPhase,
+  MarketSyncRequestPacerStatusView,
   MarketSyncRunStatus,
   MarketSyncRunStatusView,
   MarketSyncSlowReason,
@@ -30,6 +31,7 @@ export const MARKET_SYNC_PHASE_LABEL_KEYS: Record<MarketSyncPhase, string> = {
   syncing_bots: "admin.settings.syncPhase.syncingBots",
   paused: "admin.settings.syncPhase.paused",
   completed: "admin.settings.syncPhase.completed",
+  cancelled: "admin.settings.syncPhase.cancelled",
   failed: "admin.settings.syncPhase.failed",
   fetching_youpin: "admin.settings.syncPhase.collectingAssets",
   downloading_assets: "admin.settings.syncPhase.collectingAssets",
@@ -58,6 +60,7 @@ const MARKET_SYNC_PHASES = new Set<MarketSyncPhase>([
   "syncing_bots",
   "paused",
   "completed",
+  "cancelled",
   "failed",
   "fetching_youpin",
   "downloading_assets",
@@ -73,6 +76,7 @@ const RUN_STATUSES = new Set<MarketSyncRunStatus>([
   "running",
   "paused",
   "completed",
+  "cancelled",
   "failed",
 ]);
 
@@ -88,6 +92,14 @@ const CIRCUIT_BREAKER_STATES = new Set<MarketSyncCircuitBreakerState>([
   "open",
   "half_open",
 ]);
+
+const REQUEST_PACER_GATE_STATES = new Set<
+  MarketSyncRequestPacerStatusView["gateState"]
+>(["closed", "open"]);
+
+const REQUEST_PACER_GATE_REASONS = new Set<
+  NonNullable<MarketSyncRequestPacerStatusView["gateReason"]>
+>(["congestion", "rate_limited"]);
 
 const SLOW_REASONS = new Set<MarketSyncSlowReason>([
   "quota_wait",
@@ -142,11 +154,23 @@ export function shouldPollMarketSyncStatus(status: MarketSyncStatus | null) {
   if (
     status.phase === "failed" ||
     status.phase === "completed" ||
+    status.phase === "cancelled" ||
     status.phase === "paused"
   ) {
     return false;
   }
   return Boolean(status.running || status.run?.status === "running");
+}
+
+const CANCELLABLE_MARKET_SYNC_PHASES = new Set<MarketSyncPhase>([
+  "collecting_assets",
+  "waiting_rate_limit",
+]);
+
+export function canCancelMarketSync(status: MarketSyncStatus | null) {
+  return Boolean(
+    status?.running && CANCELLABLE_MARKET_SYNC_PHASES.has(status.phase),
+  );
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -214,6 +238,116 @@ function unitInterval(
   return Math.min(1, Math.max(0, numberValue(record, [key], fallback)));
 }
 
+function normalizeMarketSyncRequestPacer(
+  value: unknown,
+  fallback: MarketSyncRequestPacerStatusView | null,
+): MarketSyncRequestPacerStatusView | null {
+  if (value === null) return null;
+  if (typeof value !== "object" || Array.isArray(value)) return fallback;
+
+  const record = asRecord(value);
+  const rawInitial = record.initialStartsPerSecond;
+  const rawMaximum = record.maximumStartsPerSecond;
+  const rawCurrent = record.currentStartsPerSecond;
+  const hasValidInitial =
+    typeof rawInitial === "number" &&
+    Number.isFinite(rawInitial) &&
+    rawInitial > 0;
+  const hasValidMaximum =
+    typeof rawMaximum === "number" &&
+    Number.isFinite(rawMaximum) &&
+    rawMaximum > 0;
+  const hasValidCurrent =
+    typeof rawCurrent === "number" &&
+    Number.isFinite(rawCurrent) &&
+    rawCurrent > 0;
+
+  if (
+    fallback === null &&
+    (!hasValidInitial || !hasValidMaximum || !hasValidCurrent)
+  ) {
+    return null;
+  }
+
+  const maximumStartsPerSecond = hasValidMaximum
+    ? rawMaximum
+    : fallback?.maximumStartsPerSecond ?? 0;
+  const initialStartsPerSecond = Math.min(
+    hasValidInitial ? rawInitial : fallback?.initialStartsPerSecond ?? 0,
+    maximumStartsPerSecond,
+  );
+  const currentStartsPerSecond = Math.min(
+    hasValidCurrent ? rawCurrent : fallback?.currentStartsPerSecond ?? 0,
+    maximumStartsPerSecond,
+  );
+  const queuedValue = record.queued;
+  const queued =
+    typeof queuedValue === "number" && Number.isFinite(queuedValue)
+      ? Math.floor(Math.max(0, queuedValue))
+      : fallback?.queued ?? 0;
+  const gateStateValue = record.gateState;
+  let gateState =
+    typeof gateStateValue === "string" &&
+    REQUEST_PACER_GATE_STATES.has(
+      gateStateValue as MarketSyncRequestPacerStatusView["gateState"],
+    )
+      ? (gateStateValue as MarketSyncRequestPacerStatusView["gateState"])
+      : fallback?.gateState ?? "closed";
+  const gateReasonValue = record.gateReason;
+  let gateReason =
+    gateReasonValue === null
+      ? null
+      : typeof gateReasonValue === "string" &&
+          REQUEST_PACER_GATE_REASONS.has(
+            gateReasonValue as NonNullable<
+              MarketSyncRequestPacerStatusView["gateReason"]
+            >,
+          )
+        ? (gateReasonValue as NonNullable<
+            MarketSyncRequestPacerStatusView["gateReason"]
+          >)
+        : fallback?.gateReason ?? null;
+  let gateResumeAt = nullableStringField(
+    record,
+    "gateResumeAt",
+    fallback?.gateResumeAt ?? null,
+  );
+
+  if (gateState === "closed") {
+    gateReason = null;
+    gateResumeAt = null;
+  } else if (
+    gateReason === null ||
+    gateResumeAt === null ||
+    !Number.isFinite(Date.parse(gateResumeAt))
+  ) {
+    const fallbackGateIsOpen =
+      fallback?.gateState === "open" &&
+      fallback.gateReason !== null &&
+      fallback.gateResumeAt !== null &&
+      Number.isFinite(Date.parse(fallback.gateResumeAt));
+    if (fallbackGateIsOpen && fallback) {
+      gateState = fallback.gateState;
+      gateReason = fallback.gateReason;
+      gateResumeAt = fallback.gateResumeAt;
+    } else {
+      gateState = "closed";
+      gateReason = null;
+      gateResumeAt = null;
+    }
+  }
+
+  return {
+    initialStartsPerSecond,
+    maximumStartsPerSecond,
+    currentStartsPerSecond,
+    queued,
+    gateState,
+    gateReason,
+    gateResumeAt,
+  };
+}
+
 export function normalizeMarketSyncRun(
   value: unknown,
   fallback?: MarketSyncRunStatusView | null,
@@ -236,6 +370,13 @@ export function normalizeMarketSyncRun(
   const throughput = asRecord(record.throughput);
   const workers = asRecord(record.workers);
   const circuitBreaker = asRecord(record.circuitBreaker);
+  const requestPacer =
+    "requestPacer" in record
+      ? normalizeMarketSyncRequestPacer(
+          record.requestPacer,
+          base?.requestPacer ?? null,
+        )
+      : base?.requestPacer ?? null;
   const etaConfidenceValue = throughput.etaConfidence;
   const etaConfidence =
     typeof etaConfidenceValue === "string" &&
@@ -463,6 +604,7 @@ export function normalizeMarketSyncRun(
         base?.circuitBreaker.resumeAt ?? null,
       ),
     },
+    requestPacer,
     slowReason,
     recommendedPollAfterMs: nonNegativeNumber(
       record,

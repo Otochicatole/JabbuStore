@@ -58,6 +58,7 @@ export type MarketSyncPhase =
   | "syncing_bots"
   | "paused"
   | "completed"
+  | "cancelled"
   | "failed"
   // Fases del contrato anterior. Se conservan para poder desplegar frontend y
   // backend de forma independiente.
@@ -69,11 +70,26 @@ export type MarketSyncCompletionReason =
   | "target_reached"
   | "catalog_exhausted";
 
-export type MarketSyncRunStatus = "running" | "paused" | "completed" | "failed";
+export type MarketSyncRunStatus =
+  | "running"
+  | "paused"
+  | "completed"
+  | "cancelled"
+  | "failed";
 
 export type MarketSyncEtaConfidence = "high" | "medium" | "low" | "unavailable";
 
 export type MarketSyncCircuitBreakerState = "closed" | "open" | "half_open";
+
+export type MarketSyncRequestPacerStatusView = {
+  initialStartsPerSecond: number;
+  maximumStartsPerSecond: number;
+  currentStartsPerSecond: number;
+  queued: number;
+  gateState: "closed" | "open";
+  gateReason: "congestion" | "rate_limited" | null;
+  gateResumeAt: string | null;
+};
 
 export type MarketSyncSlowReason =
   | "quota_wait"
@@ -164,6 +180,8 @@ export type MarketSyncRunStatusView = {
     openCount: number;
     resumeAt: string | null;
   };
+  /** Ritmo de admisión de requests del proveedor; null con backends anteriores. */
+  requestPacer: MarketSyncRequestPacerStatusView | null;
   slowReason: MarketSyncSlowReason;
   recommendedPollAfterMs: number;
   deferredCandidateCount: number;

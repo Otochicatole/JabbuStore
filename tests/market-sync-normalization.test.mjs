@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  canCancelMarketSync,
   MARKET_SYNC_PHASE_LABEL_KEYS,
   MARKET_SYNC_WARNING_KEYS,
   marketSyncBasePollingDelay,
@@ -18,6 +19,8 @@ function statusWithRun(run) {
     phase:
       run?.status === "completed"
         ? "completed"
+        : run?.status === "cancelled"
+          ? "cancelled"
         : run?.status === "failed"
           ? "failed"
           : run?.status === "paused"
@@ -88,6 +91,15 @@ describe("normalizeMarketSyncStatus", () => {
         openCount: 2,
         resumeAt: "2026-07-21T00:02:30.000Z",
       },
+      requestPacer: {
+        initialStartsPerSecond: 4,
+        maximumStartsPerSecond: 16,
+        currentStartsPerSecond: 3,
+        queued: 9,
+        gateState: "open",
+        gateReason: "congestion",
+        gateResumeAt: "2026-07-21T00:02:10.000Z",
+      },
       slowReason: "adaptive_concurrency",
       recommendedPollAfterMs: 5_000,
       deferredCandidateCount: 4,
@@ -125,6 +137,15 @@ describe("normalizeMarketSyncStatus", () => {
         openCount: 2,
         resumeAt: "2026-07-21T00:02:30.000Z",
       },
+      requestPacer: {
+        initialStartsPerSecond: 4,
+        maximumStartsPerSecond: 16,
+        currentStartsPerSecond: 3,
+        queued: 9,
+        gateState: "open",
+        gateReason: "congestion",
+        gateResumeAt: "2026-07-21T00:02:10.000Z",
+      },
     });
     expect(status.run.phases).toHaveLength(1);
     expect(status.run.elapsed.quotaWaitMs).toBe(0);
@@ -153,6 +174,7 @@ describe("normalizeMarketSyncStatus", () => {
       openCount: 0,
       resumeAt: null,
     });
+    expect(status.run.requestPacer).toBeNull();
     expect(status.run.throughput).toMatchObject({
       targetDurationSeconds: 600,
       requiredAssetsPerMinute: 0,
@@ -165,6 +187,75 @@ describe("normalizeMarketSyncStatus", () => {
     const previous = statusWithRun({ id: "run-1", status: "running" });
     const next = normalizeMarketSyncStatus({ run: null }, previous);
     expect(next.run).toBeNull();
+  });
+
+  it("conserva el pacer entre polls parciales y lo limpia con null explícito", () => {
+    const previous = statusWithRun({
+      id: "pacer-run",
+      status: "running",
+      requestPacer: {
+        initialStartsPerSecond: 4,
+        maximumStartsPerSecond: 16,
+        currentStartsPerSecond: 3,
+        queued: 8,
+        gateState: "open",
+        gateReason: "rate_limited",
+        gateResumeAt: "2026-07-21T00:04:00.000Z",
+      },
+    });
+    const partial = normalizeMarketSyncStatus(
+      {
+        run: {
+          id: "pacer-run",
+          requestPacer: {
+            currentStartsPerSecond: 2.5,
+            queued: -4,
+            gateState: "invalid",
+            gateReason: null,
+            gateResumeAt: null,
+          },
+        },
+      },
+      previous,
+    );
+
+    expect(partial.run.requestPacer).toEqual({
+      initialStartsPerSecond: 4,
+      maximumStartsPerSecond: 16,
+      currentStartsPerSecond: 2.5,
+      queued: 0,
+      gateState: "open",
+      gateReason: "rate_limited",
+      gateResumeAt: "2026-07-21T00:04:00.000Z",
+    });
+
+    const cleared = normalizeMarketSyncStatus(
+      { run: { id: "pacer-run", requestPacer: null } },
+      partial,
+    );
+    expect(cleared.run.requestPacer).toBeNull();
+  });
+
+  it("ignora un pacer nuevo incompleto en vez de mostrar métricas 0/0", () => {
+    const status = statusWithRun({
+      id: "malformed-pacer",
+      status: "running",
+      requestPacer: {},
+    });
+
+    expect(status.run.requestPacer).toBeNull();
+  });
+
+  it("normaliza cancelled como estado terminal", () => {
+    const status = statusWithRun({
+      id: "cancelled-run",
+      status: "cancelled",
+    });
+
+    expect(status.phase).toBe("cancelled");
+    expect(status.run.status).toBe("cancelled");
+    expect(status.running).toBe(false);
+    expect(shouldPollMarketSyncStatus(status)).toBe(false);
   });
 });
 
@@ -217,6 +308,47 @@ describe("market sync polling", () => {
     expect(shouldPollMarketSyncStatus(waiting)).toBe(true);
     expect(shouldPollMarketSyncStatus(historicalQuotaWait)).toBe(false);
   });
+
+  it("permite cancelar sólo las fases con collector registrado", () => {
+    for (const phase of [
+      "collecting_assets",
+      "waiting_rate_limit",
+    ]) {
+      expect(
+        canCancelMarketSync(
+          normalizeMarketSyncStatus({ running: true, phase }),
+        ),
+      ).toBe(true);
+    }
+
+    for (const phase of [
+      "building_priority_queue",
+      "validating_snapshot",
+      "saving_snapshot",
+      "publishing_database",
+      "syncing_bots",
+      "paused",
+      "completed",
+      "cancelled",
+      "failed",
+    ]) {
+      expect(
+        canCancelMarketSync(
+          normalizeMarketSyncStatus({ running: true, phase }),
+        ),
+      ).toBe(false);
+    }
+
+    expect(
+      canCancelMarketSync(
+        normalizeMarketSyncStatus({
+          running: false,
+          phase: "collecting_assets",
+          run: { id: "stale", status: "running" },
+        }),
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("market sync translations", () => {
@@ -227,12 +359,29 @@ describe("market sync translations", () => {
       "admin.settings.syncWarningsTitle",
       "admin.settings.syncWorkersActiveRequired",
       "admin.settings.syncWorkersEffectiveMax",
+      "admin.settings.syncRequestPacerRate",
+      "admin.settings.syncRequestsPerSecond",
+      "admin.settings.syncRequestPacerQueue",
+      "admin.settings.syncRequestPacerGate",
+      "admin.settings.syncRequestPacerGateOpen",
+      "admin.settings.syncRequestPacerGateReason.congestion",
+      "admin.settings.syncRequestPacerGateReason.rateLimited",
+      "admin.settings.syncRequestPacerGateResumeAt",
       "admin.settings.syncTargetCountdown",
       "admin.settings.syncProjectedCompletion",
       "admin.settings.syncCircuitBreakerTitle",
       "admin.settings.syncCircuitBreaker.closed",
       "admin.settings.syncCircuitBreaker.open",
       "admin.settings.syncCircuitBreaker.halfOpen",
+      "admin.settings.syncPhase.cancelled",
+      "admin.settings.syncCancelButton",
+      "admin.settings.syncCancelling",
+      "admin.settings.syncCancelConfirmTitle",
+      "admin.settings.syncCancelConfirmMessage",
+      "admin.settings.syncCancelSuccess",
+      "admin.settings.syncCancelError",
+      "admin.settings.syncCancelledTitle",
+      "admin.settings.syncCancelledDescription",
     ];
 
     for (const key of keys) {

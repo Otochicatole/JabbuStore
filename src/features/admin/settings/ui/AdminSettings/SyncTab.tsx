@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useCallback, useState, useEffect, useRef } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Square } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
+import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
 import type {
   MarketSyncCircuitBreakerState,
   MarketSyncEtaConfidence,
+  MarketSyncRequestPacerStatusView,
   MarketSyncSlowReason,
   MarketSyncStatus,
   PriceCatalogStatus,
@@ -18,6 +20,7 @@ import { getErrorMessage } from "./helpers";
 import {
   createAcceptedPriceCatalogStatus,
   createAcceptedMarketSyncStatus,
+  canCancelMarketSync,
   MARKET_SYNC_PHASE_LABEL_KEYS,
   MARKET_SYNC_WARNING_KEYS,
   marketSyncBasePollingDelay,
@@ -54,6 +57,14 @@ const CIRCUIT_BREAKER_KEYS: Record<MarketSyncCircuitBreakerState, string> = {
   half_open: "admin.settings.syncCircuitBreaker.halfOpen",
 };
 
+const REQUEST_PACER_GATE_REASON_KEYS: Record<
+  NonNullable<MarketSyncRequestPacerStatusView["gateReason"]>,
+  string
+> = {
+  congestion: "admin.settings.syncRequestPacerGateReason.congestion",
+  rate_limited: "admin.settings.syncRequestPacerGateReason.rateLimited",
+};
+
 function formatDate(value: string | null) {
   if (!value) return null;
   const date = new Date(value);
@@ -74,6 +85,12 @@ function formatLatency(value: number | null) {
   if (value == null) return "—";
   if (value >= 1000) return `${(value / 1000).toFixed(1)}s`;
   return `${Math.round(value)}ms`;
+}
+
+function formatRequestRate(value: number) {
+  return value.toLocaleString("es-AR", {
+    maximumFractionDigits: 2,
+  });
 }
 
 function percentage(part: number, total: number) {
@@ -220,6 +237,7 @@ function SyncStatusCard({
   const exhausted = status.completionReason === "catalog_exhausted";
   const failed = status.phase === "failed" || run?.status === "failed";
   const completed = status.phase === "completed" || run?.status === "completed";
+  const cancelled = status.phase === "cancelled" || run?.status === "cancelled";
   const active = (status.running || run?.status === "running") && !waiting;
   const resetAt = formatDate(run?.quota.resetsAt ?? status.quotaResetsAt);
   const finishedAt = formatDate(status.lastFinishedAt);
@@ -237,9 +255,12 @@ function SyncStatusCard({
     run?.throughput.projectedCompletionAt ?? null,
   );
   const breakerResumeAt = formatDate(run?.circuitBreaker.resumeAt ?? null);
+  const requestPacerResumeAt = formatDate(
+    run?.requestPacer?.gateResumeAt ?? null,
+  );
   const tone = failed
     ? "bg-red-500/10 border-red-500/20 text-red-400"
-    : waiting || paused || exhausted
+    : waiting || paused || exhausted || cancelled
       ? "bg-amber-500/10 border-amber-500/20 text-amber-300"
       : completed
         ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
@@ -258,6 +279,8 @@ function SyncStatusCard({
                 ? "Sincronización esperando cuota"
                 : paused
                   ? "Sincronización pausada"
+                  : cancelled
+                    ? t("admin.settings.syncCancelledTitle")
                   : completed
                     ? exhausted
                       ? "Sincronización completada parcialmente"
@@ -283,7 +306,7 @@ function SyncStatusCard({
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
           <div
-            className={`h-full transition-all duration-300 ${failed ? "bg-red-400" : waiting || paused || exhausted ? "bg-amber-400" : "bg-accent"}`}
+            className={`h-full transition-all duration-300 ${failed ? "bg-red-400" : waiting || paused || exhausted || cancelled ? "bg-amber-400" : "bg-accent"}`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -505,6 +528,66 @@ function SyncStatusCard({
             </div>
           </div>
 
+          {run.requestPacer && (
+            <div
+              className={`grid grid-cols-1 gap-2 border-t border-white/5 pt-3 ${
+                run.requestPacer.gateState === "open"
+                  ? "lg:grid-cols-3"
+                  : "lg:grid-cols-2"
+              }`}
+            >
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                  {t("admin.settings.syncRequestPacerRate")}
+                </p>
+                <p className="mt-1 font-mono text-xs font-black text-white">
+                  {t("admin.settings.syncRequestsPerSecond", {
+                    current: formatRequestRate(
+                      run.requestPacer.currentStartsPerSecond,
+                    ),
+                    maximum: formatRequestRate(
+                      run.requestPacer.maximumStartsPerSecond,
+                    ),
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">
+                  {t("admin.settings.syncRequestPacerQueue")}
+                </p>
+                <p className="mt-1 font-mono text-xs font-black text-white">
+                  {run.requestPacer.queued.toLocaleString("es-AR")}
+                </p>
+              </div>
+              {run.requestPacer.gateState === "open" && (
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-wider text-amber-300">
+                    {t("admin.settings.syncRequestPacerGate")}
+                  </p>
+                  <p className="mt-1 text-xs font-black text-amber-200">
+                    {t("admin.settings.syncRequestPacerGateOpen")}
+                  </p>
+                  {run.requestPacer.gateReason && (
+                    <p className="mt-0.5 text-[9px] font-bold text-amber-100/80">
+                      {t(
+                        REQUEST_PACER_GATE_REASON_KEYS[
+                          run.requestPacer.gateReason
+                        ],
+                      )}
+                    </p>
+                  )}
+                  {requestPacerResumeAt && (
+                    <p className="mt-0.5 text-[9px] font-bold text-amber-100/80">
+                      {t("admin.settings.syncRequestPacerGateResumeAt", {
+                        value: requestPacerResumeAt,
+                      })}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <p className="border-t border-white/5 pt-3 font-mono text-[10px] text-[#84849b]">
             {t("admin.settings.syncRunQuota", {
               run: run.quota.runUnitsUsed.toLocaleString("es-AR"),
@@ -643,6 +726,12 @@ function SyncStatusCard({
         </div>
       )}
 
+      {cancelled && (
+        <p className="text-xs font-bold text-amber-200">
+          {t("admin.settings.syncCancelledDescription")}
+        </p>
+      )}
+
       {failed && status.lastError && (
         <p className="break-words text-xs font-bold text-red-300">{status.lastError}</p>
       )}
@@ -653,7 +742,7 @@ function SyncStatusCard({
         </p>
       )}
 
-      {(status.running || status.resumable) && status.lastPublished && (
+      {(status.running || status.resumable || cancelled) && status.lastPublished && (
         <p className="text-[10px] font-bold text-[#84849b]">
           Snapshot anterior visible: {status.lastPublished.validAssets.toLocaleString("es-AR")} assets,
           {" "}{status.lastPublished.publishedListings.toLocaleString("es-AR")} listings.
@@ -770,6 +859,8 @@ export function SyncTab() {
   const [runtimeConfigMessage, setRuntimeConfigMessage] = useState<string | null>(null);
 
   const [syncingAll, setSyncingAll] = useState(false);
+  const [cancellingSync, setCancellingSync] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [cooldownLeft, setCooldownLeft] = useState(0);
@@ -976,6 +1067,52 @@ export function SyncTab() {
     }
   };
 
+  const handleCancelSync = async () => {
+    if (cancellingSync) return;
+    if (!canCancelMarketSync(syncStatus)) {
+      setCancelConfirmOpen(false);
+      return;
+    }
+
+    setCancellingSync(true);
+    setSyncResult(null);
+    setSyncError(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/market/sync/cancel`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+      });
+      const data: unknown = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          responseMessage(data, t("admin.settings.syncCancelError")),
+        );
+      }
+
+      const message = responseMessage(
+        data,
+        t("admin.settings.syncCancelSuccess"),
+      );
+      const cancelledStatus = statusFromTriggerResponse(data);
+      if (cancelledStatus) {
+        setSyncStatus(cancelledStatus);
+        setSyncStatusConfirmed(true);
+      }
+      setSyncResult(message);
+      setCancelConfirmOpen(false);
+    } catch (err: unknown) {
+      setSyncError(
+        getErrorMessage(err, t("admin.settings.syncCancelError")),
+      );
+    } finally {
+      setCancellingSync(false);
+    }
+  };
+
   const handleRefreshPriceCatalog = async () => {
     setRefreshingCatalog(true);
     setCatalogError(null);
@@ -1175,6 +1312,24 @@ export function SyncTab() {
                 : t("admin.settings.syncAll")}
             </button>
 
+            {syncStatusConfirmed && canCancelMarketSync(syncStatus) && (
+              <button
+                type="button"
+                onClick={() => setCancelConfirmOpen(true)}
+                disabled={cancellingSync}
+                className="w-full sm:w-auto px-6 py-3.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(220,38,38,0.2)] cursor-pointer select-none"
+              >
+                {cancellingSync ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <Square className="w-4 h-4 fill-current text-white" />
+                )}
+                {cancellingSync
+                  ? t("admin.settings.syncCancelling")
+                  : t("admin.settings.syncCancelButton")}
+              </button>
+            )}
+
             {cooldownLeft > 0 && !syncStatus?.resumable && (
               <span className="text-[10px] text-[#84849b] font-mono font-bold uppercase tracking-wider self-center">
                 * {t("admin.settings.cooldownHelp")}
@@ -1265,6 +1420,23 @@ export function SyncTab() {
           </div>
         </div>
       </div>
+
+      <AlertConfirmModal
+        isOpen={cancelConfirmOpen}
+        title={t("admin.settings.syncCancelConfirmTitle")}
+        message={t("admin.settings.syncCancelConfirmMessage")}
+        type="confirm"
+        confirmLabel={
+          cancellingSync
+            ? t("admin.settings.syncCancelling")
+            : t("admin.settings.syncCancelButton")
+        }
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => void handleCancelSync()}
+        onCancel={() => {
+          if (!cancellingSync) setCancelConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }

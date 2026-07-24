@@ -237,7 +237,7 @@ export function normalizeMarketSyncStatus(
     ),
     currentCandidate:
       nullableString(record, ["currentCandidate"]) ?? fallback?.currentCandidate ?? null,
-    assetsPerItem: numberValue(record, ["assetsPerItem"], fallback?.assetsPerItem || 10),
+    assetsPerItem: numberValue(record, ["assetsPerItem"], fallback?.assetsPerItem || 7),
     quotaUnitsUsed: rowsUsed,
     quotaLimit: numberValue(record, ["quotaLimit"], fallback?.quotaLimit || 10_000),
     creditsUsed:

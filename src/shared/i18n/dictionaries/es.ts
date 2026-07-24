@@ -712,7 +712,7 @@ export const es = {
   "admin.settings.syncProcessPriority": "Prioriza las skins de mayor a menor precio usando el catálogo local actual.",
   "admin.settings.syncProcessCatalogPrefix": "Consulta SteamWebAPI vía",
   "admin.settings.syncProcessCatalogSuffix": "(assets con float).",
-  "admin.settings.syncProcessTarget": "Recolecta hasta 10.000 assets únicos, con un máximo de 10 por skin.",
+  "admin.settings.syncProcessTarget": "Recolecta hasta 10.000 assets únicos, con un máximo de 7 por skin.",
   "admin.settings.syncProcessPersistence": "Publica atómicamente FloatItem y listings agrupados.",
   "admin.settings.syncProcessInventory": "Inventario de bots Steam + inspect links + precios YouPin.",
   "admin.settings.syncingAll": "Iniciando sincronización de assets...",

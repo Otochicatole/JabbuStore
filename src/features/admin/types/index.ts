@@ -87,6 +87,8 @@ export type MarketSyncStatus = {
   phase: MarketSyncPhase;
   triggeredBy: string | null;
   message: string | null;
+  configuredTargetAssets: number;
+  configuredAssetsPerItem: number;
   targetAssets: number;
   requestedAssets: number;
   rawAssets: number;

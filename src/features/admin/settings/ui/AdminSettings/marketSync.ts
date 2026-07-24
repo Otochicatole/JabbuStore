@@ -208,6 +208,16 @@ export function normalizeMarketSyncStatus(
     phase,
     triggeredBy: nullableString(record, ["triggeredBy"]) ?? fallback?.triggeredBy ?? null,
     message: nullableString(record, ["message"]) ?? fallback?.message ?? null,
+    configuredTargetAssets: numberValue(
+      record,
+      ["configuredTargetAssets"],
+      fallback?.configuredTargetAssets || targetAssets,
+    ),
+    configuredAssetsPerItem: numberValue(
+      record,
+      ["configuredAssetsPerItem"],
+      fallback?.configuredAssetsPerItem || fallback?.assetsPerItem || 7,
+    ),
     targetAssets,
     requestedAssets: numberValue(
       record,

@@ -426,7 +426,7 @@ function PriceCatalogStatusCard({
 }
 
 export function SyncTab() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [runtimeConfig, setRuntimeConfig] = useState<Record<string, string>>({});
   const [savingRuntimeConfig, setSavingRuntimeConfig] = useState(false);
   const [runtimeConfigMessage, setRuntimeConfigMessage] = useState<string | null>(null);
@@ -449,6 +449,15 @@ export function SyncTab() {
   const [syncStatus, setSyncStatus] = useState<MarketSyncStatus | null>(null);
   const [syncStatusError, setSyncStatusError] = useState<string | null>(null);
   const [syncStatusConfirmed, setSyncStatusConfirmed] = useState(false);
+  const configuredTarget =
+    syncStatus?.configuredTargetAssets || syncStatus?.targetAssets || 10_000;
+  const configuredAssetsPerItem =
+    syncStatus?.configuredAssetsPerItem || syncStatus?.assetsPerItem || 7;
+  const numberLocale = locale === "br" ? "pt-BR" : locale;
+  const configuredCollectionParams = {
+    target: configuredTarget.toLocaleString(numberLocale),
+    perItem: configuredAssetsPerItem.toLocaleString(numberLocale),
+  };
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -714,7 +723,7 @@ export function SyncTab() {
       <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px] space-y-6">
         <SectionHeader
           title={t("admin.settings.fullSyncTitle")}
-          desc={t("admin.settings.fullSyncDesc")}
+          desc={t("admin.settings.fullSyncDesc", configuredCollectionParams)}
         />
 
         <form onSubmit={handleRuntimeConfigSubmit} className="max-w-3xl space-y-4 p-4 bg-white/[0.01] border border-white/5 rounded-[3px]">
@@ -785,7 +794,9 @@ export function SyncTab() {
                 <span className="text-white break-all">/steam/api/float/assets</span>{" "}
                 {t("admin.settings.syncProcessCatalogSuffix")}
               </li>
-              <li>{t("admin.settings.syncProcessTarget")}</li>
+              <li>
+                {t("admin.settings.syncProcessTarget", configuredCollectionParams)}
+              </li>
               <li>{t("admin.settings.syncProcessPersistence")}</li>
             </ul>
           </div>

@@ -100,9 +100,6 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">{item.name}</h4>
-                {!isRaffleCheckoutItem(item) && (
-                  <p className="text-[9px] text-[#84849b] font-mono mt-1 uppercase truncate sm:break-all">Asset: {item.assetId}</p>
-                )}
                 {isRaffleCheckoutItem(item) ? (
                   <p className="text-[9px] text-accent font-bold uppercase tracking-wider mt-1">
                     Sorteo CS2

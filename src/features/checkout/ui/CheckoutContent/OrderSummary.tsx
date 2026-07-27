@@ -31,7 +31,7 @@ export function OrderSummary({
   onSubmit
 }: OrderSummaryProps) {
   const { t } = useI18n();
-  const { effectiveCurrency, formatCurrencyAmount } = useCurrency();
+  const { effectiveCurrency, formatCurrencyAmount, rates } = useCurrency();
   const requiresArsQuote =
     checkoutType === "buy" &&
     (selectedMethod === "mercado_pago" ||
@@ -45,23 +45,23 @@ export function OrderSummary({
       ? `${cryptoQuote.settlement.amount.toFixed(2)} USDT`
       : `$${totalPrice.toFixed(2)} USD`;
 
+  const arsRate = rates?.rates.ARS ?? (arsQuote?.rate?.value || 0);
+  const brlRate = rates?.rates.BRL ?? 0;
+  const showQuoteBox = Boolean(rates || arsQuote);
+
+  const formatRate = (value: number, currency: "USD" | "ARS" | "BRL") => {
+    const locale = currency === "USD" ? "en-US" : currency === "ARS" ? "es-AR" : "pt-BR";
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
   return (
     <div className="bg-card border border-white/5 rounded-3xl p-6 md:p-8 shadow-xl">
       <h2 className="text-sm font-black uppercase tracking-widest text-white mb-6">{t("checkout.summary")}</h2>
 
       <div className="space-y-4 font-sans border-b border-white/5 pb-6 mb-6">
-        <div className="flex items-center justify-between text-xs text-[#84849b] font-semibold">
-          <span>{t("common.subtotal")} ({itemsCount} {t("common.items")})</span>
-          <Money amountUsd={totalPrice} className="text-white" />
-        </div>
-        <div className="flex items-center justify-between text-xs text-[#84849b] font-semibold">
-          <span>{t("checkout.gatewayFee")}</span>
-          <span className="text-emerald-400">{t("checkout.included")}</span>
-        </div>
-        <div className="flex items-center justify-between text-xs text-[#84849b] font-semibold">
-          <span>{t("checkout.orderValidation")}</span>
-          <span className="text-emerald-400">Server-side</span>
-        </div>
         {requiresArsQuote && paymentQuoteLoading && (
           <div className="flex items-center justify-between gap-3 text-xs text-[#84849b] font-semibold">
             <span>{t("checkout.paymentQuote")}</span>
@@ -76,29 +76,90 @@ export function OrderSummary({
             {paymentQuoteError}
           </div>
         )}
-        {arsQuote && (
-          <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 space-y-2">
-            <div className="flex items-center justify-between gap-3 text-xs font-semibold">
-              <span className="text-[#84849b]">{t("checkout.exchangeRate")}</span>
-              <span className="text-white text-right">
-                {t(`checkout.rateKind.${arsQuote.rate?.kind || "blue"}`)} · {formatArs(arsQuote.rate?.value || 0)}
-              </span>
+        {showQuoteBox && (
+          <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 space-y-3">
+            {/* Sección de Cotizaciones */}
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-[#84849b] mb-2">
+                {t("checkout.exchangeRate")}
+              </div>
+              <div className="space-y-1.5 pl-2 border-l-2 border-accent/30">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-[#84849b]">USD</span>
+                  <span className="text-white text-right">1 USD = 1.00 USD</span>
+                </div>
+                {arsRate > 0 && (
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-[#84849b]">
+                      ARS ({t(`checkout.rateKind.${rates?.usdArsRateKind || arsQuote?.rate?.kind || "blue"}`)})
+                    </span>
+                    <span className="text-white text-right">
+                      1 USD = {formatRate(arsRate, "ARS")} ARS
+                    </span>
+                  </div>
+                )}
+                {brlRate > 0 && (
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-[#84849b]">BR (BRL)</span>
+                    <span className="text-white text-right">
+                      1 USD = {formatRate(brlRate, "BRL")} BRL
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex items-center justify-between gap-3 text-xs font-semibold">
-              <span className="text-[#84849b]">{t("checkout.payInArs")}</span>
-              <span className="text-emerald-400 text-right font-black">
-                {formatCurrencyAmount(arsQuote.settlement.amount, "ARS")}
-              </span>
+
+            {/* Sección de Subtotales */}
+            <div className="border-t border-white/5 pt-3">
+              <div className="text-[10px] font-black uppercase tracking-wider text-[#84849b] mb-2">
+                {t("common.subtotal")} ({itemsCount} {t("common.items")})
+              </div>
+              <div className="space-y-1.5 pl-2 border-l-2 border-emerald-500/30">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-[#84849b]">USD</span>
+                  <span className="text-white text-right">
+                    {formatCurrencyAmount(totalPrice, "USD")}
+                  </span>
+                </div>
+                {arsRate > 0 && (
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-[#84849b]">ARS</span>
+                    <span className="text-white text-right">
+                      {formatCurrencyAmount(totalPrice * arsRate, "ARS")}
+                    </span>
+                  </div>
+                )}
+                {brlRate > 0 && (
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-[#84849b]">BR (BRL)</span>
+                    <span className="text-white text-right">
+                      {formatCurrencyAmount(totalPrice * brlRate, "BRL")}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            {arsQuote.expiresAt && (
-              <p className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider">
-                {t("checkout.quoteExpiresAt", {
-                  time: new Date(arsQuote.expiresAt).toLocaleTimeString("es-AR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }),
-                })}
-              </p>
+
+            {/* Si hay cotización activa en ARS para el pago actual */}
+            {arsQuote && (
+              <div className="border-t border-white/5 pt-3">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-[#84849b]">{t("checkout.payInArs")}</span>
+                  <span className="text-emerald-400 font-black text-right">
+                    {formatCurrencyAmount(arsQuote.settlement.amount, "ARS")}
+                  </span>
+                </div>
+                {arsQuote.expiresAt && (
+                  <p className="text-[9px] text-[#84849b] font-mono uppercase tracking-wider mt-1">
+                    {t("checkout.quoteExpiresAt", {
+                      time: new Date(arsQuote.expiresAt).toLocaleTimeString("es-AR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
+                    })}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -108,12 +169,12 @@ export function OrderSummary({
         <div>
           <span className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">{t("checkout.finalAmount")}</span>
           <span className="text-2xl font-black text-white block tracking-tighter mt-1">{finalAmountLabel}</span>
-          {effectiveCurrency !== settlementCurrency && (
+          {effectiveCurrency !== settlementCurrency && !showQuoteBox && (
             <span className="block mt-1 text-[10px] font-bold text-accent">
               {t("currency.estimated")}: <Money amountUsd={totalPrice} approximate />
             </span>
           )}
-          {arsQuote && (
+          {arsQuote && !showQuoteBox && (
             <span className="text-[10px] font-bold text-[#84849b] block mt-1">
               {t("checkout.baseAmountUsd", { amount: totalPrice.toFixed(2) })}
             </span>
@@ -146,10 +207,3 @@ export function OrderSummary({
   );
 }
 export default OrderSummary;
-
-function formatArs(value: number) {
-  return new Intl.NumberFormat("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}

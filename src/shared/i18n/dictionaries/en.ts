@@ -284,6 +284,7 @@ export const en = {
   "checkout.payInArs": "Total to pay",
   "checkout.quoteExpiresAt": "Quote valid until {time}",
   "checkout.baseAmountUsd": "Base: {amount} USD",
+  "checkout.orderEquivalents": "Order Equivalents",
   "checkout.baseAmount": "Base amount",
   "checkout.rateKind.blue": "Blue dollar",
   "checkout.rateKind.oficial": "Official dollar",

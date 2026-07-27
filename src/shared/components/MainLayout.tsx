@@ -30,7 +30,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
           <CartProvider>
             <FilterProvider>
               <InventoryProvider>
-                <div className="min-h-screen min-w-0 bg-background overflow-x-hidden">
+                <div className="min-h-screen min-w-0 bg-background overflow-x-clip">
                   {children}
                 </div>
               </InventoryProvider>
@@ -50,7 +50,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <InventoryProvider>
               <NotificationProvider actor="USER" enabled>
                 <TicketNotificationProvider actor="USER" enabled>
-                  <div className="min-h-screen min-w-0 overflow-x-hidden">
+                  <div className="min-h-screen min-w-0 overflow-x-clip">
                     <Navbar onOpenCart={() => setIsCartOpen(true)} />
                     <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
                     <ProfileCompletionModal />

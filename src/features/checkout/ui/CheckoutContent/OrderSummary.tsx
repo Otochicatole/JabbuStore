@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, ArrowRight, Loader2 } from 'lucide-react';
+import { DollarSign, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 import type { PaymentQuote } from '../../domain/types';
 import { Money } from '@/features/currency/ui/Money';
@@ -15,6 +15,7 @@ interface OrderSummaryProps {
   paymentQuoteLoading: boolean;
   paymentQuoteError: string | null;
   manualTransferType: "bank" | "crypto";
+  payoutCurrency?: "ARS" | "BRL" | "USD";
   onSubmit: () => void;
 }
 
@@ -28,6 +29,7 @@ export function OrderSummary({
   paymentQuoteLoading,
   paymentQuoteError,
   manualTransferType,
+  payoutCurrency,
   onSubmit
 }: OrderSummaryProps) {
   const { t } = useI18n();
@@ -39,14 +41,27 @@ export function OrderSummary({
   const arsQuote = paymentQuote?.settlement.currency === "ARS" ? paymentQuote : null;
   const cryptoQuote = paymentQuote?.settlement.currency === "USDT" ? paymentQuote : null;
   const settlementCurrency = arsQuote ? "ARS" : cryptoQuote ? "USDT" : "USD";
-  const finalAmountLabel = arsQuote
-    ? formatCurrencyAmount(arsQuote.settlement.amount, "ARS")
-    : cryptoQuote
-      ? `${cryptoQuote.settlement.amount.toFixed(2)} USDT`
-      : `$${totalPrice.toFixed(2)} USD`;
 
   const arsRate = rates?.rates.ARS ?? (arsQuote?.rate?.value || 0);
   const brlRate = rates?.rates.BRL ?? 0;
+
+  let finalAmountLabel = "";
+  if (checkoutType === "sell" && selectedMethod === "mercado_pago") {
+    if (payoutCurrency === "ARS" && arsRate > 0) {
+      finalAmountLabel = formatCurrencyAmount(totalPrice * arsRate, "ARS");
+    } else if (payoutCurrency === "BRL" && brlRate > 0) {
+      finalAmountLabel = formatCurrencyAmount(totalPrice * brlRate, "BRL");
+    } else {
+      finalAmountLabel = `$${totalPrice.toFixed(2)} USD`;
+    }
+  } else {
+    finalAmountLabel = arsQuote
+      ? formatCurrencyAmount(arsQuote.settlement.amount, "ARS")
+      : cryptoQuote
+        ? `${cryptoQuote.settlement.amount.toFixed(2)} USDT`
+        : `$${totalPrice.toFixed(2)} USD`;
+  }
+
   const showQuoteBox = Boolean(rates || arsQuote);
 
   const formatRate = (value: number, currency: "USD" | "ARS" | "BRL") => {
@@ -184,6 +199,18 @@ export function OrderSummary({
           <DollarSign className="w-6 h-6 text-accent" />
         </div>
       </div>
+
+      {checkoutType === "sell" && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-2 mb-6">
+          <div className="flex items-center gap-2 text-amber-400 font-bold uppercase tracking-wider text-[10px]">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{t("checkout.warning.provisionalQuoteTitle")}</span>
+          </div>
+          <p className="text-[9.5px] text-[#84849b] leading-relaxed font-bold uppercase tracking-wide">
+            {t("checkout.warning.provisionalQuoteDescription")}
+          </p>
+        </div>
+      )}
 
       <button
         onClick={onSubmit}

@@ -147,6 +147,7 @@ export function CheckoutContent() {
             paymentQuoteLoading={paymentQuoteLoading}
             paymentQuoteError={paymentQuoteError}
             manualTransferType={formData.manualTransferType}
+            payoutCurrency={formData.payoutCurrency}
             onSubmit={handleSubmitCheckout}
           />
           {(checkoutType === "buy" || checkoutType === "raffle") && !selectedMethod && (

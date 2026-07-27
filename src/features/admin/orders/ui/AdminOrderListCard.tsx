@@ -93,6 +93,17 @@ export function AdminOrderListCard({ order, kind, onOpen }: AdminOrderListCardPr
                 {formatArs(arsSettlement)} ARS
               </p>
             )}
+            {kind === "listing" && (
+              <p className="text-[9px] font-bold text-accent uppercase mt-0.5">
+                {order.paymentMethod === "mercado_pago"
+                  ? `${t("checkout.bankTransfer")} (${order.metadata?.payoutCurrency || "ARS"})`
+                  : order.paymentMethod === "paypal"
+                    ? "PayPal (USD)"
+                    : order.paymentMethod === "nowpayments"
+                      ? "Crypto"
+                      : order.paymentMethod || "N/A"}
+              </p>
+            )}
           </div>
 
           <div>

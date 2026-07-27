@@ -102,6 +102,7 @@ export function useCheckout() {
     network: "ERC20",
     manualTransferType: "bank",
     paymentProof: null,
+    payoutCurrency: "ARS",
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
@@ -114,6 +115,7 @@ export function useCheckout() {
         cuil: "",
         accountHolder: "",
         walletAddress: "",
+        payoutCurrency: "ARS",
         network:
           selectedMethod === "ethereum"
             ? "ERC20"
@@ -545,11 +547,25 @@ export function useCheckout() {
 
     if (checkoutType === "sell" && selectedMethod) {
       if (selectedMethod === "mercado_pago") {
-        if (!formData.cbu.trim())
-          errors.cbu = t("checkout.error.cbuRequired");
-        if (!formData.accountHolder.trim())
+        if (!formData.cbu.trim()) {
+          errors.cbu =
+            formData.payoutCurrency === "BRL"
+              ? (t("checkout.error.pixKeyRequired") || "La llave Pix es obligatoria")
+              : formData.payoutCurrency === "USD"
+                ? (t("checkout.error.accountNumberOrIbanRequired") || "El número de cuenta o IBAN es obligatorio")
+                : t("checkout.error.cbuRequired");
+        }
+        if (!formData.accountHolder.trim()) {
           errors.accountHolder = t("checkout.error.accountHolderRequired");
-        if (!formData.cuil.trim()) errors.cuil = t("checkout.error.cuilRequired");
+        }
+        if (!formData.cuil.trim()) {
+          errors.cuil =
+            formData.payoutCurrency === "BRL"
+              ? (t("checkout.error.cpfRequired") || "El CPF es obligatorio")
+              : formData.payoutCurrency === "USD"
+                ? (t("checkout.error.swiftBicRequired") || "El código SWIFT/BIC es obligatorio")
+                : t("checkout.error.cuilRequired");
+        }
       } else if (selectedMethod === "paypal") {
         if (!formData.cbu.trim())
           errors.cbu = t("checkout.error.paypalEmailRequired");
@@ -794,6 +810,7 @@ export function useCheckout() {
               accountHolder: formData.accountHolder || null,
               walletAddress: formData.walletAddress || null,
               network: formData.network || null,
+              payoutCurrency: formData.payoutCurrency || null,
               manualTransferType:
                 selectedMethod === "manual_transfer" ? formData.manualTransferType : null,
               manualTransferSnapshot:

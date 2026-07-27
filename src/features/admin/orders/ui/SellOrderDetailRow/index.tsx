@@ -21,6 +21,7 @@ import { PayoutDetailsPanel } from "./PayoutDetailsPanel";
 import { SellOrderDetailItem } from "./SellOrderDetailItem";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
+import { useCurrency } from "@/features/currency/context/CurrencyContext";
 
 interface SellOrderDetailRowProps {
   order: Order;
@@ -44,6 +45,20 @@ export function SellOrderDetailRow({
   bots = [],
 }: SellOrderDetailRowProps) {
   const { t } = useI18n();
+  const { rates } = useCurrency();
+  const arsRate = rates?.rates.ARS ?? 0;
+  const brlRate = rates?.rates.BRL ?? 0;
+
+  const formatRate = (value: number, currency: "USD" | "ARS" | "BRL") => {
+    const locale = currency === "USD" ? "en-US" : currency === "ARS" ? "es-AR" : "pt-BR";
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const selectedCurrency = order.metadata?.payoutCurrency || (order.paymentMethod === "nowpayments" ? "USDT" : "USD");
+
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
   const [uploadingProof, setUploadingProof] = useState(false);
   const [proofError, setProofError] = useState<string | null>(null);
@@ -181,13 +196,29 @@ export function SellOrderDetailRow({
               <p className="truncate text-sm font-black text-white">{order.user?.name || t("admin.common.unknownUser")}</p>
               <p className="truncate font-mono text-[10px] font-bold text-accent">{order.user?.steamId || "-"}</p>
             </div>
-            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
-              <span className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-[#84849b]">
+            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3 space-y-1.5 min-w-[240px]">
+              <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-[#84849b]">
                 <WalletCards className="h-3 w-3" />
                 {t("admin.sellOrders.amountToPay")}
               </span>
-              <p className="text-lg font-black leading-none text-emerald-400">${order.totalPrice.toLocaleString()} USD</p>
-              <p className="mt-1 text-[10px] font-bold text-white/35">{statusLabel}</p>
+              <div className="space-y-1 font-mono text-[10px] leading-tight">
+                <div className={`flex items-center justify-between px-1.5 py-0.5 rounded ${selectedCurrency === "USD" || selectedCurrency === "USDT" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold" : "text-white/45"}`}>
+                  <span>USD:</span>
+                  <span>${order.totalPrice.toFixed(2)} USD {(selectedCurrency === "USD" || selectedCurrency === "USDT") && "✓"}</span>
+                </div>
+                {arsRate > 0 && (
+                  <div className={`flex items-center justify-between px-1.5 py-0.5 rounded ${selectedCurrency === "ARS" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold" : "text-white/45"}`}>
+                    <span>ARS:</span>
+                    <span>{formatRate(order.totalPrice * arsRate, "ARS")} ARS {selectedCurrency === "ARS" && "✓"}</span>
+                  </div>
+                )}
+                {brlRate > 0 && (
+                  <div className={`flex items-center justify-between px-1.5 py-0.5 rounded ${selectedCurrency === "BRL" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold" : "text-white/45"}`}>
+                    <span>BRL:</span>
+                    <span>{formatRate(order.totalPrice * brlRate, "BRL")} BRL {selectedCurrency === "BRL" && "✓"}</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
               <span className="mb-1 block text-[9px] font-black uppercase tracking-widest text-[#84849b]">

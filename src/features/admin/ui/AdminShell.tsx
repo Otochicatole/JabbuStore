@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Loader2, Search, type LucideIcon } from "lucide-react";
+import { CurrencyProvider } from "@/features/currency/context/CurrencyContext";
 
 type AdminButtonVariant = "primary" | "secondary" | "success" | "danger" | "ghost";
 
@@ -20,11 +21,13 @@ const buttonVariants: Record<AdminButtonVariant, string> = {
 
 export function AdminPage({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#070510] text-white">
-      <main className="w-full min-w-0 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-        <div className="mx-auto w-full max-w-[1680px] space-y-6">{children}</div>
-      </main>
-    </div>
+    <CurrencyProvider>
+      <div className="min-h-screen bg-[#070510] text-white">
+        <main className="w-full min-w-0 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1680px] space-y-6">{children}</div>
+        </main>
+      </div>
+    </CurrencyProvider>
   );
 }
 

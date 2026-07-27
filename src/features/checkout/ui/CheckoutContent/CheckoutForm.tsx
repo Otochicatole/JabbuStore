@@ -87,6 +87,32 @@ export function CheckoutForm({
     ? t(`paymentMethod.${selectedMethodObj.id}.name`)
     : selectedMethod;
 
+  const getCbuLabel = () => {
+    if (selectedMethod === "paypal") return t("checkout.paypalEmail");
+    if (formData.payoutCurrency === "BRL") return t("checkout.pixKey");
+    if (formData.payoutCurrency === "USD") return t("checkout.accountNumberOrIban") || "Número de Cuenta / IBAN";
+    return t("checkout.destinationAlias");
+  };
+
+  const getCbuPlaceholder = () => {
+    if (selectedMethod === "paypal") return t("checkout.paypalEmailPlaceholder");
+    if (formData.payoutCurrency === "BRL") return "Ex. CPF, CNPJ, Email, Celular ou Chave aleatória";
+    if (formData.payoutCurrency === "USD") return "Ex. US1234567890123456";
+    return t("checkout.destinationAliasPlaceholder");
+  };
+
+  const getCuilLabel = () => {
+    if (formData.payoutCurrency === "BRL") return t("checkout.cpf");
+    if (formData.payoutCurrency === "USD") return t("checkout.swiftBic") || "Código SWIFT / BIC";
+    return t("checkout.beneficiaryTaxId");
+  };
+
+  const getCuilPlaceholder = () => {
+    if (formData.payoutCurrency === "BRL") return "Ex. 123.456.789-00";
+    if (formData.payoutCurrency === "USD") return "Ex. AAAABBCCXXX";
+    return t("checkout.beneficiaryTaxIdPlaceholder");
+  };
+
   return (
     <section id="checkout-form-section" className="bg-card border border-white/5 rounded-3xl p-6 md:p-8 space-y-6 scroll-mt-24">
       <h2 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
@@ -285,13 +311,34 @@ export function CheckoutForm({
 
           {(selectedMethod === "mercado_pago" || selectedMethod === "paypal") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {selectedMethod === "mercado_pago" && (
+                <div className="flex flex-col gap-1.5 col-span-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">
+                    {t("checkout.payoutCurrency") || "Moneda de transferencia"}
+                  </label>
+                  <AdminSelect
+                    value={formData.payoutCurrency || "ARS"}
+                    onChange={(val) => updateField("payoutCurrency", val)}
+                    options={[
+                      { value: "ARS", label: "ARS (Pesos Argentinos)" },
+                      { value: "BRL", label: "BRL (Reais Brasileños / Pix)" },
+                      { value: "USD", label: "USD (Dólares Estadounidenses / SWIFT)" },
+                    ]}
+                    className="w-full sm:w-80 font-sans"
+                    buttonClassName="w-full px-3.5 py-2.5 bg-white/[0.03] border border-white/8 rounded-xl text-sm text-white focus:outline-none focus:border-accent/50 transition-colors flex items-center justify-between gap-2 cursor-pointer font-bold uppercase tracking-wider"
+                    menuClassName="absolute left-0 top-full mt-2 w-full bg-[#110f1e] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-40 backdrop-blur-xl"
+                    optionClassName="w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer hover:bg-white/5"
+                  />
+                </div>
+              )}
+
               <div className="flex flex-col gap-1.5 col-span-2 md:col-span-1">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">
-                  {selectedMethod === "mercado_pago" ? t("checkout.destinationAlias") : t("checkout.paypalEmail")}
+                  {getCbuLabel()}
                 </label>
                 <input
                   type="text"
-                  placeholder={selectedMethod === "mercado_pago" ? t("checkout.destinationAliasPlaceholder") : t("checkout.paypalEmailPlaceholder")}
+                  placeholder={getCbuPlaceholder()}
                   value={formData.cbu}
                   onChange={(e) => updateField("cbu", e.target.value)}
                   className={`w-full px-3.5 py-2.5 bg-white/[0.03] border rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 transition-colors font-mono ${formErrors.cbu ? 'border-red-500/50' : 'border-white/8'}`}
@@ -313,10 +360,12 @@ export function CheckoutForm({
 
               {selectedMethod === "mercado_pago" && (
                 <div className="flex flex-col gap-1.5 col-span-2 md:col-span-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">{t("checkout.beneficiaryTaxId")}</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">
+                    {getCuilLabel()}
+                  </label>
                   <input
                     type="text"
-                    placeholder={t("checkout.beneficiaryTaxIdPlaceholder")}
+                    placeholder={getCuilPlaceholder()}
                     value={formData.cuil}
                     onChange={(e) => updateField("cuil", e.target.value)}
                     className={`w-full px-3.5 py-2.5 bg-white/[0.03] border rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 transition-colors font-mono ${formErrors.cuil ? 'border-red-500/50' : 'border-white/8'}`}

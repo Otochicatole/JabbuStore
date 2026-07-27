@@ -102,7 +102,7 @@ export function PayoutDetailsPanel({
               </span>
               <span className="font-black text-accent block mt-0.5 uppercase tracking-wide">
                 {order.paymentMethod === "mercado_pago"
-                  ? t("paymentMethod.mercado_pago.name")
+                  ? (t("checkout.bankTransfer") || "Transferencia Bancaria")
                   : order.paymentMethod === "paypal"
                     ? "PayPal"
                     : order.paymentMethod === "ethereum"
@@ -135,10 +135,23 @@ export function PayoutDetailsPanel({
             )}
 
             {order.paymentMethod === "mercado_pago" && (
-              <div className="space-y-1.5 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
+              <div className="space-y-2 mt-2 pt-2 border-t border-white/5 text-[9.5px]">
+                <div>
+                  <span className="text-[8.5px] text-[#84849b] block uppercase tracking-wider">
+                    {t("checkout.payoutCurrency") || "Moneda de Transferencia"}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 bg-accent/20 border border-accent/30 text-accent font-black rounded text-[9.5px] uppercase tracking-widest mt-1">
+                    {order.metadata?.payoutCurrency || "ARS"}
+                  </span>
+                </div>
+
                 <div>
                   <span className="text-[8.5px] text-[#84849b] block">
-                    {t("admin.orders.destinationBankAccount")}
+                    {order.metadata?.payoutCurrency === "BRL"
+                      ? (t("checkout.pixKey") || "Chave Pix")
+                      : order.metadata?.payoutCurrency === "USD"
+                        ? (t("checkout.accountNumberOrIban") || "Número de Cuenta / IBAN")
+                        : t("admin.orders.destinationBankAccount")}
                   </span>
                   <span className="font-bold font-mono text-white block select-all break-all leading-normal bg-black/20 p-1.5 border border-white/5 mt-0.5 rounded-[3px]">
                     {order.metadata?.cbu || "N/A"}
@@ -155,7 +168,11 @@ export function PayoutDetailsPanel({
                   </div>
                   <div className="text-right">
                     <span className="text-[8.5px] text-[#84849b] block">
-                      CUIL / CUIT
+                      {order.metadata?.payoutCurrency === "BRL"
+                        ? (t("checkout.cpf") || "CPF")
+                        : order.metadata?.payoutCurrency === "USD"
+                          ? (t("checkout.swiftBic") || "Código SWIFT / BIC")
+                          : "CUIL / CUIT"}
                     </span>
                     <span className="font-bold font-mono text-white block select-all">
                       {order.metadata?.cuil || "N/A"}

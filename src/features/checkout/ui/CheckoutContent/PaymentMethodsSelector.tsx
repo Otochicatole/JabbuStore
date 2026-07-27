@@ -18,7 +18,9 @@ export function PaymentMethodsSelector({
 }: PaymentMethodsSelectorProps) {
   const { t } = useI18n();
   const methods = PAYMENT_METHODS.filter((method) => {
-    if (checkoutType !== "buy") return method.id !== "manual_transfer";
+    if (checkoutType !== "buy") {
+      return method.id !== "manual_transfer";
+    }
     if (!manualTransferSettings) return method.id !== "manual_transfer";
     if (method.id === "mercado_pago") return manualTransferSettings.mercadoPagoEnabled;
     if (method.id === "paypal") return manualTransferSettings.paypalEnabled;
@@ -42,7 +44,7 @@ export function PaymentMethodsSelector({
         ...method,
         name: t("checkout.bankTransfer"),
         description: t("paymentMethod.sell.bank.description"),
-        badge: "ARS / CBU / Alias",
+        badge: "ARS / BRL / USD",
       };
     }
 

@@ -12,10 +12,12 @@ import {
   UserRound,
   WalletCards,
   XCircle,
+  MessageSquare,
 } from "lucide-react";
 import { AdminBotOption, Order, PaymentProofMetadata } from "@/features/admin/domain/types";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { PaymentProofModal } from "@/shared/components/PaymentProofModal";
+import { AdminOrderTicketsModal } from "@/shared/components/AdminOrderTicketsModal";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { PayoutDetailsPanel } from "./PayoutDetailsPanel";
 import { SellOrderDetailItem } from "./SellOrderDetailItem";
@@ -61,6 +63,7 @@ export function SellOrderDetailRow({
   const selectedCurrency = order.metadata?.payoutCurrency || (order.paymentMethod === "nowpayments" ? "USDT" : "USD");
 
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
+  const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false);
   const [uploadingProof, setUploadingProof] = useState(false);
   const [proofError, setProofError] = useState<string | null>(null);
   const [proofOpen, setProofOpen] = useState(false);
@@ -477,29 +480,51 @@ export function SellOrderDetailRow({
       </div>
 
       <div className="grid grid-cols-1 gap-4 border-b border-white/5 pb-5 mb-5 lg:grid-cols-[280px_1fr]">
-        <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4">
-          <span className="mb-2 flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
-            <Bot className="h-3.5 w-3.5" />
-            {t("admin.orders.selectBotAccount") || "Bot de Recibo"}
-          </span>
-          {order.status !== "COMPLETED" && order.status !== "CANCELLED" ? (
-            <AdminSelect
-              value={selectedBotId}
-              onChange={setSelectedBotId}
-              className="w-full"
-              options={[
-                { value: "", label: t("admin.orders.selectBotPlaceholder") || "Seleccionar bot..." },
-                ...bots.filter((b) => b.isActive).map((b) => ({ value: b.id, label: `${b.name} (${b.steamId.slice(-4)})` }))
-              ]}
-            />
-          ) : (
-            <span className="block rounded-[3px] border border-white/10 bg-white/5 px-2.5 py-2 text-xs font-bold text-white/80">
-              {assignedBotLabel}
+        <div className="flex flex-col gap-4">
+          {/* Bot Selection Box */}
+          <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4">
+            <span className="mb-2 flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
+              <Bot className="h-3.5 w-3.5" />
+              {t("admin.orders.selectBotAccount") || "Bot de Recibo"}
             </span>
-          )}
-          <p className="mt-2 text-[10px] font-semibold leading-relaxed text-white/35">
-            {t("admin.sellOrders.sellBotHelper")}
-          </p>
+            {order.status !== "COMPLETED" && order.status !== "CANCELLED" ? (
+              <AdminSelect
+                value={selectedBotId}
+                onChange={setSelectedBotId}
+                className="w-full"
+                options={[
+                  { value: "", label: t("admin.orders.selectBotPlaceholder") || "Seleccionar bot..." },
+                  ...bots.filter((b) => b.isActive).map((b) => ({ value: b.id, label: `${b.name} (${b.steamId.slice(-4)})` }))
+                ]}
+              />
+            ) : (
+              <span className="block rounded-[3px] border border-white/10 bg-white/5 px-2.5 py-2 text-xs font-bold text-white/80">
+                {assignedBotLabel}
+              </span>
+            )}
+            <p className="mt-2 text-[10px] font-semibold leading-relaxed text-white/35">
+              {t("admin.sellOrders.sellBotHelper")}
+            </p>
+          </div>
+
+          {/* Tickets / Chat Box */}
+          <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4 flex flex-col gap-2">
+            <span className="flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
+              <MessageSquare className="h-3.5 w-3.5 text-accent" />
+              Soporte y Chat
+            </span>
+            <p className="text-[10px] font-semibold leading-relaxed text-white/35">
+              Si necesitás comunicarte con el usuario por esta orden de venta, podés abrir un ticket de chat directo.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsTicketsModalOpen(true)}
+              className="w-full h-9 bg-accent/15 hover:bg-accent/25 border border-accent/30 text-accent text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              Soporte / Chat
+            </button>
+          </div>
         </div>
 
         <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4">
@@ -790,6 +815,13 @@ export function SellOrderDetailRow({
         message={alertMessage}
         type="warning"
         onConfirm={() => setAlertOpen(false)}
+      />
+      <AdminOrderTicketsModal
+        isOpen={isTicketsModalOpen}
+        onClose={() => setIsTicketsModalOpen(false)}
+        orderId={order.id}
+        orderType={order.type}
+        orderPrice={order.totalPrice}
       />
     </div>
   );

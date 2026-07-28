@@ -101,7 +101,7 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                     <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center p-2">
                       <Image src={item.skin.imageUrl} alt={item.skin.name} fill className="object-contain p-2" />
                     </div>
-                    <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                       <div className="min-w-0">
                         <h4 className="text-[11px] font-black uppercase text-white leading-tight line-clamp-2 sm:line-clamp-none">
                           {item.skin.weapon} | <span className="text-[#aaaaff]">{item.skin.name}</span>
@@ -110,15 +110,17 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                           {item.skin.exterior || "Factory New"}
                           {item.skin.isSpecific !== false && item.skin.float !== undefined && ` • Float: ${item.skin.float.toFixed(5)}`}
                         </p>
-                        
+                        <div className="mt-1">
+                          <Money amountUsd={item.skin.price * item.quantity} className="text-sm font-black text-white tracking-tighter" />
+                        </div>
                       </div>
-                      <div className="text-left sm:text-right shrink-0">
-                        <Money amountUsd={item.skin.price * item.quantity} className="text-sm font-black text-white tracking-tighter" />
+                      <div className="shrink-0 ml-4">
                         <button 
                           onClick={() => removeFromCart(item.skin.id)}
-                          className="mt-1 text-[10px] font-bold text-red-400/50 hover:text-red-400 transition-colors cursor-pointer"
+                          className="p-2 rounded-[3px] bg-red-500/10 border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all cursor-pointer flex items-center justify-center"
+                          title={t("common.delete") || "Eliminar"}
                         >
-                          {t("common.delete")}
+                          <Trash2 className="w-4.5 h-4.5" />
                         </button>
                       </div>
                     </div>

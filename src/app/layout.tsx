@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "JabbuStore - El Futuro del Skin Trading",
   description: "Intercambia tus skins de CS2 de forma rápida y segura con JabbuStore. Mercado instantáneo de skins.",
+  icons: {
+    icon: "/logo.webp",
+    shortcut: "/logo.webp",
+    apple: "/logo.webp",
+  },
 };
 
 export default function RootLayout({

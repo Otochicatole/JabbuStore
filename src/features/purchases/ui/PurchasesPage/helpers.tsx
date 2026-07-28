@@ -38,6 +38,18 @@ export function getStatusConfig(status: Order["status"], orderType: Order["type"
   const isRaffle = order ? isRaffleOrder(order) : false;
 
   switch (status) {
+    case "RETENTION":
+      return {
+        label: t("purchases.status.sellRetention"),
+        color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+        icon: <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />,
+      };
+    case "AWAITING_APPROVAL":
+      return {
+        label: t("purchases.status.sellAwaitingApproval"),
+        color: "text-blue-400 bg-blue-500/10 border-blue-500/20 animate-bounce",
+        icon: <Clock className="w-3.5 h-3.5 text-blue-400" />,
+      };
     case "PENDING_PAYMENT":
       return {
         label: isRaffle
@@ -203,8 +215,9 @@ export function getCurrentPurchaseStep(order: Order) {
 
   if (order.status === "PENDING_PAYMENT") return 1;
   if (order.status === "TRADE_PENDING") return 2;
-  if (order.status === "PAID") return 3;
-  if (order.status === "COMPLETED") return 4;
+  if (order.status === "RETENTION" || order.status === "AWAITING_APPROVAL") return 3;
+  if (order.status === "PAID") return 4;
+  if (order.status === "COMPLETED") return 5;
   return 0;
 }
 

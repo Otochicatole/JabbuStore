@@ -79,7 +79,7 @@ export function CheckoutContent() {
         checkoutType={subCheckoutType}
         createdOrderId={createdOrderId}
         paymentMethod={selectedMethod}
-        onNavigateToOrders={() => router.push(localizePath("/purchases"))}
+        onNavigateToOrders={() => router.push(localizePath(checkoutType === "sell" ? "/listings" : "/purchases"))}
         onNavigateToHome={() => router.push(localizePath("/"))}
       />
     );

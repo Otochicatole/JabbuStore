@@ -22,6 +22,7 @@ import { SellOrderDetailItem } from "./SellOrderDetailItem";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
 import { useCurrency } from "@/features/currency/context/CurrencyContext";
+import { RetentionCountdown } from "@/shared/components/RetentionCountdown";
 
 interface SellOrderDetailRowProps {
   order: Order;
@@ -67,22 +68,30 @@ export function SellOrderDetailRow({
   const [selectedBotId, setSelectedBotId] = useState<string>(order.botId || "");
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  const [isRequoting, setIsRequoting] = useState(false);
+  const [newRequotePrice, setNewRequotePrice] = useState<string>("");
+  const [requotingError, setRequotingError] = useState<string | null>(null);
+  const [requotingLoading, setRequotingLoading] = useState(false);
 
   // Workflow steps based on order status for SELL orders
   // 1. PENDING_PAYMENT (Pendiente de Aprobación)
   // 2. TRADE_PENDING (Venta Aprobada, Esperando Trade de la Skin)
-  // 3. PAID (Trade Confirmado / Pendiente de Pago al Usuario)
-  // 4. COMPLETED (Pago Realizado / Completado)
+  // 3. RETENTION / AWAITING_APPROVAL (Retención de Seguridad 8 días)
+  // 4. PAID (Retención Finalizada, Pendiente de Pago al Usuario)
+  // 5. COMPLETED (Pago Realizado / Completado)
   const getWorkflowStep = (): number => {
     switch (order.status) {
       case "PENDING_PAYMENT":
         return 1;
       case "TRADE_PENDING":
         return 2;
-      case "PAID":
+      case "RETENTION":
+      case "AWAITING_APPROVAL":
         return 3;
-      case "COMPLETED":
+      case "PAID":
         return 4;
+      case "COMPLETED":
+        return 5;
       default:
         return 0;
     }
@@ -109,11 +118,15 @@ export function SellOrderDetailRow({
       ? t("purchases.status.sellPendingApproval")
       : order.status === "TRADE_PENDING"
         ? t("purchases.status.sellApprovedSendTrade")
-        : order.status === "PAID"
-          ? t("purchases.status.tradeConfirmedPendingPayment")
-          : order.status === "COMPLETED"
-            ? t("purchases.status.sellCompletedPaid")
-            : t("purchases.status.sellRejected");
+        : order.status === "RETENTION"
+          ? t("purchases.status.sellRetention")
+          : order.status === "AWAITING_APPROVAL"
+            ? t("purchases.status.sellAwaitingApproval")
+            : order.status === "PAID"
+              ? t("purchases.status.tradeConfirmedPendingPayment")
+              : order.status === "COMPLETED"
+                ? t("purchases.status.sellCompletedPaid")
+                : t("purchases.status.sellRejected");
 
   const handleAdminProofUpload = async (file: File | null) => {
     if (!file) return;
@@ -153,6 +166,42 @@ export function SellOrderDetailRow({
       return;
     }
     await onUpdateStatus(orderId, newStatus, selectedBotId || null);
+  };
+
+  const handleRequoteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const priceNum = parseFloat(newRequotePrice);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      setRequotingError(t("admin.priceModal.invalidPrice") || "Ingresá un precio numérico válido mayor a 0.");
+      return;
+    }
+
+    setRequotingLoading(true);
+    setRequotingError(null);
+
+    try {
+      const response = await fetchWithAuth(`${BACKEND_URL}/orders/${order.id}/requote`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPrice: priceNum }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Error al actualizar la cotización");
+      }
+
+      // Reload order details by triggering a status refresh
+      setIsRequoting(false);
+      // Use onUpdateStatus to refresh - the backend already set AWAITING_APPROVAL
+      // We call updateStatus with the current order ID to trigger a list refresh
+      window.location.reload();
+    } catch (err: any) {
+      console.error(err);
+      setRequotingError(err.message || "Error al enviar la re-tasa.");
+    } finally {
+      setRequotingLoading(false);
+    }
   };
 
   return (
@@ -261,7 +310,7 @@ export function SellOrderDetailRow({
           <span className="text-white/40 font-mono">{t("purchases.order")} ID: {order.id}</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
           {/* Paso 1: Aprobación */}
           <div
             className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
@@ -328,11 +377,11 @@ export function SellOrderDetailRow({
             </div>
           </div>
 
-          {/* Paso 3: Pago */}
+          {/* Paso 3: Retención */}
           <div
             className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
               currentStep === 3
-                ? "bg-purple-500/10 border-purple-500/30 text-purple-400 shadow-[0_0_15px_rgba(16,185,129,0.05)]"
+                ? "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.05)] animate-pulse"
                 : currentStep > 3
                   ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60"
                   : "bg-white/[0.01] border-white/5 text-white/30"
@@ -341,7 +390,7 @@ export function SellOrderDetailRow({
             <div
               className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
                 currentStep === 3
-                  ? "bg-purple-400 text-black"
+                  ? "bg-amber-400 text-black"
                   : currentStep > 3
                     ? "bg-emerald-400 text-black"
                     : "bg-white/10 text-white/40"
@@ -351,39 +400,76 @@ export function SellOrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
+                {t("purchases.step.retention")}
+              </span>
+              <span className="text-[8.5px] font-mono opacity-60">
+                {order.status === "AWAITING_APPROVAL"
+                  ? t("purchases.step.awaitingApproval")
+                  : currentStep === 3
+                    ? t("purchases.step.retentionAwaiting")
+                    : currentStep > 3
+                      ? t("purchases.step.retentionPassed")
+                      : t("admin.orders.queued")}
+              </span>
+            </div>
+          </div>
+
+          {/* Paso 4: Pago */}
+          <div
+            className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+              currentStep === 4
+                ? "bg-purple-500/10 border-purple-500/30 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.05)]"
+                : currentStep > 4
+                  ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60"
+                  : "bg-white/[0.01] border-white/5 text-white/30"
+            }`}
+          >
+            <div
+              className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                currentStep === 4
+                  ? "bg-purple-400 text-black"
+                  : currentStep > 4
+                    ? "bg-emerald-400 text-black"
+                    : "bg-white/10 text-white/40"
+              }`}
+            >
+              {currentStep > 4 ? "✓" : "4"}
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-black uppercase block leading-tight">
                 {t("admin.sellOrders.payUser")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 3
+                {currentStep === 4
                   ? t("admin.sellOrders.toTransfer")
-                  : currentStep > 3
+                  : currentStep > 4
                     ? t("admin.sellOrders.paymentSent")
                     : t("admin.orders.queued")}
               </span>
             </div>
           </div>
 
-          {/* Paso 4: Completar */}
+          {/* Paso 5: Completar */}
           <div
             className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-              currentStep === 4
+              currentStep === 5
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                 : "bg-white/[0.01] border-white/5 text-white/30"
             }`}
           >
             <div
               className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                currentStep === 4 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
+                currentStep === 5 ? "bg-emerald-400 text-black" : "bg-white/10 text-white/40"
               }`}
             >
-              4
+              5
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
                 {t("admin.sellOrders.completed")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 4 ? t("admin.sellOrders.ready") : t("purchases.step.pending")}
+                {currentStep === 5 ? t("admin.sellOrders.ready") : t("purchases.step.pending")}
               </span>
             </div>
           </div>
@@ -449,7 +535,7 @@ export function SellOrderDetailRow({
             <button
               onClick={() => {
                 if (!isCancelled) {
-                  handleUpdateStatus(order.id, "PAID");
+                  handleUpdateStatus(order.id, "RETENTION");
                 }
               }}
               disabled={isCancelled}
@@ -457,7 +543,7 @@ export function SellOrderDetailRow({
               className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
-                  : order.status === "PAID"
+                  : order.status === "RETENTION" || order.status === "AWAITING_APPROVAL"
                   ? "bg-blue-500/20 border-blue-500/40 text-blue-400 font-extrabold shadow-[0_0_10px_rgba(59,130,246,0.1)]"
                   : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
               }`}
@@ -465,8 +551,29 @@ export function SellOrderDetailRow({
               <Check className="w-3.5 h-3.5" />
               {t("admin.sellOrders.tradeReceivedStep")}
             </button>
+
+            {/* Paso 3: Liberar Retención / Pagar */}
+            <button
+              onClick={() => {
+                if (!isCancelled) {
+                  handleUpdateStatus(order.id, "PAID");
+                }
+              }}
+              disabled={isCancelled || (order.status !== "RETENTION" && order.status !== "PAID")}
+              title="Liberar retención de seguridad y pasar a pago"
+              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
+                isCancelled || (order.status !== "RETENTION" && order.status !== "PAID")
+                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
+                  : order.status === "PAID"
+                  ? "bg-amber-500/20 border-amber-500/40 text-amber-400 font-extrabold shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
+              }`}
+            >
+              <Check className="w-3.5 h-3.5" />
+              Liberar Retención
+            </button>
  
-            {/* Paso 3: Pago al Usuario / Completar */}
+            {/* Paso 4: Pago al Usuario / Completar */}
             <button
               onClick={() => {
                 if (!isCancelled) {
@@ -525,6 +632,94 @@ export function SellOrderDetailRow({
               {t("admin.sellOrders.rejectCancel")}
             </button>
           </div>
+
+          {/* Re-tasar / Hold Info Panel */}
+          {(order.status === "RETENTION" || order.status === "AWAITING_APPROVAL") && (
+            <div className="mt-4 p-4 border border-white/5 bg-black/20 rounded-[3px]">
+              {order.status === "RETENTION" ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="text-xs font-black uppercase text-amber-400">
+                          Período de Retención Activo (8 días)
+                        </h4>
+                        <p className="text-[10px] text-white/40 mt-0.5">
+                          El artículo está retenido. Podés realizar el pago cuando finalice el plazo o volver a tasar el artículo si su valor varió en el mercado.
+                        </p>
+                      </div>
+                      {!isRequoting && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewRequotePrice(order.totalPrice.toString());
+                            setIsRequoting(true);
+                          }}
+                          className="px-3 py-1.5 bg-accent hover:bg-accent/90 border border-accent/20 rounded-[3px] text-[10px] font-black uppercase text-white transition-all cursor-pointer"
+                        >
+                          Volver a tasar
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Countdown timer */}
+                    {order.metadata?.retentionStartedAt && (
+                      <div className="mb-4">
+                        <RetentionCountdown retentionStartedAt={order.metadata.retentionStartedAt} />
+                      </div>
+                    )}
+
+                    {isRequoting && (
+                      <form onSubmit={handleRequoteSubmit} className="mt-4 p-3 bg-white/[0.03] border border-white/10 rounded-[3px] space-y-3">
+                        <div>
+                          <label className="text-[9px] uppercase font-black tracking-wider text-[#84849b] block mb-1">
+                            Nuevo valor de cotización (USD)
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={newRequotePrice}
+                              onChange={(e) => setNewRequotePrice(e.target.value)}
+                              placeholder="Ej. 295.00"
+                              className="h-9 w-32 bg-black/40 border border-white/10 rounded-[3px] text-xs font-mono font-bold text-white px-2.5 outline-none focus:border-accent/50"
+                            />
+                            <button
+                              type="submit"
+                              disabled={requotingLoading}
+                              className="h-9 px-4 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/20 rounded-[3px] text-[10px] font-black uppercase text-white transition-all cursor-pointer"
+                            >
+                              {requotingLoading ? "Actualizando..." : "Confirmar propuesta"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsRequoting(false)}
+                              className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-[10px] font-black uppercase text-white/60 hover:text-white transition-all cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                        {requotingError && (
+                          <p className="text-[10px] text-red-400 font-bold">{requotingError}</p>
+                        )}
+                      </form>
+                    )}
+                  </div>
+              ) : (
+                <div>
+                  <h4 className="text-xs font-black uppercase text-blue-400">
+                    Nueva propuesta de cotización enviada
+                  </h4>
+                  <p className="text-[10px] text-white/50 mt-1">
+                    Se propuso una retasa a <span className="font-mono font-bold text-emerald-400">${order.totalPrice.toFixed(2)} USD</span> (Precio original: ${(order.metadata?.originalPrice || order.totalPrice).toFixed(2)} USD).
+                  </p>
+                  <p className="text-[10px] text-amber-400/80 font-bold uppercase mt-2 tracking-wider animate-pulse">
+                    ⏰ Esperando aprobación del cliente
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

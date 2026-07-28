@@ -109,11 +109,14 @@ export interface Order {
     manualTransferType?: "bank" | "crypto" | string | null;
     manualTransferSnapshot?: ManualTransferSnapshot | null;
     payoutCurrency?: string | null;
+    originalPrice?: number | null;
     raffleId?: string | null;
     raffleName?: string | null;
     raffleTicketPrice?: number | null;
     ticketsCount?: number | null;
     userChancesInRaffle?: number | null;
+    retentionStartedAt?: string | null;
+    retentionExpiredNotified?: boolean | null;
   } | null;
 }
 

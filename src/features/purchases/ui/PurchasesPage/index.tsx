@@ -49,6 +49,7 @@ export function PurchasesPage({ mode = "buy" }: { mode?: "buy" | "sell" }) {
               locale={locale}
               onOpenProof={setSelectedProof}
               onToggle={() => toggleOrderExpand(order.id)}
+              onRefresh={fetchOrders}
               order={order}
               t={t}
             />

@@ -38,7 +38,7 @@ export interface Order {
   id: string;
   userId: string;
   type: "BUY" | "SELL";
-  status: "PENDING_PAYMENT" | "PAID" | "TRADE_PENDING" | "COMPLETED" | "CANCELLED";
+  status: "PENDING_PAYMENT" | "PAID" | "TRADE_PENDING" | "COMPLETED" | "CANCELLED" | "RETENTION" | "AWAITING_APPROVAL";
   totalPrice: number;
   items: OrderItem[];
   createdAt: string;
@@ -62,6 +62,8 @@ export interface Order {
     buyerPaymentProof?: PaymentProofInfo | null;
     adminPaymentProof?: PaymentProofInfo | null;
     manualTransferType?: "bank" | "crypto" | string | null;
+    payoutCurrency?: "ARS" | "BRL" | "USD" | string | null;
+    originalPrice?: number | null;
     manualTransferSnapshot?: {
       type?: "bank" | "crypto" | string | null;
       bank?: {
@@ -81,6 +83,8 @@ export interface Order {
     raffleTicketPrice?: number | null;
     ticketsCount?: number | null;
     userChancesInRaffle?: number | null;
+    retentionStartedAt?: string | null;
+    retentionExpiredNotified?: boolean | null;
   } | null;
 }
 

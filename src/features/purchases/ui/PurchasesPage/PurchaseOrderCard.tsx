@@ -1,9 +1,11 @@
+import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowDownLeft, ArrowUpRight, Calendar, ChevronDown } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Calendar, ChevronDown, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { Order, SelectedProof } from "@/features/purchases/types";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 
 import { getRaffleOrderContext, getStatusConfig, type Translate } from "./helpers";
 import { PurchaseDetailsPanels } from "./PurchaseDetailsPanels";
@@ -11,6 +13,7 @@ import { PurchaseItemsList } from "./PurchaseItemsList";
 import { PurchaseTimeline } from "./PurchaseTimeline";
 import { Money } from "@/features/currency/ui/Money";
 import { useCurrency } from "@/features/currency/context/CurrencyContext";
+import { RetentionCountdown } from "@/shared/components/RetentionCountdown";
 
 interface PurchaseOrderCardProps {
   expanded: boolean;
@@ -18,6 +21,7 @@ interface PurchaseOrderCardProps {
   locale: string;
   onOpenProof: (proof: SelectedProof) => void;
   onToggle: () => void;
+  onRefresh: () => void;
   order: Order;
   t: Translate;
 }
@@ -28,12 +32,15 @@ export function PurchaseOrderCard({
   locale,
   onOpenProof,
   onToggle,
+  onRefresh,
   order,
   t,
 }: PurchaseOrderCardProps) {
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const { effectiveCurrency } = useCurrency();
+  const { effectiveCurrency, rates } = useCurrency();
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const isBuy = order.type === "BUY";
   const raffleContext = getRaffleOrderContext(order);
   const isRaffle = raffleContext.isRaffle;
@@ -146,6 +153,110 @@ export function PurchaseOrderCard({
           >
             <div className="border-t border-white/5 mt-5 pt-5 space-y-4">
               <PurchaseTimeline order={order} t={t} />
+
+              {/* Retention timer panel for client */}
+              {order.status === "RETENTION" && order.metadata?.retentionStartedAt && (
+                <div className="space-y-3">
+                  <RetentionCountdown retentionStartedAt={order.metadata.retentionStartedAt} />
+                  <p className="text-[10px] text-white/40 leading-relaxed px-1">
+                    Tu artículo se encuentra en el período de retención de seguridad de 8 días. Una vez finalizado el plazo, el administrador procesará el pago correspondiente.
+                  </p>
+                </div>
+              )}
+
+              {order.status === "AWAITING_APPROVAL" && (
+                <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-[3px] space-y-3">
+                  <h4 className="text-xs font-black uppercase text-blue-400">
+                    Propuesta de Nueva Cotización
+                  </h4>
+                  <p className="text-[10px] text-white/70 leading-relaxed">
+                    El administrador ha actualizado la cotización de tus ítems debido a cambios en el mercado global. La cotización total cambió de <span className="line-through text-white/40">${(order.metadata?.originalPrice || order.totalPrice).toFixed(2)} USD</span> a <span className="font-extrabold text-emerald-400 font-mono">${order.totalPrice.toFixed(2)} USD</span>.
+                  </p>
+                  
+                  {/* Equivalents in local cashing currencies */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 bg-black/25 rounded-[3px] border border-white/5 text-[9.5px]">
+                    <div>
+                      <span className="text-[#84849b] block uppercase">Equivalente USD</span>
+                      <span className="font-bold text-white font-mono">${order.totalPrice.toFixed(2)} USD</span>
+                    </div>
+                    {rates?.rates.ARS && (
+                      <div>
+                        <span className="text-[#84849b] block uppercase">Equivalente ARS</span>
+                        <span className="font-bold text-white font-mono">
+                          {new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(order.totalPrice * rates.rates.ARS)} ARS
+                        </span>
+                      </div>
+                    )}
+                    {rates?.rates.BRL && (
+                      <div>
+                        <span className="text-[#84849b] block uppercase">Equivalente BRL</span>
+                        <span className="font-bold text-white font-mono">
+                          {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(order.totalPrice * rates.rates.BRL)} BRL
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2.5 pt-1.5">
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={async () => {
+                        setActionLoading(true);
+                        setActionError(null);
+                        try {
+                          const res = await fetchWithAuth(`${BACKEND_URL}/orders/${order.id}/approve-requote`, {
+                            method: "POST"
+                          });
+                          if (!res.ok) {
+                            const data = await res.json().catch(() => null);
+                            throw new Error(data?.error || "Error al aprobar cotización");
+                          }
+                          onRefresh();
+                        } catch (err: any) {
+                          setActionError(err.message || "Error al procesar la aprobación.");
+                        } finally {
+                          setActionLoading(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/20 text-white rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      Aprobar nueva cotización
+                    </button>
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={async () => {
+                        setActionLoading(true);
+                        setActionError(null);
+                        try {
+                          const res = await fetchWithAuth(`${BACKEND_URL}/orders/${order.id}/reject-requote`, {
+                            method: "POST"
+                          });
+                          if (!res.ok) {
+                            const data = await res.json().catch(() => null);
+                            throw new Error(data?.error || "Error al rechazar cotización");
+                          }
+                          onRefresh();
+                        } catch (err: any) {
+                          setActionError(err.message || "Error al procesar el rechazo.");
+                        } finally {
+                          setActionLoading(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-300 rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Rechazar y cancelar venta
+                    </button>
+                  </div>
+
+                  {actionError && (
+                    <p className="text-[10px] font-bold text-red-400">{actionError}</p>
+                  )}
+                </div>
+              )}
               <PurchaseDetailsPanels
                 isBuy={isBuy}
                 order={order}

@@ -65,12 +65,20 @@ export function PurchaseTimeline({ order, t }: PurchaseTimelineProps) {
             currentStep === 2 ? t("purchases.step.awaitingTrade") : t("purchases.step.tradeReceived"),
           ],
           [
+            t("purchases.step.retention"),
+            currentStep === 3
+              ? order.status === "AWAITING_APPROVAL"
+                ? t("purchases.step.awaitingApproval")
+                : t("purchases.step.retentionAwaiting")
+              : t("purchases.step.retentionPassed"),
+          ],
+          [
             t("purchases.step.processPayment"),
-            currentStep === 3 ? t("purchases.step.paymentQueued") : t("purchases.step.paymentSent"),
+            currentStep === 4 ? t("purchases.step.paymentQueued") : t("purchases.step.paymentSent"),
           ],
           [
             t("purchases.step.completed"),
-            currentStep === 4 ? t("purchases.step.sellCompleted") : t("purchases.step.queued"),
+            currentStep === 5 ? t("purchases.step.sellCompleted") : t("purchases.step.queued"),
           ],
         ];
 
@@ -89,7 +97,7 @@ export function PurchaseTimeline({ order, t }: PurchaseTimelineProps) {
 
       <div
         className={`grid grid-cols-1 gap-3 mt-3 ${
-          isRaffle ? "sm:grid-cols-3" : "sm:grid-cols-4"
+          isRaffle ? "sm:grid-cols-3" : isBuy ? "sm:grid-cols-4" : "sm:grid-cols-5"
         }`}
       >
         {labels.map(([title, description], index) => {

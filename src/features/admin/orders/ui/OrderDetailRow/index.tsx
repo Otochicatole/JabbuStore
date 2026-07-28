@@ -377,10 +377,10 @@ export function OrderDetailRow({
           <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4 flex flex-col gap-2">
             <span className="flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
               <MessageSquare className="h-3.5 w-3.5 text-accent" />
-              Soporte y Chat
+              {t("admin.tickets.panelTitle") || "Soporte y Chat"}
             </span>
             <p className="text-[10px] font-semibold leading-relaxed text-white/35">
-              Si necesitás comunicarte con el usuario por esta orden de compra, podés abrir un ticket de chat directo.
+              {t("admin.tickets.panelDescBuy") || "Si necesitás comunicarte con el usuario por esta orden de compra, podés abrir un ticket de chat directo."}
             </p>
             <button
               type="button"
@@ -388,7 +388,7 @@ export function OrderDetailRow({
               className="w-full h-9 bg-accent/15 hover:bg-accent/25 border border-accent/30 text-accent text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center justify-center gap-1.5"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              Soporte / Chat
+              {t("admin.tickets.panelButton") || "Soporte / Chat"}
             </button>
           </div>
         </div>

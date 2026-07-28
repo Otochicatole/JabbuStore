@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 const RETENTION_DAYS = 8;
 const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
@@ -38,6 +39,7 @@ function calcTimeLeft(retentionStartedAt: string): TimeLeft {
 }
 
 export function RetentionCountdown({ retentionStartedAt, compact = false }: RetentionCountdownProps) {
+  const { t } = useI18n();
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calcTimeLeft(retentionStartedAt));
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export function RetentionCountdown({ retentionStartedAt, compact = false }: Rete
         fontWeight: 600,
       }}>
         <span>⚠️</span>
-        <span>Período vencido – pendiente de pago</span>
+        <span>{t("purchases.retention.expired") || "Período vencido – pendiente de pago"}</span>
       </div>
     );
   }
@@ -111,17 +113,17 @@ export function RetentionCountdown({ retentionStartedAt, compact = false }: Rete
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <span style={{ fontSize: "18px" }}>⏳</span>
         <span style={{ fontSize: "13px", fontWeight: 700, color: "#c4b5fd", letterSpacing: "0.5px", textTransform: "uppercase" }}>
-          Período de Retención
+          {t("purchases.retention.title") || "Período de Retención"}
         </span>
       </div>
 
       {/* Timer blocks */}
       <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
         {[
-          { value: timeLeft.days, label: "días" },
-          { value: timeLeft.hours, label: "horas" },
-          { value: timeLeft.minutes, label: "min" },
-          { value: timeLeft.seconds, label: "seg" },
+          { value: timeLeft.days, label: t("purchases.retention.days") || "días" },
+          { value: timeLeft.hours, label: t("purchases.retention.hours") || "horas" },
+          { value: timeLeft.minutes, label: t("purchases.retention.minutes") || "min" },
+          { value: timeLeft.seconds, label: t("purchases.retention.seconds") || "seg" },
         ].map(({ value, label }) => (
           <div key={label} style={{
             display: "flex",
@@ -167,9 +169,11 @@ export function RetentionCountdown({ retentionStartedAt, compact = false }: Rete
 
       {/* Days passed label */}
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#6b6f99" }}>
-        <span>Inicio de retención</span>
-        <span>{Math.floor(progressPercent)}% completado</span>
-        <span>Liberación en {timeLeft.days}d {timeLeft.hours}h</span>
+        <span>{t("purchases.retention.start") || "Inicio de retención"}</span>
+        <span>{t("purchases.retention.completedPercent", { percent: Math.floor(progressPercent) }) || `${Math.floor(progressPercent)}% completado`}</span>
+        <span>
+          {t("purchases.retention.releaseIn", { timeLeft: `${timeLeft.days}d ${timeLeft.hours}h` }) || `Liberación en ${timeLeft.days}d ${timeLeft.hours}h`}
+        </span>
       </div>
     </div>
   );

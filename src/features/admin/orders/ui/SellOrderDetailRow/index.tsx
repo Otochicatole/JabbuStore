@@ -511,10 +511,10 @@ export function SellOrderDetailRow({
           <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4 flex flex-col gap-2">
             <span className="flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
               <MessageSquare className="h-3.5 w-3.5 text-accent" />
-              Soporte y Chat
+              {t("admin.tickets.panelTitle") || "Soporte y Chat"}
             </span>
             <p className="text-[10px] font-semibold leading-relaxed text-white/35">
-              Si necesitás comunicarte con el usuario por esta orden de venta, podés abrir un ticket de chat directo.
+              {t("admin.tickets.panelDescSell") || "Si necesitás comunicarte con el usuario por esta orden de venta, podés abrir un ticket de chat directo."}
             </p>
             <button
               type="button"
@@ -522,7 +522,7 @@ export function SellOrderDetailRow({
               className="w-full h-9 bg-accent/15 hover:bg-accent/25 border border-accent/30 text-accent text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center justify-center gap-1.5"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              Soporte / Chat
+              {t("admin.tickets.panelButton") || "Soporte / Chat"}
             </button>
           </div>
         </div>
@@ -666,10 +666,10 @@ export function SellOrderDetailRow({
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <h4 className="text-xs font-black uppercase text-amber-400">
-                          Período de Retención Activo (8 días)
+                          {t("admin.orders.retentionActiveTitle") || "Período de Retención Activo (8 días)"}
                         </h4>
                         <p className="text-[10px] text-white/40 mt-0.5">
-                          El artículo está retenido. Podés realizar el pago cuando finalice el plazo o volver a tasar el artículo si su valor varió en el mercado.
+                          {t("admin.orders.retentionActiveDesc") || "El artículo está retenido. Podés realizar el pago cuando finalice el plazo o volver a tasar el artículo si su valor varió en el mercado."}
                         </p>
                       </div>
                       {!isRequoting && (
@@ -681,7 +681,7 @@ export function SellOrderDetailRow({
                           }}
                           className="px-3 py-1.5 bg-accent hover:bg-accent/90 border border-accent/20 rounded-[3px] text-[10px] font-black uppercase text-white transition-all cursor-pointer"
                         >
-                          Volver a tasar
+                          {t("admin.sellOrders.reQuoteButton") || "Volver a tasar"}
                         </button>
                       )}
                     </div>
@@ -697,7 +697,7 @@ export function SellOrderDetailRow({
                       <form onSubmit={handleRequoteSubmit} className="mt-4 p-3 bg-white/[0.03] border border-white/10 rounded-[3px] space-y-3">
                         <div>
                           <label className="text-[9px] uppercase font-black tracking-wider text-[#84849b] block mb-1">
-                            Nuevo valor de cotización (USD)
+                            {t("admin.sellOrders.reQuoteInputLabel") || "Nuevo valor de cotización (USD)"}
                           </label>
                           <div className="flex gap-2">
                             <input
@@ -713,14 +713,14 @@ export function SellOrderDetailRow({
                               disabled={requotingLoading}
                               className="h-9 px-4 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/20 rounded-[3px] text-[10px] font-black uppercase text-white transition-all cursor-pointer"
                             >
-                              {requotingLoading ? "Actualizando..." : "Confirmar propuesta"}
+                              {requotingLoading ? (t("admin.sellOrders.reQuoteUpdating") || "Actualizando...") : (t("admin.sellOrders.reQuoteConfirm") || "Confirmar propuesta")}
                             </button>
                             <button
                               type="button"
                               onClick={() => setIsRequoting(false)}
                               className="h-9 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-[10px] font-black uppercase text-white/60 hover:text-white transition-all cursor-pointer"
                             >
-                              Cancelar
+                              {t("common.cancel") || "Cancelar"}
                             </button>
                           </div>
                         </div>
@@ -733,13 +733,16 @@ export function SellOrderDetailRow({
               ) : (
                 <div>
                   <h4 className="text-xs font-black uppercase text-blue-400">
-                    Nueva propuesta de cotización enviada
+                    {t("admin.sellOrders.reQuoteSent") || "Nueva propuesta de cotización enviada"}
                   </h4>
                   <p className="text-[10px] text-white/50 mt-1">
-                    Se propuso una retasa a <span className="font-mono font-bold text-emerald-400">${order.totalPrice.toFixed(2)} USD</span> (Precio original: ${(order.metadata?.originalPrice || order.totalPrice).toFixed(2)} USD).
+                    {t("admin.sellOrders.reQuoteSentDesc", { 
+                      newPrice: order.totalPrice.toFixed(2), 
+                      originalPrice: (order.metadata?.originalPrice || order.totalPrice).toFixed(2) 
+                    }) || `Se propuso una retasa a $${order.totalPrice.toFixed(2)} USD (Precio original: $${(order.metadata?.originalPrice || order.totalPrice).toFixed(2)} USD).`}
                   </p>
                   <p className="text-[10px] text-amber-400/80 font-bold uppercase mt-2 tracking-wider animate-pulse">
-                    ⏰ Esperando aprobación del cliente
+                    {t("admin.sellOrders.reQuoteAwaitingApproval") || "⏰ Esperando aprobación del cliente"}
                   </p>
                 </div>
               )}

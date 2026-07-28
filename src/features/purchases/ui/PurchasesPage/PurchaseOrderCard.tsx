@@ -159,7 +159,7 @@ export function PurchaseOrderCard({
                 <div className="space-y-3">
                   <RetentionCountdown retentionStartedAt={order.metadata.retentionStartedAt} />
                   <p className="text-[10px] text-white/40 leading-relaxed px-1">
-                    Tu artículo se encuentra en el período de retención de seguridad de 8 días. Una vez finalizado el plazo, el administrador procesará el pago correspondiente.
+                    {t("purchases.retention.desc") || "Tu artículo se encuentra en el período de retención de seguridad de 8 días. Una vez finalizado el plazo, el administrador procesará el pago correspondiente."}
                   </p>
                 </div>
               )}
@@ -167,21 +167,24 @@ export function PurchaseOrderCard({
               {order.status === "AWAITING_APPROVAL" && (
                 <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-[3px] space-y-3">
                   <h4 className="text-xs font-black uppercase text-blue-400">
-                    Propuesta de Nueva Cotización
+                    {t("purchases.requote.title") || "Propuesta de Nueva Cotización"}
                   </h4>
                   <p className="text-[10px] text-white/70 leading-relaxed">
-                    El administrador ha actualizado la cotización de tus ítems debido a cambios en el mercado global. La cotización total cambió de <span className="line-through text-white/40">${(order.metadata?.originalPrice || order.totalPrice).toFixed(2)} USD</span> a <span className="font-extrabold text-emerald-400 font-mono">${order.totalPrice.toFixed(2)} USD</span>.
+                    {t("purchases.requote.desc", {
+                      oldPrice: (order.metadata?.originalPrice || order.totalPrice).toFixed(2),
+                      newPrice: order.totalPrice.toFixed(2),
+                    }) || `El administrador ha actualizado la cotización de tus ítems debido a cambios en el mercado global. La cotización total cambió de $${(order.metadata?.originalPrice || order.totalPrice).toFixed(2)} USD a $${order.totalPrice.toFixed(2)} USD.`}
                   </p>
                   
                   {/* Equivalents in local cashing currencies */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 bg-black/25 rounded-[3px] border border-white/5 text-[9.5px]">
                     <div>
-                      <span className="text-[#84849b] block uppercase">Equivalente USD</span>
+                      <span className="text-[#84849b] block uppercase">{t("purchases.requote.eqUsd") || "Equivalente USD"}</span>
                       <span className="font-bold text-white font-mono">${order.totalPrice.toFixed(2)} USD</span>
                     </div>
                     {rates?.rates.ARS && (
                       <div>
-                        <span className="text-[#84849b] block uppercase">Equivalente ARS</span>
+                        <span className="text-[#84849b] block uppercase">{t("purchases.requote.eqArs") || "Equivalente ARS"}</span>
                         <span className="font-bold text-white font-mono">
                           {new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(order.totalPrice * rates.rates.ARS)} ARS
                         </span>
@@ -189,7 +192,7 @@ export function PurchaseOrderCard({
                     )}
                     {rates?.rates.BRL && (
                       <div>
-                        <span className="text-[#84849b] block uppercase">Equivalente BRL</span>
+                        <span className="text-[#84849b] block uppercase">{t("purchases.requote.eqBrl") || "Equivalente BRL"}</span>
                         <span className="font-bold text-white font-mono">
                           {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(order.totalPrice * rates.rates.BRL)} BRL
                         </span>
@@ -210,11 +213,11 @@ export function PurchaseOrderCard({
                           });
                           if (!res.ok) {
                             const data = await res.json().catch(() => null);
-                            throw new Error(data?.error || "Error al aprobar cotización");
+                            throw new Error(data?.error || t("purchases.requote.errorApprove") || "Error al aprobar cotización");
                           }
                           onRefresh();
                         } catch (err: any) {
-                          setActionError(err.message || "Error al procesar la aprobación.");
+                          setActionError(err.message || t("purchases.requote.errorProcessApprove") || "Error al procesar la aprobación.");
                         } finally {
                           setActionLoading(false);
                         }
@@ -222,7 +225,7 @@ export function PurchaseOrderCard({
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/20 text-white rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
                     >
                       <Check className="w-3.5 h-3.5" />
-                      Aprobar nueva cotización
+                      {t("purchases.requote.approve") || "Aprobar nueva cotización"}
                     </button>
                     <button
                       type="button"
@@ -236,11 +239,11 @@ export function PurchaseOrderCard({
                           });
                           if (!res.ok) {
                             const data = await res.json().catch(() => null);
-                            throw new Error(data?.error || "Error al rechazar cotización");
+                            throw new Error(data?.error || t("purchases.requote.errorReject") || "Error al rechazar cotización");
                           }
                           onRefresh();
                         } catch (err: any) {
-                          setActionError(err.message || "Error al procesar el rechazo.");
+                          setActionError(err.message || t("purchases.requote.errorProcessReject") || "Error al procesar el rechazo.");
                         } finally {
                           setActionLoading(false);
                         }
@@ -248,7 +251,7 @@ export function PurchaseOrderCard({
                       className="px-4 py-2 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-300 rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
                     >
                       <X className="w-3.5 h-3.5" />
-                      Rechazar y cancelar venta
+                      {t("purchases.requote.reject") || "Rechazar y cancelar venta"}
                     </button>
                   </div>
 

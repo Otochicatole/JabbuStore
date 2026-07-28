@@ -72,7 +72,7 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {[...Array(20)].map((_, i) => (
           <div key={i} className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 animate-pulse w-full">
             

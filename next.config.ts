@@ -59,6 +59,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'youpin.img898.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'raw.githubusercontent.com',
         pathname: '/**',
       },

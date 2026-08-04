@@ -24,10 +24,7 @@ export const SECRET_LABELS = [
   { key: "PAYPAL_SANDBOX", label: "PAYPAL_SANDBOX" },
 ];
 
-export const RUNTIME_CONFIG_LABELS = [
-  { key: "MARKET_SYNC_PAGE_SIZE", label: "MARKET_SYNC_PAGE_SIZE", type: "number" },
-  { key: "MARKET_SYNC_MAX_PAGES", label: "MARKET_SYNC_MAX_PAGES", type: "number" },
-];
+
 
 export const TABS: {
   id: Tab;

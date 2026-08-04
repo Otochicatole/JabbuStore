@@ -6,8 +6,8 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import type { PriceCatalogStatus } from "@/features/admin/types";
-import { RUNTIME_CONFIG_LABELS } from "./constants";
-import { SectionHeader, FieldLabel, StyledInput } from "./FormControls";
+
+import { SectionHeader } from "./FormControls";
 import { getErrorMessage } from "./helpers";
 import {
   createAcceptedPriceCatalogStatus,
@@ -427,15 +427,26 @@ function PriceCatalogStatusCard({
 
 export function SyncTab() {
   const { locale, t } = useI18n();
-  const [runtimeConfig, setRuntimeConfig] = useState<Record<string, string>>({});
-  const [savingRuntimeConfig, setSavingRuntimeConfig] = useState(false);
-  const [runtimeConfigMessage, setRuntimeConfigMessage] = useState<string | null>(null);
 
-  const [syncingAll, setSyncingAll] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const [cooldownLeft, setCooldownLeft] = useState(0);
 
+
+
+
+
+  // Pasos Individuales (Pruebas Manuales)
+  const [step1Loading, setStep1Loading] = useState(false);
+  const [step1Result, setStep1Result] = useState<string | null>(null);
+  const [step1Error, setStep1Error] = useState<string | null>(null);
+
+
+
+  const [step3Loading, setStep3Loading] = useState(false);
+  const [step3Result, setStep3Result] = useState<string | null>(null);
+  const [step3Error, setStep3Error] = useState<string | null>(null);
+
+  const [step4Loading, setStep4Loading] = useState(false);
+  const [step4Result, setStep4Result] = useState<string | null>(null);
+  const [step4Error, setStep4Error] = useState<string | null>(null);
   const [syncingPrices, setSyncingPrices] = useState(false);
   const [syncPricesResult, setSyncPricesResult] = useState<string | null>(null);
   const [syncPricesError, setSyncPricesError] = useState<string | null>(null);
@@ -446,77 +457,9 @@ export function SyncTab() {
   const [catalogStatusError, setCatalogStatusError] = useState<string | null>(null);
   const [catalogStatusConfirmed, setCatalogStatusConfirmed] = useState(false);
 
-  const [syncStatus, setSyncStatus] = useState<MarketSyncStatus | null>(null);
-  const [syncStatusError, setSyncStatusError] = useState<string | null>(null);
-  const [syncStatusConfirmed, setSyncStatusConfirmed] = useState(false);
 
-  // Pasos Individuales (Pruebas Manuales)
-  const [step1Loading, setStep1Loading] = useState(false);
-  const [step1Result, setStep1Result] = useState<string | null>(null);
-  const [step1Error, setStep1Error] = useState<string | null>(null);
 
-  const [step2Loading, setStep2Loading] = useState(false);
-  const [step2Result, setStep2Result] = useState<string | null>(null);
-  const [step2Error, setStep2Error] = useState<string | null>(null);
 
-  const [step3Loading, setStep3Loading] = useState(false);
-  const [step3Result, setStep3Result] = useState<string | null>(null);
-  const [step3Error, setStep3Error] = useState<string | null>(null);
-
-  const [step4Loading, setStep4Loading] = useState(false);
-  const [step4Result, setStep4Result] = useState<string | null>(null);
-  const [step4Error, setStep4Error] = useState<string | null>(null);
-  const configuredTarget =
-    syncStatus?.configuredTargetAssets || syncStatus?.targetAssets || 10_000;
-  const configuredAssetsPerItem =
-    syncStatus?.configuredAssetsPerItem || syncStatus?.assetsPerItem || 7;
-  const numberLocale = locale === "br" ? "pt-BR" : locale;
-  const configuredCollectionParams = {
-    target: configuredTarget.toLocaleString(numberLocale),
-    perItem: configuredAssetsPerItem.toLocaleString(numberLocale),
-  };
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      const saved = window.localStorage.getItem("last_sync_timestamp");
-      if (saved) {
-        const diff = Date.now() - Number(saved);
-        const remaining = Math.max(0, Math.ceil((3 * 60 * 1000 - diff) / 1000));
-        setCooldownLeft(remaining);
-      }
-    }, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  useEffect(() => {
-    if (cooldownLeft <= 0) return;
-    const interval = setInterval(() => {
-      setCooldownLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [cooldownLeft]);
-
-  const fetchRuntimeConfig = useCallback(async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/runtime-config`, {
-        credentials: "include",
-        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.error || t("admin.settings.loadRuntimeError"));
-      }
-      setRuntimeConfig(data);
-    } catch (err: unknown) {
-      setRuntimeConfigMessage(getErrorMessage(err, t("admin.settings.loadRuntimeError")));
-    }
-  }, [t]);
 
   const fetchCatalogStatus = useCallback(async (signal: AbortSignal) => {
     const response = await fetch(`${BACKEND_URL}/store/prices/catalog/status`, {
@@ -533,35 +476,15 @@ export function SyncTab() {
     setCatalogStatusError(null);
   }, [t]);
 
-  const fetchSyncStatus = useCallback(async (signal: AbortSignal) => {
-    const response = await fetch(`${BACKEND_URL}/market/sync/status`, {
-      credentials: "include",
-      headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
-      signal,
-    });
-    const data: unknown = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(responseMessage(data, t("admin.settings.marketStatusRequestError")));
-    }
-    setSyncStatus((current) => normalizeMarketSyncStatus(data, current));
-    setSyncStatusConfirmed(true);
-    setSyncStatusError(null);
-  }, [t]);
+
 
   const handleCatalogStatusError = useCallback((error: unknown) => {
     setCatalogStatusError(getErrorMessage(error, t("admin.bots.catalogStatusError")));
   }, [t]);
 
-  const handleSyncStatusError = useCallback((error: unknown) => {
-    setSyncStatusError(getErrorMessage(error, t("admin.settings.marketStatusRequestError")));
-  }, [t]);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void fetchRuntimeConfig();
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [fetchRuntimeConfig]);
+
+
 
   const catalogPollingEnabled =
     catalogStatus === null || Boolean(catalogStatus.running) || refreshingCatalog;
@@ -573,98 +496,11 @@ export function SyncTab() {
     timeoutMessage: t("admin.settings.statusRequestTimeout"),
   });
 
-  const waitingForQuota = syncStatus?.phase === "waiting_rate_limit";
-  const recoverablePause = syncStatus?.phase === "paused" && Boolean(syncStatus.resumable);
-  const marketPollingEnabled =
-    syncStatus === null ||
-    (syncStatus.phase !== "failed" &&
-      (Boolean(syncStatus.running) || waitingForQuota || recoverablePause));
-  const getMarketPollingInterval = useCallback(
-    () => marketStatusPollingDelay(syncStatus?.phase, syncStatus?.quotaResetsAt),
-    [syncStatus?.phase, syncStatus?.quotaResetsAt],
-  );
-  useRecursiveStatusPolling({
-    enabled: marketPollingEnabled,
-    intervalMs: waitingForQuota || recoverablePause ? 10_000 : 2_000,
-    nextIntervalMs: getMarketPollingInterval,
-    poll: fetchSyncStatus,
-    onError: handleSyncStatusError,
-    timeoutMessage: t("admin.settings.statusRequestTimeout"),
-  });
 
-  const handleRuntimeConfigSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingRuntimeConfig(true);
-    setRuntimeConfigMessage(null);
-    try {
-      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/runtime-config`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Tunnel-Skip-AntiPhishing-Page": "true",
-        },
-        body: JSON.stringify(runtimeConfig),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.error || t("admin.settings.saveRuntimeError"));
-      }
-      setRuntimeConfig(data);
-      setRuntimeConfigMessage(t("admin.settings.requiresRestart"));
-    } catch (err: unknown) {
-      setRuntimeConfigMessage(getErrorMessage(err, t("admin.settings.saveRuntimeError")));
-    } finally {
-      setSavingRuntimeConfig(false);
-    }
-  };
 
-  const handleFullSync = async () => {
-    if (cooldownLeft > 0 && !syncStatus?.resumable) return;
-    setSyncingAll(true);
-    setSyncResult(null);
-    setSyncError(null);
-    setSyncStatusError(null);
-    try {
-      const response = await fetch(`${BACKEND_URL}/market/sync`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Tunnel-Skip-AntiPhishing-Page": "true",
-        },
-      });
-      const data: unknown = await response.json().catch(() => ({}));
-      if (response.status === 409) {
-        const record = responseRecord(data);
-        const blockingJob = record.blockingJob;
-        const message = responseMessage(data, t("admin.settings.marketSyncAlreadyRunning"));
-        if (blockingJob === "market_assets") {
-          const currentStatus = statusFromTriggerResponse(data);
-          setSyncStatus(currentStatus ?? createAcceptedMarketSyncStatus(message));
-          setSyncStatusConfirmed(Boolean(currentStatus));
-        }
-        setSyncResult(message);
-        return;
-      }
-      if (!response.ok) {
-        throw new Error(responseMessage(data, t("admin.settings.syncServerError")));
-      }
-      const message = responseMessage(data, t("admin.settings.fullSyncSuccess"));
-      const triggerStatus = statusFromTriggerResponse(data);
-      setSyncResult(message);
-      setSyncStatus(triggerStatus ?? createAcceptedMarketSyncStatus(message));
-      setSyncStatusConfirmed(Boolean(triggerStatus));
-      
-      const now = Date.now();
-      window.localStorage.setItem("last_sync_timestamp", String(now));
-      setCooldownLeft(180); // 3 minutos
-    } catch (err: unknown) {
-      setSyncError(getErrorMessage(err, t("admin.settings.syncAppError")));
-    } finally {
-      setSyncingAll(false);
-    }
-  };
+
+
+
 
   const handleRefreshPriceCatalog = async () => {
     setRefreshingCatalog(true);
@@ -755,26 +591,6 @@ export function SyncTab() {
     }
   };
 
-  const handleStep2DownloadYoupinPrices = async () => {
-    setStep2Loading(true);
-    setStep2Result(null);
-    setStep2Error(null);
-    try {
-      const response = await fetch(`${BACKEND_URL}/market/download-youpin-prices`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Error descargando youpin-prices.json");
-      setStep2Result(`Éxito: ${data.message} (${data.itemCount?.toLocaleString() ?? 0} precios)`);
-    } catch (err) {
-      setStep2Error(getErrorMessage(err, "Error al ejecutar Paso 2"));
-    } finally {
-      setStep2Loading(false);
-    }
-  };
-
   const handleStep3GenerateCatalogGlobal = async () => {
     setStep3Loading(true);
     setStep3Result(null);
@@ -818,66 +634,8 @@ export function SyncTab() {
   return (
     <div className="space-y-6">
       <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px] space-y-6">
-        <SectionHeader
-          title={t("admin.settings.fullSyncTitle")}
-          desc={t("admin.settings.fullSyncDesc", configuredCollectionParams)}
-        />
 
-        <form onSubmit={handleRuntimeConfigSubmit} className="max-w-3xl space-y-4 p-4 bg-white/[0.01] border border-white/5 rounded-[3px]">
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">
-              {t("admin.settings.syncConfigTitle")}
-            </h3>
-            <p className="text-[10px] text-[#84849b] mt-1 font-mono">
-              {t("admin.settings.syncConfigDescription")}
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {RUNTIME_CONFIG_LABELS.map((item) => (
-              <div key={item.key} className="space-y-1.5">
-                <FieldLabel>{item.label}</FieldLabel>
-                {item.type === "boolean" ? (
-                  <AdminSelect
-                    value={runtimeConfig[item.key] || ""}
-                    onChange={(value) =>
-                      setRuntimeConfig((prev) => ({ ...prev, [item.key]: value }))
-                    }
-                    options={[
-                      { value: "", label: t("common.useEnv") },
-                      { value: "true", label: t("common.enabled") },
-                      { value: "false", label: t("common.disabled") },
-                    ]}
-                  />
-                ) : (
-                  <StyledInput
-                    type={item.type === "number" ? "number" : "text"}
-                    value={runtimeConfig[item.key] || ""}
-                    onChange={(event) =>
-                      setRuntimeConfig((prev) => ({ ...prev, [item.key]: event.target.value }))
-                    }
-                    placeholder={t("common.useEnv")}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-
-          {runtimeConfigMessage && (
-            <div className="p-3 bg-accent/10 border border-accent/20 text-accent text-xs font-bold rounded-[3px]">
-              {runtimeConfigMessage}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={savingRuntimeConfig}
-            className="px-6 py-3 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-all disabled:opacity-60 cursor-pointer flex items-center gap-2"
-          >
-            {savingRuntimeConfig && <Loader2 className="w-4 h-4 animate-spin" />}
-            {t("admin.settings.saveSync")}
-          </button>
-        </form>
         
         <div className="max-w-xl w-full space-y-6">
           <div className="space-y-4">
@@ -998,29 +756,9 @@ export function SyncTab() {
               <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 2</span>
-                  <span className="text-[10px] font-mono text-white/50">youpin-prices.json</span>
-                </div>
-                <p className="text-xs text-[#84849b]">Descarga los precios del mercado desde /market/youpin/prices.</p>
-                {step2Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step2Error}</div>}
-                {step2Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step2Result}</div>}
-                <button
-                  type="button"
-                  onClick={handleStep2DownloadYoupinPrices}
-                  disabled={step2Loading}
-                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
-                >
-                  {step2Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                  2. Descargar youpin-prices.json
-                </button>
-              </div>
-
-              {/* Paso 3 */}
-              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 3</span>
                   <span className="text-[10px] font-mono text-white/50">catalog-global.json</span>
                 </div>
-                <p className="text-xs text-[#84849b]">Cruza el catálogo base con los precios y genera catalog-global.json.</p>
+                <p className="text-xs text-[#84849b]">Filtra el catálogo base y genera catalog-global.json.</p>
                 {step3Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step3Error}</div>}
                 {step3Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step3Result}</div>}
                 <button
@@ -1030,14 +768,14 @@ export function SyncTab() {
                   className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
                 >
                   {step3Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                  3. Generar catalog-global.json
+                  2. Generar catalog-global.json
                 </button>
               </div>
 
-              {/* Paso 4 */}
+              {/* Paso 3 */}
               <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 4</span>
+                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 3</span>
                   <span className="text-[10px] font-mono text-white/50">Base de Datos (MarketListing)</span>
                 </div>
                 <p className="text-xs text-[#84849b]">Sincroniza catalog-global.json a las tablas de la BD.</p>
@@ -1050,87 +788,12 @@ export function SyncTab() {
                   className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
                 >
                   {step4Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                  4. Pushear a Base de Datos
+                  3. Pushear a Base de Datos
                 </button>
               </div>
             </div>
           </div>
 
-          <hr className="border-white/5 my-6" />
-
-          <div className="p-4 bg-white/[0.01] border border-white/5 rounded-[3px] space-y-3 min-w-0">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">
-              {t("admin.settings.executedProcesses")}
-            </h3>
-            <ul className="text-xs text-[#84849b] list-disc list-inside space-y-1.5 font-medium">
-              <li>{t("admin.settings.syncProcessPriority")}</li>
-              <li>
-                {t("admin.settings.syncProcessCatalogPrefix")}{" "}
-                <span className="text-white break-all">/steam/api/float/assets</span>{" "}
-                {t("admin.settings.syncProcessCatalogSuffix")}
-              </li>
-              <li>
-                {t("admin.settings.syncProcessTarget", configuredCollectionParams)}
-              </li>
-              <li>{t("admin.settings.syncProcessPersistence")}</li>
-            </ul>
-          </div>
-
-          {syncError && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-[3px]">
-              {syncError}
-            </div>
-          )}
-
-          {syncResult && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-[3px]">
-              {syncResult}
-            </div>
-          )}
-
-          <StatusUnavailableWarning
-            message={syncStatusError}
-            hasLastKnownStatus={syncStatusConfirmed && syncStatus !== null}
-            unavailableLabel={t("admin.settings.marketStatusUnavailable")}
-            lastKnownLabel={t("admin.settings.statusShowingLastKnown")}
-            awaitingLabel={t("admin.settings.statusAwaitingConfirmation")}
-          />
-
-          {syncStatus && (syncStatus.running || syncStatus.phase !== "idle") && (
-            <SyncStatusCard status={syncStatus} statusConfirmed={syncStatusConfirmed} />
-          )}
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <button
-              type="button"
-              onClick={handleFullSync}
-              disabled={
-                syncingAll ||
-                Boolean(syncStatus?.running) ||
-                (cooldownLeft > 0 && !syncStatus?.resumable)
-              }
-              className="w-full sm:w-auto px-6 py-3.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(217,70,239,0.25)] cursor-pointer select-none"
-            >
-              {syncingAll ? (
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
-              ) : (
-                <RefreshCw className={`w-4 h-4 text-white ${syncingAll ? "animate-spin" : ""}`} />
-              )}
-              {syncingAll
-                ? t("admin.settings.syncingAll")
-                : syncStatus?.resumable
-                ? "Reanudar sincronización desde checkpoint"
-                : cooldownLeft > 0
-                ? t("admin.settings.cooldown", { minutes: Math.floor(cooldownLeft / 60), seconds: cooldownLeft % 60 })
-                : t("admin.settings.syncAll")}
-            </button>
-
-            {cooldownLeft > 0 && !syncStatus?.resumable && (
-              <span className="text-[10px] text-[#84849b] font-mono font-bold uppercase tracking-wider self-center">
-                * {t("admin.settings.cooldownHelp")}
-              </span>
-            )}
-          </div>
         </div>
       </div>
     </div>

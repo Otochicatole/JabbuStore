@@ -5,7 +5,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { AdminSelect } from "@/shared/components/AdminSelect";
-import type { MarketSyncPhase, MarketSyncStatus, PriceCatalogStatus } from "@/features/admin/types";
+import type { PriceCatalogStatus } from "@/features/admin/types";
 import { RUNTIME_CONFIG_LABELS } from "./constants";
 import { SectionHeader, FieldLabel, StyledInput } from "./FormControls";
 import { getErrorMessage } from "./helpers";

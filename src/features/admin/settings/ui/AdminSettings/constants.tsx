@@ -25,8 +25,8 @@ export const SECRET_LABELS = [
 ];
 
 export const RUNTIME_CONFIG_LABELS = [
-  { key: "ENABLE_SYNC", label: "ENABLE_SYNC", type: "boolean" },
-  { key: "ENABLE_ITEMS_CATALOG_SYNC", label: "ENABLE_ITEMS_CATALOG_SYNC", type: "boolean" },
+  { key: "MARKET_SYNC_PAGE_SIZE", label: "MARKET_SYNC_PAGE_SIZE", type: "number" },
+  { key: "MARKET_SYNC_MAX_PAGES", label: "MARKET_SYNC_MAX_PAGES", type: "number" },
 ];
 
 export const TABS: {

@@ -82,16 +82,13 @@ export function MarketCatalog() {
   const {
     listings,
     loading,
-    syncing,
     error,
-    syncMessage,
     search,
     setSearch,
     sortBy,
     setSortBy,
     filtered,
     youpinCount,
-    handleSync,
     fetchListings,
     currentPage,
     setCurrentPage,
@@ -127,27 +124,12 @@ export function MarketCatalog() {
           >
             {t("common.refresh")}
           </button>
-          <button
-            type="button"
-            onClick={handleSync}
-            disabled={syncing}
-            className="px-4 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-[10px] font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? t("admin.market.syncing") : t("admin.market.sync")}
-          </button>
         </div>
       </div>
 
-      {(syncMessage || error) && (
-        <div
-          className={`p-3 rounded-[3px] text-xs font-bold border ${
-            error
-              ? "bg-red-500/10 border-red-500/20 text-red-400"
-              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-          }`}
-        >
-          {error || syncMessage}
+      {error && (
+        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-[3px] text-xs font-bold">
+          {error}
         </div>
       )}
 

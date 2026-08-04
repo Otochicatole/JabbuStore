@@ -35,7 +35,7 @@ export const SkinCardImage = ({
       />
 
       {/* Absolute count badge positioned next to the image (transparent design) */}
-      {isMultiple && (
+      {isMultiple && skinsInGroupCount > 1 && (
         <div className="absolute bottom-2 right-2 bg-transparent select-none animate-fade-in z-10">
           <span className="text-[11px] font-black text-white/50 font-mono">
             x{skinsInGroupCount}

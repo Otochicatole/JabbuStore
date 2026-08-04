@@ -449,6 +449,23 @@ export function SyncTab() {
   const [syncStatus, setSyncStatus] = useState<MarketSyncStatus | null>(null);
   const [syncStatusError, setSyncStatusError] = useState<string | null>(null);
   const [syncStatusConfirmed, setSyncStatusConfirmed] = useState(false);
+
+  // Pasos Individuales (Pruebas Manuales)
+  const [step1Loading, setStep1Loading] = useState(false);
+  const [step1Result, setStep1Result] = useState<string | null>(null);
+  const [step1Error, setStep1Error] = useState<string | null>(null);
+
+  const [step2Loading, setStep2Loading] = useState(false);
+  const [step2Result, setStep2Result] = useState<string | null>(null);
+  const [step2Error, setStep2Error] = useState<string | null>(null);
+
+  const [step3Loading, setStep3Loading] = useState(false);
+  const [step3Result, setStep3Result] = useState<string | null>(null);
+  const [step3Error, setStep3Error] = useState<string | null>(null);
+
+  const [step4Loading, setStep4Loading] = useState(false);
+  const [step4Result, setStep4Result] = useState<string | null>(null);
+  const [step4Error, setStep4Error] = useState<string | null>(null);
   const configuredTarget =
     syncStatus?.configuredTargetAssets || syncStatus?.targetAssets || 10_000;
   const configuredAssetsPerItem =
@@ -712,9 +729,89 @@ export function SyncTab() {
           t("admin.settings.syncBotPricesStarted"),
       );
     } catch (err: unknown) {
-      setSyncPricesError(getErrorMessage(err, t("admin.settings.syncPricesError")));
+      setSyncPricesError(getErrorMessage(err, t("admin.settings.syncBotPricesError")));
     } finally {
       setSyncingPrices(false);
+    }
+  };
+
+  const handleStep1DownloadCatalog = async () => {
+    setStep1Loading(true);
+    setStep1Result(null);
+    setStep1Error(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/market/download-items-catalog`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Error descargando items-catalog.json");
+      setStep1Result(`Éxito: ${data.message} (${data.itemCount?.toLocaleString() ?? 0} ítems)`);
+    } catch (err) {
+      setStep1Error(getErrorMessage(err, "Error al ejecutar Paso 1"));
+    } finally {
+      setStep1Loading(false);
+    }
+  };
+
+  const handleStep2DownloadYoupinPrices = async () => {
+    setStep2Loading(true);
+    setStep2Result(null);
+    setStep2Error(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/market/download-youpin-prices`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Error descargando youpin-prices.json");
+      setStep2Result(`Éxito: ${data.message} (${data.itemCount?.toLocaleString() ?? 0} precios)`);
+    } catch (err) {
+      setStep2Error(getErrorMessage(err, "Error al ejecutar Paso 2"));
+    } finally {
+      setStep2Loading(false);
+    }
+  };
+
+  const handleStep3GenerateCatalogGlobal = async () => {
+    setStep3Loading(true);
+    setStep3Result(null);
+    setStep3Error(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/market/generate-catalog-global`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Error generando catalog-global.json");
+      setStep3Result(`Éxito: ${data.message} (${data.matchedItemsCount?.toLocaleString() ?? 0} ítems cruzados)`);
+    } catch (err) {
+      setStep3Error(getErrorMessage(err, "Error al ejecutar Paso 3"));
+    } finally {
+      setStep3Loading(false);
+    }
+  };
+
+  const handleStep4SyncCatalogDb = async () => {
+    setStep4Loading(true);
+    setStep4Result(null);
+    setStep4Error(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/market/sync-catalog-global-db`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Error sincronizando a BD");
+      setStep4Result(`Éxito: ${data.message} (${data.totalListingsUpserted?.toLocaleString() ?? 0} listings actualizadas en BD)`);
+    } catch (err) {
+      setStep4Error(getErrorMessage(err, "Error al ejecutar Paso 4"));
+    } finally {
+      setStep4Loading(false);
     }
   };
 
@@ -783,82 +880,6 @@ export function SyncTab() {
         </form>
         
         <div className="max-w-xl w-full space-y-6">
-          <div className="p-4 bg-white/[0.01] border border-white/5 rounded-[3px] space-y-3 min-w-0">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">
-              {t("admin.settings.executedProcesses")}
-            </h3>
-            <ul className="text-xs text-[#84849b] list-disc list-inside space-y-1.5 font-medium">
-              <li>{t("admin.settings.syncProcessPriority")}</li>
-              <li>
-                {t("admin.settings.syncProcessCatalogPrefix")}{" "}
-                <span className="text-white break-all">/steam/api/float/assets</span>{" "}
-                {t("admin.settings.syncProcessCatalogSuffix")}
-              </li>
-              <li>
-                {t("admin.settings.syncProcessTarget", configuredCollectionParams)}
-              </li>
-              <li>{t("admin.settings.syncProcessPersistence")}</li>
-            </ul>
-          </div>
-
-          {syncError && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-[3px]">
-              {syncError}
-            </div>
-          )}
-
-          {syncResult && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-[3px]">
-              {syncResult}
-            </div>
-          )}
-
-          <StatusUnavailableWarning
-            message={syncStatusError}
-            hasLastKnownStatus={syncStatusConfirmed && syncStatus !== null}
-            unavailableLabel={t("admin.settings.marketStatusUnavailable")}
-            lastKnownLabel={t("admin.settings.statusShowingLastKnown")}
-            awaitingLabel={t("admin.settings.statusAwaitingConfirmation")}
-          />
-
-          {syncStatus && (syncStatus.running || syncStatus.phase !== "idle") && (
-            <SyncStatusCard status={syncStatus} statusConfirmed={syncStatusConfirmed} />
-          )}
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <button
-              type="button"
-              onClick={handleFullSync}
-              disabled={
-                syncingAll ||
-                Boolean(syncStatus?.running) ||
-                (cooldownLeft > 0 && !syncStatus?.resumable)
-              }
-              className="w-full sm:w-auto px-6 py-3.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(217,70,239,0.25)] cursor-pointer select-none"
-            >
-              {syncingAll ? (
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
-              ) : (
-                <RefreshCw className={`w-4 h-4 text-white ${syncingAll ? "animate-spin" : ""}`} />
-              )}
-              {syncingAll
-                ? t("admin.settings.syncingAll")
-                : syncStatus?.resumable
-                ? "Reanudar sincronización desde checkpoint"
-                : cooldownLeft > 0
-                ? t("admin.settings.cooldown", { minutes: Math.floor(cooldownLeft / 60), seconds: cooldownLeft % 60 })
-                : t("admin.settings.syncAll")}
-            </button>
-
-            {cooldownLeft > 0 && !syncStatus?.resumable && (
-              <span className="text-[10px] text-[#84849b] font-mono font-bold uppercase tracking-wider self-center">
-                * {t("admin.settings.cooldownHelp")}
-              </span>
-            )}
-          </div>
-
-          <hr className="border-white/5 my-6" />
-
           <div className="space-y-4">
             <SectionHeader
               title={t("admin.settings.localPriceCatalog")}
@@ -937,6 +958,178 @@ export function SyncTab() {
                   : t("admin.settings.applyCatalogPrices")}
               </button>
             </div>
+          </div>
+
+          <hr className="border-white/5 my-6" />
+
+          {/* Sincronización Modular Paso a Paso */}
+          <div className="space-y-4 p-5 bg-white/[0.02] border border-white/10 rounded-[3px]">
+            <div className="border-b border-white/5 pb-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                Procesos Manuales Paso a Paso (Testeo Individual)
+              </h3>
+              <p className="text-[11px] text-[#84849b] mt-1 font-mono">
+                Ejecuta y verifica cada fase del flujo de sincronización del Mercado Global YouPin de forma independiente.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Paso 1 */}
+              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 1</span>
+                  <span className="text-[10px] font-mono text-white/50">items-catalog.json</span>
+                </div>
+                <p className="text-xs text-[#84849b]">Descarga el catálogo base completo desde /steam/api/items.</p>
+                {step1Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step1Error}</div>}
+                {step1Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step1Result}</div>}
+                <button
+                  type="button"
+                  onClick={handleStep1DownloadCatalog}
+                  disabled={step1Loading}
+                  className="w-full py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
+                >
+                  {step1Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  1. Descargar items-catalog.json
+                </button>
+              </div>
+
+              {/* Paso 2 */}
+              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 2</span>
+                  <span className="text-[10px] font-mono text-white/50">youpin-prices.json</span>
+                </div>
+                <p className="text-xs text-[#84849b]">Descarga los precios del mercado desde /market/youpin/prices.</p>
+                {step2Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step2Error}</div>}
+                {step2Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step2Result}</div>}
+                <button
+                  type="button"
+                  onClick={handleStep2DownloadYoupinPrices}
+                  disabled={step2Loading}
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
+                >
+                  {step2Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  2. Descargar youpin-prices.json
+                </button>
+              </div>
+
+              {/* Paso 3 */}
+              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 3</span>
+                  <span className="text-[10px] font-mono text-white/50">catalog-global.json</span>
+                </div>
+                <p className="text-xs text-[#84849b]">Cruza el catálogo base con los precios y genera catalog-global.json.</p>
+                {step3Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step3Error}</div>}
+                {step3Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step3Result}</div>}
+                <button
+                  type="button"
+                  onClick={handleStep3GenerateCatalogGlobal}
+                  disabled={step3Loading}
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
+                >
+                  {step3Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  3. Generar catalog-global.json
+                </button>
+              </div>
+
+              {/* Paso 4 */}
+              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 4</span>
+                  <span className="text-[10px] font-mono text-white/50">Base de Datos (MarketListing)</span>
+                </div>
+                <p className="text-xs text-[#84849b]">Sincroniza catalog-global.json a las tablas de la BD.</p>
+                {step4Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step4Error}</div>}
+                {step4Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step4Result}</div>}
+                <button
+                  type="button"
+                  onClick={handleStep4SyncCatalogDb}
+                  disabled={step4Loading}
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
+                >
+                  {step4Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  4. Pushear a Base de Datos
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-white/5 my-6" />
+
+          <div className="p-4 bg-white/[0.01] border border-white/5 rounded-[3px] space-y-3 min-w-0">
+            <h3 className="text-xs font-black uppercase tracking-wider text-white">
+              {t("admin.settings.executedProcesses")}
+            </h3>
+            <ul className="text-xs text-[#84849b] list-disc list-inside space-y-1.5 font-medium">
+              <li>{t("admin.settings.syncProcessPriority")}</li>
+              <li>
+                {t("admin.settings.syncProcessCatalogPrefix")}{" "}
+                <span className="text-white break-all">/steam/api/float/assets</span>{" "}
+                {t("admin.settings.syncProcessCatalogSuffix")}
+              </li>
+              <li>
+                {t("admin.settings.syncProcessTarget", configuredCollectionParams)}
+              </li>
+              <li>{t("admin.settings.syncProcessPersistence")}</li>
+            </ul>
+          </div>
+
+          {syncError && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-[3px]">
+              {syncError}
+            </div>
+          )}
+
+          {syncResult && (
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-[3px]">
+              {syncResult}
+            </div>
+          )}
+
+          <StatusUnavailableWarning
+            message={syncStatusError}
+            hasLastKnownStatus={syncStatusConfirmed && syncStatus !== null}
+            unavailableLabel={t("admin.settings.marketStatusUnavailable")}
+            lastKnownLabel={t("admin.settings.statusShowingLastKnown")}
+            awaitingLabel={t("admin.settings.statusAwaitingConfirmation")}
+          />
+
+          {syncStatus && (syncStatus.running || syncStatus.phase !== "idle") && (
+            <SyncStatusCard status={syncStatus} statusConfirmed={syncStatusConfirmed} />
+          )}
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <button
+              type="button"
+              onClick={handleFullSync}
+              disabled={
+                syncingAll ||
+                Boolean(syncStatus?.running) ||
+                (cooldownLeft > 0 && !syncStatus?.resumable)
+              }
+              className="w-full sm:w-auto px-6 py-3.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase tracking-wider text-white rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(217,70,239,0.25)] cursor-pointer select-none"
+            >
+              {syncingAll ? (
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+              ) : (
+                <RefreshCw className={`w-4 h-4 text-white ${syncingAll ? "animate-spin" : ""}`} />
+              )}
+              {syncingAll
+                ? t("admin.settings.syncingAll")
+                : syncStatus?.resumable
+                ? "Reanudar sincronización desde checkpoint"
+                : cooldownLeft > 0
+                ? t("admin.settings.cooldown", { minutes: Math.floor(cooldownLeft / 60), seconds: cooldownLeft % 60 })
+                : t("admin.settings.syncAll")}
+            </button>
+
+            {cooldownLeft > 0 && !syncStatus?.resumable && (
+              <span className="text-[10px] text-[#84849b] font-mono font-bold uppercase tracking-wider self-center">
+                * {t("admin.settings.cooldownHelp")}
+              </span>
+            )}
           </div>
         </div>
       </div>

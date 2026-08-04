@@ -973,7 +973,7 @@ export function SyncTab() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4">
               {/* Paso 1 */}
               <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
                 <div className="flex items-center justify-between">

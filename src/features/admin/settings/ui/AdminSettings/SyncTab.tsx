@@ -443,10 +443,6 @@ export function SyncTab() {
   const [step3Loading, setStep3Loading] = useState(false);
   const [step3Result, setStep3Result] = useState<string | null>(null);
   const [step3Error, setStep3Error] = useState<string | null>(null);
-
-  const [step4Loading, setStep4Loading] = useState(false);
-  const [step4Result, setStep4Result] = useState<string | null>(null);
-  const [step4Error, setStep4Error] = useState<string | null>(null);
   const [syncingPrices, setSyncingPrices] = useState(false);
   const [syncPricesResult, setSyncPricesResult] = useState<string | null>(null);
   const [syncPricesError, setSyncPricesError] = useState<string | null>(null);
@@ -611,25 +607,7 @@ export function SyncTab() {
     }
   };
 
-  const handleStep4SyncCatalogDb = async () => {
-    setStep4Loading(true);
-    setStep4Result(null);
-    setStep4Error(null);
-    try {
-      const response = await fetch(`${BACKEND_URL}/market/sync-catalog-global-db`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Error sincronizando a BD");
-      setStep4Result(`Éxito: ${data.message} (${data.totalListingsUpserted?.toLocaleString() ?? 0} listings actualizadas en BD)`);
-    } catch (err) {
-      setStep4Error(getErrorMessage(err, "Error al ejecutar Paso 4"));
-    } finally {
-      setStep4Loading(false);
-    }
-  };
+
 
   return (
     <div className="space-y-6">
@@ -772,25 +750,6 @@ export function SyncTab() {
                 </button>
               </div>
 
-              {/* Paso 3 */}
-              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 3</span>
-                  <span className="text-[10px] font-mono text-white/50">Base de Datos (MarketListing)</span>
-                </div>
-                <p className="text-xs text-[#84849b]">Sincroniza catalog-global.json a las tablas de la BD.</p>
-                {step4Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step4Error}</div>}
-                {step4Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step4Result}</div>}
-                <button
-                  type="button"
-                  onClick={handleStep4SyncCatalogDb}
-                  disabled={step4Loading}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
-                >
-                  {step4Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                  3. Pushear a Base de Datos
-                </button>
-              </div>
             </div>
           </div>
 

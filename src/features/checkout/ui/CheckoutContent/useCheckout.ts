@@ -372,11 +372,13 @@ export function useCheckout() {
               if (validateRes.ok) {
                 const validateData = await validateRes.json();
                 if (validateData.invalidIds && validateData.invalidIds.length > 0) {
-                  const removedItems = cartItems.filter((item) => validateData.invalidIds.includes(toValidationId(item.skin)));
-                  const removedNames = removedItems.map((item) => `${item.skin.weapon} | ${item.skin.name}`).join("\n");
+                  const removedItems = cartItems.filter((item) => item.skin && validateData.invalidIds.includes(toValidationId(item.skin)));
+                  const removedNames = removedItems
+                    .filter((item) => item.skin)
+                    .map((item) => `${item.skin.weapon} | ${item.skin.name}`).join("\n");
 
                   removedItems.forEach((item) => {
-                    removeFromCart(item.skin.id);
+                    if (item.skin) removeFromCart(item.skin.id);
                   });
 
                   const alertTemplate = t("cart.itemsRemoved");
@@ -399,8 +401,8 @@ export function useCheckout() {
           );
         }
 
-        setItems(data.items);
-        setTotalPrice(data.totalPrice);
+        setItems(Array.isArray(data.items) ? data.items : []);
+        setTotalPrice(data.totalPrice || 0);
       } catch (err: unknown) {
         console.error("Validation error:", err);
         setError(

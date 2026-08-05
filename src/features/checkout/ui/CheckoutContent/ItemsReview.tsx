@@ -92,14 +92,16 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
       </h2>
 
       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
-        {items.map((item) => (
+        {items.map((item) => {
+          if (!item) return null;
+          return (
           <div key={item.assetId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-2xl bg-background/50 border border-white/5">
             <div className="flex items-center gap-4 min-w-0">
               <div className="relative w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center p-1.5 shrink-0 overflow-hidden">
                 <ItemThumbnail item={item} />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">{item.name}</h4>
+                <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">{item.name || 'Unknown'}</h4>
                 {isRaffleCheckoutItem(item) ? (
                   <p className="text-[9px] text-accent font-bold uppercase tracking-wider mt-1">
                     Sorteo CS2
@@ -114,7 +116,8 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
               <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">{t("checkout.ready")}</p>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

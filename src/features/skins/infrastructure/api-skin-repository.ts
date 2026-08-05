@@ -24,6 +24,7 @@ export interface CatalogItemResponse {
   phase: string | null;
   isImmediate: boolean;
   inspectLink: string | null;
+  provider: "bot" | "youpin";
   variants?: CatalogItemResponse[];
 }
 
@@ -66,6 +67,7 @@ function mapCatalogItemToSkin(item: CatalogItemResponse): Skin {
     phase: item.phase ?? undefined,
     isImmediate: item.isImmediate,
     inspectLink: item.inspectLink,
+    provider: item.provider,
   };
 
   if (variants && variants.length > 0) {

@@ -380,7 +380,7 @@ export const SkinCardModal = ({
               </div>
             ) : (
               floats.map((f) => {
-                const assetId = f.id ? `youpin-${f.id}` : skin.id;
+                const assetId = f.assetId ? `youpin-${f.assetId}` : skin.id;
                 const isThisInCart = items.some(
                   (item) =>
                     item.skin.id === assetId ||
@@ -473,6 +473,7 @@ export const SkinCardModal = ({
                               provider: "youpin",
                               inspectLink: f.inspectLink ?? skin.inspectLink ?? null,
                               isSpecific: true,
+                              listingId: skin.id,
                             })
                           }
                           className="h-9 px-5 flex items-center justify-center bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)] shrink-0"

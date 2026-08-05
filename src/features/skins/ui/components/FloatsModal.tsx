@@ -197,7 +197,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   if (!isOpen || !mounted) return null;
 
   const handleSelectFloat = (float: FloatItem) => {
-    const assetId = float.id ? `youpin-${float.id}` : skin.id;
+    const assetId = float.assetId ? `youpin-${float.assetId}` : skin.id;
     const selectedSkin: Skin = {
       ...skin,
       id: assetId,
@@ -206,6 +206,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
       pattern: float.paintSeed,
       provider: "youpin",
       inspectLink: float.inspectLink ?? skin.inspectLink ?? null,
+      listingId: skin.id,
     };
 
     const existing = cartItems.find(
@@ -346,7 +347,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
           ) : (
             // Floats List
             processedFloats.map((f) => {
-              const assetId = f.id ? `youpin-${f.id}` : null;
+              const assetId = f.assetId ? `youpin-${f.assetId}` : null;
               const isSelectedInCart =
                 cartItemForThisListing &&
                 (cartItemForThisListing.skin.id === assetId ||

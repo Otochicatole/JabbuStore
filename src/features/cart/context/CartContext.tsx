@@ -38,6 +38,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
           items: currentItems.map(i => ({
             assetId: toValidationId(i.skin),
             isSpecific: i.skin.isSpecific !== false,
+            listingId: i.skin.listingId ?? null,
           })),
         }),
       });

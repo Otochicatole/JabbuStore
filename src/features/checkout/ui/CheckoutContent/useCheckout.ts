@@ -322,6 +322,7 @@ export function useCheckout() {
               float: i.skin.float !== undefined ? i.skin.float : null,
               pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
               isSpecific: i.skin.isSpecific !== false,
+              listingId: i.skin.listingId ?? null,
             })),
           };
         } else {
@@ -364,6 +365,7 @@ export function useCheckout() {
                   items: cartItems.map((i) => ({
                     assetId: toValidationId(i.skin),
                     isSpecific: i.skin.isSpecific !== false,
+                    listingId: i.skin.listingId ?? null,
                   })),
                 }),
               });
@@ -445,6 +447,7 @@ export function useCheckout() {
           float: i.skin.float !== undefined ? i.skin.float : null,
           pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
           isSpecific: i.skin.isSpecific !== false,
+          listingId: i.skin.listingId ?? null,
         })),
         paymentMethod: selectedMethod,
         manualTransferType,

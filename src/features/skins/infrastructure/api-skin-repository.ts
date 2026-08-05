@@ -92,11 +92,6 @@ const CATEGORY_LABEL_TO_TOKEN: Record<string, string> = {
   "Rifles de francotirador": "snipers",
   Escopetas: "shotguns",
   Ametralladoras: "machine_guns",
-  Agentes: "agents",
-  Contenedores: "containers",
-  "Kits musicales": "music_kits",
-  Parches: "patches",
-  Pegatinas: "stickers",
 };
 
 const CONDITION_LABEL_TO_TOKEN: Record<string, string> = {

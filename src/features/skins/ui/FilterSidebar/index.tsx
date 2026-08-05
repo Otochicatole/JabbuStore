@@ -22,11 +22,6 @@ const CATEGORIES = [
   { value: "Rifles de francotirador", labelKey: "filters.category.sniperRifles", icon: "snipers.webp" },
   { value: "Escopetas", labelKey: "filters.category.shotguns", icon: "shotguns.webp" },
   { value: "Ametralladoras", labelKey: "filters.category.machineGuns", icon: "machine-guns.webp" },
-  { value: "Agentes", labelKey: "filters.category.agents", icon: "agents.webp" },
-  { value: "Contenedores", labelKey: "filters.category.containers" },
-  { value: "Kits musicales", labelKey: "filters.category.musicKits" },
-  { value: "Parches", labelKey: "filters.category.patches" },
-  { value: "Pegatinas", labelKey: "filters.category.stickers", icon: "stickers.webp" },
 ];
 
 const CONDITIONS = [

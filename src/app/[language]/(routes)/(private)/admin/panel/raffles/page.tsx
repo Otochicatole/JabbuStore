@@ -16,6 +16,7 @@ import {
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { toValidationId } from "@/features/cart/domain/cart";
 import {
   AdminAlert,
   AdminButton,
@@ -70,6 +71,7 @@ interface CatalogItem {
   exterior: string | null;
   float: number | null;
   isImmediate: boolean;
+  provider?: "bot" | "youpin";
 }
 
 function getRaffleStatusBadge(status: string) {
@@ -183,7 +185,10 @@ function RafflesAdminContent() {
         drawDate: new Date(formDrawDate).toISOString(),
         ticketPrice: Number(formPrice),
         maxTickets: formMaxTickets ? Number(formMaxTickets) : null,
-        prizes: selectedPrizes.map((p) => ({ assetId: p.item.id, position: p.position })),
+        prizes: selectedPrizes.map((p) => ({
+          assetId: toValidationId({ id: p.item.id, provider: (p.item as any).provider } as any),
+          position: p.position,
+        })),
       };
 
       const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin`, {

@@ -699,6 +699,7 @@ export const es = {
   "admin.settings.rateKind.blue": "Dólar blue",
   "admin.settings.rateKind.oficial": "Dólar oficial",
   "admin.settings.rateKind.cripto": "Dólar cripto",
+  "admin.settings.currencyConversionActive": "Tasa activa:",
   "admin.settings.manualTransferTitle": "Transferencia Manual",
   "admin.settings.manualTransferDesc": "Configurá los datos que verá el comprador para pagar manualmente por transferencia bancaria o cripto.",
   "admin.settings.enableManualTransfer": "Habilitar Transferencia Manual en Checkout",

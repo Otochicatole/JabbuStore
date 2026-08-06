@@ -243,22 +243,7 @@ export function AdminSettings() {
         },
       );
       if (!res.ok) throw new Error();
-      const conversionRes = await fetch(
-        `${BACKEND_URL}/admin/marketplace/settings/currency-conversion`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Tunnel-Skip-AntiPhishing-Page": "true",
-          },
-          body: JSON.stringify({
-            usdArsRateKind: settings.usdArsRateKind,
-          }),
-        },
-      );
-      if (!conversionRes.ok) throw new Error();
-      const saved = await conversionRes.json();
+      const saved = await res.json();
       setSettings((prev) => ({
         ...prev,
         ...saved,
@@ -322,7 +307,22 @@ export function AdminSettings() {
         },
       );
       if (!res.ok) throw new Error();
-      const saved = await res.json();
+      const conversionRes = await fetch(
+        `${BACKEND_URL}/admin/marketplace/settings/currency-conversion`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tunnel-Skip-AntiPhishing-Page": "true",
+          },
+          body: JSON.stringify({
+            usdArsRateKind: settings.usdArsRateKind,
+          }),
+        },
+      );
+      if (!conversionRes.ok) throw new Error();
+      const saved = await conversionRes.json();
       setSettings((prev) => ({
         ...prev,
         ...saved,

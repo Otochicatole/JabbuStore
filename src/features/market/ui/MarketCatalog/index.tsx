@@ -210,7 +210,6 @@ export function MarketCatalog() {
                 <thead>
                   <tr className="border-b border-white/5 bg-[#110f1e]/60 text-[#84849b] text-[9px] font-black uppercase tracking-wider font-mono">
                     <th className="py-3 px-4">{t("common.item")}</th>
-                    <th className="py-3 px-4">{t("admin.market.floatPattern")}</th>
                     <th className="py-3 px-4">{t("admin.market.wear")}</th>
                     <th className="py-3 px-4">{t("admin.market.basePrice")}</th>
                     <th className="py-3 px-4">{t("admin.market.storePrice")}</th>
@@ -252,10 +251,6 @@ export function MarketCatalog() {
                               {l.category}
                             </p>
                           </div>
-                        </td>
-                        <td className="py-2.5 px-4 font-mono text-[10px] text-white/80">
-                          <div>{l.float?.toFixed(6) ?? "—"}</div>
-                          <div className="text-[#84849b]">#{l.pattern ?? "—"}</div>
                         </td>
                         <td className="py-2.5 px-4 font-mono text-xs">
                           {l.exterior ? (
@@ -346,16 +341,8 @@ export function MarketCatalog() {
                     </div>
 
                     {/* Sugeridos and Resell Prices Grid */}
-                    <div className="grid grid-cols-2 gap-2.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] text-[9.5px] font-mono">
-                      <div>
-                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("admin.market.float")}</span>
-                        <span className="text-white/80 block mt-0.5">{l.float?.toFixed(6) ?? "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("admin.market.pattern")}</span>
-                        <span className="text-white/80 block mt-0.5">#{l.pattern ?? "—"}</span>
-                      </div>
-                      <div className="col-span-2 border-t border-white/[0.03] pt-2 flex items-center justify-between">
+                    <div className="grid grid-cols-1 gap-2.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] text-[9.5px] font-mono">
+                      <div className="border-t border-white/[0.03] pt-2 flex items-center justify-between">
                         <div>
                           <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("admin.market.storePriceShort")}</span>
                           <span className="font-extrabold text-green-400 text-xs block mt-0.5">

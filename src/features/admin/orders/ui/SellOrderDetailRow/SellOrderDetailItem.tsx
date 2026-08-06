@@ -73,7 +73,7 @@ export function SellOrderDetailItem({
           />
         ) : (
           <span className="text-[8px] text-[#84849b] font-mono">
-            No Image
+            {t("common.noImage")}
           </span>
         )}
       </div>
@@ -98,7 +98,7 @@ export function SellOrderDetailItem({
           )}
           {isStar && (
             <span className="text-[7.5px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-400 border border-purple-500/30 px-1.5 py-0.5 rounded-[2px] shadow-[0_0_8px_rgba(168,85,247,0.1)]">
-              ★ Especial
+              ★ {t("admin.orders.specialBadge")}
             </span>
           )}
         </div>
@@ -120,7 +120,7 @@ export function SellOrderDetailItem({
           </a>
 
           <span className="text-[8.5px] font-black uppercase bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-[2px] font-sans tracking-wide">
-            Recibiendo Skin
+            {t("admin.orders.receivingSkin")}
           </span>
         </div>
 
@@ -166,7 +166,7 @@ export function SellOrderDetailItem({
       {displayFloat !== null && displayFloat !== undefined ? (
         <div className="sm:w-48 flex-shrink-0 bg-[#121021]/80 border border-white/5 p-3 rounded-[3px]">
           <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono">
-            Float Registrado
+            {t("purchases.registeredFloat")}
           </span>
           <span className="text-[11px] font-black font-mono text-white block mt-1 select-all">
             {displayFloat.toFixed(10)}
@@ -193,7 +193,7 @@ export function SellOrderDetailItem({
       ) : (
         <div className="sm:w-48 flex-shrink-0 bg-[#121021]/80 border border-white/5 p-3 rounded-[3px] flex flex-col justify-center">
           <span className="text-[9px] uppercase tracking-wider font-black text-white/25 font-mono">
-            Float Registrado
+            {t("purchases.registeredFloat")}
           </span>
           <span className="text-[10px] text-white/35 font-mono mt-1 font-bold">
             {t("admin.orders.chooseAnyFloat") || "A Criterio (Cualquiera)"}
@@ -204,7 +204,7 @@ export function SellOrderDetailItem({
       {/* Price */}
       <div className="text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0">
         <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block sm:hidden">
-          Precio Acordado
+          {t("admin.orders.agreedPrice")}
         </span>
         <div>
           <span className="text-sm sm:text-base font-black text-accent">

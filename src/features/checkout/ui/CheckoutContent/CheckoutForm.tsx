@@ -314,15 +314,15 @@ export function CheckoutForm({
               {selectedMethod === "mercado_pago" && (
                 <div className="flex flex-col gap-1.5 col-span-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">
-                    {t("checkout.payoutCurrency") || "Moneda de transferencia"}
+                    {t("checkout.payoutCurrency") || t("checkout.transferCurrency")}
                   </label>
                   <AdminSelect
                     value={formData.payoutCurrency || "ARS"}
                     onChange={(val) => updateField("payoutCurrency", val)}
                     options={[
-                      { value: "ARS", label: "ARS (Pesos Argentinos)" },
-                      { value: "BRL", label: "BRL (Reais Brasileños / Pix)" },
-                      { value: "USD", label: "USD (Dólares Estadounidenses / SWIFT)" },
+                      { value: "ARS", label: t("checkout.currency.arsPeso") },
+                      { value: "BRL", label: t("checkout.currency.brlPix") },
+                      { value: "USD", label: t("checkout.currency.usdSwift") },
                     ]}
                     className="w-full sm:w-80 font-sans"
                     buttonClassName="w-full px-3.5 py-2.5 bg-white/[0.03] border border-white/8 rounded-xl text-sm text-white focus:outline-none focus:border-accent/50 transition-colors flex items-center justify-between gap-2 cursor-pointer font-bold uppercase tracking-wider"

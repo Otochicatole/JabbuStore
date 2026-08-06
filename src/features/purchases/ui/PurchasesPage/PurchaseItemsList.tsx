@@ -54,7 +54,7 @@ export function PurchaseItemsList({
                 </span>
               )}
               <span className="text-[9px] font-mono text-accent block mt-0.5 uppercase tracking-wider">
-                Sorteo CS2
+                {t("checkout.raffleType")}
               </span>
             </div>
             <div className="shrink-0 text-right">

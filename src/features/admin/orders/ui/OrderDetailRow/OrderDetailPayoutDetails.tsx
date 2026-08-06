@@ -83,7 +83,7 @@ export function OrderDetailPayoutDetails({
         {/* Columna 2: Método de Cobro */}
         <div className="space-y-2.5">
           <h5 className="text-[9px] font-black uppercase text-[#84849b] tracking-wider font-mono">
-            Detalle del Cobro
+            {t("admin.orders.payoutDetails")}
           </h5>
           <div className="space-y-2 bg-[#110f1e]/40 p-3 border border-white/5 min-h-[120px] rounded-[3px]">
             <div>
@@ -206,7 +206,7 @@ export function OrderDetailPayoutDetails({
                 {order.metadata?.paypalPaymentId && (
                   <div className="mb-2">
                     <span className="text-[8.5px] text-[#84849b] block">
-                      ID de Captura PayPal
+                      {t("admin.orders.paypalCaptureId")}
                     </span>
                     <span className="font-bold font-mono text-indigo-400 block select-all bg-indigo-500/10 p-1.5 rounded-[3px] border border-indigo-500/20 mt-0.5 shadow-[0_0_10px_rgba(99,102,241,0.05)]">
                       {order.metadata.paypalPaymentId}

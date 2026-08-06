@@ -45,11 +45,12 @@ function ExpressPageContent() {
 }
 
 export default function ExpressPage() {
+  const { t } = useI18n();
   return (
     <Suspense fallback={
       <div className="flex flex-col items-center justify-center min-h-screen pt-28 text-white font-sans">
         <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
-        <p className="text-xs text-[#8984a1] font-bold uppercase tracking-widest">Cargando...</p>
+        <p className="text-xs text-[#8984a1] font-bold uppercase tracking-widest">{t("common.loading")}</p>
       </div>
     }>
       <ExpressPageContent />

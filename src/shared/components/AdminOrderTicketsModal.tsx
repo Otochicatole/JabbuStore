@@ -188,7 +188,7 @@ export function AdminOrderTicketsModal({
                             </span>
                           </div>
                           <span className="text-[9px] text-[#84849b] font-mono">
-                            {t("admin.rafflePurchases.workflowProcessing") || "Creado el"} {new Date(tItem.createdAt).toLocaleDateString("es-AR", {
+                            {t("admin.tickets.createdAt")} {new Date(tItem.createdAt).toLocaleDateString("es-AR", {
                               day: "2-digit",
                               month: "short",
                               year: "numeric",
@@ -204,7 +204,7 @@ export function AdminOrderTicketsModal({
                           className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/20 text-white text-[10px] font-black uppercase rounded-[3px] transition-all cursor-pointer flex items-center gap-1"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
-                          Chat
+                          {t("admin.tickets.chat")}
                         </button>
                       </div>
                     ))}

@@ -118,7 +118,7 @@ export function BotCard({
           <div className="flex justify-between items-center text-[8px] font-black uppercase text-[#84849b] tracking-wider mb-1">
             <span>{t("admin.bots.storageCapacity")}</span>
             <span className="text-white/80">
-              {bot.currentItems} / {bot.maxItems} items ({pct.toFixed(0)}%)
+              {t("admin.bots.itemsCount", { count: `${bot.currentItems} / ${bot.maxItems}` })} ({pct.toFixed(0)}%)
             </span>
           </div>
           <div className="w-full h-1.5 bg-white/[0.03] rounded-full overflow-hidden">

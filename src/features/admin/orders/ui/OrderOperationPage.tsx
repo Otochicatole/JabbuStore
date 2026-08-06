@@ -243,7 +243,7 @@ export function OrderOperationPage({ kind }: OrderOperationPageProps) {
         actions={
           <>
             <AdminButton type="button" icon={ArrowLeft} variant="secondary" onClick={() => router.push(localizePath(listPath))}>
-              Back to list
+              {t("admin.common.backToList")}
             </AdminButton>
             <AdminButton type="button" icon={RefreshCw} variant="secondary" loading={loading} onClick={fetchOrder}>
               {t("common.refresh")}

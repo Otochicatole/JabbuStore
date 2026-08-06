@@ -178,6 +178,7 @@ function SyncStatusCard({
   status: MarketSyncStatus;
   statusConfirmed: boolean;
 }) {
+  const { t } = useI18n();
   const target = status.targetAssets > 0 ? status.targetAssets : 10_000;
   const progress = Math.min(100, Math.max(0, Math.round((status.validAssets / target) * 100)));
   const waiting = status.phase === "waiting_rate_limit";
@@ -227,7 +228,7 @@ function SyncStatusCard({
 
       <div>
         <div className="mb-1.5 flex items-center justify-between gap-3 text-[10px] font-bold text-[#b4b4c5]">
-          <span>Assets válidos</span>
+          <span>{t("admin.settings.validAssets")}</span>
           <span className="font-mono">
             {status.validAssets.toLocaleString("es-AR")} / {target.toLocaleString("es-AR")}
           </span>
@@ -242,22 +243,22 @@ function SyncStatusCard({
 
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <div className="rounded-[3px] border border-white/5 bg-black/10 p-2.5">
-          <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">Descargados</p>
+          <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.settings.syncDownloaded")}</p>
           <p className="mt-1 font-mono text-xs font-black text-white">{status.rawAssets.toLocaleString("es-AR")}</p>
         </div>
         <div className="rounded-[3px] border border-white/5 bg-black/10 p-2.5">
-          <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">Descartados</p>
+          <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.settings.syncSkipped")}</p>
           <p className="mt-1 font-mono text-xs font-black text-white">{status.skippedAssets.toLocaleString("es-AR")}</p>
         </div>
         <div className="rounded-[3px] border border-white/5 bg-black/10 p-2.5">
-          <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">Candidatos</p>
+          <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.settings.syncCandidates")}</p>
           <p className="mt-1 font-mono text-xs font-black text-white">
             {status.candidatesVisited.toLocaleString("es-AR")}
             {status.totalCandidates > 0 ? ` / ${status.totalCandidates.toLocaleString("es-AR")}` : ""}
           </p>
         </div>
         <div className="rounded-[3px] border border-white/5 bg-black/10 p-2.5">
-          <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">Cuota actual</p>
+          <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.settings.syncQuota")}</p>
           <p className="mt-1 font-mono text-xs font-black text-white">
             {status.quotaUnitsUsed.toLocaleString("es-AR")} / {status.quotaLimit.toLocaleString("es-AR")}
           </p>
@@ -270,38 +271,37 @@ function SyncStatusCard({
 
       {status.currentCandidate && (
         <p className="break-words font-mono text-[10px] text-[#84849b]">
-          Skin actual: <span className="text-white">{status.currentCandidate}</span>
+          {t("admin.settings.currentSkinLabel")} <span className="text-white">{status.currentCandidate}</span>
         </p>
       )}
 
       {status.creditsUsed != null && status.creditsUsed > 0 && (
         <p className="font-mono text-[10px] text-[#84849b]">
-          Créditos informados por SteamWebAPI: {status.creditsUsed.toLocaleString("es-AR")}.
-        </p>
+          {t("admin.settings.steamApiCredits")} {status.creditsUsed.toLocaleString("es-AR")}.        </p>
       )}
 
       {waiting && resetAt && (
-        <p className="text-xs font-bold text-amber-200">Reanudación estimada: {resetAt}.</p>
+        <p className="text-xs font-bold text-amber-200">{t("admin.settings.estimatedResume")} {resetAt}.</p>
       )}
 
       {paused && (
         <p className="text-xs font-bold text-amber-200">
-          El avance quedó guardado. La próxima ejecución continuará desde el checkpoint.
+          {t("admin.settings.checkpointSaved")}
         </p>
       )}
 
       {completed && (
         <div className="space-y-1 text-[10px] font-bold text-[#b4b4c5]">
           <p>
-            Resultado: {exhausted ? "se agotó el catálogo elegible" : "se alcanzó el objetivo de assets"}.
+            {t("admin.settings.resultLabel")} {exhausted ? t("admin.settings.resultExhausted") : t("admin.settings.resultTargetReached")}.
           </p>
           {(status.publishedListings > 0 || status.publishedFloats > 0) && (
             <p>
-              Publicados: {status.publishedListings.toLocaleString("es-AR")} listings y{" "}
+              {t("admin.settings.publishedLabel")} {status.publishedListings.toLocaleString("es-AR")} listings y{" "}
               {status.publishedFloats.toLocaleString("es-AR")} assets.
             </p>
           )}
-          {finishedAt && <p>Finalizada: {finishedAt}.</p>}
+          {finishedAt && <p>{t("admin.settings.finalizedLabel")} {finishedAt}.</p>}
         </div>
       )}
 
@@ -311,13 +311,13 @@ function SyncStatusCard({
 
       {status.snapshotHash && (
         <p className="break-all font-mono text-[9px] text-[#67677d]">
-          Snapshot: {status.snapshotHash}
+          {t("admin.settings.snapshotLabel")} {status.snapshotHash}
         </p>
       )}
 
       {(status.running || status.resumable) && status.lastPublished && (
         <p className="text-[10px] font-bold text-[#84849b]">
-          Snapshot anterior visible: {status.lastPublished.validAssets.toLocaleString("es-AR")} assets,
+          {t("admin.settings.snapshotVisible")} {status.lastPublished.validAssets.toLocaleString("es-AR")} assets,
           {" "}{status.lastPublished.publishedListings.toLocaleString("es-AR")} listings.
         </p>
       )}
@@ -702,10 +702,10 @@ export function SyncTab() {
           <div className="space-y-4 p-5 bg-white/[0.02] border border-white/10 rounded-[3px]">
             <div className="border-b border-white/5 pb-3">
               <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                Procesos Manuales Paso a Paso (Testeo Individual)
+                {t("admin.settings.stepByStepTitle")}
               </h3>
               <p className="text-[11px] text-[#84849b] mt-1 font-mono">
-                Ejecuta y verifica cada fase del flujo de sincronización del Mercado Global YouPin de forma independiente.
+                {t("admin.settings.youpinSyncIntro")}
               </p>
             </div>
 
@@ -713,10 +713,10 @@ export function SyncTab() {
               {/* Paso 1 */}
               <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 1</span>
+                  <span className="text-xs font-black uppercase text-accent tracking-wider">{t("admin.settings.step", { number: 1 })}</span>
                   <span className="text-[10px] font-mono text-white/50">items-catalog.json</span>
                 </div>
-                <p className="text-xs text-[#84849b]">Descarga el catálogo base completo desde /steam/api/items.</p>
+                <p className="text-xs text-[#84849b]">{t("admin.settings.downloadBaseCatalog")}</p>
                 {step1Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step1Error}</div>}
                 {step1Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step1Result}</div>}
                 <button
@@ -726,17 +726,17 @@ export function SyncTab() {
                   className="w-full py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
                 >
                   {step1Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                  1. Descargar items-catalog.json
+                  {t("admin.settings.step1Button")}
                 </button>
               </div>
 
               {/* Paso 2 */}
               <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-accent tracking-wider">Paso 2</span>
+                  <span className="text-xs font-black uppercase text-accent tracking-wider">{t("admin.settings.step", { number: 2 })}</span>
                   <span className="text-[10px] font-mono text-white/50">catalog-global.json</span>
                 </div>
-                <p className="text-xs text-[#84849b]">Filtra el catálogo base y genera catalog-global.json.</p>
+                <p className="text-xs text-[#84849b]">{t("admin.settings.filterBaseCatalog")}</p>
                 {step3Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step3Error}</div>}
                 {step3Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step3Result}</div>}
                 <button
@@ -746,7 +746,7 @@ export function SyncTab() {
                   className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
                 >
                   {step3Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                  2. Generar catalog-global.json
+                  {t("admin.settings.step2Button")}
                 </button>
               </div>
 

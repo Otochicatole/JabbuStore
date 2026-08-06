@@ -206,7 +206,7 @@ export default function UserProfilePage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Tu nombre en la tienda"
+                  placeholder={t("profile.namePlaceholder")}
                   className="w-full px-4 py-3 bg-white/[0.03] border border-white/8 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 transition-colors"
                 />
               </div>
@@ -221,7 +221,7 @@ export default function UserProfilePage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ejemplo@correo.com"
+                  placeholder={t("profile.emailPlaceholder")}
                   className="w-full px-4 py-3 bg-white/[0.03] border border-white/8 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 transition-colors"
                 />
               </div>

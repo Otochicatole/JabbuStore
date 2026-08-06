@@ -170,7 +170,7 @@ export default function Home() {
               
               <div className="absolute top-4 right-4 flex items-center gap-2 bg-gradient-to-r from-[#eb4b4b]/20 to-transparent border border-[#eb4b4b]/40 text-[#eb4b4b] px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(235,75,75,0.3)]">
                 <span className="w-1 h-1 rounded-full bg-[#eb4b4b] animate-ping"></span>
-                Legendary
+                {t("skinCard.rarity.legendary")}
               </div>
 
               <div className="flex flex-col">
@@ -181,7 +181,7 @@ export default function Home() {
                    Doppler Phase 2
                 </h3>
                 <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">
-                  Factory New
+                  {t("filters.condition.factoryNew")}
                 </span>
               </div>
 
@@ -206,7 +206,7 @@ export default function Home() {
               <div className="bg-[#050308]/80 border border-white/5 rounded-xl p-4 flex flex-col gap-2.5 backdrop-blur-md relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                 <div className="flex justify-between items-center text-[9px] font-mono">
-                  <span className="text-white/40 uppercase tracking-wider">Float Value</span>
+                  <span className="text-white/40 uppercase tracking-wider">{t("skinCard.floatValueLabel")}</span>
                   <span className="text-green-400 font-bold drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">0.00318920</span>
                 </div>
                 {/* Micro Progress Bar */}
@@ -219,7 +219,7 @@ export default function Home() {
                   />
                 </div>
                 <div className="flex justify-between items-center text-[9px] font-mono mt-0.5">
-                  <span className="text-white/40 uppercase tracking-wider">Pattern Template</span>
+                  <span className="text-white/40 uppercase tracking-wider">{t("skinCard.patternTemplateLabel")}</span>
                   <span className="text-white font-bold bg-white/10 px-1.5 py-0.5 rounded">389</span>
                 </div>
               </div>
@@ -274,7 +274,7 @@ export default function Home() {
         >
           <div className="inline-flex items-center justify-center gap-2 mb-4">
             <span className="w-8 h-[1px] bg-accent"></span>
-            <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em]">Why Choose Us</span>
+            <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em]">{t("home.feature.section.eyebrow")}</span>
             <span className="w-8 h-[1px] bg-accent"></span>
           </div>
           <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-white mb-6">

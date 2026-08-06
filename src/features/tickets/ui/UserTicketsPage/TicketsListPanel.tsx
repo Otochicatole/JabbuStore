@@ -35,7 +35,7 @@ export function TicketsListPanel({
       <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
       <div className="flex bg-[#110f1e]/90 border-b border-white/5 p-4 shrink-0 gap-4 items-center justify-between flex-wrap z-10">
         <span className="text-[10px] font-black uppercase tracking-widest text-[#8984a1]">
-          Lista de tickets
+          {t("tickets.listTitle")}
         </span>
         <div className="flex bg-[#0d0b16] border border-white/5 p-1 rounded-full">
           {(["ALL", "OPEN", "CLOSED"] as const).map((status) => (
@@ -49,7 +49,7 @@ export function TicketsListPanel({
               }`}
             >
               {status === "ALL"
-                ? "Todos"
+                ? t("tickets.filterAll")
                 : status === "OPEN"
                   ? t("tickets.status.open")
                   : t("tickets.status.closed")}
@@ -70,7 +70,7 @@ export function TicketsListPanel({
             {t("tickets.noTickets")}
           </p>
           <p className="text-[11px] text-[#8984a1] mt-2 max-w-xs mx-auto leading-relaxed">
-            No tienes consultas registradas bajo este filtro en este momento.
+            {t("tickets.noTicketsFiltered")}
           </p>
         </div>
       ) : (

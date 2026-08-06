@@ -407,17 +407,17 @@ export function RaffleRoulette({
               >
                 {/* Header */}
                 <div className="flex items-center gap-1.5 text-[10px] uppercase font-black tracking-wider truncate w-full">
-                  <span className="text-white shrink-0">★ PARTICIPANTE</span>
+                  <span className="text-white shrink-0">★ {t("raffles.participant")}</span>
                   <span className="text-white/20 shrink-0">|</span>
                   <span className="text-fuchsia-500 truncate">
-                    {user.name || "USUARIO"}
+                    {user.name || t("raffles.user")}
                   </span>
                 </div>
 
                 {/* Sub-header */}
                 <div className="flex items-center justify-between mt-2 sm:mt-4">
                   <span className="text-[9px] font-black text-white/90 uppercase tracking-widest">
-                    TICKET ACTIVO
+                    {t("raffles.ticketActive")}
                   </span>
                   <span className="text-[9px] font-mono text-white/40">
                     ID: {user.id.slice(0, 5)}
@@ -430,7 +430,7 @@ export function RaffleRoulette({
                     Float
                   </span>
                   <span className="text-[9px] font-black text-white/80">
-                    USER
+                    {t("raffles.user")}
                   </span>
                 </div>
                 <div className="mt-1 w-full h-[3px] bg-white/5 rounded-full flex overflow-hidden">
@@ -478,9 +478,8 @@ export function RaffleRoulette({
             onClick={handleStart}
             className="px-6 sm:px-10 py-3 sm:py-4 bg-accent hover:bg-accent/90 text-white rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(var(--accent-rgb),0.3)] border border-white/10 hover:scale-105 active:scale-95 cursor-pointer"
           >
-            Ver Ganador
-          </button>
-        </div>
+            {t("raffles.viewWinner")}
+          </button>        </div>
       )}
     </div>
   );

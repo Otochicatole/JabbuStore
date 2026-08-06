@@ -72,17 +72,17 @@ export function CreateTicketForm({
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-[9px] font-black uppercase tracking-widest text-[#8984a1]">
-            Orden Relacionada
+            {t("tickets.relatedOrder")}
           </label>
           {ordersLoading ? (
             <div className="flex items-center gap-2 py-2 text-xs text-white/55">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
-              <span>Cargando tus ordenes...</span>
+              <span>{t("tickets.loadingOrders")}</span>
             </div>
           ) : orders.length === 0 ? (
             <div className="p-3 bg-orange-500/5 border border-orange-500/15 rounded-xl text-[10px] text-orange-300 font-bold uppercase tracking-wider flex items-start gap-2">
               <AlertCircle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-              <p>No tienes compras ni ventas en tu historial para abrir un ticket.</p>
+              <p>{t("tickets.noOrdersForTicket")}</p>
             </div>
           ) : (
             <AdminSelect
@@ -99,7 +99,7 @@ export function CreateTicketForm({
 
         <div className="flex flex-col gap-1.5">
           <label className="text-[9px] font-black uppercase tracking-widest text-[#8984a1]">
-            Asunto
+            {t("tickets.subject")}
           </label>
           <input
             type="text"
@@ -113,7 +113,7 @@ export function CreateTicketForm({
 
         <div className="flex flex-col gap-1.5">
           <label className="text-[9px] font-black uppercase tracking-widest text-[#8984a1]">
-            Mensaje Inicial
+            {t("tickets.initialMessage")}
           </label>
           <textarea
             value={message}

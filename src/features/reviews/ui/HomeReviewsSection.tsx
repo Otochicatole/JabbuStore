@@ -180,7 +180,7 @@ export function HomeReviewsSection() {
       >
         <div className="inline-flex items-center justify-center gap-2 mb-4">
           <span className="w-8 h-[1px] bg-accent"></span>
-          <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em]">Feedback</span>
+          <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em]">{t("home.recommendations.eyebrow")}</span>
           <span className="w-8 h-[1px] bg-accent"></span>
         </div>
         <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-white mb-6">

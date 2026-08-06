@@ -96,7 +96,7 @@ export function AdminBotsPanel() {
         <div className="rounded-[3px] border border-white/10 bg-white/3 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-[#84849b] break-words">
           {t("admin.bots.priceCatalog")}:{" "}
           <span className="text-white">
-            {catalogStatus.itemCount.toLocaleString()} items
+            {t("admin.bots.itemsCount", { count: catalogStatus.itemCount.toLocaleString() })}
           </span>
           {" · "}
           <span className={catalogStatus.running ? "text-sky-400" : catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}>

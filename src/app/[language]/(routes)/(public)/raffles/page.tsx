@@ -127,7 +127,7 @@ function RafflesListContent() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-4">
         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        <h3 className="text-base font-black uppercase text-white tracking-wider mb-2">Error al cargar</h3>
+        <h3 className="text-base font-black uppercase text-white tracking-wider mb-2">{t("raffles.loadErrorTitle")}</h3>
         <p className="text-xs text-[#84849b] max-w-sm mb-6">{error}</p>
       </div>
     );
@@ -218,7 +218,7 @@ function RafflesListContent() {
                   {raffle.maxTickets ? (
                     <div>
                       <div className="flex justify-between text-[10px] font-bold text-[#84849b] uppercase tracking-wider mb-1.5">
-                        <span>Chances: {soldTickets} / {raffle.maxTickets}</span>
+                        <span>{t("raffles.chancesProgress", { sold: soldTickets, total: raffle.maxTickets })}</span>
                         <span>{percentSold}%</span>
                       </div>
                       <div className="w-full bg-[#181628] rounded-full h-1.5 border border-white/5 overflow-hidden">
@@ -294,7 +294,7 @@ export default function RafflesListPage() {
       <Suspense fallback={
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-white">
           <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
-          <p className="text-xs text-[#8984a1] font-bold uppercase tracking-widest">Cargando...</p>
+          <p className="text-xs text-[#8984a1] font-bold uppercase tracking-widest">{t("common.loading")}</p>
         </div>
       }>
         <RafflesListContent />

@@ -30,7 +30,7 @@ export function HomeStatsTab({
 
       <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="space-y-5 max-w-xl">
         <div className="space-y-1.5">
-          <FieldLabel>Usuarios Activos (Active Users)</FieldLabel>
+          <FieldLabel>{t("admin.settings.homeStats.activeUsers")}</FieldLabel>
           <StyledInput
             value={settings.homeStatsActiveUsers}
             onChange={(e) =>
@@ -40,7 +40,7 @@ export function HomeStatsTab({
           />
         </div>
         <div className="space-y-1.5">
-          <FieldLabel>Skins Disponibles (Available Skins)</FieldLabel>
+          <FieldLabel>{t("admin.settings.homeStats.availableSkins")}</FieldLabel>
           <StyledInput
             value={settings.homeStatsAvailableSkins}
             onChange={(e) =>
@@ -50,7 +50,7 @@ export function HomeStatsTab({
           />
         </div>
         <div className="space-y-1.5">
-          <FieldLabel>Transacciones (Transactions)</FieldLabel>
+          <FieldLabel>{t("admin.settings.homeStats.transactions")}</FieldLabel>
           <StyledInput
             value={settings.homeStatsTransactions}
             onChange={(e) =>
@@ -60,7 +60,7 @@ export function HomeStatsTab({
           />
         </div>
         <div className="space-y-1.5">
-          <FieldLabel>Soporte (Online Support)</FieldLabel>
+          <FieldLabel>{t("admin.settings.homeStats.onlineSupport")}</FieldLabel>
           <StyledInput
             value={settings.homeStatsOnlineSupport}
             onChange={(e) =>

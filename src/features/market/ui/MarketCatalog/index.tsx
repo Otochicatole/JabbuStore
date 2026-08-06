@@ -210,7 +210,7 @@ export function MarketCatalog() {
                 <thead>
                   <tr className="border-b border-white/5 bg-[#110f1e]/60 text-[#84849b] text-[9px] font-black uppercase tracking-wider font-mono">
                     <th className="py-3 px-4">{t("common.item")}</th>
-                    <th className="py-3 px-4">Float / Pattern</th>
+                    <th className="py-3 px-4">{t("admin.market.floatPattern")}</th>
                     <th className="py-3 px-4">{t("admin.market.wear")}</th>
                     <th className="py-3 px-4">{t("admin.market.basePrice")}</th>
                     <th className="py-3 px-4">{t("admin.market.storePrice")}</th>
@@ -348,11 +348,11 @@ export function MarketCatalog() {
                     {/* Sugeridos and Resell Prices Grid */}
                     <div className="grid grid-cols-2 gap-2.5 bg-white/[0.01] border border-white/5 p-3 rounded-[3px] text-[9.5px] font-mono">
                       <div>
-                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Float</span>
+                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("admin.market.float")}</span>
                         <span className="text-white/80 block mt-0.5">{l.float?.toFixed(6) ?? "—"}</span>
                       </div>
                       <div>
-                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Pattern</span>
+                        <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("admin.market.pattern")}</span>
                         <span className="text-white/80 block mt-0.5">#{l.pattern ?? "—"}</span>
                       </div>
                       <div className="col-span-2 border-t border-white/[0.03] pt-2 flex items-center justify-between">

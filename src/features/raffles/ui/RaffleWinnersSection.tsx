@@ -258,7 +258,7 @@ export function RaffleWinnersSection({
                   </div>
                   {prize.winningTicket && (
                     <div className="text-right shrink-0 ml-2">
-                      <p className="text-[9px] font-black uppercase text-white/50 tracking-wider mb-0.5">Ticket</p>
+                      <p className="text-[9px] font-black uppercase text-white/50 tracking-wider mb-0.5">{t("raffles.ticketSingular")}</p>
                       <p className="text-[10px] font-mono text-white/80">#{prize.winningTicket.ticketNumber}</p>
                     </div>
                   )}

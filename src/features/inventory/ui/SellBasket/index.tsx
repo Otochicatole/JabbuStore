@@ -94,7 +94,7 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
                     {item.weapon} | {item.name}
                   </h4>
                   <p className="text-[9px] text-muted font-bold mt-0.5 uppercase tracking-wide">
-                    Cotización manual
+                    {t("sell.manualQuote")}
                   </p>
                 </div>
                 <button
@@ -114,7 +114,7 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
           <div className="flex flex-col">
             <span className="text-[10px] font-black text-muted uppercase tracking-widest">{t("sell.youWillReceive")}</span>
             <span className="text-[11px] sm:text-xs font-black text-accent uppercase tracking-widest mt-1">
-              Cotización manual por admin
+              {t("sell.manualQuoteByAdmin")}
             </span>
           </div>
           <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
@@ -132,7 +132,7 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
         {/* Success message */}
         {sellSuccess && (
           <div className="mb-4 px-3 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
-            <p className="text-[10px] font-bold text-emerald-400">¡Solicitud de cotización enviada! Redirigiendo...</p>
+            <p className="text-[10px] font-bold text-emerald-400">{t("sell.quoteSent")}</p>
           </div>
         )}
 
@@ -142,12 +142,11 @@ export const SellBasket = ({ embedded = false }: SellBasketProps) => {
           className="w-full h-12 bg-accent text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_rgba(217,70,239,0.5)] transition-all disabled:opacity-50 disabled:grayscale active:scale-95 cursor-pointer flex items-center justify-center gap-2"
         >
           {selling ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-          {selling ? t("checkout.processing") : selectedItems.length > 0 ? `Cotizar ${selectedItems.length} ítem(s)` : "Solicitar Cotización"}
+          {selling ? t("checkout.processing") : selectedItems.length > 0 ? t("sell.quoteItems", { count: selectedItems.length }) : t("sell.requestQuote")}
         </button>
 
         <p className="text-[8px] text-center text-muted mt-4 font-bold uppercase tracking-widest leading-relaxed">
-          El administrador cotizará tus ítems de forma manual
-        </p>
+          {t("sell.adminWillQuote")}        </p>
       </div>
     </div>
   );

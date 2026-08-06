@@ -90,7 +90,7 @@ export function OrderDetailItem({
           />
         ) : (
           <span className="text-[8px] text-[#84849b] font-mono">
-            No Image
+            {t("common.noImage")}
           </span>
         )}
       </div>
@@ -115,7 +115,7 @@ export function OrderDetailItem({
           )}
           {isStar && (
             <span className="text-[7.5px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-400 border border-purple-500/30 px-1.5 py-0.5 rounded-[2px] shadow-[0_0_8px_rgba(168,85,247,0.1)]">
-              ★ Especial
+              ★ {t("admin.orders.specialBadge")}
             </span>
           )}
           {finalExterior && (
@@ -231,11 +231,11 @@ export function OrderDetailItem({
         <div className="sm:w-48 flex-shrink-0 bg-[#121021]/80 border border-white/5 p-3 rounded-[3px]">
           <div className="flex items-center justify-between">
             <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono">
-              Float Registrado
+              {t("purchases.registeredFloat")}
             </span>
             {isPhysical && (
               <span className="text-[7.5px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded font-sans tracking-wider">
-                ✓ Real
+                ✓ {t("admin.orders.realBadge")}
               </span>
             )}
           </div>
@@ -264,7 +264,7 @@ export function OrderDetailItem({
       ) : (
         <div className="sm:w-48 flex-shrink-0 bg-[#121021]/80 border border-white/5 p-3 rounded-[3px] flex flex-col justify-center">
           <span className="text-[9px] uppercase tracking-wider font-black text-white/25 font-mono">
-            Float Registrado
+            {t("purchases.registeredFloat")}
           </span>
           <span className="text-[10px] text-white/35 font-mono mt-1 font-bold">
             {t("admin.orders.chooseAnyFloat") || "A Criterio (Cualquiera)"}
@@ -294,7 +294,7 @@ export function OrderDetailItem({
       {/* Price */}
       <div className="text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0">
         <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block sm:hidden">
-          Precio
+          {t("common.price")}
         </span>
         <div>
           <span className="text-sm sm:text-base font-black text-accent">

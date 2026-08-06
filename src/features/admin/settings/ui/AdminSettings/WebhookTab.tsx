@@ -30,10 +30,10 @@ export function WebhookTab({
       />
       <form onSubmit={onSubmit} className="space-y-5 max-w-xl">
         <div className="space-y-1.5">
-          <FieldLabel>Webhook URL</FieldLabel>
+          <FieldLabel>{t("admin.settings.webhookUrl")}</FieldLabel>
           <StyledInput
             type="url"
-            placeholder="https://tu-servidor.com/webhook"
+            placeholder={t("admin.settings.webhookExample")}
             value={settings.webhookUrl || ""}
             onChange={(e) =>
               setSettings((prev: SettingsState) => ({ ...prev, webhookUrl: e.target.value }))

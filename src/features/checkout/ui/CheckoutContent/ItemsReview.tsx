@@ -104,7 +104,7 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
                 <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">{item.name || 'Unknown'}</h4>
                 {isRaffleCheckoutItem(item) ? (
                   <p className="text-[9px] text-accent font-bold uppercase tracking-wider mt-1">
-                    Sorteo CS2
+                    {t("checkout.raffleType")}
                   </p>
                 ) : (
                   <ItemSpecs item={item} />

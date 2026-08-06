@@ -182,10 +182,10 @@ export function RafflePurchasesListPage() {
           className="w-full md:w-48"
           options={[
             { value: "all", label: t("admin.rafflePurchases.allPayments") },
-            { value: "mercado_pago", label: "Mercado Pago" },
-            { value: "paypal", label: "PayPal" },
-            { value: "nowpayments", label: "Crypto (NOWPayments)" },
-            { value: "manual_transfer", label: "Transferencia" },
+            { value: "mercado_pago", label: t("paymentMethod.mercado_pago.name") },
+            { value: "paypal", label: t("paymentMethod.paypal.name") },
+            { value: "nowpayments", label: t("paymentMethod.nowpayments.name") },
+            { value: "manual_transfer", label: t("paymentMethod.manual_transfer.name") },
           ]}
         />
       </AdminToolbar>

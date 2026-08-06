@@ -25,9 +25,9 @@ export function TicketChatPortal({
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-[#0f0d1e] px-4 py-3 sm:px-6">
         <div className="min-w-0">
           <p className="truncate text-[9.5px] font-mono text-white/40">
-            Referencia: <span className="text-white select-all">#{selected.orderId}</span> -{" "}
+            {t("tickets.referenceLabel")} <span className="text-white select-all">#{selected.orderId}</span> -{" "}
             <span className={selected.order?.type === "BUY" ? "text-emerald-400" : "text-purple-400"}>
-              {selected.order?.type === "BUY" ? "Compra" : "Venta"}
+              {selected.order?.type === "BUY" ? t("admin.tickets.typeBuy") : t("admin.tickets.typeSell")}
             </span>
           </p>
           <h2 className="truncate text-sm font-black text-white sm:text-base">

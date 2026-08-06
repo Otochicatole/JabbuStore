@@ -233,7 +233,7 @@ function RaffleOrderCard({ order, t }: { order: RaffleOrder; t: (key: string) =>
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">Total</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("common.total")}</p>
             <p className="text-sm font-black text-emerald-400">${order.totalPrice.toFixed(2)}</p>
             {arsSettlement !== null && (
               <p className="text-[10px] font-bold text-emerald-300">
@@ -273,7 +273,7 @@ function RaffleOrderCard({ order, t }: { order: RaffleOrder; t: (key: string) =>
             ))}
             {order.raffleTickets.length > 6 && (
               <span className="text-[9px] font-bold text-[#84849b]">
-                +{order.raffleTickets.length - 6} más
+                +{order.raffleTickets.length - 6} {t("admin.raffles.more")}
               </span>
             )}
           </div>
@@ -481,7 +481,7 @@ function RafflePurchasesContent() {
 
               <AdminToolbar>
                 <AdminSearchInput
-                  placeholder="Buscar por usuario, Steam ID u orden..."
+                  placeholder={t("admin.rafflePurchases.searchPlaceholder")}
                   value={searchTerm}
                   onChange={setSearchTerm}
                 />
@@ -504,9 +504,9 @@ function RafflePurchasesContent() {
                   className="w-full md:w-48"
                   options={[
                     { value: "all", label: t("admin.rafflePurchases.allPayments") },
-                    { value: "mercado_pago", label: "Mercado Pago" },
-                    { value: "paypal", label: "PayPal" },
-                    { value: "nowpayments", label: "Crypto (NOWPayments)" },
+                    { value: "mercado_pago", label: t("paymentMethod.mercado_pago.name") },
+                    { value: "paypal", label: t("paymentMethod.paypal.name") },
+                    { value: "nowpayments", label: t("paymentMethod.nowpayments.name") },
                   ]}
                 />
                 {selectedRaffleId && (

@@ -105,11 +105,13 @@ export function PayoutDetailsPanel({
                   ? (t("checkout.bankTransfer") || "Transferencia Bancaria")
                   : order.paymentMethod === "paypal"
                     ? "PayPal"
-                    : order.paymentMethod === "ethereum"
-                      ? "Ethereum (Web3)"
-                      : order.paymentMethod === "binance"
-                        ? "Binance Pay"
-                        : order.paymentMethod || t("common.notSpecified")}
+                    : order.paymentMethod === "nowpayments"
+                      ? "Crypto"
+                      : order.paymentMethod === "ethereum"
+                        ? "Ethereum (Web3)"
+                        : order.paymentMethod === "binance"
+                          ? "Binance Pay"
+                          : order.paymentMethod || t("common.notSpecified")}
               </span>
             </div>
 

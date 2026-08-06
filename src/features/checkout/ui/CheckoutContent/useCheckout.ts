@@ -117,7 +117,7 @@ export function useCheckout() {
         cuil: "",
         accountHolder: "",
         walletAddress: "",
-        payoutCurrency: "ARS",
+        payoutCurrency: selectedMethod === "mercado_pago" || selectedMethod === "manual_transfer" ? "ARS" : "USD",
         network:
           selectedMethod === "ethereum"
             ? "ERC20"

@@ -182,12 +182,12 @@ export function OrderSummary({
       </div>
 
       {checkoutType === "sell" && (
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-2 mb-6">
-          <div className="flex items-center gap-2 text-amber-400 font-bold uppercase tracking-wider text-[10px]">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
+        <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/10 p-5 space-y-3 mb-6">
+          <div className="flex items-center gap-2.5 text-amber-400 font-black uppercase tracking-wider text-xs">
+            <AlertTriangle className="w-5 h-5 shrink-0" />
             <span>{t("checkout.warning.provisionalQuoteTitle")}</span>
           </div>
-          <p className="text-[9.5px] text-[#84849b] leading-relaxed font-bold uppercase tracking-wide">
+          <p className="text-[11px] text-amber-100/80 leading-relaxed font-bold uppercase tracking-wide">
             {t("checkout.warning.provisionalQuoteDescription")}
           </p>
         </div>

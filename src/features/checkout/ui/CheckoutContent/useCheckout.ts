@@ -163,7 +163,7 @@ export function useCheckout() {
   }, []);
 
   useEffect(() => {
-    if (!manualTransferSettings || checkoutType !== "buy") return;
+    if (!manualTransferSettings || !isBuyLikeCheckout) return;
 
     const availableMethods = PAYMENT_METHODS.filter((method) => {
       if (method.id === "mercado_pago") return manualTransferSettings.mercadoPagoEnabled;

@@ -15,10 +15,7 @@ import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 
 export type SortOption =
   | "Precio: Mayor a Menor"
-  | "Precio: Menor a Mayor"
-  | "Float: Menor a Mayor"
-  | "Float: Mayor a Menor"
-  | "Más recientes";
+  | "Precio: Menor a Mayor";
 
 export interface FilterState {
   searchQuery: string;
@@ -91,25 +88,16 @@ const FILTER_QUERY_KEYS = [
 const SORT_OPTIONS: SortOption[] = [
   "Precio: Mayor a Menor",
   "Precio: Menor a Mayor",
-  "Float: Menor a Mayor",
-  "Float: Mayor a Menor",
-  "Más recientes",
 ];
 
 const SORT_LABEL_TO_TOKEN: Record<SortOption, string> = {
   "Precio: Mayor a Menor": "price_desc",
   "Precio: Menor a Mayor": "price_asc",
-  "Float: Menor a Mayor": "float_asc",
-  "Float: Mayor a Menor": "float_desc",
-  "Más recientes": "newest",
 };
 
 const SORT_TOKEN_TO_LABEL: Record<string, SortOption> = {
   price_desc: "Precio: Mayor a Menor",
   price_asc: "Precio: Menor a Mayor",
-  float_asc: "Float: Menor a Mayor",
-  float_desc: "Float: Mayor a Menor",
-  newest: "Más recientes",
 };
 
 const CATEGORY_LABEL_TO_TOKEN: Record<string, string> = {

@@ -172,15 +172,15 @@ function TicketChatSession({
   };
 
   return (
-    <div className={`flex flex-col bg-[#0d0b16] ${fullscreen ? "h-full min-h-0" : "min-h-[360px] rounded-[3px] border border-white/10"}`}>
-      <div className="border-b border-white/5 px-4 py-3">
+    <div className={`flex flex-col bg-[#0d0b16] ${fullscreen ? "h-full min-h-0" : "min-h-[360px] rounded-[3px] border-2 border-white/10"}`}>
+      <div className="border-b border-white/10 px-4 py-3.5">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="truncate text-xs font-black text-white">{ticket.subject}</h3>
-          <span className={`rounded px-2 py-1 text-[9px] font-black ${ticket.status === "OPEN" ? "bg-emerald-500/10 text-emerald-300" : "bg-white/5 text-white/40"}`}>
+          <h3 className="truncate text-sm font-black text-white">{ticket.subject}</h3>
+          <span className={`rounded px-2.5 py-1 text-[10px] font-black ${ticket.status === "OPEN" ? "bg-emerald-500/10 text-emerald-300" : "bg-white/5 text-white/40"}`}>
             {t(`tickets.status.${ticket.status.toLowerCase()}`)}
           </span>
         </div>
-        <p className="mt-1 text-[9px] font-mono text-white/35">#{ticket.orderId}</p>
+        <p className="mt-1 text-[10px] font-mono text-white/35">#{ticket.orderId}</p>
       </div>
 
       <div className={`flex-1 space-y-3 overflow-y-auto p-4 sm:p-6 ${fullscreen ? "min-h-0" : "max-h-[430px]"}`}>
@@ -190,9 +190,9 @@ function TicketChatSession({
           const mine = message.senderType === actor;
           return (
             <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-[3px] px-3 py-2 ${mine ? "bg-accent/20 text-white" : "bg-white/5 text-white/80"}`}>
-                <p className="whitespace-pre-wrap break-words text-xs">{message.body}</p>
-                <p className="mt-1 text-right text-[8px] text-white/35">
+              <div className={`max-w-[85%] rounded-xl px-4 py-2.5 ${mine ? "bg-accent/20 text-white" : "bg-white/5 text-white/80"}`}>
+                <p className="whitespace-pre-wrap break-words text-sm">{message.body}</p>
+                <p className="mt-1 text-right text-[9px] text-white/35">
                   {new Date(message.createdAt).toLocaleString(locale === "es" ? "es-AR" : "en-US")}
                 </p>
               </div>
@@ -202,8 +202,8 @@ function TicketChatSession({
         <div ref={endRef} />
       </div>
 
-      {error && <p className="px-4 pb-2 text-[10px] text-red-300">{error}</p>}
-      <div className="flex gap-2 border-t border-white/5 p-3">
+      {error && <p className="px-4 pb-2 text-[11px] text-red-300">{error}</p>}
+      <div className="flex gap-2 border-t border-white/10 p-3">
         <textarea
           value={body}
           onChange={(event) => setBody(event.target.value.slice(0, 2000))}
@@ -220,13 +220,13 @@ function TicketChatSession({
           placeholder={ticket.status === "CLOSED" ? t("tickets.closedPlaceholder") : t("tickets.messagePlaceholder")}
           disabled={ticket.status === "CLOSED" || sending}
           rows={2}
-          className="min-h-14 flex-1 resize-none rounded-[3px] border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white outline-none focus:border-accent/40 disabled:opacity-40"
+          className="min-h-14 flex-1 resize-none rounded-[3px] border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none focus:border-accent/40 disabled:opacity-40"
         />
         <button
           type="button"
           onClick={send}
           disabled={!body.trim() || sending || ticket.status === "CLOSED"}
-          className="flex w-11 cursor-pointer items-center justify-center rounded-[3px] bg-accent text-white disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex w-12 cursor-pointer items-center justify-center rounded-[3px] bg-gradient-to-r from-accent to-fuchsia-600 text-white disabled:cursor-not-allowed disabled:opacity-30 hover:brightness-110 transition-all"
           aria-label={t("tickets.send")}
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

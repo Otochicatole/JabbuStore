@@ -31,16 +31,16 @@ export function TicketPageHeader({
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="flex items-center justify-center gap-2 h-10 px-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-xl text-xs font-bold text-white transition-all duration-300 disabled:opacity-50 cursor-pointer"
+          className="flex items-center justify-center gap-2 h-12 px-6 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-[3px] text-sm font-black uppercase tracking-wider text-white transition-all duration-300 disabled:opacity-50 cursor-pointer"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-accent" : ""}`} />
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-accent" : ""}`} />
           <span className="hidden sm:inline">{t("common.refresh")}</span>
         </button>
 
         <button
           type="button"
           onClick={onNewTicket}
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-black uppercase text-white shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:bg-accent/90 hover:scale-105 active:scale-95 transition-all duration-300"
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-[3px] bg-gradient-to-r from-accent to-fuchsia-600 hover:from-accent hover:to-fuchsia-500 px-6 py-3 text-sm font-black uppercase text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] hover:shadow-[0_0_30px_rgba(217,70,239,0.5)] hover:scale-105 active:scale-95 transition-all duration-300"
         >
           <Plus className="h-4 w-4" />
           {t("tickets.openTicket")}

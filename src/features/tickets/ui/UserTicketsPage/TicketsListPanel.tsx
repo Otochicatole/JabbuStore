@@ -31,18 +31,18 @@ export function TicketsListPanel({
   t,
 }: TicketsListPanelProps) {
   return (
-    <div className="order-2 lg:order-1 lg:col-span-2 rounded-2xl border border-white/5 bg-[#110f1e]/40 overflow-hidden min-h-[380px] flex flex-col backdrop-blur-md shadow-2xl relative">
+    <div className="order-2 lg:order-1 lg:col-span-2 rounded-xl border-2 border-white/10 bg-[#110f1e]/40 overflow-hidden min-h-[380px] flex flex-col backdrop-blur-md shadow-2xl relative">
       <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
-      <div className="flex bg-[#110f1e]/90 border-b border-white/5 p-4 shrink-0 gap-4 items-center justify-between flex-wrap z-10">
-        <span className="text-[10px] font-black uppercase tracking-widest text-[#8984a1]">
+      <div className="flex bg-[#110f1e]/90 border-b border-white/10 p-4 shrink-0 gap-4 items-center justify-between flex-wrap z-10">
+        <span className="text-xs font-black uppercase tracking-widest text-[#8984a1]">
           {t("tickets.listTitle")}
         </span>
-        <div className="flex bg-[#0d0b16] border border-white/5 p-1 rounded-full">
+        <div className="flex bg-[#0d0b16] border border-white/10 p-1 rounded-full">
           {(["ALL", "OPEN", "CLOSED"] as const).map((status) => (
             <button
               key={status}
               onClick={() => onStatusFilterChange(status)}
-              className={`px-4 py-1.5 text-[8.5px] font-black uppercase tracking-wider rounded-full transition-all duration-300 text-center cursor-pointer ${
+              className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-full transition-all duration-300 text-center cursor-pointer ${
                 statusFilter === status
                   ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.4)]"
                   : "text-white/40 hover:text-white"
@@ -108,27 +108,26 @@ function TicketListItem({
     <button
       type="button"
       onClick={onSelect}
-      className={`w-full cursor-pointer p-4 text-left transition-all duration-300 rounded-xl border flex items-center justify-between gap-4 relative overflow-hidden group backdrop-blur-sm ${
+      className={`w-full cursor-pointer p-5 text-left transition-all duration-300 rounded-xl border-2 flex items-center justify-between gap-4 relative overflow-hidden group backdrop-blur-sm ${
         selected
           ? "bg-[#211c33]/65 border-accent/40 shadow-[0_4px_25px_rgba(217,70,239,0.12)] scale-[1.01]"
-          : "bg-[#211c33]/15 border-white/5 hover:border-white/10 hover:bg-[#211c33]/30 hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:translate-x-1"
+          : "bg-[#211c33]/15 border-white/10 hover:border-white/20 hover:bg-[#211c33]/30 hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:translate-x-1"
       }`}
     >
-      <div className={`absolute top-0 bottom-0 left-0 w-1.5 transition-all duration-300 ${selected ? "bg-accent" : "bg-transparent group-hover:bg-white/15"}`} />
-      <div className="min-w-0 flex-1 space-y-2.5 pl-2">
+      <div className="min-w-0 flex-1 space-y-2.5">
         <div className="flex items-center gap-2.5">
-          <span className={`text-xs sm:text-sm font-black tracking-wide transition-colors ${selected ? "text-white" : "text-white/80 group-hover:text-white"}`}>
+          <span className={`text-sm sm:text-base font-black tracking-wide transition-colors ${selected ? "text-white" : "text-white/80 group-hover:text-white"}`}>
             {ticket.subject}
           </span>
           {ticket.unreadCount > 0 && (
-            <span className="rounded-full bg-accent px-2 py-0.5 text-[8px] font-black text-white shrink-0 shadow-[0_0_12px_rgba(217,70,239,0.5)] animate-pulse">
+            <span className="rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-black text-white shrink-0 shadow-[0_0_12px_rgba(217,70,239,0.5)] animate-pulse">
               {ticket.unreadCount}
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-[9px] font-mono text-white/40">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-white/40">
           <span
-            className={`px-2 py-0.5 rounded-[4px] border text-[8px] font-bold uppercase tracking-wider ${
+            className={`px-2.5 py-0.5 rounded-[4px] border text-[9px] font-bold uppercase tracking-wider ${
               ticket.order?.type === "BUY"
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.05)]"
                 : "bg-purple-500/10 border-purple-500/20 text-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.05)]"
@@ -137,12 +136,12 @@ function TicketListItem({
             {ticket.order?.type === "BUY" ? "Compra" : "Venta"}
           </span>
           <span>-</span>
-          <span className="font-semibold text-white/50 bg-white/5 px-1.5 py-0.5 rounded select-all">
+          <span className="font-semibold text-white/50 bg-white/5 px-2 py-0.5 rounded select-all">
             #{ticket.orderId.slice(0, 8)}
           </span>
           <span>-</span>
           <span className="flex items-center gap-1.5 text-white/35 font-sans">
-            <Calendar className="w-3 h-3 text-[#8984a1]/60" />
+            <Calendar className="w-3.5 h-3.5 text-[#8984a1]/60" />
             {new Date(ticket.createdAt).toLocaleDateString(locale, {
               day: "2-digit",
               month: "short",
@@ -153,7 +152,7 @@ function TicketListItem({
       </div>
       <div className="shrink-0">
         <span
-          className={`rounded-full border px-3 py-1 text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 ${
+          className={`rounded-full border px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${
             ticket.status === "OPEN"
               ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
               : "border-white/10 bg-white/5 text-white/30"

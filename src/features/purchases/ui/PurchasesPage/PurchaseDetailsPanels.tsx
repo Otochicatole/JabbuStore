@@ -2,6 +2,8 @@ import { FileText, MessageSquare } from "lucide-react";
 
 import { BACKEND_URL } from "@/shared/lib/api";
 import type { Order, SelectedProof } from "@/features/purchases/types";
+import { Money } from "@/features/currency/ui/Money";
+import { useCurrency } from "@/features/currency/context/CurrencyContext";
 
 import { getPaymentMethodLabel, isRaffleOrder, type Translate } from "./helpers";
 
@@ -88,12 +90,14 @@ export function PurchaseDetailsPanels({
 }
 
 function PaymentInfoPanel({ order, t }: { order: Order; t: Translate }) {
+  const { effectiveCurrency } = useCurrency();
   const paymentQuote = order.metadata?.paymentQuote;
   const arsQuote =
     paymentQuote?.settlement?.currency === "ARS" &&
     typeof paymentQuote.settlement.amount === "number"
       ? paymentQuote
       : null;
+  const baseUsd = arsQuote?.base?.amount || order.totalPrice;
 
   return (
     <div className="bg-[#110f1e]/40 p-4 border border-white/5 rounded-[3px]">
@@ -112,14 +116,18 @@ function PaymentInfoPanel({ order, t }: { order: Order; t: Translate }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <span className="text-[#84849b] uppercase block">{t("checkout.payInArs")}</span>
-              <span className="font-black text-emerald-300">
-                {formatArs(arsQuote.settlement?.amount || 0)} ARS
-              </span>
+              {effectiveCurrency === "USD" ? (
+                <span className="font-black text-emerald-300">
+                  {formatArs(arsQuote.settlement?.amount || 0)} ARS
+                </span>
+              ) : (
+                <Money amountUsd={baseUsd} approximate className="font-black text-emerald-300" />
+              )}
             </div>
             <div>
               <span className="text-[#84849b] uppercase block">{t("checkout.baseAmount")}</span>
               <span className="font-bold text-white">
-                ${Number(arsQuote.base?.amount || order.totalPrice).toFixed(2)} USD
+                ${Number(baseUsd).toFixed(2)} USD
               </span>
             </div>
             <div>

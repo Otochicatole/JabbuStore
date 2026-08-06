@@ -113,16 +113,24 @@ export function PurchaseOrderCard({
             <span className="text-[9px] text-[#84849b] font-mono block uppercase tracking-widest">
               {t("purchases.totalAmount")}
             </span>
-            <span className="text-sm sm:text-base font-black text-white">
-              ${order.totalPrice.toLocaleString()} USD
-            </span>
-            {arsSettlement !== null && (
-              <span className="block text-[10px] font-bold text-emerald-400">
-                {formatArs(arsSettlement)} ARS
-              </span>
-            )}
-            {effectiveCurrency !== "USD" && (
-              <Money amountUsd={order.totalPrice} approximate className="block text-[10px] font-bold text-accent" />
+            {effectiveCurrency === "USD" ? (
+              <>
+                <span className="text-sm sm:text-base font-black text-white">
+                  ${order.totalPrice.toLocaleString()} USD
+                </span>
+                {arsSettlement !== null && (
+                  <span className="block text-[10px] font-bold text-emerald-400">
+                    {formatArs(arsSettlement)} ARS
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <Money amountUsd={order.totalPrice} approximate className="block text-sm sm:text-base font-black text-white" />
+                <span className="block text-[10px] font-bold text-white/40">
+                  ${order.totalPrice.toLocaleString()} USD
+                </span>
+              </>
             )}
           </div>
 

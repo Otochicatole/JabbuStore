@@ -35,31 +35,31 @@ export function PurchaseItemsList({
 
     return (
       <div className="space-y-3">
-        <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-2 block pt-2">
+        <h4 className="text-xs font-black uppercase tracking-widest text-[#84849b] mb-2 block pt-2">
           {t("purchases.includedItems", { count: chancesInOrder })}
         </h4>
-        <div className="flex flex-col gap-3 bg-[#0d0b16] p-4 rounded-[3px] border border-accent/10 hover:border-accent/20 transition-colors relative overflow-hidden">
+        <div className="flex flex-col gap-3 p-4 rounded-[3px] border border-accent/10 hover:border-accent/20 transition-colors relative overflow-hidden">
           <div className="flex items-center gap-4">
             <div className="w-12 h-10 bg-accent/5 rounded-lg flex items-center justify-center shrink-0">
               <Ticket className="w-5 h-5 text-accent" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-xs font-black text-white block">
+              <span className="text-sm font-black text-white block">
                 {t("purchases.raffleChancesInOrder", { count: chancesInOrder })}
                 {raffleName ? ` — "${raffleName}"` : ""}
               </span>
               {showTotal && (
-                <span className="text-[10px] font-bold text-emerald-400 block mt-1">
+                <span className="text-xs font-bold text-emerald-400 block mt-1">
                   {t("purchases.userChancesInRaffle", { count: userChancesInRaffle })}
                 </span>
               )}
-              <span className="text-[9px] font-mono text-accent block mt-0.5 uppercase tracking-wider">
+              <span className="text-[10px] font-mono text-accent block mt-0.5 uppercase tracking-wider">
                 {t("checkout.raffleType")}
               </span>
             </div>
             <div className="shrink-0 text-right">
-              <Money amountUsd={items.reduce((sum, item) => sum + item.price, 0)} approximate className="text-xs font-black text-accent block" />
-              <span className="text-[8px] text-[#84849b] font-mono uppercase">
+              <Money amountUsd={items.reduce((sum, item) => sum + item.price, 0)} approximate className="text-sm font-black text-accent block" />
+              <span className="text-[10px] text-[#84849b] font-mono uppercase">
                 {t("purchases.unitPrice")}
               </span>
             </div>
@@ -67,7 +67,7 @@ export function PurchaseItemsList({
           {raffleId && localizePath && (
             <Link
               href={localizePath(`/raffles/${raffleId}`)}
-              className="text-[10px] font-black uppercase tracking-wider text-accent hover:text-white transition-colors"
+              className="text-xs font-black uppercase tracking-wider text-accent hover:text-white transition-colors"
             >
               {t("purchases.viewRaffle")} →
             </Link>
@@ -78,7 +78,7 @@ export function PurchaseItemsList({
   }
   return (
     <div className="space-y-3">
-      <h4 className="text-[10px] font-black uppercase tracking-widest text-[#84849b] mb-2 block pt-2">
+      <h4 className="text-xs font-black uppercase tracking-widest text-[#84849b] mb-2 block pt-2">
         {t("purchases.includedItems", { count: items.length })}
       </h4>
 
@@ -98,11 +98,11 @@ function PurchaseItemCard({ item, t }: { item: OrderItem; t: Translate }) {
 
   return (
     <div
-      className={`flex flex-col md:flex-row md:items-center gap-4 bg-[#0d0b16] p-4 rounded-[3px] border border-white/5 hover:border-white/10 transition-colors relative overflow-hidden group ${
+      className={`flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-[3px] border border-white/10 hover:border-white/20 transition-colors relative overflow-hidden group ${
         rarityColors[finalRarity] || ""
       }`}
     >
-      <div className="w-16 h-12 bg-white/5 rounded-lg flex items-center justify-center p-1.5 overflow-hidden shrink-0 shadow-inner">
+      <div className="w-20 h-14 bg-white/5 rounded-lg flex items-center justify-center p-1.5 overflow-hidden shrink-0 shadow-inner">
         {item.iconUrl ? (
           <img
             src={item.iconUrl}
@@ -113,20 +113,20 @@ function PurchaseItemCard({ item, t }: { item: OrderItem; t: Translate }) {
             }}
           />
         ) : (
-          <Tag className="w-4 h-4 text-white/20" />
+          <Tag className="w-5 h-5 text-white/20" />
         )}
       </div>
 
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs font-black text-white truncate">{item.name}</span>
+          <span className="text-sm font-black text-white truncate">{item.name}</span>
           {isStatTrak && <ItemBadge className="bg-orange-500/10 text-orange-400 border-orange-500/20">StatTrak</ItemBadge>}
           {isSouvenir && <ItemBadge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">Souvenir</ItemBadge>}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-[9.5px] font-mono text-[#84849b]">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-[#84849b]">
           {finalExterior && (
-            <span className="text-white font-sans uppercase font-extrabold bg-white/5 px-1.5 py-0.2 rounded-sm">
+            <span className="text-white font-sans uppercase font-extrabold bg-white/5 px-2 py-0.5 rounded-sm">
               {finalExterior}
             </span>
           )}
@@ -141,8 +141,8 @@ function PurchaseItemCard({ item, t }: { item: OrderItem; t: Translate }) {
       {displayFloat !== null && <FloatDisplay displayFloat={displayFloat} t={t} />}
 
       <div className="text-right ml-auto">
-        <Money amountUsd={item.price} approximate className="text-xs font-black text-accent block" />
-        <span className="text-[8px] text-[#84849b] font-mono uppercase">
+        <Money amountUsd={item.price} approximate className="text-sm font-black text-accent block" />
+        <span className="text-[10px] text-[#84849b] font-mono uppercase">
           {t("purchases.unitPrice")}
         </span>
       </div>
@@ -158,7 +158,7 @@ function ItemBadge({
   className: string;
 }) {
   return (
-    <span className={`text-[7.5px] font-black uppercase tracking-wider border px-1.5 py-0.5 rounded-[2px] ${className}`}>
+    <span className={`text-[9px] font-black uppercase tracking-wider border px-2 py-0.5 rounded-[2px] ${className}`}>
       {children}
     </span>
   );
@@ -167,11 +167,11 @@ function ItemBadge({
 function FloatDisplay({ displayFloat, t }: { displayFloat: number | null; t: Translate }) {
   if (displayFloat === null) {
     return (
-      <div className="w-full md:w-36 bg-[#110f1e]/20 p-2 border border-white/5 rounded-[3px] shrink-0">
-        <span className="text-[8px] uppercase tracking-wider font-black text-[#84849b] block">
+      <div className="w-full md:w-40 bg-[#110f1e]/20 p-3 border border-white/10 rounded-[3px] shrink-0">
+        <span className="text-[10px] uppercase tracking-wider font-black text-[#84849b] block">
           {t("purchases.registeredFloat")}
         </span>
-        <span className="text-[10px] text-white/30 font-mono block mt-0.5">
+        <span className="text-xs text-white/30 font-mono block mt-0.5">
           {t("purchases.activeDeliveryFallback")}
         </span>
       </div>
@@ -179,14 +179,14 @@ function FloatDisplay({ displayFloat, t }: { displayFloat: number | null; t: Tra
   }
 
   return (
-    <div className="w-full md:w-36 bg-[#110f1e]/20 p-2 border border-white/5 rounded-[3px] shrink-0">
-      <span className="text-[8px] uppercase tracking-wider font-black text-[#84849b] block">
+    <div className="w-full md:w-40 bg-[#110f1e]/20 p-3 border border-white/10 rounded-[3px] shrink-0">
+      <span className="text-[10px] uppercase tracking-wider font-black text-[#84849b] block">
         {t("purchases.registeredFloat")}
       </span>
-      <span className="text-[10px] font-bold font-mono text-white block mt-0.5">
+      <span className="text-xs font-bold font-mono text-white block mt-0.5">
         {displayFloat.toFixed(8)}
       </span>
-      <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
+      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mt-1 relative">
         <div
           className={`h-full rounded-full ${
             displayFloat < 0.07 ? "bg-emerald-400" : displayFloat < 0.15 ? "bg-blue-400" : "bg-yellow-400"

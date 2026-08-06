@@ -57,11 +57,12 @@ export function PurchaseOrderCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="bg-[#110f1e]/40 border border-white/5 rounded-[3px] p-5 hover:border-white/10 transition-colors backdrop-blur-sm relative overflow-hidden"
+      className="bg-[#110f1e]/40 border border-white/10 rounded-sm p-6 hover:border-white/20 transition-colors backdrop-blur-sm relative overflow-hidden"
     >
-      <div className={`absolute top-0 bottom-0 left-0 w-1 ${isRaffle ? "bg-accent" : isBuy ? "bg-emerald-500" : "bg-purple-500"}`} />
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div
+        onClick={onToggle}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer rounded-lg -m-2 px-4 py-2 hover:bg-fuchsia-500/10 transition-all duration-1000"
+      >
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div
             className={`p-2.5 rounded-[3px] border shrink-0 ${
@@ -77,11 +78,11 @@ export function PurchaseOrderCard({
 
           <div className="min-w-0 flex-1 sm:flex-initial">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs font-bold text-white/90">
+              <span className="font-mono text-sm font-bold text-white/90">
                 ID: <span className="text-accent">{order.id.slice(0, 8)}</span>
               </span>
               <span
-                className={`px-2 py-0.5 rounded-[3px] text-[8.5px] font-black tracking-widest uppercase ${
+                className={`px-2.5 py-1 rounded-[3px] text-[10px] font-black tracking-widest uppercase ${
                   isRaffle
                     ? "bg-accent/10 text-accent border border-accent/20"
                     : isBuy
@@ -93,8 +94,8 @@ export function PurchaseOrderCard({
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-[#84849b] mt-1 font-medium">
-              <Calendar className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 text-sm text-[#84849b] mt-1 font-medium">
+              <Calendar className="w-3.5 h-3.5" />
               <span>
                 {new Date(order.createdAt).toLocaleDateString(locale, {
                   day: "2-digit",
@@ -110,24 +111,24 @@ export function PurchaseOrderCard({
 
         <div className="flex flex-row items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t border-white/5 sm:border-t-0">
           <div className="text-left sm:text-right">
-            <span className="text-[9px] text-[#84849b] font-mono block uppercase tracking-widest">
+            <span className="text-[11px] text-[#84849b] font-mono block uppercase tracking-widest">
               {t("purchases.totalAmount")}
             </span>
             {effectiveCurrency === "USD" ? (
               <>
-                <span className="text-sm sm:text-base font-black text-white">
+                <span className="text-base sm:text-lg font-black text-white">
                   ${order.totalPrice.toLocaleString()} USD
                 </span>
                 {arsSettlement !== null && (
-                  <span className="block text-[10px] font-bold text-emerald-400">
+                  <span className="block text-xs font-bold text-emerald-400">
                     {formatArs(arsSettlement)} ARS
                   </span>
                 )}
               </>
             ) : (
               <>
-                <Money amountUsd={order.totalPrice} approximate className="block text-sm sm:text-base font-black text-white" />
-                <span className="block text-[10px] font-bold text-white/40">
+                <Money amountUsd={order.totalPrice} approximate className="block text-base sm:text-lg font-black text-white" />
+                <span className="block text-xs font-bold text-white/40">
                   ${order.totalPrice.toLocaleString()} USD
                 </span>
               </>
@@ -135,13 +136,16 @@ export function PurchaseOrderCard({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-[3px] text-[10px] font-bold border ${statusConfig.color}`}>
+            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[3px] text-xs font-bold border ${statusConfig.color}`}>
               {statusConfig.icon}
               <span className="max-w-[120px] sm:max-w-none truncate">{statusConfig.label}</span>
             </div>
 
             <button
-              onClick={onToggle}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle();
+              }}
               className="p-2 bg-white/5 hover:bg-white/10 rounded-[3px] transition-all text-white/50 hover:text-white cursor-pointer shrink-0"
             >
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${expanded ? "rotate-180 text-accent animate-pulse" : ""}`} />
@@ -159,25 +163,25 @@ export function PurchaseOrderCard({
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="border-t border-white/5 mt-5 pt-5 space-y-4">
+            <div className="border-t-2 border-white/10 mt-5 pt-5 space-y-4">
               <PurchaseTimeline order={order} t={t} />
 
               {/* Retention timer panel for client */}
               {order.status === "RETENTION" && order.metadata?.retentionStartedAt && (
                 <div className="space-y-3">
                   <RetentionCountdown retentionStartedAt={order.metadata.retentionStartedAt} />
-                  <p className="text-[10px] text-white/40 leading-relaxed px-1">
+                  <p className="text-xs text-white/40 leading-relaxed px-1">
                     {t("purchases.retention.desc") || "Tu artículo se encuentra en el período de retención de seguridad de 8 días. Una vez finalizado el plazo, el administrador procesará el pago correspondiente."}
                   </p>
                 </div>
               )}
 
               {order.status === "AWAITING_APPROVAL" && (
-                <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-[3px] space-y-3">
-                  <h4 className="text-xs font-black uppercase text-blue-400">
+                <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-[3px] space-y-3">
+                  <h4 className="text-sm font-black uppercase text-blue-400">
                     {t("purchases.requote.title") || "Propuesta de Nueva Cotización"}
                   </h4>
-                  <p className="text-[10px] text-white/70 leading-relaxed">
+                  <p className="text-xs text-white/70 leading-relaxed">
                     {t("purchases.requote.desc", {
                       oldPrice: (order.metadata?.originalPrice || order.totalPrice).toFixed(2),
                       newPrice: order.totalPrice.toFixed(2),
@@ -185,7 +189,7 @@ export function PurchaseOrderCard({
                   </p>
                   
                   {/* Equivalents in local cashing currencies */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 bg-black/25 rounded-[3px] border border-white/5 text-[9.5px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-black/25 rounded-[3px] border border-white/10 text-[11px]">
                     <div>
                       <span className="text-[#84849b] block uppercase">{t("purchases.requote.eqUsd") || "Equivalente USD"}</span>
                       <span className="font-bold text-white font-mono">${order.totalPrice.toFixed(2)} USD</span>
@@ -222,9 +226,9 @@ export function PurchaseOrderCard({
                           setActionLoading(false);
                         }
                       }}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/20 text-white rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/20 text-white rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      <Check className="w-3.5 h-3.5" />
+                      <Check className="w-4 h-4" />
                       {t("purchases.requote.approve") || "Aprobar nueva cotización"}
                     </button>
                     <button
@@ -248,15 +252,15 @@ export function PurchaseOrderCard({
                           setActionLoading(false);
                         }
                       }}
-                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-300 rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
+                      className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 text-red-300 rounded-[3px] text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4" />
                       {t("purchases.requote.reject") || "Rechazar y cancelar venta"}
                     </button>
                   </div>
 
                   {actionError && (
-                    <p className="text-[10px] font-bold text-red-400">{actionError}</p>
+                    <p className="text-xs font-bold text-red-400">{actionError}</p>
                   )}
                 </div>
               )}

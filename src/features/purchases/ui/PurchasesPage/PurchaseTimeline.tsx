@@ -83,9 +83,9 @@ export function PurchaseTimeline({ order, t }: PurchaseTimelineProps) {
         ];
 
   return (
-    <div className="bg-white/[0.01] border border-white/5 p-4 rounded-[3px]">
-      <span className="text-[10px] font-black uppercase tracking-wider font-mono text-[#84849b] mb-4 flex items-center gap-1.5">
-        <Layers className="w-3.5 h-3.5 text-accent" />
+    <div className="bg-white/[0.01] border border-white/10 p-5 rounded-[3px]">
+      <span className="text-xs font-black uppercase tracking-wider font-mono text-[#84849b] mb-4 flex items-center gap-1.5">
+        <Layers className="w-4 h-4 text-accent" />
         {isRaffle
           ? raffleContext.raffleName
             ? t("purchases.transactionProgressRaffleNamed", { name: raffleContext.raffleName })
@@ -108,7 +108,7 @@ export function PurchaseTimeline({ order, t }: PurchaseTimelineProps) {
           return (
             <div
               key={title}
-              className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
+              className={`flex items-center gap-2.5 p-3 border transition-all rounded-[3px] ${
                 active
                   ? "bg-accent/10 border-accent/30 text-accent"
                   : done
@@ -117,7 +117,7 @@ export function PurchaseTimeline({ order, t }: PurchaseTimelineProps) {
               }`}
             >
               <div
-                className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
+                className={`w-7 h-7 flex items-center justify-center text-xs font-black font-mono rounded-[3px] ${
                   active
                     ? "bg-accent text-white"
                     : done
@@ -128,10 +128,10 @@ export function PurchaseTimeline({ order, t }: PurchaseTimelineProps) {
                 {done ? "OK" : step}
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-black uppercase block leading-tight">
+                <span className="text-xs font-black uppercase block leading-tight">
                   {title}
                 </span>
-                <span className="text-[8.5px] font-mono opacity-60">{description}</span>
+                <span className="text-[10px] font-mono opacity-60">{description}</span>
               </div>
             </div>
           );

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Loader2, RefreshCw, Save } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Loader2, RefreshCw, Save, Play, CheckCircle2, XCircle, X } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
 
@@ -86,6 +86,23 @@ export function SyncTab() {
   const [filtersSaved, setFiltersSaved] = useState(false);
   const [filters, setFilters] = useState<CatalogFilters>(DEFAULT_FILTERS);
 
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
+  const [autoSyncInterval, setAutoSyncInterval] = useState(5);
+  const [autoSyncSaving, setAutoSyncSaving] = useState(false);
+  const [autoSyncSaved, setAutoSyncSaved] = useState(false);
+  const [autoSyncRunning, setAutoSyncRunning] = useState(false);
+  const [autoSyncStatus, setAutoSyncStatus] = useState<{
+    currentStep: string;
+    lastRunAt: string | null;
+    nextRunAt: string | null;
+    lastError: string | null;
+    lastStep1ItemCount: number | null;
+    lastStep2ItemCount: number | null;
+  } | null>(null);
+
+  const prevStepRef = useRef<string>("idle");
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
   const loadFilters = useCallback(async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings`, {
@@ -105,6 +122,8 @@ export function SyncTab() {
         catalogFilterStatTrakEnabled: data.catalogFilterStatTrakEnabled ?? true,
         catalogMinPrice: data.catalogMinPrice ?? 0.1,
       });
+      setAutoSyncEnabled(data.autoSyncEnabled ?? false);
+      setAutoSyncInterval(data.autoSyncIntervalMinutes ?? 5);
     } catch {
       // keep defaults
     } finally {
@@ -115,6 +134,85 @@ export function SyncTab() {
   useEffect(() => {
     void loadFilters();
   }, [loadFilters]);
+
+  useEffect(() => {
+    const pollStatus = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/admin/marketplace/settings/auto-sync/status`, {
+          credentials: "include",
+          headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (prevStepRef.current !== "idle" && data.currentStep === "idle") {
+          if (data.lastError) {
+            setToast({ type: "error", message: data.lastError });
+          } else if (data.lastRunAt) {
+            setToast({ type: "success", message: t("admin.settings.autoSyncComplete") || "Sincronización completada." });
+          }
+          setTimeout(() => setToast(null), 5000);
+        }
+        prevStepRef.current = data.currentStep;
+
+        setAutoSyncStatus(data);
+      } catch {
+        // silent
+      }
+    };
+    void pollStatus();
+    const interval = setInterval(pollStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSaveAutoSync = async () => {
+    setAutoSyncSaving(true);
+    setAutoSyncSaved(false);
+    try {
+      await fetch(`${BACKEND_URL}/admin/marketplace/settings/auto-sync`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        body: JSON.stringify({
+          autoSyncEnabled,
+          autoSyncIntervalMinutes: autoSyncInterval,
+        }),
+      });
+      setAutoSyncSaved(true);
+      setTimeout(() => setAutoSyncSaved(false), 3000);
+    } catch {
+      // silent
+    } finally {
+      setAutoSyncSaving(false);
+    }
+  };
+
+  const handleRunAutoSyncNow = async () => {
+    setAutoSyncRunning(true);
+    try {
+      await fetch(`${BACKEND_URL}/admin/marketplace/settings/auto-sync/run-now`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-Tunnel-Skip-AntiPhishing-Page": "true" },
+      });
+    } catch {
+      // silent
+    } finally {
+      setAutoSyncRunning(false);
+    }
+  };
+
+  const stepLabel = (step: string) => {
+    switch (step) {
+      case "step1_downloading": return t("admin.settings.step1Button");
+      case "step2_generating": return t("admin.settings.step2Button");
+      case "step3_syncing": return t("admin.settings.applyCatalogPrices");
+      default: return t("admin.settings.autoSyncIdle");
+    }
+  };
 
   const handleSaveFilters = async () => {
     setFiltersSaving(true);
@@ -208,6 +306,19 @@ export function SyncTab() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-[3px] border text-xs font-bold shadow-lg animate-in slide-in-from-top ${
+          toast.type === "success"
+            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+            : "bg-red-500/10 border-red-500/20 text-red-400"
+        }`}>
+          {toast.type === "success" ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
+          <span>{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-2 p-0.5 hover:bg-white/10 rounded cursor-pointer">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
       <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px] space-y-6">
         <div className="max-w-xl w-full space-y-6">
           {/* Filtros del Catálogo Global */}
@@ -368,6 +479,121 @@ export function SyncTab() {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Auto Sync */}
+          <div className="space-y-4 p-5 bg-white/[0.02] border border-white/10 rounded-[3px]">
+            <div className="border-b border-white/5 pb-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                {t("admin.settings.autoSyncTitle")}
+              </h3>
+              <p className="text-[11px] text-[#84849b] mt-1 font-mono">
+                {t("admin.settings.autoSyncDesc")}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <ToggleSwitch
+                label={t("admin.settings.autoSyncEnable")}
+                checked={autoSyncEnabled}
+                onChange={setAutoSyncEnabled}
+              />
+
+              {autoSyncEnabled && (
+                <div className="pl-2 border-l-2 border-accent/30 space-y-4">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b] mb-2">
+                      {t("admin.settings.autoSyncInterval")}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        max={120}
+                        step={1}
+                        value={autoSyncInterval}
+                        onChange={(e) => setAutoSyncInterval(parseInt(e.target.value) || 1)}
+                        className="w-20 px-3 py-1.5 bg-[#110f1e] border border-white/10 rounded-[3px] text-xs font-mono text-white focus:outline-none focus:border-accent/50 transition-colors"
+                      />
+                      <span className="text-[10px] text-[#84849b] font-mono">min</span>
+                    </div>
+                  </div>
+
+                  {autoSyncStatus && (
+                    <div className="space-y-2 text-xs">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-2.5">
+                          <span className="text-[9px] text-[#84849b] uppercase font-bold block">{t("admin.settings.autoSyncStep")}</span>
+                          <span className="text-white font-mono text-[11px] font-bold">{stepLabel(autoSyncStatus.currentStep)}</span>
+                        </div>
+                        <div className="bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-2.5">
+                          <span className="text-[9px] text-[#84849b] uppercase font-bold block">{t("admin.settings.autoSyncLastRun")}</span>
+                          <span className="text-white font-mono text-[11px] font-bold">
+                            {autoSyncStatus.lastRunAt ? new Date(autoSyncStatus.lastRunAt).toLocaleTimeString() : t("admin.settings.autoSyncNever")}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-2.5">
+                          <span className="text-[9px] text-[#84849b] uppercase font-bold block">{t("admin.settings.autoSyncNextRun")}</span>
+                          <span className="text-white font-mono text-[11px] font-bold">
+                            {autoSyncStatus.nextRunAt ? new Date(autoSyncStatus.nextRunAt).toLocaleTimeString() : "—"}
+                          </span>
+                        </div>
+                        <div className="bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-2.5">
+                          <span className="text-[9px] text-[#84849b] uppercase font-bold block">{t("admin.settings.autoSyncStatus")}</span>
+                          <span className={`font-mono text-[11px] font-bold ${autoSyncStatus.currentStep !== "idle" ? "text-emerald-400" : "text-[#84849b]"}`}>
+                            {autoSyncStatus.currentStep !== "idle" ? t("admin.settings.autoSyncRunning") : t("admin.settings.autoSyncIdle")}
+                          </span>
+                        </div>
+                      </div>
+                      {autoSyncStatus.lastError && (
+                        <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">
+                          {autoSyncStatus.lastError}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleSaveAutoSync}
+                    disabled={autoSyncSaving}
+                    className="w-full sm:w-auto px-6 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase text-white rounded-[3px] transition flex items-center justify-center gap-2 cursor-pointer select-none"
+                  >
+                    {autoSyncSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    {t("admin.settings.saveAutoSync")}
+                  </button>
+
+                  {autoSyncSaved && (
+                    <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">
+                      {t("admin.settings.autoSyncSaved")}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Run Now */}
+          <div className="space-y-4 p-5 bg-white/[0.02] border border-white/10 rounded-[3px]">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-white">
+                {t("admin.settings.autoSyncRunNow")}
+              </p>
+              <p className="text-[11px] text-[#84849b] mt-1 font-mono">
+                {t("admin.settings.autoSyncRunNowDesc")}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRunAutoSyncNow}
+              disabled={autoSyncRunning || autoSyncStatus?.currentStep !== "idle"}
+              className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded-[3px] transition flex items-center justify-center gap-2 cursor-pointer select-none"
+            >
+              {autoSyncRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              {autoSyncRunning ? t("admin.settings.autoSyncRunning") : t("admin.settings.autoSyncRunNow")}
+            </button>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { Skin } from '../../skins/domain/skin';
-import { CartItem } from '../domain/cart';
+import { CartItem, toValidationId } from '../domain/cart';
 import { BACKEND_URL } from '@/shared/lib/api';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +10,7 @@ import { AlertCircle, X } from 'lucide-react';
 
 interface CartContextType {
   items: CartItem[];
+  isLoaded: boolean;
   addToCart: (skin: Skin) => void;
   removeFromCart: (skinId: string) => void;
   updateQuantity: (skinId: string, delta: number) => void;
@@ -34,20 +35,21 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          itemIds: currentItems.map(i => i.skin.id),
+          itemIds: currentItems.map(i => toValidationId(i.skin)),
           items: currentItems.map(i => ({
-            assetId: i.skin.id,
+            assetId: toValidationId(i.skin),
             isSpecific: i.skin.isSpecific !== false,
+            listingId: i.skin.listingId ?? null,
           })),
         }),
       });
       if (!response.ok) return true;
       const data = await response.json();
       if (data.invalidIds && data.invalidIds.length > 0) {
-        const removedItems = currentItems.filter(item => data.invalidIds.includes(item.skin.id));
+        const removedItems = currentItems.filter(item => data.invalidIds.includes(toValidationId(item.skin)));
         const namesArray = removedItems.map(item => `${item.skin.weapon} | ${item.skin.name}`);
         
-        setItems(prev => prev.filter(item => !data.invalidIds.includes(item.skin.id)));
+        setItems(prev => prev.filter(item => !data.invalidIds.includes(toValidationId(item.skin))));
         setRemovedItemsNames(namesArray);
         setIsRemovedModalOpen(true);
         return false;
@@ -118,7 +120,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, total, validateCartItems }}>
+    <CartContext.Provider value={{ items, isLoaded, addToCart, removeFromCart, updateQuantity, clearCart, total, validateCartItems }}>
       {children}
 
       <AnimatePresence>

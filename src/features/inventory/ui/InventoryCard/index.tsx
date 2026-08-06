@@ -2,6 +2,7 @@ import React from "react";
 import { SkinImage } from "@/shared/components/SkinImage";
 import { Skin } from "../../../skins/domain/skin";
 import { useInventory } from "../../context/InventoryContext";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 import { Zap, Plus, Check, Lock } from "lucide-react";
 
 interface InventoryCardProps {
@@ -53,6 +54,7 @@ export const InventoryCard = ({
 }: InventoryCardProps) => {
   const { addToSellList, removeFromSellList, selectedItems, minSellPrice } =
     useInventory();
+  const { t } = useI18n();
   const isSelected = selectedItems.find((item) => item.id === skin.id);
   const conditionLabel = skin.exterior || getConditionLabel(skin.float);
 
@@ -94,7 +96,7 @@ export const InventoryCard = ({
         <div className="absolute inset-0 z-10 rounded-2xl backdrop-blur-[2px] bg-black/30 flex flex-col items-center justify-center gap-1.5 pointer-events-none">
           <Lock className="w-5 h-5 text-white/60" />
           <p className="text-[9px] font-black text-white/60 uppercase tracking-widest text-center px-3">
-            NO VENDIBLE
+            {t("inventory.notSellable")}
           </p>
         </div>
       )}
@@ -128,7 +130,7 @@ export const InventoryCard = ({
           </span>
           {skin.pattern !== undefined && (
             <span className="text-[#84849b] text-[8px]">
-              Semilla:{" "}
+              {t("inventory.seedLabel")}{" "}
               <span className="text-white font-bold">{skin.pattern}</span>
             </span>
           )}
@@ -190,7 +192,7 @@ export const InventoryCard = ({
         <div className="flex flex-col gap-0.5 mb-3 mt-auto pt-3 border-t border-white/5">
           <div className="text-lg font-black text-white tracking-tight leading-none">
             <span className="text-sm text-white/30 italic font-medium">
-              No comerciable
+              {t("inventory.notTradable")}
             </span>
           </div>
         </div>

@@ -16,6 +16,7 @@ import {
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { toValidationId } from "@/features/cart/domain/cart";
 import {
   AdminAlert,
   AdminButton,
@@ -70,6 +71,7 @@ interface CatalogItem {
   exterior: string | null;
   float: number | null;
   isImmediate: boolean;
+  provider?: "bot" | "youpin";
 }
 
 function getRaffleStatusBadge(status: string) {
@@ -183,7 +185,10 @@ function RafflesAdminContent() {
         drawDate: new Date(formDrawDate).toISOString(),
         ticketPrice: Number(formPrice),
         maxTickets: formMaxTickets ? Number(formMaxTickets) : null,
-        prizes: selectedPrizes.map((p) => ({ assetId: p.item.id, position: p.position })),
+        prizes: selectedPrizes.map((p) => ({
+          assetId: toValidationId({ id: p.item.id, provider: (p.item as any).provider } as any),
+          position: p.position,
+        })),
       };
 
       const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin`, {
@@ -282,7 +287,7 @@ function RafflesAdminContent() {
       ) : filteredRaffles.length === 0 ? (
         <div className="text-center py-10 bg-[#0f0d1e] border border-white/5 rounded-[3px]">
           <p className="text-xs text-[#84849b] font-bold uppercase tracking-wider">
-            No se encontraron sorteos con esos filtros.
+            {t("admin.raffles.noRafflesWithFilters")}
           </p>
         </div>
       ) : (
@@ -330,7 +335,7 @@ function RafflesAdminContent() {
                     onChange={(e) => setFormName(e.target.value)}
                     required
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent focus:bg-white/[0.03] transition-all placeholder:text-white/20"
-                    placeholder="ej. Sorteo Cuchillo Mariposa"
+                    placeholder={t("admin.raffles.namePlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
@@ -355,7 +360,7 @@ function RafflesAdminContent() {
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent focus:bg-white/[0.03] transition-all h-28 resize-none placeholder:text-white/20"
-                  placeholder="Condiciones del sorteo, información adicional..."
+                  placeholder={t("admin.raffles.descriptionPlaceholder")}
                 />
               </div>
 
@@ -387,7 +392,7 @@ function RafflesAdminContent() {
                     value={formMaxTickets}
                     onChange={(e) => setFormMaxTickets(e.target.value)}
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent focus:bg-white/[0.03] transition-all placeholder:text-white/20"
-                    placeholder="Sin límite"
+                    placeholder={t("admin.raffles.noLimit")}
                   />
                 </div>
               </div>
@@ -434,7 +439,7 @@ function RafflesAdminContent() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3 bg-black/40 px-3 py-2 rounded-lg border border-white/5">
-                          <span className="text-[10px] font-black text-[#84849b] uppercase tracking-widest">Posición</span>
+                          <span className="text-[10px] font-black text-[#84849b] uppercase tracking-widest">{t("admin.raffles.position")}</span>
                           <input
                             type="number"
                             min="1"
@@ -538,7 +543,7 @@ function RafflesAdminContent() {
                 </div>
               ) : filteredCatalog.length === 0 ? (
                 <p className="text-xs text-[#84849b] uppercase font-bold text-center py-8">
-                  No se encontraron ítems en stock.
+                  {t("admin.raffles.noStockItems")}
                 </p>
               ) : (
                 <div className="grid grid-cols-1 gap-2.5">
@@ -589,7 +594,7 @@ function RafflesAdminContent() {
                 onClick={() => setIsPickerOpen(false)}
                 className="px-5 py-2.5 rounded-[3px] bg-accent hover:bg-accent/90 text-xs font-black uppercase text-white tracking-widest cursor-pointer"
               >
-                Aceptar ({selectedPrizes.length})
+                {t("common.accept")} ({selectedPrizes.length})
               </button>
             </div>
           </div>

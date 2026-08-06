@@ -54,7 +54,7 @@ export function PurchaseItemsList({
                 </span>
               )}
               <span className="text-[9px] font-mono text-accent block mt-0.5 uppercase tracking-wider">
-                Sorteo CS2
+                {t("checkout.raffleType")}
               </span>
             </div>
             <div className="shrink-0 text-right">
@@ -138,7 +138,7 @@ function PurchaseItemCard({ item, t }: { item: OrderItem; t: Translate }) {
         </div>
       </div>
 
-      <FloatDisplay displayFloat={displayFloat} t={t} />
+      {displayFloat !== null && <FloatDisplay displayFloat={displayFloat} t={t} />}
 
       <div className="text-right ml-auto">
         <Money amountUsd={item.price} approximate className="text-xs font-black text-accent block" />

@@ -102,28 +102,6 @@ export function applyFilters(skins: Skin[], filters: FilterState): Skin[] {
     case 'Precio: Menor a Mayor':
       result.sort((a, b) => a.price - b.price);
       break;
-    case 'Float: Menor a Mayor':
-      // Market listings (sin float) van al final
-      result.sort((a, b) => {
-        if (a.float === undefined && b.float === undefined) return 0;
-        if (a.float === undefined) return 1;
-        if (b.float === undefined) return -1;
-        return a.float - b.float;
-      });
-      break;
-    case 'Float: Mayor a Menor':
-      // Market listings (sin float) van al final
-      result.sort((a, b) => {
-        if (a.float === undefined && b.float === undefined) return 0;
-        if (a.float === undefined) return 1;
-        if (b.float === undefined) return -1;
-        return b.float - a.float;
-      });
-      break;
-    case 'Más recientes':
-      // id is assetId; higher numeric id = newer item
-      result.sort((a, b) => (b.id > a.id ? 1 : -1));
-      break;
   }
 
   return result;

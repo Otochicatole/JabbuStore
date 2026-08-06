@@ -7,6 +7,7 @@ import { RaffleRoulette } from "@/features/raffles/ui/RaffleRoulette";
 import { Loader2, Users, Trophy, Clock, Ticket, Gift, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface LiveDrawPageProps {
   params: Promise<{
@@ -20,6 +21,7 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
   const { id } = unwrappedParams;
   const router = useRouter();
   const localizePath = useLocalizedPath();
+  const { t } = useI18n();
 
   const [raffle, setRaffle] = useState<any>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -175,7 +177,7 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-black uppercase tracking-widest mb-4">
                 <span className="w-2 h-2 rounded-full bg-accent animate-ping absolute" />
                 <span className="w-2 h-2 rounded-full bg-accent" />
-                Sorteo en Directo
+                {t("raffles.liveTitle")}
               </div>
 
               <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 uppercase tracking-tighter mb-4">
@@ -187,14 +189,14 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
                 <div className="flex items-center gap-2 text-white/60">
                   <Gift className="w-4 h-4 text-accent" />
                   <span className="text-sm font-bold uppercase tracking-wider">
-                    {raffle.prizes?.length || 1} Premios
+                    {raffle.prizes?.length || 1} {t("raffles.prizes")}
                   </span>
                 </div>
                 <div className="w-1 h-1 rounded-full bg-white/20" />
                 <div className="flex items-center gap-2 text-white/60">
                   <Users className="w-4 h-4 text-accent" />
                   <span className="text-sm font-bold uppercase tracking-wider">
-                    {raffle.tickets?.length || 0} Chances Vendidas
+                    {raffle.tickets?.length || 0} {t("raffles.chancesSold")}
                   </span>
                 </div>
               </div>
@@ -204,16 +206,16 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="w-8 h-8 text-accent animate-spin" />
                   <h3 className="text-white font-black uppercase tracking-widest text-lg">
-                    Conectando...
+                    {t("raffles.connecting")}
                   </h3>
                   <p className="text-white/40 text-xs text-center max-w-[250px]">
-                    Mantén esta pestaña abierta. La ruleta girará automáticamente.
+                    {t("raffles.keepTabOpen")}
                   </p>
                   
                   {timeLeft && (
                     <div className="mt-4 pt-4 border-t border-white/5 w-full text-center">
                       <span className="block text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">
-                        Inicia en aprox:
+                        {t("raffles.startsIn")}
                       </span>
                       <span className="text-2xl font-black text-white font-mono tracking-wider">
                         {timeLeft}
@@ -231,12 +233,12 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
         <div className="text-center animate-pulse flex flex-col items-center gap-4">
           <Sparkles className="w-12 h-12 text-accent" />
           <h1 className="text-4xl sm:text-6xl font-black text-transparent bg-clip-text bg-linear-to-r from-accent to-fuchsia-500 uppercase tracking-tighter">
-            {currentRoundIndex > 0 ? "¡Siguiente Premio!" : "¡Prepárate!"}
+            {currentRoundIndex > 0 ? t("raffles.nextPrize") : t("raffles.getReady")}
           </h1>
           <p className="text-white/60 font-bold uppercase tracking-widest text-sm">
             {currentRoundIndex > 0 
-              ? `Preparando ronda ${currentRoundIndex + 1} de ${allWinners.length}...`
-              : "Generando resultados..."
+              ? t("raffles.preparingRound", { current: currentRoundIndex + 1, total: allWinners.length })
+              : t("raffles.generatingResults")
             }
           </p>
         </div>
@@ -258,8 +260,8 @@ export default function LiveDrawPage({ params }: LiveDrawPageProps) {
       
       {drawState === "FINISHED" && (
         <div className="text-center">
-          <h1 className="text-4xl font-black text-white uppercase">Sorteo finalizado</h1>
-          <p className="text-white/60 mt-4">Redirigiendo a los resultados...</p>
+          <h1 className="text-4xl font-black text-white uppercase">{t("raffles.finished")}</h1>
+          <p className="text-white/60 mt-4">{t("raffles.redirectingResults")}</p>
         </div>
       )}
     </div>

@@ -24,10 +24,7 @@ export const SECRET_LABELS = [
   { key: "PAYPAL_SANDBOX", label: "PAYPAL_SANDBOX" },
 ];
 
-export const RUNTIME_CONFIG_LABELS = [
-  { key: "ENABLE_SYNC", label: "ENABLE_SYNC", type: "boolean" },
-  { key: "ENABLE_ITEMS_CATALOG_SYNC", label: "ENABLE_ITEMS_CATALOG_SYNC", type: "boolean" },
-];
+
 
 export const TABS: {
   id: Tab;

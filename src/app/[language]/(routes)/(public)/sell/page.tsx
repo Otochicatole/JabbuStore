@@ -111,7 +111,7 @@ function SellPageContent() {
                     {t("sell.summary")}
                   </p>
                   <p className="truncate text-xs font-bold text-white">
-                    {selectedItems.length} item{selectedItems.length === 1 ? "" : "s"}
+                    {t("sell.selectedItems", { count: selectedItems.length })}
                   </p>
                 </div>
                 <button

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface QuoteItem {
   id: string;
@@ -52,6 +53,7 @@ interface Quote {
 
 export function QuotesPage() {
   const router = useRouter();
+  const { t } = useI18n();
 
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -250,25 +252,25 @@ export function QuotesPage() {
     switch (status) {
       case "PENDING":
         return {
-          label: "Pendiente",
+          label: t("admin.quotes.statusPending"),
           color: "bg-amber-500/10 text-amber-400 border-amber-500/20",
           icon: Clock,
         };
       case "QUOTED":
         return {
-          label: "Cotizado",
+          label: t("admin.quotes.statusQuoted"),
           color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
           icon: DollarSign,
         };
       case "ACCEPTED":
         return {
-          label: "Aceptado / Comprado",
+          label: t("admin.quotes.statusAcceptedBought"),
           color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
           icon: CheckCircle,
         };
       case "CANCELLED":
         return {
-          label: "Cancelado",
+          label: t("admin.quotes.statusCancelled"),
           color: "bg-rose-500/10 text-rose-400 border-rose-500/20",
           icon: XCircle,
         };
@@ -294,10 +296,10 @@ export function QuotesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white flex items-center gap-2">
-            Cotizaciones Manuales
+            {t("admin.quotes.title")}
           </h2>
           <p className="text-xs text-[#84849b] mt-1 font-bold">
-            Ingresa y envía cotizaciones manuales para solicitudes de venta de usuarios.
+            {t("admin.quotes.intro")}
           </p>
         </div>
 
@@ -307,7 +309,7 @@ export function QuotesPage() {
           className="flex items-center justify-center gap-2 h-10 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-accent" : ""}`} />
-          Refrescar Lista
+          {t("admin.quotes.refreshList")}
         </button>
       </div>
 
@@ -323,7 +325,7 @@ export function QuotesPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
           <input
             type="text"
-            placeholder="Buscar por usuario o ID..."
+            placeholder={t("admin.quotes.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full h-10 pl-9 pr-4 bg-white/5 border border-white/5 rounded-[3px] text-xs text-white placeholder-white/30 focus:border-accent/40 focus:outline-none transition-colors"
@@ -336,14 +338,14 @@ export function QuotesPage() {
             {["all", "PENDING", "QUOTED", "ACCEPTED", "CANCELLED"].map((st) => {
               const label =
                 st === "all"
-                  ? "Todas"
+                  ? t("admin.quotes.filterAll")
                   : st === "PENDING"
-                    ? "Pendientes"
+                    ? t("admin.quotes.filterPending")
                     : st === "QUOTED"
-                      ? "Cotizadas"
+                      ? t("admin.quotes.filterQuoted")
                       : st === "ACCEPTED"
-                        ? "Aceptadas"
-                        : "Canceladas";
+                        ? t("admin.quotes.filterAccepted")
+                        : t("admin.quotes.filterCancelled");
               return (
                 <button
                   key={st}
@@ -366,13 +368,13 @@ export function QuotesPage() {
         <div className="flex flex-col items-center justify-center py-20 bg-[#110f1e]/20 border border-white/5 rounded-lg">
           <Loader2 className="w-8 h-8 animate-spin text-accent mb-2" />
           <span className="text-xs text-[#84849b] font-black uppercase tracking-wider font-mono">
-            Cargando cotizaciones del servidor...
+            {t("admin.quotes.loadingServer")}
           </span>
         </div>
       ) : filteredQuotes.length === 0 ? (
         <div className="p-8 text-center bg-[#110f1e]/20 border border-white/5 rounded-lg">
           <p className="text-xs text-[#84849b] font-black uppercase tracking-wider">
-            No se encontraron cotizaciones coincidentes
+            {t("admin.quotes.noMatchingQuotes")}
           </p>
         </div>
       ) : (
@@ -418,7 +420,7 @@ export function QuotesPage() {
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-xs font-bold text-white/90">
-                          Cotización ID: <span className="text-accent">{quote.id.slice(0, 8)}</span>
+                          {t("admin.quotes.quoteId")} <span className="text-accent">{quote.id.slice(0, 8)}</span>
                         </span>
                         <span
                           className={`px-2 py-0.5 rounded-[3px] text-[8.5px] font-black tracking-widest uppercase border ${badge.color} flex items-center gap-1`}
@@ -429,11 +431,11 @@ export function QuotesPage() {
                       </div>
 
                       <p className="text-[10px] text-[#84849b] mt-1 font-bold">
-                        Usuario: <span className="text-white">{quote.user.name || "Steam User"}</span>
+                        {t("admin.quotes.user")} <span className="text-white">{quote.user.name || "Steam User"}</span>
                         {" · "}
                         {quote.user.email || "Sin email"}
                         {" · "}
-                        {quote.items.length} ítem{quote.items.length === 1 ? "" : "s"}
+                        {quote.items.length} {t("admin.quotes.item")}{quote.items.length === 1 ? "" : "s"}
                       </p>
                     </div>
                   </div>
@@ -441,11 +443,11 @@ export function QuotesPage() {
                   <div className="flex items-center justify-between sm:justify-end gap-5 w-full sm:w-auto border-t border-white/5 sm:border-t-0 pt-3 sm:pt-0">
                     <div className="text-left sm:text-right">
                       <span className="text-[8px] text-[#84849b] font-mono block uppercase tracking-widest">
-                        Total Solicitado/Cotizado
+                        {t("admin.quotes.totalRequestedQuoted")}
                       </span>
                       <span className="text-sm font-black text-white">
                         {quote.status === "PENDING" && quote.items.every(i => i.price === null)
-                          ? "Pendiente"
+                          ? t("admin.quotes.statusPending")
                           : `$${totalQuoted.toLocaleString()} USD`}
                       </span>
                     </div>
@@ -462,7 +464,7 @@ export function QuotesPage() {
                           ) : (
                             <Trash2 className="w-3.5 h-3.5" />
                           )}
-                          Rechazar
+                          {t("admin.quotes.reject")}
                         </button>
                       )}
 
@@ -482,12 +484,12 @@ export function QuotesPage() {
                     <div className="mb-6 p-4 rounded-[3px] border border-white/5 bg-background/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div>
                         <h4 className="text-[10px] font-black text-white uppercase tracking-widest mb-1.5">
-                          Información del Usuario
+                          {t("admin.quotes.userInfo")}
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-2 gap-x-6 text-xs font-bold text-[#84849b]">
-                          <p>Nombre: <span className="text-white">{quote.user.name || "N/A"}</span></p>
-                          <p>Email: <span className="text-white">{quote.user.email || "N/A"}</span></p>
-                          <p>Steam ID: <span className="text-white font-mono">{quote.user.steamId || "N/A"}</span></p>
+                          <p>{t("admin.quotes.name")} <span className="text-white">{quote.user.name || "N/A"}</span></p>
+                          <p>{t("admin.quotes.email")} <span className="text-white">{quote.user.email || "N/A"}</span></p>
+                          <p>{t("admin.quotes.steamId")} <span className="text-white font-mono">{quote.user.steamId || "N/A"}</span></p>
                         </div>
                       </div>
 
@@ -498,14 +500,14 @@ export function QuotesPage() {
                           rel="noopener noreferrer"
                           className="px-3 h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-[10px] font-black uppercase tracking-wider text-white transition-all flex items-center justify-center gap-1 cursor-pointer"
                         >
-                          Perfil de Steam <ArrowRight className="w-3 h-3" />
+                          {t("admin.quotes.steamProfile")} <ArrowRight className="w-3 h-3" />
                         </a>
                       )}
                     </div>
 
                     <form onSubmit={(e) => handleSubmitQuote(quote.id, e)} className="space-y-6">
                       <h4 className="text-[10px] font-black text-[#84849b] uppercase tracking-widest">
-                        Artículos a Cotizar (USD)
+                        {t("admin.quotes.itemsToQuote")}
                       </h4>
 
                       <div className="space-y-3">
@@ -571,7 +573,7 @@ export function QuotesPage() {
                             ) : (
                               <Send className="w-3.5 h-3.5" />
                             )}
-                            Enviar Cotización
+                            {t("admin.quotes.sendQuote")}
                           </button>
                         </div>
                       )}

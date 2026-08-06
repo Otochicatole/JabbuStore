@@ -9,9 +9,6 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 const SORT_OPTIONS: SortOption[] = [
   "Precio: Mayor a Menor",
   "Precio: Menor a Mayor",
-  "Float: Menor a Mayor",
-  "Float: Mayor a Menor",
-  "Más recientes"
 ];
 
 export const SortDropdown = () => {
@@ -25,7 +22,6 @@ export const SortDropdown = () => {
   return (
     <div className="relative z-20 w-full sm:w-auto">
       <div className="flex items-center justify-between sm:justify-start gap-2 w-full">
-        <span className="text-[9px] sm:text-[10px] font-bold text-[#84849b] uppercase tracking-widest shrink-0">{t("filters.sort")}:</span>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`

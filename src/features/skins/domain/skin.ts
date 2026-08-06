@@ -33,6 +33,8 @@ export interface Skin {
   /** Variantes exactas cuando el catálogo viene agrupado desde backend. */
   variants?: Skin[];
   isSpecific?: boolean;
+  /** market_hash_name del listing al que pertenece este float (para validación contra API) */
+  listingId?: string;
 }
 
 export interface SkinPagination {

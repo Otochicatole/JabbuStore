@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/context/CartContext";
+import { toValidationId } from "@/features/cart/domain/cart";
 import { useInventory } from "@/features/inventory/context/InventoryContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
@@ -55,7 +56,7 @@ export function useCheckout() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const { items: cartItems, clearCart, removeFromCart } = useCart();
+  const { items: cartItems, clearCart, removeFromCart, isLoaded: cartLoaded } = useCart();
   const {
     selectedItems: sellItems,
     clearSellList,
@@ -71,6 +72,7 @@ export function useCheckout() {
   const quoteId = searchParams.get("quoteId");
 
   const processedRef = useRef(false);
+  const recoveringRef = useRef(false);
 
   const [items, setItems] = useState<CheckoutItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -162,7 +164,7 @@ export function useCheckout() {
   }, []);
 
   useEffect(() => {
-    if (!manualTransferSettings || checkoutType !== "buy") return;
+    if (!manualTransferSettings || !isBuyLikeCheckout) return;
 
     const availableMethods = PAYMENT_METHODS.filter((method) => {
       if (method.id === "mercado_pago") return manualTransferSettings.mercadoPagoEnabled;
@@ -271,7 +273,7 @@ export function useCheckout() {
   // 2. Validate checkout items
   useEffect(() => {
     const status = searchParams.get("status");
-    if (status || isSuccess) return;
+    if (status || isSuccess || recoveringRef.current || !cartLoaded) return;
 
     const validateCheckout = async () => {
       setLoading(true);
@@ -315,12 +317,13 @@ export function useCheckout() {
           }
           payload = {
             type: "BUY",
-            itemIds: cartItems.map((i) => i.skin.id),
+            itemIds: cartItems.map((i) => toValidationId(i.skin)),
             items: cartItems.map((i) => ({
-              assetId: i.skin.id,
+              assetId: toValidationId(i.skin),
               float: i.skin.float !== undefined ? i.skin.float : null,
               pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
               isSpecific: i.skin.isSpecific !== false,
+              listingId: i.skin.listingId ?? null,
             })),
           };
         } else {
@@ -359,21 +362,25 @@ export function useCheckout() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  itemIds: cartItems.map((i) => i.skin.id),
+                  itemIds: cartItems.map((i) => toValidationId(i.skin)),
                   items: cartItems.map((i) => ({
-                    assetId: i.skin.id,
+                    assetId: toValidationId(i.skin),
                     isSpecific: i.skin.isSpecific !== false,
+                    listingId: i.skin.listingId ?? null,
                   })),
                 }),
               });
               if (validateRes.ok) {
                 const validateData = await validateRes.json();
                 if (validateData.invalidIds && validateData.invalidIds.length > 0) {
-                  const removedItems = cartItems.filter((item) => validateData.invalidIds.includes(item.skin.id));
-                  const removedNames = removedItems.map((item) => `${item.skin.weapon} | ${item.skin.name}`).join("\n");
+                  recoveringRef.current = true;
+                  const removedItems = cartItems.filter((item) => item.skin && validateData.invalidIds.includes(toValidationId(item.skin)));
+                  const removedNames = removedItems
+                    .filter((item) => item.skin)
+                    .map((item) => `${item.skin.weapon} | ${item.skin.name}`).join("\n");
 
-                  validateData.invalidIds.forEach((id: string) => {
-                    removeFromCart(id);
+                  removedItems.forEach((item) => {
+                    if (item.skin) removeFromCart(item.skin.id);
                   });
 
                   const alertTemplate = t("cart.itemsRemoved");
@@ -396,8 +403,8 @@ export function useCheckout() {
           );
         }
 
-        setItems(data.items);
-        setTotalPrice(data.totalPrice);
+        setItems(Array.isArray(data.items) ? data.items : []);
+        setTotalPrice(data.totalPrice || 0);
       } catch (err: unknown) {
         console.error("Validation error:", err);
         setError(
@@ -412,7 +419,7 @@ export function useCheckout() {
     };
 
     validateCheckout();
-  }, [checkoutType, cartItems, sellItems, searchParams, t, isSuccess]);
+  }, [checkoutType, cartItems, sellItems, searchParams, t, isSuccess, cartLoaded]);
 
   const buildPaymentQuotePayload = useCallback(() => {
     if (!isBuyLikeCheckout || !selectedMethod || loading || isSuccess) {
@@ -438,12 +445,13 @@ export function useCheckout() {
       if (cartItems.length === 0 || items.length === 0) return null;
       return {
         type: "BUY",
-        itemIds: cartItems.map((i) => i.skin.id),
+        itemIds: cartItems.map((i) => toValidationId(i.skin)),
         items: cartItems.map((i) => ({
-          assetId: i.skin.id,
+          assetId: toValidationId(i.skin),
           float: i.skin.float !== undefined ? i.skin.float : null,
           pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
           isSpecific: i.skin.isSpecific !== false,
+          listingId: i.skin.listingId ?? null,
         })),
         paymentMethod: selectedMethod,
         manualTransferType,
@@ -698,7 +706,7 @@ export function useCheckout() {
               }));
             } else {
               detailedItems = items.map((i) => {
-                const cartItem = cartItems.find((c) => c.skin.id === i.assetId);
+                const cartItem = cartItems.find((c) => toValidationId(c.skin) === i.assetId);
                 const skin = cartItem?.skin;
 
                 return {
@@ -855,7 +863,7 @@ export function useCheckout() {
                 }));
               } else {
                 detailedItems = items.map((i) => {
-                  const cartItem = cartItems.find((c) => c.skin.id === i.assetId);
+                  const cartItem = cartItems.find((c) => toValidationId(c.skin) === i.assetId);
                   const skin = cartItem?.skin;
 
                   return {

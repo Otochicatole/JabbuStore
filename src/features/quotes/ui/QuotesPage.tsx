@@ -137,8 +137,8 @@ export function QuotesPage() {
   const handleCancelQuote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     showConfirm(
-      "Cancelar Cotización",
-      "¿Estás seguro de que deseas cancelar esta solicitud de cotización?",
+      t("quotes.cancelConfirmTitle"),
+      t("quotes.cancelConfirmDesc"),
       async () => {
         setCancellingId(id);
         try {
@@ -155,7 +155,7 @@ export function QuotesPage() {
           setQuotes((prev) =>
             prev.map((q) => (q.id === id ? { ...q, status: updatedQuote.status } : q))
           );
-          showAlert("Solicitud Cancelada", "Tu solicitud de cotización ha sido cancelada correctamente.", "success");
+          showAlert(t("quotes.cancelledTitle"), t("quotes.cancelledDesc"), "success");
         } catch (err: any) {
           showAlert("Error", err.message || "Error al cancelar la cotización.", "error");
         } finally {
@@ -174,25 +174,25 @@ export function QuotesPage() {
     switch (status) {
       case "PENDING":
         return {
-          label: "Pendiente",
+          label: t("quotes.statusPending"),
           color: "bg-amber-500/10 text-amber-400 border-amber-500/20",
           icon: Clock,
         };
       case "QUOTED":
         return {
-          label: "Cotizado",
+          label: t("admin.quotes.statusQuoted"),
           color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)]",
           icon: DollarSign,
         };
       case "ACCEPTED":
         return {
-          label: "Aceptado",
+          label: t("quotes.statusAccepted"),
           color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
           icon: CheckCircle,
         };
       case "CANCELLED":
         return {
-          label: "Cancelado",
+          label: t("quotes.statusCancelled"),
           color: "bg-rose-500/10 text-rose-400 border-rose-500/20",
           icon: XCircle,
         };
@@ -204,10 +204,10 @@ export function QuotesPage() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
-            Mis Cotizaciones
+            {t("quotes.title")}
           </h1>
           <p className="text-xs sm:text-sm text-[#84849b] mt-1.5 font-medium">
-            Seguimiento de tus solicitudes de cotización manual.
+            {t("quotes.trackingIntro")}
           </p>
         </div>
 
@@ -228,12 +228,12 @@ export function QuotesPage() {
       {error && (
         <div className="p-6 rounded-xl bg-rose-500/5 border border-rose-500/10 text-center mb-8">
           <AlertTriangle className="w-8 h-8 text-rose-500 mx-auto mb-3" />
-          <p className="text-sm font-bold text-white/90 mb-4">{error}</p>
+          <p className="text-xs font-bold text-white/90 mb-4">{error}</p>
           <button
             onClick={fetchQuotes}
             className="px-4 py-2 bg-accent hover:bg-accent/90 text-xs font-black uppercase tracking-wider rounded-[3px] transition-colors"
           >
-            Reintentar
+            {t("quotes.retry")}
           </button>
         </div>
       )}
@@ -242,7 +242,7 @@ export function QuotesPage() {
         <div className="flex flex-col items-center justify-center py-20 bg-card border border-white/5 rounded-2xl">
           <Loader2 className="w-10 h-10 animate-spin text-accent mb-4" />
           <p className="text-xs text-[#84849b] font-bold uppercase tracking-widest">
-            Cargando cotizaciones...
+            {t("quotes.loading")}
           </p>
         </div>
       ) : quotes.length === 0 ? (
@@ -251,16 +251,16 @@ export function QuotesPage() {
             <DollarSign className="w-8 h-8 text-[#84849b]/40" />
           </div>
           <h3 className="text-sm font-black text-white uppercase tracking-wider mb-1">
-            No tienes cotizaciones registradas
+            {t("quotes.noQuotes")}
           </h3>
           <p className="text-xs text-[#84849b] max-w-sm mb-6">
-            Ve a la sección de venta para seleccionar ítems de tu inventario y solicitar una cotización manual.
+            {t("quotes.emptyQuote")}
           </p>
           <button
             onClick={() => router.push(localizePath("/sell"))}
             className="px-5 py-2.5 bg-accent hover:bg-accent/90 text-xs font-black uppercase tracking-wider rounded-[3px] transition-colors"
           >
-            Ir a Vender
+            {t("quotes.goToSell")}
           </button>
         </div>
       ) : (
@@ -327,7 +327,7 @@ export function QuotesPage() {
                           minute: "2-digit",
                         })}
                         {" · "}
-                        {quote.items.length} ítem{quote.items.length === 1 ? "" : "s"}
+                        {t("quotes.itemsCount", { count: quote.items.length })}
                       </p>
                     </div>
                   </div>
@@ -335,10 +335,10 @@ export function QuotesPage() {
                   <div className="flex items-center justify-between sm:justify-end gap-5 w-full sm:w-auto border-t border-white/5 sm:border-t-0 pt-3 sm:pt-0">
                     <div className="text-left sm:text-right">
                       <span className="text-[8px] text-[#84849b] font-mono block uppercase tracking-widest">
-                        Total Cotizado
+                        {t("quotes.totalQuoted")}
                       </span>
                       {quote.status === "PENDING" ? (
-                        <span className="text-sm font-black text-white">Pendiente</span>
+                        <span className="text-sm font-black text-white">{t("quotes.statusPending")}</span>
                       ) : (
                         <>
                           <Money amountUsd={totalQuoted} approximate={effectiveCurrency !== "USD"} className="block text-sm font-black text-white" />
@@ -353,16 +353,15 @@ export function QuotesPage() {
                           onClick={(e) => handleAcceptQuote(quote.id, e)}
                           className="px-3.5 py-1.5 bg-accent hover:bg-accent/90 border border-accent/20 hover:border-accent/40 rounded-[3px] text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-[0_0_15px_rgba(217,70,239,0.2)] flex items-center gap-1 cursor-pointer"
                         >
-                          Aceptar <ArrowRight className="w-3 h-3" />
-                        </button>
-                      )}
+                          {t("quotes.accept")} <ArrowRight className="w-3 h-3" />
+                        </button>                      )}
 
                       {(quote.status === "PENDING" || quote.status === "QUOTED") && (
                         <button
                           onClick={(e) => handleCancelQuote(quote.id, e)}
                           disabled={cancellingId === quote.id}
                           className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 text-white/40 hover:text-rose-400 rounded-[3px] transition-all cursor-pointer"
-                          title="Cancelar solicitud"
+                          title={t("quotes.cancelRequest")}
                         >
                           {cancellingId === quote.id ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -393,7 +392,7 @@ export function QuotesPage() {
                     >
                       <div className="p-5 space-y-4">
                         <h4 className="text-[10px] font-black text-[#84849b] uppercase tracking-widest">
-                          Detalle de Artículos
+                          {t("quotes.itemDetails")}
                         </h4>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -420,19 +419,19 @@ export function QuotesPage() {
                                   {item.name}
                                 </h5>
                                 <p className="text-[9px] text-[#84849b] mt-0.5 font-bold">
-                                  {item.exterior || "Exterior no especificado"}
+                                  {item.exterior || t("quotes.exteriorNotSpecified")}
                                   {item.float !== null && ` · Float: ${item.float.toFixed(4)}`}
                                 </p>
                               </div>
 
                               <div className="text-right font-mono shrink-0">
                                 <p className="text-[9px] text-[#84849b] uppercase tracking-widest font-sans font-bold">
-                                  Precio
+                                  {t("common.price")}
                                 </p>
                                 {item.price !== null ? (
                                   <Money amountUsd={item.price} approximate={effectiveCurrency !== "USD"} className="text-xs font-black text-white mt-0.5" />
                                 ) : (
-                                  <p className="text-xs font-black text-white mt-0.5">A cotizar</p>
+                                  <p className="text-xs font-black text-white mt-0.5">{t("quotes.toQuote")}</p>
                                 )}
                               </div>
                             </div>

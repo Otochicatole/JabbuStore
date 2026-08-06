@@ -162,10 +162,10 @@ export function ActiveRafflesWidget() {
                 </div>
                 <div>
                   <h2 className="text-sm font-black uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-amber-500 drop-shadow-sm">
-                    Sorteos Activos
+                    {t("raffles.title")}
                   </h2>
                   <p className="text-[10px] text-amber-400/70 font-bold uppercase tracking-widest">
-                    ¡No te quedes afuera!
+                    {t("raffles.dontMissOut")}
                   </p>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export function ActiveRafflesWidget() {
                         <div className="flex items-center gap-2">
                           <Ticket className="w-3.5 h-3.5 text-[#8984a1]" />
                           <span className="text-[10px] font-bold text-[#8984a1] uppercase tracking-widest">
-                            Valor: <Money amountUsd={raffle.ticketPrice} className="text-white" />
+                            {t("raffles.valueLabel")} <Money amountUsd={raffle.ticketPrice} className="text-white" />
                           </span>
                         </div>
                       </div>
@@ -243,9 +243,8 @@ export function ActiveRafflesWidget() {
                 onClick={() => setIsOpen(false)}
                 className="w-full py-3.5 rounded-xl flex items-center justify-center text-xs font-black uppercase tracking-widest transition-all duration-300 bg-white/[0.03] backdrop-blur-md border border-white/10 text-white/80 hover:bg-amber-500/20 hover:border-amber-400/50 hover:text-amber-300 hover:shadow-[0_0_25px_rgba(251,191,36,0.3)] hover:scale-[1.02] cursor-pointer"
               >
-                Ver todos los sorteos
-              </Link>
-            </div>
+                {t("raffles.seeAllRaffles")}
+              </Link>            </div>
           </motion.aside>
         )}
       </AnimatePresence>

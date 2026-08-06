@@ -105,12 +105,12 @@ export const Navbar = ({ onOpenCart }: { onOpenCart: () => void }) => {
       {closestDraw && (
         <div className="w-full bg-accent text-white px-4 py-2 text-center text-xs font-black tracking-widest uppercase flex items-center justify-center gap-3 animate-pulse">
           <Radio className="w-4 h-4 animate-ping" />
-          <span>¡Sorteo en vivo! {closestDraw.name} está por comenzar</span>
+          <span>{t("raffles.liveBanner", { name: closestDraw.name })}</span>
           <Link
             href={localizePath(`/raffles/${closestDraw.id}/live`)}
             className="ml-2 bg-white text-accent px-3 py-1 rounded-full hover:bg-white/90 transition-colors"
           >
-            Ver Ahora
+            {t("raffles.watchNow")}
           </Link>
         </div>
       )}

@@ -254,66 +254,10 @@ export function getItemRarity(item: OrderItem) {
 export function getDisplayFloatData(item: OrderItem) {
   const finalExterior = getItemExterior(item);
   const finalRarity = getItemRarity(item);
-  const finalProvider =
-    item.provider ||
-    (item.assetId &&
-    typeof item.assetId === "string" &&
-    (item.assetId.startsWith("resell-") ||
-      item.assetId.startsWith("youpin-") ||
-      item.assetId.startsWith("market-"))
-      ? "youpin"
-      : "bots");
-
-  const hash = hashCode(item.assetId);
-  let displayFloat = item.float ?? null;
-  let displayPattern = item.pattern ?? null;
-
-  if (finalProvider === "youpin" && (displayFloat === null || displayPattern === null)) {
-    if (displayPattern === null) {
-      displayPattern = (hash % 999) + 1;
-    }
-
-    if (displayFloat === null) {
-      const ext = (finalExterior || "").toLowerCase();
-      let minF = 0;
-      let maxF = 0.07;
-      let hasFloat = true;
-
-      if (ext.includes("factory") || ext.includes("fn")) {
-        minF = 0;
-        maxF = 0.07;
-      } else if (ext.includes("minimal") || ext.includes("mw")) {
-        minF = 0.07;
-        maxF = 0.15;
-      } else if (ext.includes("field") || ext.includes("ft")) {
-        minF = 0.15;
-        maxF = 0.38;
-      } else if (ext.includes("well") || ext.includes("ww")) {
-        minF = 0.38;
-        maxF = 0.45;
-      } else if (ext.includes("battle") || ext.includes("bs")) {
-        minF = 0.45;
-        maxF = 0.99;
-      } else {
-        hasFloat = false;
-      }
-
-      if (hasFloat) {
-        const fraction = (hash % 1000000) / 1000000;
-        displayFloat = minF + fraction * (maxF - minF);
-      }
-    }
-  }
-
-  return { finalExterior, finalRarity, displayFloat, displayPattern };
-}
-
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const chr = str.charCodeAt(i);
-    hash = (hash << 5) - hash + chr;
-    hash |= 0;
-  }
-  return Math.abs(hash);
+  return {
+    finalExterior,
+    finalRarity,
+    displayFloat: item.float ?? null,
+    displayPattern: item.pattern ?? null,
+  };
 }

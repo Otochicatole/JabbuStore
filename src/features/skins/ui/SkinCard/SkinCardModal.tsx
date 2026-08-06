@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, ShoppingCart, Eye } from "lucide-react";
+import { X, ShoppingCart, Eye, AlertCircle, RefreshCw } from "lucide-react";
 import { Skin } from "../../domain/skin";
 import { CartItem } from "../../../cart/domain/cart";
 import { InspectInGameButton } from "./InspectInGameButton";
@@ -8,6 +8,19 @@ import { SkinImage } from "@/shared/components/SkinImage";
 import type { TranslationParams } from "@/shared/i18n/types";
 import { getFloatColorClass } from "./helpers";
 import { Money } from "@/features/currency/ui/Money";
+import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
+
+interface FloatItem {
+  id: string;
+  assetId: string;
+  floatValue: number;
+  paintSeed: number;
+  price: number;
+  displayPrice: number;
+  inspectLink: string | null;
+  available: boolean;
+  externalId: string | null;
+}
 
 interface SkinCardModalProps {
   skin: Skin;
@@ -79,6 +92,42 @@ export const SkinCardModal = ({
   const [activeTab, setActiveTab] = useState<"details" | "stock">("details");
   const theoreticalFloat = getTheoreticalFloat(skin.exterior);
   const exteriorAbbr = getExteriorAbbreviation(skin.exterior);
+
+  const [floats, setFloats] = useState<FloatItem[]>([]);
+  const [floatsLoading, setFloatsLoading] = useState(false);
+  const [floatsError, setFloatsError] = useState<string | null>(null);
+
+  const isYoupinMarketItem =
+    skin.provider === "youpin" ||
+    skin.isImmediate === false ||
+    skin.id.startsWith("youpin-") ||
+    skinsInGroup.every((s) => s.float === undefined);
+
+  const fetchFloats = async () => {
+    setFloatsLoading(true);
+    setFloatsError(null);
+    try {
+      const response = await fetchWithAuth(
+        `${BACKEND_URL}/market/listings/${encodeURIComponent(skin.id)}/floats`
+      );
+      if (!response.ok) {
+        throw new Error(t("skinCard.floatLoadApiError"));
+      }
+      const data = await response.json();
+      setFloats(Array.isArray(data) ? data : data.floats || []);
+    } catch (err: unknown) {
+      console.error("[SkinCardModal] Error fetching floats:", err);
+      setFloatsError(err instanceof Error ? err.message : t("skinCard.floatLoadError"));
+    } finally {
+      setFloatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isModalOpen && activeTab === "stock" && isYoupinMarketItem) {
+      void fetchFloats();
+    }
+  }, [isModalOpen, activeTab, isYoupinMarketItem, skin.id]);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -291,6 +340,159 @@ export const SkinCardModal = ({
                 </span>
               </div>
             </div>
+          </div>
+        ) : isYoupinMarketItem ? (
+          /* YOUPIN / MARKET FLOATS TAB */
+          <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar bg-[#151322]/20 min-h-[350px]">
+            {floatsLoading ? (
+              Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between py-5 border-b border-white/10 h-[72px] animate-pulse"
+                >
+                  <div className="flex flex-col gap-2 w-1/3">
+                    <div className="h-3 bg-white/10 rounded w-2/3" />
+                    <div className="h-2.5 bg-white/5 rounded w-1/2" />
+                  </div>
+                  <div className="h-4 bg-white/10 rounded w-1/6" />
+                  <div className="h-8 bg-white/10 rounded w-24" />
+                </div>
+              ))
+            ) : floatsError ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <AlertCircle className="w-10 h-10 text-red-400 mb-3" />
+                <p className="text-sm font-semibold text-white/70">{floatsError}</p>
+                <button
+                  onClick={fetchFloats}
+                  className="mt-4 flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black uppercase tracking-wider rounded-lg text-white transition-all cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> {t("common.retry")}
+                </button>
+              </div>
+            ) : floats.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center bg-white/[0.01] border border-white/5 border-dashed rounded-2xl">
+                <span className="text-white/20 font-black text-xs uppercase tracking-widest font-mono mb-2">
+                  {t("skinCard.noFloatResults")}
+                </span>
+                <p className="text-xs text-[#84849b] max-w-xs leading-relaxed">
+                  {t("skinCard.noFloatResultsDescription")}
+                </p>
+              </div>
+            ) : (
+              floats.map((f) => {
+                const assetId = f.assetId ? `youpin-${f.assetId}` : skin.id;
+                const isThisInCart = items.some(
+                  (item) =>
+                    item.skin.id === assetId ||
+                    (item.skin.float === f.floatValue && item.skin.pattern === f.paintSeed)
+                );
+
+                return (
+                  <div
+                    key={f.id || f.assetId}
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between py-5 gap-4 border-b ${
+                      isThisInCart ? "border-accent" : "border-white/10"
+                    }`}
+                  >
+                    <div className="flex sm:flex-row flex-col items-center gap-10 flex-1 min-w-0">
+                      {/* Thumbnail Image */}
+                      <div className="relative w-16 h-12 flex items-center justify-center shrink-0">
+                        <SkinImage
+                          src={skin.imageUrl}
+                          alt={skin.name}
+                          width={80}
+                          height={80}
+                          maxWidth={80}
+                          maxHeight={80}
+                          className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+                        />
+                      </div>
+
+                      {/* Left side details */}
+                      <div className="flex flex-col gap-1.5 w-full min-w-0 pr-2">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-white">
+                            {translateExterior(skin.exterior, "Factory New")}
+                          </span>
+                          <span className="text-[#84849b] text-[10px] font-mono">
+                            {t("checkout.seed")}:{" "}
+                            <span className="text-white font-bold">
+                              {f.paintSeed}
+                            </span>
+                          </span>
+                          <div className="flex gap-2 items-center justify-center font-mono">
+                            <span className="text-[#84849b] uppercase font-bold text-[9px]">
+                              {t("common.price")}:
+                            </span>
+                            <Money amountUsd={f.displayPrice} className="text-sm font-black text-white" />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1 w-full">
+                          <div className="flex items-center justify-between text-[9px] font-mono text-[#84849b]">
+                            <span>Float:</span>
+                            <span className="text-white font-bold">
+                              {f.floatValue.toFixed(8)}
+                            </span>
+                          </div>
+                          {/* Progress bar */}
+                          <div className="h-1.5 w-full bg-[#151322]/80 rounded-full overflow-hidden relative border border-white/5">
+                            <div className="absolute inset-y-0 left-[7%] w-px bg-white/20" />
+                            <div className="absolute inset-y-0 left-[15%] w-px bg-white/20" />
+                            <div className="absolute inset-y-0 left-[38%] w-px bg-white/20" />
+                            <div className="absolute inset-y-0 left-[45%] w-px bg-white/20" />
+                            <div
+                              className={`h-full ${getFloatColorClass(f.floatValue)} rounded-full`}
+                              style={{
+                                width: `${Math.min(100, f.floatValue * 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right side Price & Actions */}
+                    <div className="flex items-center gap-2 sm:self-center self-end">
+                      {f.inspectLink && !/%[a-z0-9_:]+%/i.test(f.inspectLink) && (
+                        <InspectInGameButton
+                          href={f.inspectLink}
+                          title={t("skinCard.inspectInGame")}
+                        />
+                      )}
+
+                      {!isThisInCart ? (
+                        <button
+                          onClick={() =>
+                            addToCart({
+                              ...skin,
+                              id: assetId,
+                              price: f.displayPrice,
+                              float: f.floatValue,
+                              pattern: f.paintSeed,
+                              provider: "youpin",
+                              inspectLink: f.inspectLink ?? skin.inspectLink ?? null,
+                              isSpecific: true,
+                              listingId: skin.id,
+                            })
+                          }
+                          className="h-9 px-5 flex items-center justify-center bg-accent text-white hover:brightness-110 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer border-none shadow-[0_0_15px_rgba(217,70,239,0.25)] shrink-0"
+                        >
+                          {t("common.add")}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => removeFromCart(assetId)}
+                          className="h-9 px-5 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer shrink-0"
+                        >
+                          {t("common.remove")}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         ) : (
           /* STOCK TAB (List of all specific items in stock with floats & buy buttons) */

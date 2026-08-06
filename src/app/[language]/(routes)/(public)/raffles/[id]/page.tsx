@@ -484,7 +484,7 @@ function RaffleDetailsContent() {
                     </div>
                     <div className="text-right">
                       <span className="block text-[8px] font-black text-accent uppercase tracking-wider">
-                        <Money amountUsd={raffle.ticketPrice} /> c/u
+                        <Money amountUsd={raffle.ticketPrice} /> {t("raffles.perUnit")}
                       </span>
                     </div>
                   </div>

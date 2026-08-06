@@ -23,7 +23,7 @@ export function TicketPageHeader({
           {t("nav.tickets")}
         </h1>
         <p className="text-sm text-[#8984a1] mt-1.5 font-medium">
-          Revisa y administra tus consultas de soporte asociadas a compras o ventas en curso.
+          {t("tickets.pageDescription")}
         </p>
       </div>
 

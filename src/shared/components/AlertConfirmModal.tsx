@@ -3,6 +3,7 @@
 import React from "react";
 import { AlertCircle, CheckCircle, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface AlertConfirmModalProps {
   isOpen: boolean;
@@ -22,10 +23,14 @@ export function AlertConfirmModal({
   type = "info",
   onConfirm,
   onCancel,
-  confirmLabel = "Aceptar",
-  cancelLabel = "Cancelar",
+  confirmLabel,
+  cancelLabel,
 }: AlertConfirmModalProps) {
+  const { t } = useI18n();
   if (!isOpen) return null;
+
+  const resolvedConfirmLabel = confirmLabel ?? t("common.accept");
+  const resolvedCancelLabel = cancelLabel ?? t("common.cancel");
 
   const isConfirm = type === "confirm";
 
@@ -75,7 +80,7 @@ export function AlertConfirmModal({
                 onClick={onCancel}
                 className="px-4 py-2 hover:bg-white/5 border border-white/10 rounded-[3px] text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition-all cursor-pointer"
               >
-                {cancelLabel}
+                {resolvedCancelLabel}
               </button>
             )}
             <button
@@ -89,7 +94,7 @@ export function AlertConfirmModal({
                     : "bg-accent hover:bg-accent/90 shadow-[0_0_15px_rgba(217,70,239,0.3)]"
               }`}
             >
-              {confirmLabel}
+              {resolvedConfirmLabel}
             </button>
           </div>
         </motion.div>

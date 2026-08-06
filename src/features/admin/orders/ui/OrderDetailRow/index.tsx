@@ -335,7 +335,7 @@ export function OrderDetailRow({
             </div>
             <div className="min-w-0">
               <span className="text-[10px] font-black uppercase block leading-tight">
-                Completado
+                {t("admin.orders.stepCompleted")}
               </span>
               <span className="text-[8.5px] font-mono opacity-60">
                 {currentStep === 4 ? t("purchases.step.skinDelivered") : t("admin.orders.queued")}

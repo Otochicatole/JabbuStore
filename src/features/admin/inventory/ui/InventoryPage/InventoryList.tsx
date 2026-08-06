@@ -260,7 +260,7 @@ export function InventoryList({
                     </div>
                   </div>
                   <div className="col-span-2 border-t border-white/[0.03] pt-2">
-                    <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">Float Value</span>
+                    <span className="text-[#84849b] block text-[8px] uppercase tracking-widest font-bold">{t("admin.inventory.floatValue")}</span>
                     <span className="text-white font-bold block mt-0.5">
                       {item.float !== null && item.float !== undefined ? (
                         <span className="text-white font-extrabold">{item.float.toFixed(5)}</span>

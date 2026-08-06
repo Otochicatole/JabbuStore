@@ -9,7 +9,7 @@ import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 interface AdminRaffleCardProps {
   raffle: any; // Using any for simplicity in this extraction, though ideally we'd type it based on the parent.
   fetchRaffles: () => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const getRaffleStatusBadge = (status: string) => {
@@ -119,7 +119,7 @@ export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchR
             <div className="bg-white/[0.02] border border-white/[0.03] rounded-lg p-3 flex flex-col gap-1">
               <div className="flex items-center gap-2 text-[#84849b] text-[10px] font-bold uppercase tracking-widest">
                 <Calendar className="w-3.5 h-3.5 text-accent" />
-                Fecha Sorteo
+                {t("admin.raffles.drawDateLabel")}
               </div>
               <span className="text-xs text-white font-medium">
                 {new Date(raffle.drawDate).toLocaleString()}
@@ -129,27 +129,27 @@ export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchR
             <div className="bg-white/[0.02] border border-white/[0.03] rounded-lg p-3 flex flex-col gap-1">
               <div className="flex items-center gap-2 text-[#84849b] text-[10px] font-bold uppercase tracking-widest">
                 <Ticket className="w-3.5 h-3.5 text-accent" />
-                Precio
+                {t("common.price")}
               </div>
               <span className="text-xs text-white font-medium">
-                ${raffle.ticketPrice.toFixed(2)} / chance
+                ${raffle.ticketPrice.toFixed(2)} {t("admin.raffles.perChance")}
               </span>
             </div>
 
             <div className="bg-white/[0.02] border border-white/[0.03] rounded-lg p-3 flex flex-col gap-1">
               <div className="flex items-center gap-2 text-[#84849b] text-[10px] font-bold uppercase tracking-widest">
                 <Gift className="w-3.5 h-3.5 text-accent" />
-                Premios
+                {t("raffles.prizes")}
               </div>
               <span className="text-xs text-white font-medium">
-                {raffle.prizes?.length || 0} items
+                {t("admin.raffles.prizesCount", { count: raffle.prizes?.length || 0 })}
               </span>
             </div>
 
             <div className="bg-white/[0.02] border border-white/[0.03] rounded-lg p-3 flex flex-col gap-1">
               <div className="flex items-center gap-2 text-[#84849b] text-[10px] font-bold uppercase tracking-widest">
                 <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                Recaudación
+                {t("admin.raffles.revenue")}
               </div>
               <span className="text-xs text-emerald-400 font-bold">
                 ${(soldTickets * raffle.ticketPrice).toFixed(2)}
@@ -160,7 +160,7 @@ export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchR
           <div className="mt-4 pt-4 border-t border-white/[0.05]">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-[#84849b] uppercase tracking-widest flex items-center gap-1.5">
-                Progreso de Tickets
+                {t("admin.raffles.ticketProgress")}
                 <span className="text-white bg-white/10 px-1.5 py-0.5 rounded ml-1">{soldTickets} {raffle.maxTickets ? `/ ${raffle.maxTickets}` : ""}</span>
               </span>
               {raffle.maxTickets && (
@@ -176,7 +176,7 @@ export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchR
                 />
               </div>
             ) : (
-              <div className="text-[10px] text-[#84849b] italic">Sin límite de tickets</div>
+              <div className="text-[10px] text-[#84849b] italic">{t("admin.raffles.unlimitedTickets")}</div>
             )}
           </div>
         </div>
@@ -188,10 +188,10 @@ export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchR
             <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex flex-col items-center justify-center text-center gap-2 shadow-[inset_0_0_20px_rgba(255,170,0,0.05)]">
               <div className="flex items-center gap-2 text-accent/80 text-[10px] font-black uppercase tracking-widest">
                 <Clock className="w-4 h-4 animate-pulse" />
-                Tiempo Restante
+                {t("admin.raffles.timeRemaining")}
               </div>
               <div className="text-2xl font-black text-accent tracking-wider font-mono drop-shadow-md">
-                {timeLeft || "Calculando..."}
+                {timeLeft || t("admin.raffles.calculating")}
               </div>
             </div>
           )}
@@ -199,7 +199,7 @@ export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchR
           <div className="bg-black/20 border border-white/5 rounded-xl p-4">
             <h4 className="text-[10px] font-bold text-[#84849b] uppercase tracking-widest mb-3 flex items-center gap-2">
               <Package className="w-3.5 h-3.5" />
-              Vista Previa de Premios
+              {t("admin.raffles.prizesPreview")}
             </h4>
             <div className="flex flex-wrap gap-2">
               {raffle.prizes?.slice(0, 5).map((p: any) => (
@@ -241,7 +241,7 @@ export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchR
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-white text-[11px] font-black uppercase tracking-widest transition-all hover:scale-[1.02]"
         >
           <ExternalLink className="w-3.5 h-3.5 text-[#84849b]" />
-          Ver Participantes
+          {t("raffles.viewParticipants")}
         </Link>
 
         <RaffleManageActions

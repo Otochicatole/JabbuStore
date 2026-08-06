@@ -392,7 +392,7 @@ export function RaffleManageActions({
             className={`${buttonBase} bg-blue-500/10 hover:bg-blue-500/20 text-blue-400`}
           >
             <Bot className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
-            Bots
+            {t("admin.raffles.bots")}
           </button>
         )}
 
@@ -447,7 +447,7 @@ export function RaffleManageActions({
 
             <h2 className="text-base font-black uppercase tracking-tight text-white mb-6 flex items-center gap-2">
               <Bot className="w-5 h-5 text-blue-400" />
-              Agregar Bots
+              {t("admin.raffles.addBots")}
             </h2>
 
             <div className="flex bg-[#141221] p-1 rounded-[3px] border border-white/5 mb-6">
@@ -458,7 +458,7 @@ export function RaffleManageActions({
                   botMode === "new" ? "bg-accent text-white" : "text-[#84849b] hover:text-white"
                 }`}
               >
-                Crear Nuevo
+                {t("admin.raffles.createNew")}
               </button>
               <button
                 type="button"
@@ -467,7 +467,7 @@ export function RaffleManageActions({
                   botMode === "existing" ? "bg-accent text-white" : "text-[#84849b] hover:text-white"
                 }`}
               >
-                Existente
+                {t("admin.raffles.existing")}
               </button>
             </div>
 
@@ -476,7 +476,7 @@ export function RaffleManageActions({
                 <>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                      Nombre del Usuario
+                      {t("admin.raffles.userName")}
                     </label>
                     <input
                       type="text"
@@ -489,7 +489,7 @@ export function RaffleManageActions({
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                      Avatar del Usuario (Opcional)
+                      {t("admin.raffles.userAvatarOptional")}
                     </label>
                     <div className="flex flex-col gap-2">
                       <input
@@ -505,7 +505,7 @@ export function RaffleManageActions({
                         className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-2 text-xs text-white focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-[3px] file:border-0 file:text-xs file:font-black file:uppercase file:bg-white/10 file:text-white hover:file:bg-white/20 transition-all cursor-pointer"
                       />
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-[#84849b] uppercase font-bold">O usa una URL:</span>
+                        <span className="text-xs text-[#84849b] uppercase font-bold">{t("admin.raffles.orUseUrl")}</span>
                         <input
                           type="url"
                           value={formBotAvatarFile ? "" : formBotAvatar}
@@ -521,23 +521,22 @@ export function RaffleManageActions({
                     {formBotAvatar && (
                       <div className="mt-2 flex items-center gap-3 bg-white/5 p-2 rounded-[3px] border border-white/5">
                         <img src={formBotAvatar} alt="Preview" className="w-8 h-8 rounded-md object-cover bg-black" />
-                        <span className="text-xs text-[#84849b]">Vista previa</span>
-                      </div>
+                        <span className="text-xs text-[#84849b]">{t("admin.raffles.preview")}</span>                      </div>
                     )}
                   </div>
                 </>
               ) : (
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                    Seleccionar Bot
+                    {t("admin.raffles.selectBot")}
                   </label>
                   {isLoadingBots ? (
                     <div className="flex items-center gap-2 text-xs text-[#84849b] p-3">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Cargando bots...
+                      <Loader2 className="w-3 h-3 animate-spin" /> {t("admin.raffles.loadingBots")}
                     </div>
                   ) : existingBots.length === 0 ? (
                     <div className="text-xs text-[#84849b] p-3 border border-white/5 rounded-[3px] bg-[#141221]">
-                      No hay bots creados aún. Crea uno nuevo primero.
+                      {t("admin.raffles.noBotsCreated")}
                     </div>
                   ) : (
                     <div className="relative">
@@ -563,7 +562,7 @@ export function RaffleManageActions({
 
               <div className="space-y-2 pt-2 border-t border-white/5">
                 <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                  Chances a Comprar
+                  {t("admin.raffles.chancesToBuy")}
                 </label>
                 <input
                   type="number"
@@ -591,7 +590,7 @@ export function RaffleManageActions({
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
-                Agregar
+                {t("admin.raffles.add")}
               </button>
             </div>
           </form>

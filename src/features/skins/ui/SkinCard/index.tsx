@@ -59,11 +59,11 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   const isMultiple = sortedSkinsInGroup.length >= 2;
 
   const floatCompatibleCategories = [
-    "knife",
+    "knife", "knives",
     "gloves",
-    "rifle",
-    "pistol",
-    "smg",
+    "rifle", "rifles", "snipers", "sniper", "shotguns", "shotgun", "machine_guns", "machine_gun",
+    "pistol", "pistols",
+    "smg", "smgs",
     "heavy",
   ];
   const isStickerOrOther =

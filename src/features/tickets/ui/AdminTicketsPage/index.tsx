@@ -208,7 +208,7 @@ export function AdminTicketsPage() {
                 {t("tickets.orderReference")}: <span className="text-white">{selected.orderId}</span> · {selected.order.type}
               </p>
               <h2 className="truncate text-sm font-black text-white sm:text-base">{selected.subject}</h2>
-              <p className="mt-0.5 truncate text-[10px] text-white/45">{selected.user?.name || t("admin.common.unknownUser")} · SteamID: {selected.user?.steamId || "N/A"}</p>
+              <p className="mt-0.5 truncate text-[10px] text-white/45">{selected.user?.name || t("admin.common.unknownUser")} · {t("admin.tickets.steamIdLabel")} {selected.user?.steamId || "N/A"}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button type="button" disabled={updating} onClick={() => changeStatus(selected.status === "OPEN" ? "CLOSED" : "OPEN")} className="cursor-pointer rounded-[3px] border border-white/10 bg-white/5 px-3 py-2.5 text-[9px] font-black uppercase text-white disabled:cursor-not-allowed disabled:opacity-40">

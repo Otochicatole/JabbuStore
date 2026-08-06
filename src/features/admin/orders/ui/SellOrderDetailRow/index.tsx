@@ -585,7 +585,7 @@ export function SellOrderDetailRow({
                 }
               }}
               disabled={isCancelled || (order.status !== "RETENTION" && order.status !== "PAID")}
-              title="Liberar retención de seguridad y pasar a pago"
+              title={t("admin.orders.releaseHoldTitle")}
               className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
                 isCancelled || (order.status !== "RETENTION" && order.status !== "PAID")
                   ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
@@ -595,7 +595,7 @@ export function SellOrderDetailRow({
               }`}
             >
               <Check className="w-3.5 h-3.5" />
-              Liberar Retención
+              {t("admin.orders.releaseHold")}
             </button>
  
             {/* Paso 4: Pago al Usuario / Completar */}

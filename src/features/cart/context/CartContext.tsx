@@ -10,6 +10,7 @@ import { AlertCircle, X } from 'lucide-react';
 
 interface CartContextType {
   items: CartItem[];
+  isLoaded: boolean;
   addToCart: (skin: Skin) => void;
   removeFromCart: (skinId: string) => void;
   updateQuantity: (skinId: string, delta: number) => void;
@@ -119,7 +120,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, total, validateCartItems }}>
+    <CartContext.Provider value={{ items, isLoaded, addToCart, removeFromCart, updateQuantity, clearCart, total, validateCartItems }}>
       {children}
 
       <AnimatePresence>

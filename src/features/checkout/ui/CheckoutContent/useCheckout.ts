@@ -56,7 +56,7 @@ export function useCheckout() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const { items: cartItems, clearCart, removeFromCart } = useCart();
+  const { items: cartItems, clearCart, removeFromCart, isLoaded: cartLoaded } = useCart();
   const {
     selectedItems: sellItems,
     clearSellList,
@@ -72,6 +72,7 @@ export function useCheckout() {
   const quoteId = searchParams.get("quoteId");
 
   const processedRef = useRef(false);
+  const recoveringRef = useRef(false);
 
   const [items, setItems] = useState<CheckoutItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -272,7 +273,7 @@ export function useCheckout() {
   // 2. Validate checkout items
   useEffect(() => {
     const status = searchParams.get("status");
-    if (status || isSuccess) return;
+    if (status || isSuccess || recoveringRef.current || !cartLoaded) return;
 
     const validateCheckout = async () => {
       setLoading(true);
@@ -372,6 +373,7 @@ export function useCheckout() {
               if (validateRes.ok) {
                 const validateData = await validateRes.json();
                 if (validateData.invalidIds && validateData.invalidIds.length > 0) {
+                  recoveringRef.current = true;
                   const removedItems = cartItems.filter((item) => item.skin && validateData.invalidIds.includes(toValidationId(item.skin)));
                   const removedNames = removedItems
                     .filter((item) => item.skin)
@@ -417,7 +419,7 @@ export function useCheckout() {
     };
 
     validateCheckout();
-  }, [checkoutType, cartItems, sellItems, searchParams, t, isSuccess]);
+  }, [checkoutType, cartItems, sellItems, searchParams, t, isSuccess, cartLoaded]);
 
   const buildPaymentQuotePayload = useCallback(() => {
     if (!isBuyLikeCheckout || !selectedMethod || loading || isSuccess) {

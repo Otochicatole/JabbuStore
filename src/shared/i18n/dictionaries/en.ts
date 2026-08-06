@@ -308,8 +308,6 @@ export const en = {
   "checkout.goToOrders": "We will take you to your order tracking.",
   "checkout.billingData": "Personal and Billing Data",
   "checkout.payoutData": "Personal Data and Payout Account",
-  "checkout.pix": "Pix (BRL)",
-  "checkout.pixKey": "Pix Key (CPF, CNPJ, Email, or Phone)",
   "checkout.cpf": "CPF (Brazilian Tax ID)",
   "checkout.payoutCurrency": "Payout Currency",
   "checkout.accountNumberOrIban": "Account Number / IBAN",
@@ -431,7 +429,6 @@ export const en = {
   "paymentMethod.sell.bank.description": "Enter CBU, CVU or alias where you want to receive your sale payment",
   "paymentMethod.sell.crypto.description": "Enter the wallet and network where you want to receive your sale payment",
   "paymentMethod.sell.paypal.description": "Enter your PayPal email to receive your sale payment",
-  "paymentMethod.sell.pix.description": "Provide your Pix key and details to receive payment in Brazilian Reals (BRL)",
 
   "profile.title": "Profile",
   "profile.description": "Manage your account data and trade URL.",
@@ -1400,7 +1397,6 @@ export const en = {
   "purchases.requote.desc": "The administrator has updated the quotation of your items due to changes in the global market. The total quotation changed from {oldPrice} USD to {newPrice} USD.",
   "purchases.requote.eqUsd": "Equivalent USD",
   "purchases.requote.eqArs": "Equivalent ARS",
-  "purchases.requote.eqBrl": "Equivalent BRL",
   "purchases.requote.approve": "Approve new quote",
   "purchases.requote.reject": "Reject and cancel sale",
   "purchases.requote.errorApprove": "Error approving quotation",
@@ -1602,7 +1598,6 @@ export const en = {
   "admin.settings.autoSyncComplete": "Automatic sync completed.",
 
   "checkout.currency.arsPeso": "ARS (Argentine Pesos)",
-  "checkout.currency.brlPix": "BRL (Brazilian Reais / Pix)",
   "checkout.currency.usdSwift": "USD (US Dollars / SWIFT)",
   "checkout.raffleType": "CS2 Raffle",
   "checkout.transferCurrency": "Transfer currency",

@@ -50,10 +50,9 @@ export function SellOrderDetailRow({
   const { t } = useI18n();
   const { rates } = useCurrency();
   const arsRate = rates?.rates.ARS ?? 0;
-  const brlRate = rates?.rates.BRL ?? 0;
 
-  const formatRate = (value: number, currency: "USD" | "ARS" | "BRL") => {
-    const locale = currency === "USD" ? "en-US" : currency === "ARS" ? "es-AR" : "pt-BR";
+  const formatRate = (value: number, currency: "USD" | "ARS") => {
+    const locale = currency === "USD" ? "en-US" : "es-AR";
     return new Intl.NumberFormat(locale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -262,12 +261,6 @@ export function SellOrderDetailRow({
                   <div className={`flex items-center justify-between px-1.5 py-0.5 rounded ${selectedCurrency === "ARS" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold" : "text-white/45"}`}>
                     <span>ARS:</span>
                     <span>{formatRate(order.totalPrice * arsRate, "ARS")} ARS {selectedCurrency === "ARS" && "✓"}</span>
-                  </div>
-                )}
-                {brlRate > 0 && (
-                  <div className={`flex items-center justify-between px-1.5 py-0.5 rounded ${selectedCurrency === "BRL" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold" : "text-white/45"}`}>
-                    <span>BRL:</span>
-                    <span>{formatRate(order.totalPrice * brlRate, "BRL")} BRL {selectedCurrency === "BRL" && "✓"}</span>
                   </div>
                 )}
               </div>

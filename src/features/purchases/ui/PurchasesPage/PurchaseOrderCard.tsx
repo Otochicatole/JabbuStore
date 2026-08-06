@@ -198,14 +198,6 @@ export function PurchaseOrderCard({
                         </span>
                       </div>
                     )}
-                    {rates?.rates.BRL && (
-                      <div>
-                        <span className="text-[#84849b] block uppercase">{t("purchases.requote.eqBrl") || "Equivalente BRL"}</span>
-                        <span className="font-bold text-white font-mono">
-                          {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(order.totalPrice * rates.rates.BRL)} BRL
-                        </span>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex flex-wrap gap-2.5 pt-1.5">

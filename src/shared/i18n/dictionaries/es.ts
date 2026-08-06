@@ -308,8 +308,6 @@ export const es = {
   "checkout.goToOrders": "Te llevaremos al seguimiento de tus órdenes.",
   "checkout.billingData": "Datos Personales y de Facturación",
   "checkout.payoutData": "Datos Personales y Cuenta de Pago",
-  "checkout.pix": "Pix (BRL)",
-  "checkout.pixKey": "Llave Pix (CPF, CNPJ, Email o Teléfono)",
   "checkout.cpf": "CPF (Identificación Fiscal de Brasil)",
   "checkout.payoutCurrency": "Moneda de Transferencia",
   "checkout.accountNumberOrIban": "Número de Cuenta / IBAN",
@@ -431,7 +429,6 @@ export const es = {
   "paymentMethod.sell.bank.description": "Indica CBU, CVU o alias donde querés recibir el pago de tu venta",
   "paymentMethod.sell.crypto.description": "Indica la wallet y red donde querés recibir el pago de tu venta",
   "paymentMethod.sell.paypal.description": "Indica tu correo PayPal para recibir el pago de tu venta",
-  "paymentMethod.sell.pix.description": "Indica tu llave Pix (CPF/CNPJ, email, teléfono o clave aleatoria) para recibir el pago en Reais (BRL)",
 
   "profile.title": "Perfil",
   "profile.description": "Gestiona los datos de tu cuenta y trade URL.",
@@ -1402,7 +1399,6 @@ export const es = {
   "purchases.requote.desc": "El administrador ha actualizado la cotización de tus ítems debido a cambios en el mercado global. La cotización total cambió de {oldPrice} USD a {newPrice} USD.",
   "purchases.requote.eqUsd": "Equivalente USD",
   "purchases.requote.eqArs": "Equivalente ARS",
-  "purchases.requote.eqBrl": "Equivalente BRL",
   "purchases.requote.approve": "Aprobar nueva cotización",
   "purchases.requote.reject": "Rechazar y cancelar venta",
   "purchases.requote.errorApprove": "Error al aprobar cotización",
@@ -1604,7 +1600,6 @@ export const es = {
   "admin.settings.autoSyncComplete": "Sincronización automática completada.",
 
   "checkout.currency.arsPeso": "ARS (Pesos Argentinos)",
-  "checkout.currency.brlPix": "BRL (Reais Brasileños / Pix)",
   "checkout.currency.usdSwift": "USD (Dólares Estadounidenses / SWIFT)",
   "checkout.raffleType": "Sorteo CS2",
   "checkout.transferCurrency": "Moneda de transferencia",

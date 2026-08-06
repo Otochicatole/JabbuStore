@@ -15,7 +15,7 @@ interface OrderSummaryProps {
   paymentQuoteLoading: boolean;
   paymentQuoteError: string | null;
   manualTransferType: "bank" | "crypto";
-  payoutCurrency?: "ARS" | "BRL" | "USD";
+  payoutCurrency?: "ARS" | "USD";
   onSubmit: () => void;
 }
 
@@ -43,14 +43,11 @@ export function OrderSummary({
   const settlementCurrency = arsQuote ? "ARS" : cryptoQuote ? "USDT" : "USD";
 
   const arsRate = rates?.rates.ARS ?? (arsQuote?.rate?.value || 0);
-  const brlRate = rates?.rates.BRL ?? 0;
 
   let finalAmountLabel = "";
   if (checkoutType === "sell" && selectedMethod === "mercado_pago") {
     if (payoutCurrency === "ARS" && arsRate > 0) {
       finalAmountLabel = formatCurrencyAmount(totalPrice * arsRate, "ARS");
-    } else if (payoutCurrency === "BRL" && brlRate > 0) {
-      finalAmountLabel = formatCurrencyAmount(totalPrice * brlRate, "BRL");
     } else {
       finalAmountLabel = `$${totalPrice.toFixed(2)} USD`;
     }
@@ -64,8 +61,8 @@ export function OrderSummary({
 
   const showQuoteBox = Boolean(rates || arsQuote);
 
-  const formatRate = (value: number, currency: "USD" | "ARS" | "BRL") => {
-    const locale = currency === "USD" ? "en-US" : currency === "ARS" ? "es-AR" : "pt-BR";
+  const formatRate = (value: number, currency: "USD" | "ARS") => {
+    const locale = currency === "USD" ? "en-US" : "es-AR";
     return new Intl.NumberFormat(locale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -113,14 +110,6 @@ export function OrderSummary({
                     </span>
                   </div>
                 )}
-                {brlRate > 0 && (
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-[#84849b]">BR (BRL)</span>
-                    <span className="text-white text-right">
-                      1 USD = {formatRate(brlRate, "BRL")} BRL
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -141,14 +130,6 @@ export function OrderSummary({
                     <span className="text-[#84849b]">ARS</span>
                     <span className="text-white text-right">
                       {formatCurrencyAmount(totalPrice * arsRate, "ARS")}
-                    </span>
-                  </div>
-                )}
-                {brlRate > 0 && (
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-[#84849b]">BR (BRL)</span>
-                    <span className="text-white text-right">
-                      {formatCurrencyAmount(totalPrice * brlRate, "BRL")}
                     </span>
                   </div>
                 )}

@@ -40,7 +40,6 @@ const CurrencyContext = createContext<CurrencyContextValue | null>(null);
 const localeByCurrency: Record<DisplayCurrency, string> = {
   USD: "en-US",
   ARS: "es-AR",
-  BRL: "pt-BR",
 };
 
 function formatAmount(amount: number, currency: DisplayCurrency) {

@@ -31,7 +31,7 @@ export interface CheckoutFormData {
   network: string;
   manualTransferType: "bank" | "crypto";
   paymentProof: File | null;
-  payoutCurrency?: "ARS" | "BRL" | "USD";
+  payoutCurrency?: "ARS" | "USD";
 }
 
 export type FormErrors = Record<string, string>;

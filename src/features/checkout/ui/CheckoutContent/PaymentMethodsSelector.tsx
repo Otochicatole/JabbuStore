@@ -44,7 +44,7 @@ export function PaymentMethodsSelector({
         ...method,
         name: t("checkout.bankTransfer"),
         description: t("paymentMethod.sell.bank.description"),
-        badge: "ARS / BRL / USD",
+        badge: "ARS / USD",
       };
     }
 

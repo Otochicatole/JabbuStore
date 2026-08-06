@@ -89,26 +89,22 @@ export function CheckoutForm({
 
   const getCbuLabel = () => {
     if (selectedMethod === "paypal") return t("checkout.paypalEmail");
-    if (formData.payoutCurrency === "BRL") return t("checkout.pixKey");
     if (formData.payoutCurrency === "USD") return t("checkout.accountNumberOrIban") || "Número de Cuenta / IBAN";
     return t("checkout.destinationAlias");
   };
 
   const getCbuPlaceholder = () => {
     if (selectedMethod === "paypal") return t("checkout.paypalEmailPlaceholder");
-    if (formData.payoutCurrency === "BRL") return "Ex. CPF, CNPJ, Email, Celular ou Chave aleatória";
     if (formData.payoutCurrency === "USD") return "Ex. US1234567890123456";
     return t("checkout.destinationAliasPlaceholder");
   };
 
   const getCuilLabel = () => {
-    if (formData.payoutCurrency === "BRL") return t("checkout.cpf");
     if (formData.payoutCurrency === "USD") return t("checkout.swiftBic") || "Código SWIFT / BIC";
     return t("checkout.beneficiaryTaxId");
   };
 
   const getCuilPlaceholder = () => {
-    if (formData.payoutCurrency === "BRL") return "Ex. 123.456.789-00";
     if (formData.payoutCurrency === "USD") return "Ex. AAAABBCCXXX";
     return t("checkout.beneficiaryTaxIdPlaceholder");
   };
@@ -321,7 +317,6 @@ export function CheckoutForm({
                     onChange={(val) => updateField("payoutCurrency", val)}
                     options={[
                       { value: "ARS", label: t("checkout.currency.arsPeso") },
-                      { value: "BRL", label: t("checkout.currency.brlPix") },
                       { value: "USD", label: t("checkout.currency.usdSwift") },
                     ]}
                     className="w-full sm:w-80 font-sans"

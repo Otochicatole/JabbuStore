@@ -1,4 +1,4 @@
-export const DISPLAY_CURRENCIES = ["USD", "ARS", "BRL"] as const;
+export const DISPLAY_CURRENCIES = ["USD", "ARS"] as const;
 
 export type DisplayCurrency = (typeof DISPLAY_CURRENCIES)[number];
 
@@ -11,7 +11,6 @@ export interface DisplayRates {
   quotedAt: string;
   sourcesUpdatedAt: {
     usdArs: string | null;
-    brlArs: string | null;
   };
 }
 

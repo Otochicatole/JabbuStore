@@ -62,7 +62,7 @@ export interface Order {
     buyerPaymentProof?: PaymentProofInfo | null;
     adminPaymentProof?: PaymentProofInfo | null;
     manualTransferType?: "bank" | "crypto" | string | null;
-    payoutCurrency?: "ARS" | "BRL" | "USD" | string | null;
+    payoutCurrency?: "ARS" | "USD" | string | null;
     originalPrice?: number | null;
     manualTransferSnapshot?: {
       type?: "bank" | "crypto" | string | null;

@@ -22,7 +22,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
 
   return (
     <div
-      className={`flex items-center gap-1 w-fit min-w-[100px] rounded-full border border-white/10 bg-white/[0.02] p-1 ${
+      className={`flex items-center gap-0.5 w-fit min-w-[100px] rounded-full border border-white/10 bg-white/[0.02] p-0.5 ${
         compact ? "" : "min-w-fit"
       }`}
       aria-label={t("language.label")}
@@ -32,7 +32,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
           key={item}
           type="button"
           onClick={() => handleLocaleChange(item)}
-          className={`rounded-full px-2.5 py-1 text-[9px] w-full font-black uppercase tracking-wider transition-all cursor-pointer ${
+          className={`flex items-center justify-center rounded-full px-2.5 h-6 text-[9px] w-full font-black uppercase tracking-wider transition-all cursor-pointer leading-none ${
             locale === item
               ? "bg-accent text-white shadow-[0_0_14px_rgba(217,70,239,0.25)]"
               : "text-white/40 hover:text-white"

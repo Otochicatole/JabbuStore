@@ -14,13 +14,13 @@ export async function generateMetadata({
 
   const titles: Record<string, string> = {
     en: `Live Raffle: ${cleanId} - JabbuStore`,
-    es: `Sorteo en Vivo: ${cleanId} - JabbuStore`,
+    es: `Rifa en Vivo: ${cleanId} - JabbuStore`,
     br: `Sorteio ao Vivo: ${cleanId} - JabbuStore`,
   };
 
   const descriptions: Record<string, string> = {
     en: `Watch the live CS2 skin raffle draw for ${cleanId} on JabbuStore. Real-time results and winner announcements.`,
-    es: `Mira el sorteo en vivo de skins CS2 para ${cleanId} en JabbuStore. Resultados en tiempo real y anuncio de ganadores.`,
+    es: `Mira la rifa en vivo de skins CS2 para ${cleanId} en JabbuStore. Resultados en tiempo real y anuncio de ganadores.`,
     br: `Assista ao sorteio ao vivo de skins CS2 para ${cleanId} na JabbuStore. Resultados em tempo real e anúncio dos vencedores.`,
   };
 

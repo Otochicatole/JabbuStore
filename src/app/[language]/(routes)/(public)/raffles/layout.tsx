@@ -9,9 +9,9 @@ const metaByLang = {
     keywords: ["CS2 raffle", "skin raffle", "CS2 giveaway", "win CS2 skins", "skin lottery", "CS2 prizes"],
   },
   es: {
-    title: "Sorteos de Skins CS2 - JabbuStore",
-    description: "Participa en sorteos de skins de CS2 y gana items exclusivos. Compra tickets para tener la oportunidad de ganar cuchillos legendarios, guantes y skins raras.",
-    keywords: ["sorteo CS2", "rifa skins", "ganar skins CS2", "lotería skins", "premios CS2"],
+    title: "Rifas de Skins CS2 - JabbuStore",
+    description: "Participa en rifas de skins de CS2 y gana items exclusivos. Compra tickets para tener la oportunidad de ganar cuchillos legendarios, guantes y skins raras.",
+    keywords: ["rifa CS2", "rifa skins", "ganar skins CS2", "lotería skins", "premios CS2"],
   },
   br: {
     title: "Sorteios de Skins CS2 - JabbuStore",

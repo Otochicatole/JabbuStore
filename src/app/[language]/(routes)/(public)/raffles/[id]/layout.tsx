@@ -14,13 +14,13 @@ export async function generateMetadata({
 
   const titles: Record<string, string> = {
     en: `Raffle: ${cleanId} - JabbuStore`,
-    es: `Sorteo: ${cleanId} - JabbuStore`,
+    es: `Rifa: ${cleanId} - JabbuStore`,
     br: `Sorteio: ${cleanId} - JabbuStore`,
   };
 
   const descriptions: Record<string, string> = {
     en: `View details and participate in the CS2 skin raffle for ${cleanId}. Buy tickets and win exclusive items on JabbuStore.`,
-    es: `Consulta los detalles y participa en el sorteo de skins CS2 de ${cleanId}. Compra tickets y gana items exclusivos en JabbuStore.`,
+    es: `Consulta los detalles y participa en la rifa de skins CS2 de ${cleanId}. Compra tickets y gana items exclusivos en JabbuStore.`,
     br: `Veja os detalhes e participe do sorteio de skins CS2 de ${cleanId}. Compre bilhetes e ganhe itens exclusivos na JabbuStore.`,
   };
 

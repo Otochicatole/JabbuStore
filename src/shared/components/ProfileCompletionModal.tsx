@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { fetchWithAuth, BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { AlertCircle, ArrowRight, X } from "lucide-react";
@@ -20,8 +20,6 @@ export function ProfileCompletionModal() {
   const pathname = usePathname();
   const router = useRouter();
   const localizePath = useLocalizedPath();
-  const searchParams = useSearchParams();
-  const checkoutType = searchParams.get("type") === "sell" ? "sell" : "buy";
 
   const [isOpen, setIsOpen] = useState(false);
   const dismissedThisPageLoadRef = useRef(false);
@@ -46,11 +44,23 @@ export function ProfileCompletionModal() {
       }
 
       try {
-        const res = await fetchWithAuth(`${BACKEND_URL}/users/me`);
-        if (!res.ok || cancelled) return;
+        let isIncomplete = false;
 
-        const data = (await res.json()) as UserProfile;
-        const isIncomplete = !data.email?.trim() || !data.tradeUrl?.trim();
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const res = await fetchWithAuth(`${BACKEND_URL}/users/me`);
+          if (cancelled) return;
+
+          if (res.ok) {
+            const data = (await res.json()) as UserProfile;
+            isIncomplete = !data.email?.trim() || !data.tradeUrl?.trim();
+            break;
+          }
+
+          if (attempt < 2) {
+            await new Promise((r) => setTimeout(r, 1000));
+          }
+        }
+
         if (!cancelled) {
           setIsOpen(isIncomplete);
         }
@@ -87,7 +97,9 @@ export function ProfileCompletionModal() {
   const handleClose = () => {
     const normalizedPathname = stripLocaleFromPathname(pathname);
     if (normalizedPathname === "/checkout") {
-      router.push(localizePath(checkoutType === "sell" ? "/sell" : "/buy"));
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get("type");
+      router.push(localizePath(type === "sell" ? "/sell" : "/buy"));
     } else {
       dismissedThisPageLoadRef.current = true;
       setIsOpen(false);

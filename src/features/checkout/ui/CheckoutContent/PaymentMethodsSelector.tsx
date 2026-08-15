@@ -19,7 +19,7 @@ export function PaymentMethodsSelector({
   const { t } = useI18n();
   const methods = PAYMENT_METHODS.filter((method) => {
     if (checkoutType !== "buy") {
-      return method.id !== "manual_transfer";
+      return method.id !== "manual_transfer" && method.id !== "paypal";
     }
     if (!manualTransferSettings) return method.id !== "manual_transfer";
     if (method.id === "mercado_pago") return manualTransferSettings.mercadoPagoEnabled;

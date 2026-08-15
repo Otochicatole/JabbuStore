@@ -22,6 +22,9 @@ export const SECRET_LABELS = [
   { key: "PAYPAL_CLIENT_ID", label: "PAYPAL_CLIENT_ID" },
   { key: "PAYPAL_CLIENT_SECRET", label: "PAYPAL_CLIENT_SECRET" },
   { key: "PAYPAL_SANDBOX", label: "PAYPAL_SANDBOX" },
+  { key: "RESEND_TOKEN", label: "RESEND_TOKEN" },
+  { key: "RESEND_FROM", label: "RESEND_FROM" },
+  { key: "RESEND_TO", label: "RESEND_TO" },
 ];
 
 

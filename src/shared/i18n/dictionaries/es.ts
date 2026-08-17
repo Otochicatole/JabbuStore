@@ -464,6 +464,8 @@ export const es = {
   "profile.saveChanges": "Guardar cambios",
   "profile.saved": "Perfil actualizado correctamente.",
   "profile.updateError": "Ocurrió un error al actualizar el perfil.",
+  "profile.emailAlreadyRegisteredTitle": "Email ya registrado",
+  "profile.emailAlreadyRegistered": "Este email ya está asociado a otra cuenta. Usa otro email.",
   "profile.timeoutError": "El guardado tardó demasiado. Revisá que el backend esté corriendo y volvé a intentar.",
   "profile.connectionError": "Error de conexión al guardar el perfil.",
   "profile.loading": "Cargando perfil...",

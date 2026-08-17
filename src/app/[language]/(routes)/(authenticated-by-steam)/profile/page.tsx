@@ -18,6 +18,7 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 
 import type { UserProfile } from "@/features/users/types";
 import { CurrencySelector } from "@/features/currency/ui/CurrencySelector";
+import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
 
 export default function UserProfilePage() {
   const { t } = useI18n();
@@ -26,6 +27,10 @@ export default function UserProfilePage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [errorModal, setErrorModal] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
 
   // Form fields
   const [name, setName] = useState("");
@@ -88,15 +93,25 @@ export default function UserProfilePage() {
         setTimeout(() => setSuccess(false), 3000);
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || t("profile.updateError"));
+        const isEmailAlreadyRegistered = data.error === "Email already registered";
+        setErrorModal({
+          title: isEmailAlreadyRegistered
+            ? t("profile.emailAlreadyRegisteredTitle")
+            : t("profile.updateError"),
+          message: isEmailAlreadyRegistered
+            ? t("profile.emailAlreadyRegistered")
+            : data.error || t("profile.updateError"),
+        });
       }
     } catch (err) {
       console.error("Error saving profile:", err);
-      alert(
-        err instanceof DOMException && err.name === "AbortError"
-          ? t("profile.timeoutError")
-          : t("profile.connectionError"),
-      );
+      setErrorModal({
+        title: t("profile.updateError"),
+        message:
+          err instanceof DOMException && err.name === "AbortError"
+            ? t("profile.timeoutError")
+            : t("profile.connectionError"),
+      });
     } finally {
       window.clearTimeout(timeout);
       setSaving(false);
@@ -308,6 +323,15 @@ export default function UserProfilePage() {
           </div>
         </div>
       )}
+
+      <AlertConfirmModal
+        isOpen={errorModal !== null}
+        type="error"
+        title={errorModal?.title ?? ""}
+        message={errorModal?.message ?? ""}
+        onConfirm={() => setErrorModal(null)}
+        confirmLabel={t("common.accept")}
+      />
     </div>
   );
 }

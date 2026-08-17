@@ -464,6 +464,8 @@ export const en = {
   "profile.saveChanges": "Save changes",
   "profile.saved": "Profile updated successfully.",
   "profile.updateError": "An error occurred while updating the profile.",
+  "profile.emailAlreadyRegisteredTitle": "Email already registered",
+  "profile.emailAlreadyRegistered": "This email is already associated with another account. Use a different email.",
   "profile.timeoutError": "Saving took too long. Check that the backend is running and try again.",
   "profile.connectionError": "Connection error while saving profile.",
   "profile.loading": "Loading profile...",

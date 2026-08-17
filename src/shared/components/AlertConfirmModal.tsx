@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { createPortal } from "react-dom";
 import { AlertCircle, CheckCircle, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -49,7 +50,8 @@ export function AlertConfirmModal({
     }
   };
 
-  return (
+  return createPortal(
+    (
     <AnimatePresence>
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
         <motion.div
@@ -100,5 +102,7 @@ export function AlertConfirmModal({
         </motion.div>
       </div>
     </AnimatePresence>
+    ),
+    document.body,
   );
 }

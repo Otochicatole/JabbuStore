@@ -53,6 +53,38 @@ export function LoginForm() {
     }
   };
 
+  if (error !== null) {
+    return (
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-[#110f1e]/80 border border-red-500/20 backdrop-blur-xl rounded-2xl p-8 shadow-2xl relative overflow-hidden text-center">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-red-400/50 to-transparent" />
+          <div className="mx-auto mb-5 w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+            <AlertCircle className="w-7 h-7 text-red-400" />
+          </div>
+          <h1 className="text-xl font-black text-white mb-3">
+            {t("admin.login.errorTitle")}
+          </h1>
+          <p className="text-sm leading-6 text-[#aaa6bd] mb-7">{error}</p>
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="w-full py-3 bg-white hover:bg-white/90 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-300"
+            >
+              {t("admin.login.retry")}
+            </button>
+            <Link
+              href={localizePath('/')}
+              className="block text-[10px] font-black text-[#84849b] hover:text-white uppercase tracking-wider transition-colors font-mono"
+            >
+              {t("checkout.backToStore")}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-md relative z-10">
       {/* Brand / Logo Section */}

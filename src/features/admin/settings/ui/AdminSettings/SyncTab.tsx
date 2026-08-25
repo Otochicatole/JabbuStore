@@ -14,6 +14,20 @@ interface CatalogFilters {
   catalogFilterPistolsEnabled: boolean;
   catalogFilterSMGsEnabled: boolean;
   catalogFilterHeavyEnabled: boolean;
+  catalogFilterEquipmentEnabled: boolean;
+  catalogFilterStickersEnabled: boolean;
+  catalogFilterContainersEnabled: boolean;
+  catalogFilterAgentsEnabled: boolean;
+  catalogFilterCharmsEnabled: boolean;
+  catalogFilterGraffitiEnabled: boolean;
+  catalogFilterPatchesEnabled: boolean;
+  catalogFilterMusicKitsEnabled: boolean;
+  catalogFilterCollectiblesEnabled: boolean;
+  catalogFilterPassesEnabled: boolean;
+  catalogFilterKeysEnabled: boolean;
+  catalogFilterGiftsEnabled: boolean;
+  catalogFilterToolsEnabled: boolean;
+  catalogFilterTagsEnabled: boolean;
   catalogFilterSouvenirEnabled: boolean;
   catalogFilterStatTrakEnabled: boolean;
   catalogMinPrice: number;
@@ -62,10 +76,47 @@ const DEFAULT_FILTERS: CatalogFilters = {
   catalogFilterPistolsEnabled: true,
   catalogFilterSMGsEnabled: true,
   catalogFilterHeavyEnabled: true,
+  catalogFilterEquipmentEnabled: false,
+  catalogFilterStickersEnabled: false,
+  catalogFilterContainersEnabled: false,
+  catalogFilterAgentsEnabled: false,
+  catalogFilterCharmsEnabled: false,
+  catalogFilterGraffitiEnabled: false,
+  catalogFilterPatchesEnabled: false,
+  catalogFilterMusicKitsEnabled: false,
+  catalogFilterCollectiblesEnabled: false,
+  catalogFilterPassesEnabled: false,
+  catalogFilterKeysEnabled: false,
+  catalogFilterGiftsEnabled: false,
+  catalogFilterToolsEnabled: false,
+  catalogFilterTagsEnabled: false,
   catalogFilterSouvenirEnabled: false,
   catalogFilterStatTrakEnabled: true,
   catalogMinPrice: 0.1,
 };
+
+const CATEGORY_FILTERS = [
+  ["catalogFilterKnivesEnabled", "admin.settings.catalogFilterKnives"],
+  ["catalogFilterGlovesEnabled", "admin.settings.catalogFilterGloves"],
+  ["catalogFilterRiflesEnabled", "admin.settings.catalogFilterRifles"],
+  ["catalogFilterPistolsEnabled", "admin.settings.catalogFilterPistols"],
+  ["catalogFilterSMGsEnabled", "admin.settings.catalogFilterSMGs"],
+  ["catalogFilterHeavyEnabled", "admin.settings.catalogFilterHeavy"],
+  ["catalogFilterEquipmentEnabled", "admin.settings.catalogFilterEquipment"],
+  ["catalogFilterStickersEnabled", "admin.settings.catalogFilterStickers"],
+  ["catalogFilterContainersEnabled", "admin.settings.catalogFilterContainers"],
+  ["catalogFilterAgentsEnabled", "admin.settings.catalogFilterAgents"],
+  ["catalogFilterCharmsEnabled", "admin.settings.catalogFilterCharms"],
+  ["catalogFilterGraffitiEnabled", "admin.settings.catalogFilterGraffiti"],
+  ["catalogFilterPatchesEnabled", "admin.settings.catalogFilterPatches"],
+  ["catalogFilterMusicKitsEnabled", "admin.settings.catalogFilterMusicKits"],
+  ["catalogFilterCollectiblesEnabled", "admin.settings.catalogFilterCollectibles"],
+  ["catalogFilterPassesEnabled", "admin.settings.catalogFilterPasses"],
+  ["catalogFilterKeysEnabled", "admin.settings.catalogFilterKeys"],
+  ["catalogFilterGiftsEnabled", "admin.settings.catalogFilterGifts"],
+  ["catalogFilterToolsEnabled", "admin.settings.catalogFilterTools"],
+  ["catalogFilterTagsEnabled", "admin.settings.catalogFilterTags"],
+] as const satisfies ReadonlyArray<[keyof CatalogFilters, string]>;
 
 export function SyncTab() {
   const { t } = useI18n();
@@ -118,6 +169,20 @@ export function SyncTab() {
         catalogFilterPistolsEnabled: data.catalogFilterPistolsEnabled ?? true,
         catalogFilterSMGsEnabled: data.catalogFilterSMGsEnabled ?? true,
         catalogFilterHeavyEnabled: data.catalogFilterHeavyEnabled ?? true,
+        catalogFilterEquipmentEnabled: data.catalogFilterEquipmentEnabled ?? false,
+        catalogFilterStickersEnabled: data.catalogFilterStickersEnabled ?? false,
+        catalogFilterContainersEnabled: data.catalogFilterContainersEnabled ?? false,
+        catalogFilterAgentsEnabled: data.catalogFilterAgentsEnabled ?? false,
+        catalogFilterCharmsEnabled: data.catalogFilterCharmsEnabled ?? false,
+        catalogFilterGraffitiEnabled: data.catalogFilterGraffitiEnabled ?? false,
+        catalogFilterPatchesEnabled: data.catalogFilterPatchesEnabled ?? false,
+        catalogFilterMusicKitsEnabled: data.catalogFilterMusicKitsEnabled ?? false,
+        catalogFilterCollectiblesEnabled: data.catalogFilterCollectiblesEnabled ?? false,
+        catalogFilterPassesEnabled: data.catalogFilterPassesEnabled ?? false,
+        catalogFilterKeysEnabled: data.catalogFilterKeysEnabled ?? false,
+        catalogFilterGiftsEnabled: data.catalogFilterGiftsEnabled ?? false,
+        catalogFilterToolsEnabled: data.catalogFilterToolsEnabled ?? false,
+        catalogFilterTagsEnabled: data.catalogFilterTagsEnabled ?? false,
         catalogFilterSouvenirEnabled: data.catalogFilterSouvenirEnabled ?? false,
         catalogFilterStatTrakEnabled: data.catalogFilterStatTrakEnabled ?? true,
         catalogMinPrice: data.catalogMinPrice ?? 0.1,
@@ -132,7 +197,10 @@ export function SyncTab() {
   }, []);
 
   useEffect(() => {
-    void loadFilters();
+    const timer = window.setTimeout(() => {
+      void loadFilters();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [loadFilters]);
 
   useEffect(() => {
@@ -163,7 +231,7 @@ export function SyncTab() {
     void pollStatus();
     const interval = setInterval(pollStatus, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [t]);
 
   const handleSaveAutoSync = async () => {
     setAutoSyncSaving(true);
@@ -234,6 +302,15 @@ export function SyncTab() {
     } finally {
       setFiltersSaving(false);
     }
+  };
+
+  const allCatalogTypesEnabled = CATEGORY_FILTERS.every(([key]) => filters[key]);
+  const setAllCatalogTypes = (enabled: boolean) => {
+    setFilters((current) => {
+      const next = { ...current };
+      for (const [key] of CATEGORY_FILTERS) next[key] = enabled;
+      return next;
+    });
   };
 
   const handleSyncPrices = async () => {
@@ -338,22 +415,43 @@ export function SyncTab() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-                  <div className="space-y-1">
+                <div className="space-y-4">
+                  <div className="border-b border-white/5 pb-3">
+                    <ToggleSwitch
+                      label={t("admin.settings.catalogFilterAllTypes")}
+                      checked={allCatalogTypesEnabled}
+                      onChange={setAllCatalogTypes}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="space-y-1">
                     <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b] mb-1">
                       {t("admin.settings.catalogFilterCategories")}
                     </p>
-                    <ToggleSwitch label={t("admin.settings.catalogFilterKnives")} checked={filters.catalogFilterKnivesEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterKnivesEnabled: v }))} />
-                    <ToggleSwitch label={t("admin.settings.catalogFilterGloves")} checked={filters.catalogFilterGlovesEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterGlovesEnabled: v }))} />
-                    <ToggleSwitch label={t("admin.settings.catalogFilterRifles")} checked={filters.catalogFilterRiflesEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterRiflesEnabled: v }))} />
-                    <ToggleSwitch label={t("admin.settings.catalogFilterPistols")} checked={filters.catalogFilterPistolsEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterPistolsEnabled: v }))} />
-                    <ToggleSwitch label={t("admin.settings.catalogFilterSMGs")} checked={filters.catalogFilterSMGsEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterSMGsEnabled: v }))} />
-                    <ToggleSwitch label={t("admin.settings.catalogFilterHeavy")} checked={filters.catalogFilterHeavyEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterHeavyEnabled: v }))} />
-                  </div>
-                  <div className="space-y-1">
+                    {CATEGORY_FILTERS.slice(0, 10).map(([key, labelKey]) => (
+                      <ToggleSwitch
+                        key={key}
+                        label={t(labelKey)}
+                        checked={filters[key]}
+                        onChange={(value) => setFilters((current) => ({ ...current, [key]: value }))}
+                      />
+                    ))}
+                    </div>
+                    <div className="space-y-1">
                     <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b] mb-1">
-                      {t("admin.settings.catalogFilterOptions")}
+                      {t("admin.settings.catalogFilterOtherTypes")}
                     </p>
+                    {CATEGORY_FILTERS.slice(10).map(([key, labelKey]) => (
+                      <ToggleSwitch
+                        key={key}
+                        label={t(labelKey)}
+                        checked={filters[key]}
+                        onChange={(value) => setFilters((current) => ({ ...current, [key]: value }))}
+                      />
+                    ))}
+                    </div>
+                  </div>
+                  <div className="border-t border-white/5 pt-3 space-y-1">
                     <ToggleSwitch label={t("admin.settings.catalogFilterSouvenir")} checked={filters.catalogFilterSouvenirEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterSouvenirEnabled: v }))} />
                     <ToggleSwitch label={t("admin.settings.catalogFilterStatTrak")} checked={filters.catalogFilterStatTrakEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterStatTrakEnabled: v }))} />
                   </div>

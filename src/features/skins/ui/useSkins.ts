@@ -33,6 +33,7 @@ export const useSkins = (marketType: "express" | "market") => {
   const [catalogFilters, setCatalogFilters] = useState<FilterState | null>(null);
   const [skins, setSkins] = useState<Skin[]>([]);
   const [pagination, setPagination] = useState<SkinPagination>(DEFAULT_PAGINATION);
+  const [categoryFacets, setCategoryFacets] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
@@ -118,6 +119,7 @@ export const useSkins = (marketType: "express" | "market") => {
 
           setSkins(Array.isArray(data.items) ? data.items : []);
           setPagination(data.pagination);
+          setCategoryFacets(data.facets?.categories ?? null);
         } catch (requestError: unknown) {
           if (controller.signal.aborted || requestId !== requestSequenceRef.current) {
             return;
@@ -127,6 +129,7 @@ export const useSkins = (marketType: "express" | "market") => {
           setError(getErrorMessage(requestError));
           setSkins([]);
           setPagination(DEFAULT_PAGINATION);
+          setCategoryFacets(null);
         } finally {
           if (!controller.signal.aborted && requestId === requestSequenceRef.current) {
             setLoading(false);
@@ -153,5 +156,12 @@ export const useSkins = (marketType: "express" | "market") => {
     setRefreshVersion((current) => current + 1);
   }, []);
 
-  return { skins, pagination, loading, error, refetch };
+  return {
+    skins,
+    pagination,
+    categoryFacets,
+    loading,
+    error,
+    refetch,
+  };
 };

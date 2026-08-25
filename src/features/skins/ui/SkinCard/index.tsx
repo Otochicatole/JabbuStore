@@ -58,27 +58,10 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   };
   const isMultiple = sortedSkinsInGroup.length >= 2;
 
-  const floatCompatibleCategories = [
-    "knife", "knives",
-    "gloves",
-    "rifle", "rifles", "snipers", "sniper", "shotguns", "shotgun", "machine_guns", "machine_gun",
-    "pistol", "pistols",
-    "smg", "smgs",
-    "heavy",
-  ];
-  const isStickerOrOther =
-    skin.weapon?.toLowerCase().includes("sticker") ||
-    skin.weapon?.toLowerCase().includes("pegatina") ||
-    skin.weapon?.toLowerCase().includes("music kit") ||
-    skin.weapon?.toLowerCase().includes("graffiti") ||
-    skin.weapon?.toLowerCase().includes("key") ||
-    skin.weapon?.toLowerCase().includes("pin") ||
-    skin.weapon?.toLowerCase().includes("pass") ||
-    !skin.category ||
-    !floatCompatibleCategories.includes(skin.category.toLowerCase());
+  const isMarketItem = skin.provider === "youpin" || skin.isImmediate === false;
   const showFloatsModalTrigger =
-    skin.isImmediate === false &&
-    !isStickerOrOther &&
+    isMarketItem &&
+    skin.supportsFloatStock === true &&
     skin.float === undefined;
 
   const cartItemsInGroup = items.filter((item) =>

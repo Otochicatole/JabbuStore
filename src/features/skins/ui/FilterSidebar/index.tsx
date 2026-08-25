@@ -13,15 +13,40 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import Image from "next/image";
 import { useCurrency } from "@/features/currency/context/CurrencyContext";
 
-const CATEGORIES = [
-  { value: "Cuchillos", labelKey: "filters.category.knives", icon: "knives.webp" },
-  { value: "Guantes", labelKey: "filters.category.gloves", icon: "gloves.webp" },
-  { value: "Pistolas", labelKey: "filters.category.pistols", icon: "pistols.webp" },
-  { value: "Subfusiles", labelKey: "filters.category.smgs", icon: "smgs.webp" },
-  { value: "Rifles de asalto", labelKey: "filters.category.assaultRifles", icon: "asault-rifles.webp" },
-  { value: "Rifles de francotirador", labelKey: "filters.category.sniperRifles", icon: "snipers.webp" },
-  { value: "Escopetas", labelKey: "filters.category.shotguns", icon: "shotguns.webp" },
-  { value: "Ametralladoras", labelKey: "filters.category.machineGuns", icon: "machine-guns.webp" },
+type CatalogCategory = {
+  value: string;
+  token: string;
+  labelKey: string;
+  icon: string | null;
+};
+
+const BASE_CATEGORIES: CatalogCategory[] = [
+  { value: "Cuchillos", token: "knives", labelKey: "filters.category.knives", icon: "knives-steam.png" },
+  { value: "Guantes", token: "gloves", labelKey: "filters.category.gloves", icon: "gloves-steam.png" },
+  { value: "Pistolas", token: "pistols", labelKey: "filters.category.pistols", icon: "pistols-steam.png" },
+  { value: "Subfusiles", token: "smgs", labelKey: "filters.category.smgs", icon: "smgs-steam.png" },
+  { value: "Rifles de asalto", token: "rifles", labelKey: "filters.category.assaultRifles", icon: "rifles-steam.png" },
+  { value: "Rifles de francotirador", token: "snipers", labelKey: "filters.category.sniperRifles", icon: "snipers-steam.png" },
+  { value: "Escopetas", token: "shotguns", labelKey: "filters.category.shotguns", icon: "shotguns-steam.png" },
+  { value: "Ametralladoras", token: "machine_guns", labelKey: "filters.category.machineGuns", icon: "machine_guns-steam.png" },
+];
+
+const GLOBAL_CATEGORIES: CatalogCategory[] = [
+  ...BASE_CATEGORIES,
+  { value: "Equipo / Zeus", token: "equipment", labelKey: "filters.category.equipment", icon: "equipment-steam.png" },
+  { value: "Stickers", token: "stickers", labelKey: "filters.category.stickers", icon: "stickers-steam.png" },
+  { value: "Cajas y contenedores", token: "containers", labelKey: "filters.category.containers", icon: "containers-steam.png" },
+  { value: "Agentes", token: "agents", labelKey: "filters.category.agents", icon: "agents-steam.png" },
+  { value: "Llaveros / Charms", token: "charms", labelKey: "filters.category.charms", icon: "charms-steam.png" },
+  { value: "Grafitis", token: "graffiti", labelKey: "filters.category.graffiti", icon: "graffiti-steam.png" },
+  { value: "Parches", token: "patches", labelKey: "filters.category.patches", icon: "patches-steam.png" },
+  { value: "Kits musicales", token: "music_kits", labelKey: "filters.category.musicKits", icon: "music_kits-steam.png" },
+  { value: "Coleccionables", token: "collectibles", labelKey: "filters.category.collectibles", icon: "collectibles-steam.png" },
+  { value: "Pases", token: "passes", labelKey: "filters.category.passes", icon: "passes-steam.png" },
+  { value: "Llaves", token: "keys", labelKey: "filters.category.keys", icon: "keys-steam.png" },
+  { value: "Regalos", token: "gifts", labelKey: "filters.category.gifts", icon: "gifts-steam.png" },
+  { value: "Herramientas", token: "tools", labelKey: "filters.category.tools", icon: "tools-steam.png" },
+  { value: "Etiquetas", token: "tags", labelKey: "filters.category.tags", icon: "tags-steam.png" },
 ];
 
 const CONDITIONS = [
@@ -40,6 +65,7 @@ interface FilterControlsProps {
   onToggleCategory: (category: string) => void;
   onToggleCondition: (condition: string) => void;
   onReset: () => void;
+  categories: CatalogCategory[];
 }
 
 function FilterControls({
@@ -50,6 +76,7 @@ function FilterControls({
   onToggleCategory,
   onToggleCondition,
   onReset,
+  categories,
 }: FilterControlsProps) {
   const { t } = useI18n();
   const { effectiveCurrency, convertUsd, displayToUsd } = useCurrency();
@@ -133,6 +160,7 @@ function FilterControls({
 
       <div className="border-b border-white/5 pb-5">
         <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">{t("filters.priceRange")} ({effectiveCurrency})</h3>
+        <p className="mb-2 text-[9px] font-mono text-[#84849b]">{t("filters.priceWeaponsOnly")}</p>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -210,7 +238,7 @@ function FilterControls({
       <div>
         <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">{t("filters.category")}</h3>
         <div className="grid grid-cols-2 gap-2">
-          {CATEGORIES.map((category) => {
+          {categories.map((category) => {
             const isSelected = value.selectedCategories.includes(category.value);
             return (
               <button
@@ -267,13 +295,25 @@ function FilterControls({
   );
 }
 
-export const FilterSidebar = () => {
+export const FilterSidebar = ({
+  globalMarket = false,
+  availableCategoryTokens,
+}: {
+  globalMarket?: boolean;
+  availableCategoryTokens?: string[] | null;
+}) => {
   const { t } = useI18n();
   const [isOpenMobile, setIsMobileOpen] = useState(false);
   const filters = useFilters();
   const [mobileDraft, setMobileDraft] = useState<FilterState>(() =>
     cloneFilterState(filters.filterState),
   );
+  const categories = globalMarket
+    ? GLOBAL_CATEGORIES.filter(
+        (category) =>
+          !availableCategoryTokens || availableCategoryTokens.includes(category.token),
+      )
+    : BASE_CATEGORIES;
 
   const openMobileFilters = () => {
     setMobileDraft(cloneFilterState(filters.filterState));
@@ -326,6 +366,7 @@ export const FilterSidebar = () => {
           onToggleCategory={filters.toggleCategory}
           onToggleCondition={filters.toggleCondition}
           onReset={filters.clearFilters}
+          categories={categories}
         />
       </aside>
 
@@ -391,6 +432,7 @@ export const FilterSidebar = () => {
                     onToggleCategory={toggleMobileCategory}
                     onToggleCondition={toggleMobileCondition}
                     onReset={() => setMobileDraft(createDefaultFilterState())}
+                    categories={categories}
                   />
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, ShoppingCart, Eye, AlertCircle, RefreshCw } from "lucide-react";
 import { Skin } from "../../domain/skin";
@@ -98,12 +98,21 @@ export const SkinCardModal = ({
   const [floatsError, setFloatsError] = useState<string | null>(null);
 
   const isYoupinMarketItem =
-    skin.provider === "youpin" ||
-    skin.isImmediate === false ||
-    skin.id.startsWith("youpin-") ||
-    skinsInGroup.every((s) => s.float === undefined);
+    skin.provider === "youpin" || skin.isImmediate === false;
+  const showAvailableStock =
+    skin.supportsFloatStock === true && isYoupinMarketItem;
+  const contentTab =
+    showAvailableStock && activeTab === "stock" ? "stock" : "details";
+  const [resolvedInspect, setResolvedInspect] = useState<{
+    id: string;
+    link: string | null;
+  } | null>(null);
+  const resolvedInspectLink =
+    resolvedInspect?.id === skin.id
+      ? resolvedInspect.link
+      : skin.inspectLink ?? null;
 
-  const fetchFloats = async () => {
+  const fetchFloats = useCallback(async () => {
     setFloatsLoading(true);
     setFloatsError(null);
     try {
@@ -121,13 +130,49 @@ export const SkinCardModal = ({
     } finally {
       setFloatsLoading(false);
     }
-  };
+  }, [skin.id, t]);
 
   useEffect(() => {
-    if (isModalOpen && activeTab === "stock" && isYoupinMarketItem) {
-      void fetchFloats();
+    if (isModalOpen && showAvailableStock && activeTab === "stock") {
+      const timeoutId = window.setTimeout(() => {
+        void fetchFloats();
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
-  }, [isModalOpen, activeTab, isYoupinMarketItem, skin.id]);
+  }, [fetchFloats, isModalOpen, activeTab, showAvailableStock]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!isModalOpen || showAvailableStock || !isYoupinMarketItem) return;
+
+    const resolveInspectLink = async () => {
+      try {
+        const response = await fetchWithAuth(
+          `${BACKEND_URL}/market/listings/${encodeURIComponent(skin.id)}/inspect`,
+        );
+        if (!response.ok) {
+          if (!cancelled) setResolvedInspect({ id: skin.id, link: null });
+          return;
+        }
+        const data = (await response.json()) as { inspectLink?: unknown };
+        const link = typeof data.inspectLink === "string" ? data.inspectLink.trim() : "";
+        if (!cancelled) {
+          setResolvedInspect({
+            id: skin.id,
+            link: link && !/%[a-z0-9_:]+%/i.test(link) ? link : null,
+          });
+        }
+      } catch (error) {
+        console.warn("[SkinCardModal] Error resolving inspect link:", error);
+      }
+    };
+
+    void resolveInspectLink();
+    return () => {
+      cancelled = true;
+    };
+  }, [isModalOpen, isYoupinMarketItem, showAvailableStock, skin.id, skin.inspectLink]);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -169,16 +214,18 @@ export const SkinCardModal = ({
             >
               {t("skinCard.modal.itemDetails")}
             </button>
-            <button
-              onClick={() => setActiveTab("stock")}
-              className={`h-full border-b-2 text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-wider sm:tracking-widest bg-transparent transition-all cursor-pointer border-none ${
-                activeTab === "stock"
-                  ? "border-accent text-accent"
-                  : "border-transparent text-white/40 hover:text-white/60"
-              }`}
-            >
-              {t("skinCard.modal.availableStock")}
-            </button>
+            {showAvailableStock && (
+              <button
+                onClick={() => setActiveTab("stock")}
+                className={`h-full border-b-2 text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-wider sm:tracking-widest bg-transparent transition-all cursor-pointer border-none ${
+                  activeTab === "stock"
+                    ? "border-accent text-accent"
+                    : "border-transparent text-white/40 hover:text-white/60"
+                }`}
+              >
+                {t("skinCard.modal.availableStock")}
+              </button>
+            )}
           </div>
           <button
             onClick={() => setIsModalOpen(false)}
@@ -188,7 +235,7 @@ export const SkinCardModal = ({
           </button>
         </div>
 
-        {activeTab === "details" ? (
+        {contentTab === "details" ? (
           /* DETAILS TAB (2-Column general info, no specific float, average price) */
           <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
             {/* Left Column: Image */}
@@ -322,15 +369,15 @@ export const SkinCardModal = ({
                     {items.some((item) => item.skin.id === skin.id) ? t("cart.title") : t("nav.buy")}
                   </button>
 
-                  {skin.inspectLink && (
+                  {resolvedInspectLink && !/%[a-z0-9_:]+%/i.test(resolvedInspectLink) && (
                     <a
-                      href={skin.inspectLink}
+                      href={resolvedInspectLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="h-12 px-6 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer no-underline"
                     >
                       <Eye className="w-4 h-4 mr-2" />
-                      {t("common.view")}
+                      {t("skinCard.inspectInGame")}
                     </a>
                   )}
                 </div>
@@ -341,7 +388,7 @@ export const SkinCardModal = ({
               </div>
             </div>
           </div>
-        ) : isYoupinMarketItem ? (
+        ) : showAvailableStock ? (
           /* YOUPIN / MARKET FLOATS TAB */
           <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar bg-[#151322]/20 min-h-[350px]">
             {floatsLoading ? (

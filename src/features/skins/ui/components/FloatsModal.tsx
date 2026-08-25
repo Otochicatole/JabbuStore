@@ -89,6 +89,7 @@ const getErrorMessage = (err: unknown, fallback: string) => {
 export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   const { t } = useI18n();
   const { addToCart, removeFromCart, items: cartItems } = useCart();
+  const supportsFloatStock = skin.supportsFloatStock === true;
   const sortOptions = useMemo(
     () => sortOptionKeys.map((option) => ({ value: option.value, label: t(option.labelKey) })),
     [t],
@@ -110,7 +111,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && supportsFloatStock) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -118,7 +119,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen]);
+  }, [isOpen, supportsFloatStock]);
 
   const fetchFloats = useCallback(async () => {
     setLoading(true);
@@ -141,13 +142,13 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
   }, [skin.id, t]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && supportsFloatStock) {
       const timeoutId = window.setTimeout(() => {
         void fetchFloats();
       }, 0);
       return () => window.clearTimeout(timeoutId);
     }
-  }, [fetchFloats, isOpen]);
+  }, [fetchFloats, isOpen, supportsFloatStock]);
 
   // Encontrar si este listado (o un asset youpin del mismo skin) está en el carrito
   const cartItemForThisListing = useMemo(() => {
@@ -194,7 +195,7 @@ export const FloatsModal = ({ skin, isOpen, onClose }: FloatsModalProps) => {
     return result;
   }, [floats, search, sortBy, t]);
 
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !mounted || !supportsFloatStock) return null;
 
   const handleSelectFloat = (float: FloatItem) => {
     const assetId = float.assetId ? `youpin-${float.assetId}` : skin.id;

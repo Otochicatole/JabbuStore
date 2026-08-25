@@ -9,7 +9,7 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { Loader2 } from "lucide-react";
 
 function MarketPageContent() {
-  const { skins, pagination, loading, error, refetch } = useSkins("market");
+  const { skins, pagination, categoryFacets, loading, error, refetch } = useSkins("market");
   const { t } = useI18n();
 
   return (
@@ -18,7 +18,10 @@ function MarketPageContent() {
         {/* Sidebar Placeholder */}
         <div className="hidden lg:block w-64 flex-shrink-0" />
         
-        <FilterSidebar />
+        <FilterSidebar
+          globalMarket
+          availableCategoryTokens={categoryFacets ? Object.keys(categoryFacets) : null}
+        />
 
         {/* Main Content */}
         <section className="flex flex-col w-full">

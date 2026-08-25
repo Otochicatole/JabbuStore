@@ -1,5 +1,6 @@
 import {
   Skin,
+  CatalogItemType,
   SkinCatalogQuery,
   SkinCatalogResult,
   SkinPagination,
@@ -24,12 +25,18 @@ export interface CatalogItemResponse {
   phase: string | null;
   isImmediate: boolean;
   inspectLink: string | null;
+  supportsFloatStock?: boolean;
+  catalogItemType?: CatalogItemType;
+  priceFilterEligible?: boolean;
   provider: "bot" | "youpin";
   variants?: CatalogItemResponse[];
 }
 
 export interface CatalogItemsResponse {
   items: CatalogItemResponse[];
+  facets?: {
+    categories?: Record<string, number>;
+  };
   pagination: SkinPagination;
 }
 
@@ -67,6 +74,9 @@ function mapCatalogItemToSkin(item: CatalogItemResponse): Skin {
     phase: item.phase ?? undefined,
     isImmediate: item.isImmediate,
     inspectLink: item.inspectLink,
+    supportsFloatStock: item.supportsFloatStock === true,
+    catalogItemType: item.catalogItemType,
+    priceFilterEligible: item.priceFilterEligible === true,
     provider: item.provider,
   };
 
@@ -92,6 +102,24 @@ const CATEGORY_LABEL_TO_TOKEN: Record<string, string> = {
   "Rifles de francotirador": "snipers",
   Escopetas: "shotguns",
   Ametralladoras: "machine_guns",
+  Equipo: "equipment",
+  "Equipo / Zeus": "equipment",
+  Agentes: "agents",
+  Contenedores: "containers",
+  "Cajas y contenedores": "containers",
+  Stickers: "stickers",
+  Pegatinas: "stickers",
+  "Llaveros / Charms": "charms",
+  Charms: "charms",
+  Grafitis: "graffiti",
+  Parches: "patches",
+  "Kits musicales": "music_kits",
+  Coleccionables: "collectibles",
+  Pases: "passes",
+  Llaves: "keys",
+  Regalos: "gifts",
+  Herramientas: "tools",
+  Etiquetas: "tags",
 };
 
 const CONDITION_LABEL_TO_TOKEN: Record<string, string> = {
@@ -159,6 +187,9 @@ export class ApiSkinRepository implements SkinRepository {
       const data = (await response.json()) as CatalogItemsResponse;
       return {
         items: Array.isArray(data.items) ? data.items.map(mapCatalogItemToSkin) : [],
+        facets: data.facets
+          ? { categories: data.facets.categories ?? {} }
+          : undefined,
         pagination: data.pagination ?? emptyPagination(query),
       };
     } catch (error) {

@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import { MainLayout } from "@/shared/components/MainLayout";
 import { JsonLdOrganization, JsonLdWebSite } from "@/shared/components/JsonLd";
+import {
+  DEFAULT_LOCALE,
+  isLocale,
+  LANGUAGE_TAG_BY_LOCALE,
+  LOCALE_REQUEST_HEADER,
+} from "@/shared/i18n/routing";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -54,7 +61,7 @@ export const metadata: Metadata = {
     languages: {
       en: "/en",
       es: "/es",
-      br: "/br",
+      "pt-BR": "/br",
     },
   },
   openGraph: {
@@ -103,14 +110,18 @@ export const metadata: Metadata = {
   category: "gaming",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const requestHeaders = await headers();
+  const requestLocale = requestHeaders.get(LOCALE_REQUEST_HEADER);
+  const locale = isLocale(requestLocale) ? requestLocale : DEFAULT_LOCALE;
+
   return (
     <html
-      lang="en"
+      lang={LANGUAGE_TAG_BY_LOCALE[locale]}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>

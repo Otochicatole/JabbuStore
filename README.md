@@ -19,6 +19,19 @@ JabbuStore es el frontend de una plataforma de comercio electrónico orientada a
 * **Integración de Pagos:** Flujo de pagos integrado directamente con MercadoPago.
 * **Actualizaciones en Tiempo Real:** Conexión por WebSockets mediante Socket.io para mantener sincronizado el estado (ej. inventario, notificaciones de compra).
 
+## Selección automática de idioma
+
+Las rutas sin prefijo de idioma se resuelven con esta prioridad: preferencia manual
+guardada en la cookie `jabbustore_locale`, país informado por la infraestructura,
+cabecera `Accept-Language` del navegador e inglés como último respaldo. Las rutas que
+ya incluyen `/en`, `/es` o `/br` se respetan tal como fueron solicitadas.
+
+El proxy reconoce `X-Vercel-IP-Country`, `CF-IPCountry`,
+`CloudFront-Viewer-Country`, `X-Geo-Country`, `X-Country-Code` y `X-Country`.
+En un despliegue propio, el reverse proxy debe calcular y sobrescribir uno de esos
+encabezados con un código de país ISO 3166-1 alpha-2 confiable; si no lo hace, la
+aplicación usa el idioma preferido del navegador como respaldo.
+
 ## Scripts Disponibles
 
 En el directorio del proyecto, puedes ejecutar:

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "JabbuStore - CS2 Skin Trading",
     short_name: "JabbuStore",
     description: "Trade your CS2 skins quickly and securely with JabbuStore. Instant skin marketplace.",
-    start_url: "/en",
+    start_url: "/",
     display: "standalone",
     background_color: "#030108",
     theme_color: "#d946ef",

@@ -15,9 +15,9 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
     setLocale(nextLocale);
     const localizedPath = withLocalePath(pathname || "/", nextLocale);
     const query = window.location.search.replace(/^\?/, "");
-    router.replace(query ? `${localizedPath}?${query}` : localizedPath, {
-      scroll: false,
-    });
+    const hash = window.location.hash;
+    const destination = query ? `${localizedPath}?${query}${hash}` : `${localizedPath}${hash}`;
+    router.replace(destination, { scroll: false });
   };
 
   return (

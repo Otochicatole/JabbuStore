@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { LOCALES } from "@/shared/i18n/routing";
+import { LANGUAGE_TAG_BY_LOCALE, LOCALES } from "@/shared/i18n/routing";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jabbustore.com";
 
@@ -24,7 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         alternates: {
           languages: Object.fromEntries(
             LOCALES.map((l) => [
-              l,
+              LANGUAGE_TAG_BY_LOCALE[l],
               `${SITE_URL}/${l}${path}`,
             ])
           ),

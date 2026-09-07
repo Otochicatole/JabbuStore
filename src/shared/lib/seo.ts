@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LANGUAGE_TAG_BY_LOCALE, LOCALES } from "@/shared/i18n/routing";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jabbustore.com";
 const SITE_NAME = "JabbuStore";
@@ -24,11 +25,12 @@ export function generateHreflangAlternates(path: string, currentLang: string): M
 
   return {
     canonical: `${SITE_URL}/${currentLang}${normalizedPath === "/" ? "" : normalizedPath}`,
-    languages: {
-      en: `${SITE_URL}/en${normalizedPath === "/" ? "" : normalizedPath}`,
-      es: `${SITE_URL}/es${normalizedPath === "/" ? "" : normalizedPath}`,
-      br: `${SITE_URL}/br${normalizedPath === "/" ? "" : normalizedPath}`,
-    },
+    languages: Object.fromEntries(
+      LOCALES.map((locale) => [
+        LANGUAGE_TAG_BY_LOCALE[locale],
+        `${SITE_URL}/${locale}${normalizedPath === "/" ? "" : normalizedPath}`,
+      ]),
+    ),
   };
 }
 

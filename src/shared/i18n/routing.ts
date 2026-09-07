@@ -2,6 +2,14 @@ import type { Locale } from "./types";
 
 export const LOCALES: Locale[] = ["en", "es", "br"];
 export const DEFAULT_LOCALE: Locale = "en";
+export const LOCALE_PREFERENCE_COOKIE = "jabbustore_locale";
+export const LOCALE_PREFERENCE_MAX_AGE = 60 * 60 * 24 * 365;
+export const LOCALE_REQUEST_HEADER = "x-jabbustore-locale";
+export const LANGUAGE_TAG_BY_LOCALE: Record<Locale, string> = {
+  en: "en",
+  es: "es",
+  br: "pt-BR",
+};
 
 export function isLocale(value: string | null | undefined): value is Locale {
   return value === "en" || value === "es" || value === "br";

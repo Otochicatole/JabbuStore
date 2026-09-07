@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { DEFAULT_LOCALE, isLocale } from "@/shared/i18n/routing";
+import { resolveRequestLocale } from "@/shared/i18n/localeDetection";
+import {
+  isLocale,
+  LOCALE_PREFERENCE_COOKIE,
+  LOCALE_REQUEST_HEADER,
+} from "@/shared/i18n/routing";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
@@ -29,14 +34,24 @@ export function proxy(request: NextRequest) {
       }
     }
 
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(LOCALE_REQUEST_HEADER, firstSegment);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
+  const savedPreference = request.cookies.get(LOCALE_PREFERENCE_COOKIE)?.value;
+  const locale = resolveRequestLocale(savedPreference, request.headers);
   const url = request.nextUrl.clone();
-  url.pathname =
-    pathname === "/" ? `/${DEFAULT_LOCALE}` : `/${DEFAULT_LOCALE}${pathname}`;
+  url.pathname = pathname === "/" ? `/${locale}` : `/${locale}${pathname}`;
   url.search = search;
-  return NextResponse.redirect(url);
+
+  const response = NextResponse.redirect(url);
+  response.headers.set("Cache-Control", "private, no-store");
+  response.headers.set(
+    "Vary",
+    "Cookie, Accept-Language, X-Vercel-IP-Country, CF-IPCountry, CloudFront-Viewer-Country, X-Geo-Country, X-Country-Code, X-Country",
+  );
+  return response;
 }
 
 export const config = {

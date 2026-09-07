@@ -11,7 +11,15 @@ import { en } from "./dictionaries/en";
 import { es } from "./dictionaries/es";
 import { br } from "./dictionaries/br";
 import type { Locale, TranslationParams } from "./types";
-import { DEFAULT_LOCALE, isLocale } from "./routing";
+import {
+  DEFAULT_LOCALE,
+  isLocale,
+  LANGUAGE_TAG_BY_LOCALE,
+} from "./routing";
+import {
+  migrateLegacyLocalePreference,
+  saveLocalePreference,
+} from "./localePreference";
 
 const dictionaries = { en, es, br } as const;
 
@@ -45,11 +53,15 @@ export function I18nProvider({
   const locale = normalizedInitialLocale;
 
   useEffect(() => {
-    document.documentElement.lang = locale;
+    document.documentElement.lang = LANGUAGE_TAG_BY_LOCALE[locale];
   }, [locale]);
 
+  useEffect(() => {
+    migrateLegacyLocalePreference();
+  }, []);
+
   const setLocale = useCallback((nextLocale: Locale) => {
-    void nextLocale;
+    saveLocalePreference(nextLocale);
   }, []);
 
   const t = useCallback(

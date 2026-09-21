@@ -79,32 +79,63 @@ function FilterControls({
   categories,
 }: FilterControlsProps) {
   const { t } = useI18n();
-  const { effectiveCurrency, convertUsd, displayToUsd } = useCurrency();
+  const { effectiveCurrency, effectiveRate, convertUsd, displayToUsd, ready } = useCurrency();
   const [isConditionOpen, setIsConditionOpen] = useState(false);
+
   const toDisplayValue = useCallback((canonicalUsd: string) => {
-    if (!canonicalUsd.trim()) return "";
+    if (!canonicalUsd || !canonicalUsd.trim()) return "";
     const parsed = Number(canonicalUsd);
-    if (!Number.isFinite(parsed)) return "";
-    return String(Number(convertUsd(parsed).toFixed(2)));
-  }, [convertUsd]);
+    if (!Number.isFinite(parsed) || parsed < 0) return "";
+    const converted = convertUsd(parsed);
+    if (effectiveCurrency === "ARS") {
+      const rounded = Math.round(converted);
+      return Math.abs(converted - rounded) < 0.05
+        ? String(rounded)
+        : String(Number(converted.toFixed(2)));
+    }
+    return String(Number(converted.toFixed(2)));
+  }, [convertUsd, effectiveCurrency]);
+
+  const toCanonicalUsd = useCallback((rawDisplay: string): string => {
+    if (!rawDisplay || !rawDisplay.trim()) return "";
+    const sanitized = rawDisplay.trim().replace(",", ".");
+    const parsed = Number(sanitized);
+    if (!Number.isFinite(parsed) || parsed < 0) return "";
+    const usd = displayToUsd(parsed);
+    if (effectiveCurrency === "USD") {
+      return String(Number(usd.toFixed(2)));
+    }
+    return String(Number(usd.toFixed(6)));
+  }, [displayToUsd, effectiveCurrency]);
+
   const [displayMinPrice, setDisplayMinPrice] = useState(() => toDisplayValue(value.minPrice));
   const [displayMaxPrice, setDisplayMaxPrice] = useState(() => toDisplayValue(value.maxPrice));
   const lastMinUsd = useRef(value.minPrice);
   const lastMaxUsd = useRef(value.maxPrice);
   const previousCurrency = useRef(effectiveCurrency);
+  const previousRate = useRef(effectiveRate);
 
   useEffect(() => {
-    const currencyChanged = previousCurrency.current !== effectiveCurrency;
-    if (currencyChanged || value.minPrice !== lastMinUsd.current) {
+    const currencyOrRateChanged =
+      previousCurrency.current !== effectiveCurrency ||
+      previousRate.current !== effectiveRate;
+
+    const minExternalChanged = value.minPrice !== lastMinUsd.current;
+    const maxExternalChanged = value.maxPrice !== lastMaxUsd.current;
+
+    if (currencyOrRateChanged || minExternalChanged) {
       setDisplayMinPrice(toDisplayValue(value.minPrice));
+      lastMinUsd.current = value.minPrice;
     }
-    if (currencyChanged || value.maxPrice !== lastMaxUsd.current) {
+
+    if (currencyOrRateChanged || maxExternalChanged) {
       setDisplayMaxPrice(toDisplayValue(value.maxPrice));
+      lastMaxUsd.current = value.maxPrice;
     }
+
     previousCurrency.current = effectiveCurrency;
-    lastMinUsd.current = value.minPrice;
-    lastMaxUsd.current = value.maxPrice;
-  }, [effectiveCurrency, toDisplayValue, value.maxPrice, value.minPrice]);
+    previousRate.current = effectiveRate;
+  }, [effectiveCurrency, effectiveRate, toDisplayValue, value.maxPrice, value.minPrice]);
 
   const updateDisplayPrice = (
     raw: string,
@@ -118,9 +149,10 @@ function FilterControls({
       onCanonicalChange("");
       return;
     }
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) return;
-    const canonicalUsd = String(Number(displayToUsd(parsed).toFixed(2)));
+    const sanitized = raw.trim().replace(",", ".");
+    const parsed = Number(sanitized);
+    if (!Number.isFinite(parsed) || parsed < 0) return;
+    const canonicalUsd = toCanonicalUsd(raw);
     lastUsd.current = canonicalUsd;
     onCanonicalChange(canonicalUsd);
   };
@@ -160,26 +192,29 @@ function FilterControls({
 
       <div className="border-b border-white/5 pb-5">
         <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">{t("filters.priceRange")} ({effectiveCurrency})</h3>
-        <p className="mb-2 text-[9px] font-mono text-[#84849b]">{t("filters.priceWeaponsOnly")}</p>
         <div className="flex items-center gap-2">
           <input
             type="number"
             inputMode="decimal"
+            step="any"
             min="0"
+            disabled={!ready}
             value={displayMinPrice}
             onChange={(event) => updateDisplayPrice(event.target.value, setDisplayMinPrice, lastMinUsd, onMinPriceChange)}
-            placeholder={t("filters.min")}
-            className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            placeholder={!ready ? "..." : t("filters.min")}
+            className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-40"
           />
           <span className="text-white/20 text-xs font-bold">—</span>
           <input
             type="number"
             inputMode="decimal"
+            step="any"
             min="0"
+            disabled={!ready}
             value={displayMaxPrice}
             onChange={(event) => updateDisplayPrice(event.target.value, setDisplayMaxPrice, lastMaxUsd, onMaxPriceChange)}
-            placeholder={t("filters.max")}
-            className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            placeholder={!ready ? "..." : t("filters.max")}
+            className="w-full border border-white/5 p-2.5 text-xs font-bold text-white outline-none focus:border-accent/50 transition-colors rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-40"
           />
         </div>
       </div>

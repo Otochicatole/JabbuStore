@@ -23,6 +23,7 @@ const DISPLAY_RATES_REFRESH_MS = 5 * 60 * 1000;
 interface CurrencyContextValue {
   selectedCurrency: DisplayCurrency;
   effectiveCurrency: DisplayCurrency;
+  effectiveRate: number;
   rates: DisplayRates | null;
   ready: boolean;
   saving: boolean;
@@ -80,8 +81,15 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const controller = new AbortController();
     const bootstrap = async () => {
-      const stored = window.localStorage.getItem(GUEST_CURRENCY_KEY);
-      const guestCurrency = isDisplayCurrency(stored) ? stored : "USD";
+      try {
+        const stored = window.localStorage.getItem(GUEST_CURRENCY_KEY);
+        if (isDisplayCurrency(stored) && stored !== "USD") {
+          setSelectedCurrency(stored);
+        }
+      } catch {
+        // ignore localStorage read error
+      }
+
       const [accountCurrency] = await Promise.all([
         repositoryRef.current.getUserPreference(controller.signal).catch(() => null),
         loadRates(controller.signal),
@@ -93,6 +101,8 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         setSelectedCurrency(accountCurrency);
       } else {
         setIsAuthenticated(false);
+        const stored = window.localStorage.getItem(GUEST_CURRENCY_KEY);
+        const guestCurrency = isDisplayCurrency(stored) ? stored : "USD";
         setSelectedCurrency(guestCurrency);
       }
       setReady(true);
@@ -147,6 +157,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<CurrencyContextValue>(() => ({
     selectedCurrency,
     effectiveCurrency,
+    effectiveRate,
     rates,
     ready,
     saving,
@@ -157,7 +168,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     displayToUsd,
     formatUsd,
     formatCurrencyAmount,
-  }), [selectedCurrency, effectiveCurrency, rates, ready, saving, conversionUnavailable, isAuthenticated, setCurrency, convertUsd, displayToUsd, formatUsd, formatCurrencyAmount]);
+  }), [selectedCurrency, effectiveCurrency, effectiveRate, rates, ready, saving, conversionUnavailable, isAuthenticated, setCurrency, convertUsd, displayToUsd, formatUsd, formatCurrencyAmount]);
 
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
 }

@@ -145,6 +145,12 @@ function ParticipationDrawsAdminContent() {
   const [isLoadingBots, setIsLoadingBots] = useState(false);
   const [isSavingBots, setIsSavingBots] = useState(false);
 
+  const [manualDraw, setManualDraw] = useState<ParticipationDraw | null>(null);
+  const [manualDrawDetails, setManualDrawDetails] = useState<ParticipationDraw | null>(null);
+  const [manualAssignments, setManualAssignments] = useState<Record<string, string>>({});
+  const [loadingManualDraw, setLoadingManualDraw] = useState(false);
+  const [savingManualDraw, setSavingManualDraw] = useState(false);
+
   const loadDraws = useCallback(async () => {
     try {
       setError(null);
@@ -255,6 +261,89 @@ function ParticipationDrawsAdminContent() {
       alert(err instanceof Error ? err.message : t("common.error"));
     } finally {
       setIsSavingBots(false);
+    }
+  };
+
+  const openManualDrawModal = async (draw: ParticipationDraw) => {
+    setManualDraw(draw);
+    setManualDrawDetails(null);
+    setManualAssignments({});
+    setLoadingManualDraw(true);
+    setError(null);
+
+    try {
+      const response = await fetchWithAuth(
+        `${BACKEND_URL}/participation-draws/admin/${draw.id}`,
+      );
+      if (!response.ok) throw new Error(t("admin.participationDraws.errorLoad"));
+      const data: ParticipationDraw = await response.json();
+      setManualDrawDetails(data);
+
+      const initial: Record<string, string> = {};
+      for (const prize of data.prizes || []) {
+        initial[prize.id] = "";
+      }
+      setManualAssignments(initial);
+    } catch (err: any) {
+      setError(err.message || t("admin.participationDraws.errorLoad"));
+      setManualDraw(null);
+    } finally {
+      setLoadingManualDraw(false);
+    }
+  };
+
+  const closeManualDrawModal = () => {
+    if (savingManualDraw) return;
+    setManualDraw(null);
+    setManualDrawDetails(null);
+    setManualAssignments({});
+  };
+
+  const handleManualDrawSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualDraw || !manualDrawDetails) return;
+
+    const prizes = manualDrawDetails.prizes || [];
+    const assignments = prizes.map((prize) => ({
+      prizeId: prize.id,
+      winnerId: manualAssignments[prize.id] || "",
+    }));
+
+    if (assignments.some((item) => !item.winnerId)) {
+      alert(t("admin.participationDraws.manualDrawIncomplete"));
+      return;
+    }
+
+    const winnerIds = assignments.map((item) => item.winnerId);
+    if (new Set(winnerIds).size !== winnerIds.length) {
+      alert(t("admin.participationDraws.manualDrawDuplicate"));
+      return;
+    }
+
+    setSavingManualDraw(true);
+    setError(null);
+    try {
+      const response = await fetchWithAuth(
+        `${BACKEND_URL}/participation-draws/admin/${manualDraw.id}/draw-manual`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ assignments }),
+        },
+      );
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || t("admin.participationDraws.errorAction"));
+      }
+
+      setManualDraw(null);
+      setManualDrawDetails(null);
+      setManualAssignments({});
+      await loadDraws();
+    } catch (err: any) {
+      setError(err.message || t("admin.participationDraws.errorAction"));
+    } finally {
+      setSavingManualDraw(false);
     }
   };
 
@@ -545,6 +634,7 @@ function ParticipationDrawsAdminContent() {
               t={t}
               onShowEligible={openParticipantsModal}
               onRunDraw={(d) => setConfirmModal({ type: "draw", draw: d as ParticipationDraw })}
+              onManualDraw={(d) => openManualDrawModal(d as ParticipationDraw)}
               onAddBots={openAddBotsModal}
               onEdit={openEditModal}
               onCancel={(d) => setConfirmModal({ type: "cancel", draw: d as ParticipationDraw })}
@@ -942,6 +1032,135 @@ function ParticipationDrawsAdminContent() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {manualDraw && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <form
+            onSubmit={handleManualDrawSubmit}
+            className="w-full max-w-lg bg-[#0f0d1e] border border-white/5 rounded-[3px] p-6 relative shadow-2xl flex flex-col max-h-[85vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeManualDrawModal}
+              className="absolute top-5 right-5 text-white/50 hover:text-white cursor-pointer"
+              disabled={savingManualDraw}
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h2 className="text-base font-black uppercase tracking-tight text-white mb-2 flex items-center gap-2 pr-8">
+              <Trophy className="w-5 h-5 text-accent" />
+              {t("admin.participationDraws.manualDrawTitle")}
+            </h2>
+            <p className="text-xs text-[#84849b] mb-5">
+              {manualDraw.name} · {t("admin.participationDraws.manualDrawHint")}
+            </p>
+
+            <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1">
+              {loadingManualDraw || !manualDrawDetails ? (
+                <div className="flex items-center justify-center gap-2 py-12 text-[#84849b]">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    {t("common.loading")}
+                  </span>
+                </div>
+              ) : (manualDrawDetails.eligibleUsers || []).length === 0 ? (
+                <p className="text-center text-xs font-bold uppercase tracking-wider text-[#84849b] py-10">
+                  {t("admin.participationDraws.noEligible")}
+                </p>
+              ) : (
+                (manualDrawDetails.prizes || []).map((prize) => (
+                  <div
+                    key={prize.id}
+                    className="rounded-[3px] border border-white/5 bg-[#141221] p-4 space-y-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-[3px] border border-white/10 bg-black/30 flex items-center justify-center overflow-hidden shrink-0">
+                        {prize.iconUrl ? (
+                          <img
+                            src={prize.iconUrl}
+                            alt={prize.name}
+                            className="h-full w-full object-contain p-0.5"
+                          />
+                        ) : (
+                          <Package className="h-4 w-4 text-white/20" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
+                          #{prize.position}
+                        </p>
+                        <p className="text-xs font-black text-white truncate">{prize.name}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
+                        {t("admin.participationDraws.winner")}
+                      </label>
+                      <select
+                        value={manualAssignments[prize.id] || ""}
+                        onChange={(e) =>
+                          setManualAssignments((prev) => ({
+                            ...prev,
+                            [prize.id]: e.target.value,
+                          }))
+                        }
+                        required
+                        className="w-full bg-black/40 border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent appearance-none cursor-pointer"
+                      >
+                        <option value="">
+                          {t("admin.participationDraws.manualDrawSelectWinner")}
+                        </option>
+                        {(manualDrawDetails.eligibleUsers || []).map((user) => {
+                          const alreadyPicked = Object.entries(manualAssignments).some(
+                            ([prizeId, winnerId]) =>
+                              prizeId !== prize.id && winnerId === user.id,
+                          );
+                          return (
+                            <option key={user.id} value={user.id} disabled={alreadyPicked}>
+                              {user.name || t("participationDraws.anonymous")}
+                              {user.isBot ? " [BOT]" : ""}
+                              {alreadyPicked
+                                ? ` (${t("admin.participationDraws.manualDrawAlreadyPicked")})`
+                                : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3 border-t border-white/5 pt-4">
+              <button
+                type="button"
+                onClick={closeManualDrawModal}
+                className="px-4 py-2 text-xs font-bold uppercase text-white/70 hover:text-white transition-colors cursor-pointer"
+                disabled={savingManualDraw}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  savingManualDraw ||
+                  loadingManualDraw ||
+                  !manualDrawDetails ||
+                  (manualDrawDetails.eligibleUsers || []).length === 0
+                }
+                className="px-6 py-2 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                {savingManualDraw && <Loader2 className="w-3 h-3 animate-spin" />}
+                {t("admin.participationDraws.manualDrawConfirm")}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

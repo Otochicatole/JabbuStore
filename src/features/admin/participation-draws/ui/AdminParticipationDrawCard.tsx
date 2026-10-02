@@ -11,6 +11,7 @@ import {
   Package,
   Pencil,
   Trash2,
+  Trophy,
   Users,
 } from "lucide-react";
 import { AdminButton, AdminSection } from "@/features/admin/ui/AdminShell";
@@ -65,6 +66,7 @@ interface AdminParticipationDrawCardProps {
   t: (key: string, params?: Record<string, string | number>) => string;
   onShowEligible: (draw: AdminParticipationDrawData) => void;
   onRunDraw: (draw: AdminParticipationDrawData) => void;
+  onManualDraw: (draw: AdminParticipationDrawData) => void;
   onAddBots: (draw: AdminParticipationDrawData) => void;
   onEdit: (draw: AdminParticipationDrawData) => void;
   onCancel: (draw: AdminParticipationDrawData) => void;
@@ -90,6 +92,7 @@ export function AdminParticipationDrawCard({
   t,
   onShowEligible,
   onRunDraw,
+  onManualDraw,
   onAddBots,
   onEdit,
   onCancel,
@@ -274,6 +277,14 @@ export function AdminParticipationDrawCard({
               disabled={draw.eligibleCount < 1 || actionLoading}
             >
               {t("admin.participationDraws.runDraw")}
+            </AdminButton>
+            <AdminButton
+              variant="secondary"
+              icon={Trophy}
+              onClick={() => onManualDraw(draw)}
+              disabled={draw.eligibleCount < 1 || actionLoading}
+            >
+              {t("admin.participationDraws.manualDraw")}
             </AdminButton>
             <AdminButton variant="secondary" icon={Bot} onClick={() => onAddBots(draw)}>
               {t("admin.raffles.bots")}

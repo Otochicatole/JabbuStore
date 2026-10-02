@@ -331,7 +331,7 @@ function FilterControls({
 }
 
 export const FilterSidebar = ({
-  globalMarket = false,
+  globalMarket = true,
   availableCategoryTokens,
 }: {
   globalMarket?: boolean;
@@ -346,9 +346,11 @@ export const FilterSidebar = ({
   const categories = globalMarket
     ? GLOBAL_CATEGORIES.filter(
         (category) =>
-          !availableCategoryTokens || availableCategoryTokens.includes(category.token),
+          !availableCategoryTokens ||
+          availableCategoryTokens.length === 0 ||
+          availableCategoryTokens.includes(category.token),
       )
-    : BASE_CATEGORIES;
+    : GLOBAL_CATEGORIES;
 
   const openMobileFilters = () => {
     setMobileDraft(cloneFilterState(filters.filterState));

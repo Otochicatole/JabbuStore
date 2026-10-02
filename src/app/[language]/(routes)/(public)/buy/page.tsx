@@ -18,7 +18,7 @@ function ExpressPageContent() {
         {/* Sidebar Placeholder */}
         <div className="hidden lg:block w-64 flex-shrink-0" />
         
-        <FilterSidebar />
+        <FilterSidebar globalMarket />
 
         {/* Main Content */}
         <section className="flex flex-col w-full">

@@ -18,6 +18,7 @@ import {
   Gift,
   TicketPlus,
   Star,
+  Trophy,
 } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -151,6 +152,11 @@ export default function AdminLayout({
       name: t("admin.raffles"),
       href: "/admin/panel/raffles",
       icon: Gift,
+    },
+    {
+      name: t("admin.participationDraws"),
+      href: "/admin/panel/participation-draws",
+      icon: Trophy,
     },
     {
       name: t("admin.rafflePurchases"),

@@ -24,6 +24,7 @@ const NAV_LINKS = [
   { labelKey: "nav.market", path: "/market" },
   { labelKey: "nav.sell", path: "/sell" },
   { labelKey: "nav.raffles", path: "/raffles" },
+  { labelKey: "nav.participationDraws", path: "/participation-draws" },
 ];
 
 interface UserProfile {

@@ -13,6 +13,7 @@ import { NotificationProvider } from "@/features/notifications/context/Notificat
 import { ProfileCompletionModal } from "@/shared/components/ProfileCompletionModal";
 import { DEFAULT_LOCALE, isLocale, stripLocaleFromPathname } from "@/shared/i18n/routing";
 import { ActiveRafflesWidget } from "@/features/raffles/ui/ActiveRafflesWidget";
+import { ActiveParticipationDrawsWidget } from "@/features/participation-draws/ui/ActiveParticipationDrawsWidget";
 import { CurrencyProvider } from "@/features/currency/context/CurrencyContext";
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
@@ -55,6 +56,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
                     <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
                     <ProfileCompletionModal />
                     <ActiveRafflesWidget />
+                    <ActiveParticipationDrawsWidget />
                     {children}
                   </div>
                 </TicketNotificationProvider>

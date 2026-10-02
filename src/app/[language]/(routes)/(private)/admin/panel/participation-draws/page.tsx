@@ -150,6 +150,8 @@ function ParticipationDrawsAdminContent() {
   const [manualAssignments, setManualAssignments] = useState<Record<string, string>>({});
   const [loadingManualDraw, setLoadingManualDraw] = useState(false);
   const [savingManualDraw, setSavingManualDraw] = useState(false);
+  const [pickingPrizeId, setPickingPrizeId] = useState<string | null>(null);
+  const [winnerSearch, setWinnerSearch] = useState("");
 
   const loadDraws = useCallback(async () => {
     try {
@@ -268,6 +270,8 @@ function ParticipationDrawsAdminContent() {
     setManualDraw(draw);
     setManualDrawDetails(null);
     setManualAssignments({});
+    setPickingPrizeId(null);
+    setWinnerSearch("");
     setLoadingManualDraw(true);
     setError(null);
 
@@ -297,7 +301,49 @@ function ParticipationDrawsAdminContent() {
     setManualDraw(null);
     setManualDrawDetails(null);
     setManualAssignments({});
+    setPickingPrizeId(null);
+    setWinnerSearch("");
   };
+
+  const openWinnerPicker = (prizeId: string) => {
+    setPickingPrizeId(prizeId);
+    setWinnerSearch("");
+  };
+
+  const closeWinnerPicker = () => {
+    setPickingPrizeId(null);
+    setWinnerSearch("");
+  };
+
+  const selectManualWinner = (userId: string) => {
+    if (!pickingPrizeId) return;
+    setManualAssignments((prev) => ({
+      ...prev,
+      [pickingPrizeId]: userId,
+    }));
+    closeWinnerPicker();
+  };
+
+  const clearManualWinner = (prizeId: string) => {
+    setManualAssignments((prev) => ({
+      ...prev,
+      [prizeId]: "",
+    }));
+  };
+
+  const getEligibleUserById = (userId: string | undefined) =>
+    (manualDrawDetails?.eligibleUsers || []).find((user) => user.id === userId);
+
+  const filteredManualParticipants = useMemo(() => {
+    const users = manualDrawDetails?.eligibleUsers || [];
+    const query = winnerSearch.trim().toLowerCase();
+    if (!query) return users;
+    return users.filter((user) => {
+      const name = (user.name || "").toLowerCase();
+      const botLabel = user.isBot ? "bot" : "";
+      return name.includes(query) || botLabel.includes(query) || user.id.toLowerCase().includes(query);
+    });
+  }, [manualDrawDetails?.eligibleUsers, winnerSearch]);
 
   const handleManualDrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -339,6 +385,8 @@ function ParticipationDrawsAdminContent() {
       setManualDraw(null);
       setManualDrawDetails(null);
       setManualAssignments({});
+      setPickingPrizeId(null);
+      setWinnerSearch("");
       await loadDraws();
     } catch (err: any) {
       setError(err.message || t("admin.participationDraws.errorAction"));
@@ -1101,36 +1149,61 @@ function ParticipationDrawsAdminContent() {
                       <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
                         {t("admin.participationDraws.winner")}
                       </label>
-                      <select
-                        value={manualAssignments[prize.id] || ""}
-                        onChange={(e) =>
-                          setManualAssignments((prev) => ({
-                            ...prev,
-                            [prize.id]: e.target.value,
-                          }))
-                        }
-                        required
-                        className="w-full bg-black/40 border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent appearance-none cursor-pointer"
-                      >
-                        <option value="">
-                          {t("admin.participationDraws.manualDrawSelectWinner")}
-                        </option>
-                        {(manualDrawDetails.eligibleUsers || []).map((user) => {
-                          const alreadyPicked = Object.entries(manualAssignments).some(
-                            ([prizeId, winnerId]) =>
-                              prizeId !== prize.id && winnerId === user.id,
-                          );
-                          return (
-                            <option key={user.id} value={user.id} disabled={alreadyPicked}>
-                              {user.name || t("participationDraws.anonymous")}
-                              {user.isBot ? " [BOT]" : ""}
-                              {alreadyPicked
-                                ? ` (${t("admin.participationDraws.manualDrawAlreadyPicked")})`
-                                : ""}
-                            </option>
-                          );
-                        })}
-                      </select>
+                      {(() => {
+                        const selected = getEligibleUserById(manualAssignments[prize.id]);
+                        return selected ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openWinnerPicker(prize.id)}
+                              className="flex-1 flex items-center gap-3 bg-black/40 border border-accent/40 hover:border-accent rounded-[3px] px-3 py-2.5 text-left transition-colors cursor-pointer"
+                            >
+                              {selected.avatar ? (
+                                <img
+                                  src={selected.avatar}
+                                  alt=""
+                                  className="h-8 w-8 rounded-full border border-white/10 shrink-0"
+                                />
+                              ) : (
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[10px] font-black shrink-0">
+                                  ?
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-black text-white truncate">
+                                  {selected.name || t("participationDraws.anonymous")}
+                                </p>
+                                <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider">
+                                  {selected.isBot
+                                    ? "BOT"
+                                    : t("admin.participationDraws.rafflesPlayed", {
+                                        count: selected.raffleCount,
+                                      })}
+                                </p>
+                              </div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => clearManualWinner(prize.id)}
+                              className="h-10 w-10 shrink-0 rounded-[3px] border border-white/5 bg-white/5 text-[#84849b] hover:text-white hover:bg-white/10 cursor-pointer"
+                              title={t("common.cancel")}
+                            >
+                              <X className="h-4 w-4 mx-auto" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openWinnerPicker(prize.id)}
+                            className="w-full flex items-center justify-between gap-3 bg-black/40 border border-white/5 hover:border-accent rounded-[3px] px-4 py-3 text-xs text-[#84849b] hover:text-white transition-colors cursor-pointer"
+                          >
+                            <span className="font-bold uppercase tracking-wider">
+                              {t("admin.participationDraws.manualDrawSelectWinner")}
+                            </span>
+                            <Users className="h-4 w-4 shrink-0" />
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))
@@ -1161,6 +1234,121 @@ function ParticipationDrawsAdminContent() {
               </button>
             </div>
           </form>
+
+          {pickingPrizeId && manualDrawDetails && (
+            <div
+              className="absolute inset-0 z-[150] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+              onClick={closeWinnerPicker}
+            >
+              <div
+                className="w-full max-w-md bg-[#0f0d1e] border border-white/10 rounded-[3px] shadow-2xl flex flex-col max-h-[80vh]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b border-white/5 px-5 py-4 shrink-0">
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-white truncate">
+                      {t("admin.participationDraws.manualDrawPickerTitle")}
+                    </h3>
+                    <p className="mt-1 text-[11px] font-bold text-[#84849b]">
+                      {(manualDrawDetails.eligibleUsers || []).length}{" "}
+                      {t("admin.participationDraws.eligible").toLowerCase()}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeWinnerPicker}
+                    className="rounded-full p-2 text-[#84849b] hover:bg-white/5 hover:text-white cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="px-5 pt-4 shrink-0">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-white/30 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={winnerSearch}
+                      onChange={(e) => setWinnerSearch(e.target.value)}
+                      placeholder={t("admin.participationDraws.manualDrawSearchPlaceholder")}
+                      autoFocus
+                      className="w-full bg-[#141221] border border-white/5 rounded-[3px] pl-10 pr-4 py-3 text-xs text-white placeholder:text-[#84849b] focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-2">
+                  {filteredManualParticipants.length === 0 ? (
+                    <p className="text-center text-xs font-bold uppercase tracking-wider text-[#84849b] py-10">
+                      {t("admin.participationDraws.manualDrawNoResults")}
+                    </p>
+                  ) : (
+                    filteredManualParticipants.map((user) => {
+                      const alreadyPicked = Object.entries(manualAssignments).some(
+                        ([prizeId, winnerId]) =>
+                          prizeId !== pickingPrizeId && winnerId === user.id,
+                      );
+                      const isSelected = manualAssignments[pickingPrizeId] === user.id;
+
+                      return (
+                        <button
+                          key={user.id}
+                          type="button"
+                          disabled={alreadyPicked}
+                          onClick={() => selectManualWinner(user.id)}
+                          className={`w-full flex items-center justify-between gap-3 rounded-[3px] border px-3 py-2.5 text-left transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                            isSelected
+                              ? "border-accent/50 bg-accent/10"
+                              : "border-white/5 bg-[#141221] hover:border-white/15 hover:bg-white/5"
+                          }`}
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt=""
+                                className="h-9 w-9 rounded-full border border-white/10 shrink-0"
+                              />
+                            ) : (
+                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-[10px] font-black shrink-0">
+                                ?
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <p className="truncate text-xs font-black text-white">
+                                  {user.name || t("participationDraws.anonymous")}
+                                </p>
+                                {user.isBot && (
+                                  <span className="rounded-[3px] border border-blue-500/20 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-300 shrink-0">
+                                    BOT
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider mt-0.5">
+                                {alreadyPicked
+                                  ? t("admin.participationDraws.manualDrawAlreadyPicked")
+                                  : user.isBot
+                                    ? `${user.chances || 1} chances`
+                                    : t("admin.participationDraws.rafflesPlayed", {
+                                        count: user.raffleCount,
+                                      })}
+                              </p>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="text-[9px] font-black uppercase tracking-wider text-accent shrink-0">
+                              {t("admin.participationDraws.selected")}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

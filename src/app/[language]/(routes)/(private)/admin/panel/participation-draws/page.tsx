@@ -13,6 +13,7 @@ import {
   Ban,
   Package,
   Search,
+  Bot,
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -61,6 +62,14 @@ interface EligibleUser {
   name: string | null;
   avatar: string | null;
   raffleCount: number;
+  isBot?: boolean;
+  chances?: number;
+}
+
+interface FakeBot {
+  id: string;
+  name: string | null;
+  avatar: string | null;
 }
 
 interface ParticipationDraw {
@@ -132,6 +141,17 @@ function ParticipationDrawsAdminContent() {
   } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
+  const [botsDraw, setBotsDraw] = useState<ParticipationDraw | null>(null);
+  const [botMode, setBotMode] = useState<"new" | "existing">("new");
+  const [formBotName, setFormBotName] = useState("");
+  const [formBotAvatar, setFormBotAvatar] = useState("");
+  const [formBotAvatarFile, setFormBotAvatarFile] = useState<File | null>(null);
+  const [formBotId, setFormBotId] = useState("");
+  const [botChances, setBotChances] = useState("10");
+  const [existingBots, setExistingBots] = useState<FakeBot[]>([]);
+  const [isLoadingBots, setIsLoadingBots] = useState(false);
+  const [isSavingBots, setIsSavingBots] = useState(false);
+
   const loadDraws = useCallback(async () => {
     try {
       setError(null);
@@ -149,6 +169,101 @@ function ParticipationDrawsAdminContent() {
   useEffect(() => {
     loadDraws();
   }, [loadDraws]);
+
+  useEffect(() => {
+    if (!botsDraw) return;
+    let cancelled = false;
+    const loadBots = async () => {
+      setIsLoadingBots(true);
+      try {
+        const res = await fetchWithAuth(`${BACKEND_URL}/raffles/admin/bots`);
+        if (!res.ok) throw new Error(t("common.error"));
+        const data = await res.json();
+        if (!cancelled) {
+          setExistingBots(data || []);
+          if (data?.length && !formBotId) {
+            setFormBotId(data[0].id);
+          }
+        }
+      } catch {
+        if (!cancelled) setExistingBots([]);
+      } finally {
+        if (!cancelled) setIsLoadingBots(false);
+      }
+    };
+    loadBots();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [botsDraw, t]);
+
+  const openAddBotsModal = (draw: ParticipationDraw) => {
+    setBotsDraw(draw);
+    setBotMode("new");
+    setFormBotName("");
+    setFormBotAvatar("");
+    setFormBotAvatarFile(null);
+    setFormBotId("");
+    setBotChances("10");
+  };
+
+  const closeAddBotsModal = () => {
+    if (isSavingBots) return;
+    setBotsDraw(null);
+  };
+
+  const handleAddBots = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!botsDraw) return;
+    if (!botChances || Number(botChances) <= 0) {
+      alert("Por favor ingresa una cantidad válida de chances.");
+      return;
+    }
+    if (botMode === "new" && !formBotName.trim()) {
+      alert("El nombre del bot es requerido.");
+      return;
+    }
+    if (botMode === "existing" && !formBotId) {
+      alert("Por favor selecciona un bot existente.");
+      return;
+    }
+
+    setIsSavingBots(true);
+    try {
+      const formData = new FormData();
+      formData.append("mode", botMode);
+      formData.append("tickets", String(botChances));
+      if (botMode === "new") {
+        if (formBotName) formData.append("name", formBotName);
+        if (formBotAvatarFile) {
+          formData.append("avatarFile", formBotAvatarFile);
+        } else if (formBotAvatar) {
+          formData.append("avatar", formBotAvatar);
+        }
+      } else if (formBotId) {
+        formData.append("botId", formBotId);
+      }
+
+      const res = await fetchWithAuth(
+        `${BACKEND_URL}/participation-draws/admin/${botsDraw.id}/fake-participants`,
+        { method: "POST", body: formData },
+      );
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || t("common.error"));
+
+      setBotsDraw(null);
+      setFormBotName("");
+      setFormBotAvatar("");
+      setFormBotAvatarFile(null);
+      setBotChances("10");
+      await loadDraws();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : t("common.error"));
+    } finally {
+      setIsSavingBots(false);
+    }
+  };
 
   const loadCatalog = async () => {
     setLoadingCatalog(true);
@@ -608,6 +723,13 @@ function ParticipationDrawsAdminContent() {
                           {t("admin.participationDraws.runDraw")}
                         </AdminButton>
                         <AdminButton
+                          variant="secondary"
+                          icon={Bot}
+                          onClick={() => openAddBotsModal(draw)}
+                        >
+                          {t("admin.raffles.bots")}
+                        </AdminButton>
+                        <AdminButton
                           variant="ghost"
                           icon={Pencil}
                           onClick={() => openEditModal(draw)}
@@ -1004,6 +1126,11 @@ function ParticipationDrawsAdminContent() {
                           <span className="truncate text-xs font-black text-white">
                             {user.name || t("participationDraws.anonymous")}
                           </span>
+                          {user.isBot && (
+                            <span className="rounded-[3px] border border-blue-500/20 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-300">
+                              BOT
+                            </span>
+                          )}
                           {won && (
                             <span className="rounded-[3px] border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-300">
                               {t("admin.participationDraws.winner")}
@@ -1011,9 +1138,11 @@ function ParticipationDrawsAdminContent() {
                           )}
                         </div>
                         <span className="shrink-0 text-[11px] font-black text-accent">
-                          {t("admin.participationDraws.rafflesPlayed", {
-                            count: user.raffleCount,
-                          })}
+                          {user.isBot
+                            ? `${user.chances || 1} chances`
+                            : t("admin.participationDraws.rafflesPlayed", {
+                                count: user.raffleCount,
+                              })}
                         </span>
                       </div>
                     );
@@ -1022,6 +1151,182 @@ function ParticipationDrawsAdminContent() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {botsDraw && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <form
+            onSubmit={handleAddBots}
+            className="w-full max-w-sm bg-[#0f0d1e] border border-white/5 rounded-[3px] p-6 relative shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeAddBotsModal}
+              className="absolute top-5 right-5 text-white/50 hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h2 className="text-base font-black uppercase tracking-tight text-white mb-6 flex items-center gap-2">
+              <Bot className="w-5 h-5 text-blue-400" />
+              {t("admin.raffles.addBots")}
+            </h2>
+
+            <div className="flex bg-[#141221] p-1 rounded-[3px] border border-white/5 mb-6">
+              <button
+                type="button"
+                onClick={() => setBotMode("new")}
+                className={`flex-1 text-[10px] font-bold uppercase tracking-wider py-2 rounded-[2px] transition-colors cursor-pointer ${
+                  botMode === "new" ? "bg-accent text-white" : "text-[#84849b] hover:text-white"
+                }`}
+              >
+                {t("admin.raffles.createNew")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setBotMode("existing")}
+                className={`flex-1 text-[10px] font-bold uppercase tracking-wider py-2 rounded-[2px] transition-colors cursor-pointer ${
+                  botMode === "existing"
+                    ? "bg-accent text-white"
+                    : "text-[#84849b] hover:text-white"
+                }`}
+              >
+                {t("admin.raffles.existing")}
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {botMode === "new" ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
+                      {t("admin.raffles.userName")}
+                    </label>
+                    <input
+                      type="text"
+                      value={formBotName}
+                      onChange={(e) => setFormBotName(e.target.value)}
+                      placeholder="Ej. SniperGod"
+                      required
+                      className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
+                      {t("admin.raffles.userAvatarOptional")}
+                    </label>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            setFormBotAvatarFile(file);
+                            setFormBotAvatar(URL.createObjectURL(file));
+                          }
+                        }}
+                        className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-2 text-xs text-white focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-[3px] file:border-0 file:text-xs file:font-black file:uppercase file:bg-white/10 file:text-white hover:file:bg-white/20 transition-all cursor-pointer"
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-[#84849b] uppercase font-bold">
+                          {t("admin.raffles.orUseUrl")}
+                        </span>
+                        <input
+                          type="url"
+                          value={formBotAvatarFile ? "" : formBotAvatar}
+                          onChange={(e) => {
+                            setFormBotAvatar(e.target.value);
+                            setFormBotAvatarFile(null);
+                          }}
+                          placeholder="https://..."
+                          className="flex-1 bg-[#141221] border border-white/5 rounded-[3px] px-3 py-2 text-xs text-white focus:outline-none focus:border-accent"
+                        />
+                      </div>
+                    </div>
+                    {formBotAvatar && (
+                      <div className="mt-2 flex items-center gap-3 bg-white/5 p-2 rounded-[3px] border border-white/5">
+                        <img
+                          src={formBotAvatar}
+                          alt="Preview"
+                          className="w-8 h-8 rounded-md object-cover bg-black"
+                        />
+                        <span className="text-xs text-[#84849b]">{t("admin.raffles.preview")}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
+                    {t("admin.raffles.selectBot")}
+                  </label>
+                  {isLoadingBots ? (
+                    <div className="flex items-center gap-2 text-xs text-[#84849b] p-3">
+                      <Loader2 className="w-3 h-3 animate-spin" /> {t("admin.raffles.loadingBots")}
+                    </div>
+                  ) : existingBots.length === 0 ? (
+                    <div className="text-xs text-[#84849b] p-3 border border-white/5 rounded-[3px] bg-[#141221]">
+                      {t("admin.raffles.noBotsCreated")}
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <select
+                        value={formBotId}
+                        onChange={(e) => setFormBotId(e.target.value)}
+                        required
+                        className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent appearance-none cursor-pointer"
+                      >
+                        {existingBots.map((bot) => (
+                          <option key={bot.id} value={bot.id}>
+                            {bot.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                        <div className="w-2 h-2 border-b border-r border-[#84849b] transform rotate-45 mb-1" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
+                  {t("admin.raffles.chancesToBuy")}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={botChances}
+                  onChange={(e) => setBotChances(e.target.value)}
+                  required
+                  className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeAddBotsModal}
+                className="px-4 py-2 text-xs font-bold uppercase text-white/70 hover:text-white transition-colors cursor-pointer"
+                disabled={isSavingBots}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingBots}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                {isSavingBots && <Loader2 className="w-3 h-3 animate-spin" />}
+                {t("admin.raffles.add")}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

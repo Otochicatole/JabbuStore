@@ -51,7 +51,14 @@ interface DrawPrize {
   float: number | null;
   provider: string;
   winnerId?: string | null;
-  winner?: { id: string; name: string | null; avatar: string | null } | null;
+  winner?: {
+    id: string;
+    name: string | null;
+    avatar: string | null;
+    steamId?: string | null;
+    tradeUrl?: string | null;
+    isFake?: boolean;
+  } | null;
 }
 
 interface EligibleUser {

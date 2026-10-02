@@ -14,12 +14,22 @@ import {
   Users,
 } from "lucide-react";
 import { AdminButton, AdminSection } from "@/features/admin/ui/AdminShell";
+import { ParticipationDrawAdminWinnersList } from "@/features/admin/participation-draws/ui/ParticipationDrawAdminWinnersList";
 
 export interface AdminParticipationDrawPrize {
   id: string;
   position: number;
   name: string;
   iconUrl: string | null;
+  winnerId?: string | null;
+  winner?: {
+    id: string;
+    name: string | null;
+    avatar: string | null;
+    steamId?: string | null;
+    tradeUrl?: string | null;
+    isFake?: boolean;
+  } | null;
 }
 
 export interface AdminParticipationDrawWinner {
@@ -27,7 +37,14 @@ export interface AdminParticipationDrawWinner {
   position: number;
   prizeName: string;
   prizeIconUrl: string | null;
-  winner: { id: string; name: string | null; avatar: string | null } | null;
+  winner: {
+    id: string;
+    name: string | null;
+    avatar: string | null;
+    steamId?: string | null;
+    tradeUrl?: string | null;
+    isFake?: boolean;
+  } | null;
 }
 
 export interface AdminParticipationDrawData {
@@ -239,40 +256,6 @@ export function AdminParticipationDrawCard({
         </div>
       </div>
 
-      {(draw.winners || []).length > 0 && (
-        <div className="mt-6 space-y-2">
-          {draw.winners!.map((w) => (
-            <div
-              key={w.prizeId}
-              className="flex items-center gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3"
-            >
-              {w.winner?.avatar ? (
-                <img
-                  src={w.winner.avatar}
-                  alt=""
-                  className="h-8 w-8 rounded-full border border-white/10"
-                />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-black">
-                  ?
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                  #{w.position} · {w.prizeName}
-                </p>
-                <p className="text-sm font-black text-white truncate">
-                  {w.winner?.name || t("participationDraws.anonymous")}
-                </p>
-              </div>
-              {w.prizeIconUrl && (
-                <img src={w.prizeIconUrl} alt="" className="h-8 w-8 object-contain" />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
       <div className="mt-6 pt-5 border-t border-white/[0.05] flex flex-wrap items-center gap-3 bg-black/10 -mx-6 -mb-6 px-6 py-4">
         <AdminButton
           variant="secondary"
@@ -308,6 +291,12 @@ export function AdminParticipationDrawCard({
           <AdminButton variant="danger" icon={Trash2} onClick={() => onDelete(draw)}>
             {t("common.delete")}
           </AdminButton>
+        )}
+
+        {isFinished && (
+          <div className="w-full mt-2 pt-2">
+            <ParticipationDrawAdminWinnersList prizes={draw.prizes} t={t} />
+          </div>
         )}
       </div>
     </AdminSection>

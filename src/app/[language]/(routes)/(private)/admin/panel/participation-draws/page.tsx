@@ -686,11 +686,13 @@ function ParticipationDrawsAdminContent() {
               draw={draw}
               actionLoading={actionLoading}
               t={t}
-              onShowEligible={openParticipantsModal}
+              onShowEligible={(d) => {
+                void openParticipantsModal(d as ParticipationDraw);
+              }}
               onRunDraw={(d) => setConfirmModal({ type: "draw", draw: d as ParticipationDraw })}
               onManualDraw={(d) => openManualDrawModal(d as ParticipationDraw)}
-              onAddBots={openAddBotsModal}
-              onEdit={openEditModal}
+              onAddBots={(d) => openAddBotsModal(d as ParticipationDraw)}
+              onEdit={(d) => openEditModal(d as ParticipationDraw)}
               onCancel={(d) => setConfirmModal({ type: "cancel", draw: d as ParticipationDraw })}
               onDelete={(d) => setConfirmModal({ type: "delete", draw: d as ParticipationDraw })}
             />

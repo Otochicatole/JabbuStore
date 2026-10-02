@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { SkinImage } from "@/shared/components/SkinImage";
 import { Pencil, ExternalLink } from "lucide-react";
 import { StoreItem } from "@/features/admin/domain/types";
@@ -12,6 +12,11 @@ interface InventoryListProps {
   botMap: Record<string, string>;
   onEditPrice: (item: StoreItem) => void;
   onToggleMarketable: (item: StoreItem, marketable: boolean) => void;
+  selectedAssetIds: Set<string>;
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
+  onToggleSelectItem: (assetId: string) => void;
+  onToggleSelectAllVisible: () => void;
   currentPage: number;
   totalPages: number;
   onPageChange: React.Dispatch<React.SetStateAction<number>>;
@@ -56,11 +61,47 @@ function getPageNumbers(currentPage: number, totalPages: number) {
   return pages;
 }
 
+function SelectionCheckbox({
+  checked,
+  indeterminate = false,
+  onChange,
+  ariaLabel,
+}: {
+  checked: boolean;
+  indeterminate?: boolean;
+  onChange: () => void;
+  ariaLabel: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = indeterminate;
+    }
+  }, [indeterminate]);
+
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      aria-label={ariaLabel}
+      className="h-4 w-4 cursor-pointer rounded-[3px] border border-white/20 bg-white/5 accent-accent"
+    />
+  );
+}
+
 export function InventoryList({
   items,
   botMap,
   onEditPrice,
   onToggleMarketable,
+  selectedAssetIds,
+  allVisibleSelected,
+  someVisibleSelected,
+  onToggleSelectItem,
+  onToggleSelectAllVisible,
   currentPage,
   totalPages,
   onPageChange,
@@ -69,12 +110,32 @@ export function InventoryList({
 
   return (
     <div className="space-y-4">
+      <div className="md:hidden flex items-center gap-2 px-1">
+        <SelectionCheckbox
+          checked={allVisibleSelected}
+          indeterminate={someVisibleSelected}
+          onChange={onToggleSelectAllVisible}
+          ariaLabel={t("admin.inventory.selectAll")}
+        />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
+          {t("admin.inventory.selectAll")}
+        </span>
+      </div>
+
       <div className="border border-white/5 rounded-[3px] overflow-hidden">
         {/* Desktop Table View */}
         <div className="overflow-x-auto hidden md:block">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="border-b border-white/5 bg-[#110f1e]/40 text-[#84849b] text-[10px] font-black uppercase tracking-wider font-mono">
+                <th className="py-4 px-3 w-10">
+                  <SelectionCheckbox
+                    checked={allVisibleSelected}
+                    indeterminate={someVisibleSelected}
+                    onChange={onToggleSelectAllVisible}
+                    ariaLabel={t("admin.inventory.selectAll")}
+                  />
+                </th>
                 <th className="py-4 px-5">{t("admin.inventory.skin")}</th>
                 <th className="py-4 px-5">{t("admin.inventory.assetId")}</th>
                 <th className="py-4 px-5">{t("admin.inventory.floatValue")}</th>
@@ -90,12 +151,20 @@ export function InventoryList({
                   rarityColors[item.rarity.toLowerCase()] ||
                   rarityColors.common;
                 const botName = botMap[item.botSteamId] || `Bot (${item.botSteamId.slice(-4)})`;
+                const isSelected = selectedAssetIds.has(item.assetId);
 
                 return (
                   <tr
                     key={item.assetId}
-                    className="hover:bg-white/[0.01] transition-colors"
+                    className={`hover:bg-white/[0.01] transition-colors ${isSelected ? "bg-accent/[0.04]" : ""}`}
                   >
+                    <td className="py-3 px-3">
+                      <SelectionCheckbox
+                        checked={isSelected}
+                        onChange={() => onToggleSelectItem(item.assetId)}
+                        ariaLabel={item.name}
+                      />
+                    </td>
                     <td className="py-3 px-5 flex items-center gap-3">
                       <div
                         className="relative w-12 h-12 rounded-[3px] bg-[#110f1e]/60 border border-white/[0.03] flex items-center justify-center p-1 shrink-0"
@@ -204,13 +273,19 @@ export function InventoryList({
               rarityColors[item.rarity.toLowerCase()] ||
               rarityColors.common;
             const botName = botMap[item.botSteamId] || `Bot (${item.botSteamId.slice(-4)})`;
+            const isSelected = selectedAssetIds.has(item.assetId);
 
             return (
               <div
                 key={item.assetId}
-                className="p-4 flex flex-col gap-3.5 hover:bg-white/[0.01] transition-colors relative"
+                className={`p-4 flex flex-col gap-3.5 hover:bg-white/[0.01] transition-colors relative ${isSelected ? "bg-accent/[0.04]" : ""}`}
               >
                 <div className="flex items-start gap-3">
+                  <SelectionCheckbox
+                    checked={isSelected}
+                    onChange={() => onToggleSelectItem(item.assetId)}
+                    ariaLabel={item.name}
+                  />
                   {/* Image Container with Glow */}
                   <div
                     className="relative w-14 h-14 rounded-[3px] bg-[#110f1e]/60 border border-white/[0.03] flex items-center justify-center p-1 shrink-0"

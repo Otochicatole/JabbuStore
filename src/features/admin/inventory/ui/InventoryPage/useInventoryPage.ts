@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { StoreItem } from "@/features/admin/domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
@@ -22,6 +22,8 @@ export function useInventoryPage(initialItems: StoreItem[] = []) {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [botsList, setBotsList] = useState<BotBasicInfo[]>([]);
+  const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set());
+  const [bulkUpdating, setBulkUpdating] = useState(false);
 
   // Filter States
   const [search, setSearchValue] = useState("");
@@ -38,11 +40,18 @@ export function useInventoryPage(initialItems: StoreItem[] = []) {
   const setSearch = useCallback((value: string) => {
     setSearchValue(value);
     setInventoryPage(1);
+    setSelectedAssetIds(new Set());
   }, []);
 
   const setInventorySortBy = useCallback((value: "price_asc" | "price_desc" | "float_asc" | "float_desc") => {
     setSortBy(value);
     setInventoryPage(1);
+    setSelectedAssetIds(new Set());
+  }, []);
+
+  const handleInventoryPageChange = useCallback((value: SetStateAction<number>) => {
+    setInventoryPage(value);
+    setSelectedAssetIds(new Set());
   }, []);
 
   const fetchStoreItems = useCallback(async () => {
@@ -218,6 +227,102 @@ export function useInventoryPage(initialItems: StoreItem[] = []) {
     }
   };
 
+  const toggleSelectItem = useCallback((assetId: string) => {
+    setSelectedAssetIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(assetId)) {
+        next.delete(assetId);
+      } else {
+        next.add(assetId);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAllVisible = useCallback(() => {
+    setSelectedAssetIds((prev) => {
+      const pageIds = visibleInventoryItems.map((item) => item.assetId);
+      const allSelected = pageIds.length > 0 && pageIds.every((id) => prev.has(id));
+      if (allSelected) {
+        const next = new Set(prev);
+        pageIds.forEach((id) => next.delete(id));
+        return next;
+      }
+      const next = new Set(prev);
+      pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }, [visibleInventoryItems]);
+
+  const selectAllFiltered = useCallback(() => {
+    setSelectedAssetIds(new Set(filteredItems.map((item) => item.assetId)));
+  }, [filteredItems]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedAssetIds(new Set());
+  }, []);
+
+  const handleBulkMarketable = async (marketable: boolean) => {
+    const assetIds = Array.from(selectedAssetIds);
+    if (assetIds.length === 0) return;
+
+    const previousById = new Map(
+      items
+        .filter((item) => selectedAssetIds.has(item.assetId))
+        .map((item) => [item.assetId, item.marketable !== false] as const),
+    );
+
+    try {
+      setBulkUpdating(true);
+      setError(null);
+      setSyncSuccess(null);
+
+      setItems((prev) =>
+        prev.map((item) =>
+          selectedAssetIds.has(item.assetId) ? { ...item, marketable } : item,
+        ),
+      );
+
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/store/items/marketable`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+        body: JSON.stringify({ assetIds, marketable }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || t("admin.inventory.bulkVisibilityError"));
+      }
+
+      setSyncSuccess(
+        t("admin.inventory.bulkVisibilitySuccess", { count: assetIds.length }),
+      );
+      setSelectedAssetIds(new Set());
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("admin.inventory.connectionError"));
+      setItems((prev) =>
+        prev.map((item) => {
+          const previous = previousById.get(item.assetId);
+          return previous === undefined ? item : { ...item, marketable: previous };
+        }),
+      );
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const allVisibleSelected =
+    visibleInventoryItems.length > 0 &&
+    visibleInventoryItems.every((item) => selectedAssetIds.has(item.assetId));
+
+  const someVisibleSelected =
+    visibleInventoryItems.some((item) => selectedAssetIds.has(item.assetId)) &&
+    !allVisibleSelected;
+
   const botMap = useMemo(() => {
     const map: Record<string, string> = {};
     botsList.forEach((b) => {
@@ -238,7 +343,7 @@ export function useInventoryPage(initialItems: StoreItem[] = []) {
     sortBy,
     setSortBy: setInventorySortBy,
     inventoryPage,
-    setInventoryPage,
+    setInventoryPage: handleInventoryPageChange,
     priceModalItem,
     setPriceModalItem,
     stats,
@@ -251,5 +356,16 @@ export function useInventoryPage(initialItems: StoreItem[] = []) {
     triggerSync,
     fetchStoreItems,
     botMap,
+    selectedAssetIds,
+    selectedCount: selectedAssetIds.size,
+    bulkUpdating,
+    allVisibleSelected,
+    someVisibleSelected,
+    filteredCount: filteredItems.length,
+    toggleSelectItem,
+    toggleSelectAllVisible,
+    selectAllFiltered,
+    clearSelection,
+    handleBulkMarketable,
   };
 }

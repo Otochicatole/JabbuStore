@@ -3,6 +3,8 @@
 import React from "react";
 import {
   Database,
+  Eye,
+  EyeOff,
   RefreshCw,
   ShieldAlert,
 } from "lucide-react";
@@ -51,6 +53,17 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
     triggerSync,
     setInventoryPage,
     botMap,
+    selectedAssetIds,
+    selectedCount,
+    bulkUpdating,
+    allVisibleSelected,
+    someVisibleSelected,
+    filteredCount,
+    toggleSelectItem,
+    toggleSelectAllVisible,
+    selectAllFiltered,
+    clearSelection,
+    handleBulkMarketable,
   } = useInventoryPage(initialItems);
 
   return (
@@ -93,6 +106,53 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
           </div>
         </AdminToolbar>
 
+        {selectedCount > 0 && (
+          <div className="flex flex-col gap-3 rounded-[3px] border border-accent/20 bg-accent/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-accent">
+              <span>{t("admin.inventory.selectedCount", { count: selectedCount })}</span>
+              {selectedCount < filteredCount && (
+                <button
+                  type="button"
+                  onClick={selectAllFiltered}
+                  className="underline underline-offset-2 hover:text-white cursor-pointer"
+                >
+                  {t("admin.inventory.selectAll")} ({filteredCount})
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="text-[#84849b] underline underline-offset-2 hover:text-white cursor-pointer"
+              >
+                {t("admin.inventory.clearSelection")}
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <AdminButton
+                type="button"
+                onClick={() => handleBulkMarketable(true)}
+                disabled={bulkUpdating}
+                loading={bulkUpdating}
+                icon={Eye}
+                variant="success"
+              >
+                {t("admin.inventory.setVisible")}
+              </AdminButton>
+              <AdminButton
+                type="button"
+                onClick={() => handleBulkMarketable(false)}
+                disabled={bulkUpdating}
+                loading={bulkUpdating}
+                icon={EyeOff}
+                variant="secondary"
+              >
+                {t("admin.inventory.setHidden")}
+              </AdminButton>
+            </div>
+          </div>
+        )}
+
         {syncSuccess && (
           <AdminAlert tone="success">{syncSuccess}</AdminAlert>
         )}
@@ -116,6 +176,11 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
             botMap={botMap}
             onEditPrice={setPriceModalItem}
             onToggleMarketable={handleToggleMarketable}
+            selectedAssetIds={selectedAssetIds}
+            allVisibleSelected={allVisibleSelected}
+            someVisibleSelected={someVisibleSelected}
+            onToggleSelectItem={toggleSelectItem}
+            onToggleSelectAllVisible={toggleSelectAllVisible}
             currentPage={currentInventoryPage}
             totalPages={totalInventoryPages}
             onPageChange={setInventoryPage}

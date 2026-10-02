@@ -7,10 +7,6 @@ import {
   Trophy,
   Users,
   X,
-  Dices,
-  Pencil,
-  Trash2,
-  Ban,
   Package,
   Search,
   Bot,
@@ -30,6 +26,7 @@ import {
 } from "@/features/admin/ui/AdminShell";
 import { AdminSelect } from "@/shared/components/AdminSelect";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
+import { AdminParticipationDrawCard } from "@/features/admin/participation-draws/ui/AdminParticipationDrawCard";
 
 interface CatalogItem {
   id: string;
@@ -92,17 +89,6 @@ interface ParticipationDraw {
   }[];
   createdAt: string;
   updatedAt: string;
-}
-
-function statusBadge(status: string) {
-  switch (status) {
-    case "OPEN":
-      return "bg-purple-500/10 text-purple-400 border-purple-500/20";
-    case "FINISHED":
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-    default:
-      return "bg-red-500/10 text-red-400 border-red-500/20";
-  }
 }
 
 function ParticipationDrawsAdminContent() {
@@ -489,19 +475,6 @@ function ParticipationDrawsAdminContent() {
     }
   };
 
-  const statusLabel = (status: string) => {
-    switch (status) {
-      case "OPEN":
-        return t("participationDraws.status.open");
-      case "FINISHED":
-        return t("participationDraws.status.finished");
-      case "CANCELLED":
-        return t("participationDraws.status.cancelled");
-      default:
-        return status;
-    }
-  };
-
   if (loading) {
     return (
       <AdminPage>
@@ -556,210 +529,21 @@ function ParticipationDrawsAdminContent() {
           description={t("admin.participationDraws.emptyHint")}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          {filteredDraws.map((draw) => {
-            const primaryPrize = draw.prizes[0];
-
-            return (
-              <AdminSection key={draw.id} padded={false} className="overflow-hidden">
-                <div className="p-4 sm:p-5 space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-black text-white truncate">
-                          {draw.name}
-                        </h3>
-                        <span
-                          className={`inline-flex items-center rounded-[3px] border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${statusBadge(draw.status)}`}
-                        >
-                          {statusLabel(draw.status)}
-                        </span>
-                      </div>
-                      {draw.description && (
-                        <p className="mt-1 text-xs text-[#84849b] line-clamp-2">
-                          {draw.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="h-16 w-16 shrink-0 rounded-[3px] border border-white/10 bg-black/30 overflow-hidden flex items-center justify-center">
-                      {primaryPrize?.iconUrl ? (
-                        <img
-                          src={primaryPrize.iconUrl}
-                          alt={primaryPrize.name}
-                          className="h-full w-full object-contain p-1"
-                        />
-                      ) : (
-                        <Package className="h-6 w-6 text-white/20" />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-[3px] border border-white/5 bg-black/20 p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
-                        {t("admin.participationDraws.prizes")}
-                      </p>
-                      <p className="mt-1 text-sm font-black text-white">
-                        {draw.prizes.length}
-                      </p>
-                    </div>
-                    <div className="rounded-[3px] border border-white/5 bg-black/20 p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
-                        {t("admin.participationDraws.minRaffles")}
-                      </p>
-                      <p className="mt-1 text-sm font-black text-accent">
-                        {draw.minRaffles}
-                      </p>
-                    </div>
-                    <div className="rounded-[3px] border border-white/5 bg-black/20 p-3 col-span-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
-                        {t("admin.participationDraws.drawDate")}
-                      </p>
-                      <p className="mt-1 text-sm font-black text-white">
-                        {new Date(draw.drawDate).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="rounded-[3px] border border-white/5 bg-black/20 p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
-                        {t("admin.participationDraws.eligible")}
-                      </p>
-                      <p className="mt-1 text-sm font-black text-white">
-                        {draw.eligibleCount}
-                      </p>
-                    </div>
-                    <div className="rounded-[3px] border border-white/5 bg-black/20 p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#84849b]">
-                        {t("admin.participationDraws.winner")}
-                      </p>
-                      <p className="mt-1 text-sm font-black text-white truncate">
-                        {draw.winners?.[0]?.winner?.name ||
-                          t("admin.participationDraws.noWinner")}
-                      </p>
-                    </div>
-                  </div>
-
-                  {draw.prizes.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {draw.prizes.slice(0, 4).map((prize) => (
-                        <div
-                          key={prize.id}
-                          className="flex items-center gap-2 rounded-[3px] border border-white/5 bg-black/20 px-2 py-1.5"
-                        >
-                          {prize.iconUrl && (
-                            <img
-                              src={prize.iconUrl}
-                              alt=""
-                              className="h-6 w-6 object-contain"
-                            />
-                          )}
-                          <span className="text-[10px] font-black text-white truncate max-w-[120px]">
-                            #{prize.position} {prize.name}
-                          </span>
-                        </div>
-                      ))}
-                      {draw.prizes.length > 4 && (
-                        <span className="text-[10px] font-bold text-[#84849b] self-center">
-                          +{draw.prizes.length - 4}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {(draw.winners || []).length > 0 && (
-                    <div className="space-y-2">
-                      {draw.winners!.map((w) => (
-                        <div
-                          key={w.prizeId}
-                          className="flex items-center gap-3 rounded-[3px] border border-emerald-500/20 bg-emerald-500/10 p-3"
-                        >
-                          {w.winner?.avatar ? (
-                            <img
-                              src={w.winner.avatar}
-                              alt=""
-                              className="h-8 w-8 rounded-full border border-white/10"
-                            />
-                          ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-black">
-                              ?
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                              #{w.position} · {w.prizeName}
-                            </p>
-                            <p className="text-sm font-black text-white truncate">
-                              {w.winner?.name || t("participationDraws.anonymous")}
-                            </p>
-                          </div>
-                          {w.prizeIconUrl && (
-                            <img
-                              src={w.prizeIconUrl}
-                              alt=""
-                              className="h-8 w-8 object-contain"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-2">
-                    <AdminButton
-                      variant="secondary"
-                      icon={Users}
-                      onClick={() => openParticipantsModal(draw)}
-                    >
-                      {t("admin.participationDraws.showEligible")}
-                    </AdminButton>
-
-                    {draw.status === "OPEN" && (
-                      <>
-                        <AdminButton
-                          variant="primary"
-                          icon={Dices}
-                          onClick={() => setConfirmModal({ type: "draw", draw })}
-                          disabled={draw.eligibleCount < 1 || actionLoading}
-                        >
-                          {t("admin.participationDraws.runDraw")}
-                        </AdminButton>
-                        <AdminButton
-                          variant="secondary"
-                          icon={Bot}
-                          onClick={() => openAddBotsModal(draw)}
-                        >
-                          {t("admin.raffles.bots")}
-                        </AdminButton>
-                        <AdminButton
-                          variant="ghost"
-                          icon={Pencil}
-                          onClick={() => openEditModal(draw)}
-                        >
-                          {t("common.edit")}
-                        </AdminButton>
-                        <AdminButton
-                          variant="danger"
-                          icon={Ban}
-                          onClick={() => setConfirmModal({ type: "cancel", draw })}
-                        >
-                          {t("admin.participationDraws.cancel")}
-                        </AdminButton>
-                      </>
-                    )}
-
-                    {draw.status !== "FINISHED" && (
-                      <AdminButton
-                        variant="danger"
-                        icon={Trash2}
-                        onClick={() => setConfirmModal({ type: "delete", draw })}
-                      >
-                        {t("common.delete")}
-                      </AdminButton>
-                    )}
-                  </div>
-                </div>
-              </AdminSection>
-            );
-          })}
+        <div className="grid grid-cols-1 gap-4">
+          {filteredDraws.map((draw) => (
+            <AdminParticipationDrawCard
+              key={draw.id}
+              draw={draw}
+              actionLoading={actionLoading}
+              t={t}
+              onShowEligible={openParticipantsModal}
+              onRunDraw={(d) => setConfirmModal({ type: "draw", draw: d as ParticipationDraw })}
+              onAddBots={openAddBotsModal}
+              onEdit={openEditModal}
+              onCancel={(d) => setConfirmModal({ type: "cancel", draw: d as ParticipationDraw })}
+              onDelete={(d) => setConfirmModal({ type: "delete", draw: d as ParticipationDraw })}
+            />
+          ))}
         </div>
       )}
 

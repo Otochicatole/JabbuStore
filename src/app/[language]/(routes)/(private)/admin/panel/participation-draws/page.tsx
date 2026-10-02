@@ -59,6 +59,15 @@ interface DrawPrize {
     tradeUrl?: string | null;
     isFake?: boolean;
   } | null;
+  scheduledWinnerId?: string | null;
+  scheduledWinner?: {
+    id: string;
+    name: string | null;
+    avatar: string | null;
+    steamId?: string | null;
+    tradeUrl?: string | null;
+    isFake?: boolean;
+  } | null;
 }
 
 interface EligibleUser {
@@ -285,7 +294,7 @@ function ParticipationDrawsAdminContent() {
 
       const initial: Record<string, string> = {};
       for (const prize of data.prizes || []) {
-        initial[prize.id] = "";
+        initial[prize.id] = prize.scheduledWinnerId || prize.scheduledWinner?.id || "";
       }
       setManualAssignments(initial);
     } catch (err: any) {
@@ -352,15 +361,12 @@ function ParticipationDrawsAdminContent() {
     const prizes = manualDrawDetails.prizes || [];
     const assignments = prizes.map((prize) => ({
       prizeId: prize.id,
-      winnerId: manualAssignments[prize.id] || "",
+      winnerId: manualAssignments[prize.id] || null,
     }));
 
-    if (assignments.some((item) => !item.winnerId)) {
-      alert(t("admin.participationDraws.manualDrawIncomplete"));
-      return;
-    }
-
-    const winnerIds = assignments.map((item) => item.winnerId);
+    const winnerIds = assignments
+      .map((item) => item.winnerId)
+      .filter((id): id is string => Boolean(id));
     if (new Set(winnerIds).size !== winnerIds.length) {
       alert(t("admin.participationDraws.manualDrawDuplicate"));
       return;
@@ -370,7 +376,7 @@ function ParticipationDrawsAdminContent() {
     setError(null);
     try {
       const response = await fetchWithAuth(
-        `${BACKEND_URL}/participation-draws/admin/${manualDraw.id}/draw-manual`,
+        `${BACKEND_URL}/participation-draws/admin/${manualDraw.id}/schedule-winners`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

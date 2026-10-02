@@ -31,6 +31,15 @@ export interface AdminParticipationDrawPrize {
     tradeUrl?: string | null;
     isFake?: boolean;
   } | null;
+  scheduledWinnerId?: string | null;
+  scheduledWinner?: {
+    id: string;
+    name: string | null;
+    avatar: string | null;
+    steamId?: string | null;
+    tradeUrl?: string | null;
+    isFake?: boolean;
+  } | null;
 }
 
 export interface AdminParticipationDrawWinner {
@@ -258,6 +267,46 @@ export function AdminParticipationDrawCard({
           </div>
         </div>
       </div>
+
+      {(draw.prizes.some((prize) => prize.scheduledWinner) && isOpen) && (
+        <div className="mt-6 space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-wider text-amber-300">
+            {t("admin.participationDraws.scheduledWinners")}
+          </p>
+          {draw.prizes
+            .filter((prize) => prize.scheduledWinner)
+            .map((prize) => (
+              <div
+                key={prize.id}
+                className="flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3"
+              >
+                {prize.scheduledWinner?.avatar ? (
+                  <img
+                    src={prize.scheduledWinner.avatar}
+                    alt=""
+                    className="h-8 w-8 rounded-full border border-white/10"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-black">
+                    ?
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                    #{prize.position} · {prize.name}
+                  </p>
+                  <p className="text-sm font-black text-white truncate">
+                    {prize.scheduledWinner?.name || t("participationDraws.anonymous")}
+                    {prize.scheduledWinner?.isFake ? " [BOT]" : ""}
+                  </p>
+                </div>
+                {prize.iconUrl && (
+                  <img src={prize.iconUrl} alt="" className="h-8 w-8 object-contain" />
+                )}
+              </div>
+            ))}
+        </div>
+      )}
 
       <div className="mt-6 pt-5 border-t border-white/[0.05] flex flex-wrap items-center gap-3 bg-black/10 -mx-6 -mb-6 px-6 py-4">
         <AdminButton

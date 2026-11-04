@@ -17,15 +17,20 @@ import { NotificationBell } from "@/features/notifications/ui/NotificationBell";
 import { useUpcomingDraws } from "@/shared/hooks/useUpcomingDraws";
 import { Radio } from "lucide-react";
 import { CurrencySelector } from "@/features/currency/ui/CurrencySelector";
+import { isJabbuMarketEnabled } from "@/shared/lib/features";
 
-const NAV_LINKS = [
+const ALL_NAV_LINKS = [
   { labelKey: "nav.home", path: "/" },
-  { labelKey: "nav.express", path: "/buy" },
+  { labelKey: "nav.express", path: "/buy", requiresJabbuMarket: true },
   { labelKey: "nav.market", path: "/market" },
   { labelKey: "nav.sell", path: "/sell" },
   { labelKey: "nav.raffles", path: "/raffles" },
   { labelKey: "nav.participationDraws", path: "/participation-draws" },
 ];
+
+const NAV_LINKS = ALL_NAV_LINKS.filter(
+  (link) => !link.requiresJabbuMarket || isJabbuMarketEnabled()
+);
 
 interface UserProfile {
   id: string;

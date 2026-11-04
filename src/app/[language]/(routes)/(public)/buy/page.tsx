@@ -1,6 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { isJabbuMarketEnabled } from "@/shared/lib/features";
 import { useSkins } from "@/features/skins/ui/useSkins";
 import { SkinGrid } from "@/features/skins/ui/SkinGrid";
 import { FilterSidebar } from "@/features/skins/ui/FilterSidebar";
@@ -46,6 +49,20 @@ function ExpressPageContent() {
 
 export default function ExpressPage() {
   const { t } = useI18n();
+  const router = useRouter();
+  const localizePath = useLocalizedPath();
+  const jabbuMarketActive = isJabbuMarketEnabled();
+
+  useEffect(() => {
+    if (!jabbuMarketActive) {
+      router.replace(localizePath("/market"));
+    }
+  }, [jabbuMarketActive, router, localizePath]);
+
+  if (!jabbuMarketActive) {
+    return null;
+  }
+
   return (
     <Suspense fallback={
       <div className="flex flex-col items-center justify-center min-h-screen pt-28 text-white font-sans">

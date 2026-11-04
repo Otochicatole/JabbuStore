@@ -7,6 +7,7 @@ import { toValidationId } from "@/features/cart/domain/cart";
 import { useInventory } from "@/features/inventory/context/InventoryContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { isJabbuMarketEnabled } from "@/shared/lib/features";
 import {
   CheckoutItem,
   CheckoutFormData,
@@ -389,7 +390,7 @@ export function useCheckout() {
                     : alertTemplate || `Algunos artículos de tu carrito ya no están disponibles en la tienda y fueron removidos:\n\n${removedNames}`;
 
                   alert(alertMessage);
-                  router.push(localizePath("/buy"));
+                  router.push(localizePath(isJabbuMarketEnabled() ? "/buy" : "/market"));
                   return;
                 }
               }

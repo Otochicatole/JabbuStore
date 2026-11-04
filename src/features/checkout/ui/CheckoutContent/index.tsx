@@ -13,6 +13,7 @@ import { PaymentProcessingOverlay } from "./PaymentProcessingOverlay";
 import { useCheckout } from "./useCheckout";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { isJabbuMarketEnabled } from "@/shared/lib/features";
 
 export function CheckoutContent() {
   const { t } = useI18n();
@@ -63,7 +64,7 @@ export function CheckoutContent() {
           </h2>
           <p className="text-sm text-[#84849b] mb-6">{error}</p>
           <Link
-            href={localizePath(checkoutType === "sell" ? "/sell" : checkoutType === "raffle" ? "/raffles" : "/buy")}
+            href={localizePath(checkoutType === "sell" ? "/sell" : checkoutType === "raffle" ? "/raffles" : isJabbuMarketEnabled() ? "/buy" : "/market")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent/90 text-xs font-black uppercase text-white tracking-widest transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> {t("checkout.backToStore")}
@@ -94,7 +95,7 @@ export function CheckoutContent() {
       {/* Header */}
       <div className="mb-10">
         <Link
-          href={localizePath(checkoutType === "sell" ? "/sell" : checkoutType === "raffle" ? "/raffles" : "/buy")}
+          href={localizePath(checkoutType === "sell" ? "/sell" : checkoutType === "raffle" ? "/raffles" : isJabbuMarketEnabled() ? "/buy" : "/market")}
           className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-white transition-colors uppercase tracking-widest mb-4"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> {t("common.back")}{" "}

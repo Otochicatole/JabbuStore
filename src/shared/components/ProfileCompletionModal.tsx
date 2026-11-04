@@ -8,6 +8,7 @@ import { AlertCircle, ArrowRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { stripLocaleFromPathname } from "@/shared/i18n/routing";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { isJabbuMarketEnabled } from "@/shared/lib/features";
 
 interface UserProfile {
   id: string;
@@ -99,7 +100,7 @@ export function ProfileCompletionModal() {
     if (normalizedPathname === "/checkout") {
       const params = new URLSearchParams(window.location.search);
       const type = params.get("type");
-      router.push(localizePath(type === "sell" ? "/sell" : "/buy"));
+      router.push(localizePath(type === "sell" ? "/sell" : isJabbuMarketEnabled() ? "/buy" : "/market"));
     } else {
       dismissedThisPageLoadRef.current = true;
       setIsOpen(false);

@@ -20,6 +20,7 @@ import { HomeReviewsSection } from "@/features/reviews/ui/HomeReviewsSection";
 import { HomeSponsorsSection } from "@/features/sponsors/ui/HomeSponsorsSection";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { isJabbuMarketEnabled } from "@/shared/lib/features";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const initialStats = [
@@ -133,7 +134,7 @@ export default function Home() {
 
             {/* Unified CTA Buttons */}
             <motion.div variants={fadeIn} className="mt-12 flex flex-col sm:flex-row gap-5 w-full sm:w-auto relative z-20">
-              <Link href={localizePath("/buy")} className="w-full sm:w-auto group">
+              <Link href={localizePath(isJabbuMarketEnabled() ? "/buy" : "/market")} className="w-full sm:w-auto group">
                 <Button className="w-full sm:w-64 h-16 bg-gradient-to-r from-accent to-fuchsia-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:shadow-[0_0_50px_rgba(217,70,239,0.5)] hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 border border-white/10 relative overflow-hidden">
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"></div>
                   <ShoppingBag className="w-5 h-5 shrink-0 relative z-10" />
@@ -471,7 +472,7 @@ export default function Home() {
               </p>
 
               <div className="flex justify-center">
-                <Link href={localizePath("/buy")}>
+                <Link href={localizePath(isJabbuMarketEnabled() ? "/buy" : "/market")}>
                   <Button className="h-16 px-12 bg-gradient-to-r from-accent to-blue-600 text-white font-black uppercase tracking-[0.2em] text-sm rounded-2xl shadow-[0_0_30px_rgba(217,70,239,0.4)] hover:shadow-[0_0_60px_rgba(217,70,239,0.6)] hover:scale-[1.02] active:scale-95 transition-all duration-500 group overflow-hidden relative border border-white/10">
                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <span className="relative z-10 flex items-center gap-3">

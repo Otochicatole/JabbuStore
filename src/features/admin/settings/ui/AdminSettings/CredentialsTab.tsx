@@ -18,7 +18,7 @@ export function CredentialsTab() {
   const [secretMessage, setSecretMessage] = useState<string | null>(null);
   const [secretError, setSecretError] = useState<string | null>(null);
   const [savingSecretKey, setSavingSecretKey] = useState<string | null>(null);
-  const [testingResend, setTestingResend] = useState(false);
+  const [testingSendGrid, setTestingSendGrid] = useState(false);
 
   const fetchSecretsStatus = async () => {
     try {
@@ -133,12 +133,12 @@ export function CredentialsTab() {
     }
   };
 
-  const handleTestResendEmail = async () => {
-    setTestingResend(true);
+  const handleTestSendGridEmail = async () => {
+    setTestingSendGrid(true);
     setSecretError(null);
     setSecretMessage(null);
     try {
-      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/resend/test`, {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/sendgrid/test`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -148,28 +148,28 @@ export function CredentialsTab() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) {
-        throw new Error(data.error || t("admin.settings.resendTestError"));
+        throw new Error(data.error || t("admin.settings.sendgridTestError"));
       }
       setSecretMessage(
-        t("admin.settings.resendTestSuccess", {
+        t("admin.settings.sendgridTestSuccess", {
           to: Array.isArray(data.to) ? data.to.join(", ") : "",
           from: data.from || "",
         }),
       );
     } catch (err: unknown) {
-      setSecretError(getErrorMessage(err, t("admin.settings.resendTestError")));
+      setSecretError(getErrorMessage(err, t("admin.settings.sendgridTestError")));
     } finally {
-      setTestingResend(false);
+      setTestingSendGrid(false);
     }
   };
 
-  const resendFromStatus = secretStatuses.find((item) => item.key === "RESEND_FROM");
-  const resendToStatus = secretStatuses.find((item) => item.key === "RESEND_TO");
-  const resendTokenStatus = secretStatuses.find((item) => item.key === "RESEND_TOKEN");
-  const isResendReady =
-    Boolean(resendTokenStatus?.configured) &&
-    Boolean(resendFromStatus?.configured) &&
-    Boolean(resendToStatus?.configured);
+  const sendgridFromStatus = secretStatuses.find((item) => item.key === "SENDGRID_FROM");
+  const sendgridToStatus = secretStatuses.find((item) => item.key === "SENDGRID_TO");
+  const sendgridApiKeyStatus = secretStatuses.find((item) => item.key === "SENDGRID_API_KEY");
+  const isSendGridReady =
+    Boolean(sendgridApiKeyStatus?.configured) &&
+    Boolean(sendgridFromStatus?.configured) &&
+    Boolean(sendgridToStatus?.configured);
 
   return (
     <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
@@ -183,20 +183,20 @@ export function CredentialsTab() {
           <div className="space-y-1">
             <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
               <Mail className="w-3.5 h-3.5 text-accent" />
-              {t("admin.settings.resendEmailSectionTitle")}
+              {t("admin.settings.sendgridEmailSectionTitle")}
             </h3>
             <p className="text-[11px] text-[#84849b] leading-relaxed">
-              {t("admin.settings.resendEmailSectionHelp")}
+              {t("admin.settings.sendgridEmailSectionHelp")}
             </p>
           </div>
           <button
             type="button"
-            onClick={() => void handleTestResendEmail()}
-            disabled={testingResend || !isResendReady}
+            onClick={() => void handleTestSendGridEmail()}
+            disabled={testingSendGrid || !isSendGridReady}
             className="shrink-0 px-4 py-2.5 bg-accent text-white rounded-[3px] text-[10px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
             <Mail className="w-3.5 h-3.5" />
-            {testingResend ? t("admin.settings.resendTesting") : t("admin.settings.resendTestButton")}
+            {testingSendGrid ? t("admin.settings.sendgridTesting") : t("admin.settings.sendgridTestButton")}
           </button>
         </div>
 
@@ -237,14 +237,14 @@ export function CredentialsTab() {
                     <h3 className="text-xs font-black uppercase tracking-wider text-white">
                       {label}
                     </h3>
-                    {key === "RESEND_FROM" && (
+                    {key === "SENDGRID_FROM" && (
                       <p className="text-[10px] text-[#84849b]">
-                        {t("admin.settings.resendHintFrom")}
+                        {t("admin.settings.sendgridHintFrom")}
                       </p>
                     )}
-                    {key === "RESEND_TO" && (
+                    {key === "SENDGRID_TO" && (
                       <p className="text-[10px] text-[#84849b]">
-                        {t("admin.settings.resendHintTo")}
+                        {t("admin.settings.sendgridHintTo")}
                       </p>
                     )}
                     <p className="text-[10px] text-[#84849b] font-mono">

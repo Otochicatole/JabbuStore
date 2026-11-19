@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Mail, Trash2 } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
 import type { SecretStatus } from "@/features/admin/types";
@@ -18,6 +18,7 @@ export function CredentialsTab() {
   const [secretMessage, setSecretMessage] = useState<string | null>(null);
   const [secretError, setSecretError] = useState<string | null>(null);
   const [savingSecretKey, setSavingSecretKey] = useState<string | null>(null);
+  const [testingResend, setTestingResend] = useState(false);
 
   const fetchSecretsStatus = async () => {
     try {
@@ -132,6 +133,44 @@ export function CredentialsTab() {
     }
   };
 
+  const handleTestResendEmail = async () => {
+    setTestingResend(true);
+    setSecretError(null);
+    setSecretMessage(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/marketplace/settings/resend/test`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || t("admin.settings.resendTestError"));
+      }
+      setSecretMessage(
+        t("admin.settings.resendTestSuccess", {
+          to: Array.isArray(data.to) ? data.to.join(", ") : "",
+          from: data.from || "",
+        }),
+      );
+    } catch (err: unknown) {
+      setSecretError(getErrorMessage(err, t("admin.settings.resendTestError")));
+    } finally {
+      setTestingResend(false);
+    }
+  };
+
+  const resendFromStatus = secretStatuses.find((item) => item.key === "RESEND_FROM");
+  const resendToStatus = secretStatuses.find((item) => item.key === "RESEND_TO");
+  const resendTokenStatus = secretStatuses.find((item) => item.key === "RESEND_TOKEN");
+  const isResendReady =
+    Boolean(resendTokenStatus?.configured) &&
+    Boolean(resendFromStatus?.configured) &&
+    Boolean(resendToStatus?.configured);
+
   return (
     <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
       <SectionHeader
@@ -140,6 +179,27 @@ export function CredentialsTab() {
       />
 
       <div className="max-w-4xl space-y-5">
+        <div className="p-4 bg-accent/5 border border-accent/20 rounded-[3px] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+              <Mail className="w-3.5 h-3.5 text-accent" />
+              {t("admin.settings.resendEmailSectionTitle")}
+            </h3>
+            <p className="text-[11px] text-[#84849b] leading-relaxed">
+              {t("admin.settings.resendEmailSectionHelp")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleTestResendEmail()}
+            disabled={testingResend || !isResendReady}
+            className="shrink-0 px-4 py-2.5 bg-accent text-white rounded-[3px] text-[10px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            {testingResend ? t("admin.settings.resendTesting") : t("admin.settings.resendTestButton")}
+          </button>
+        </div>
+
         <div className="space-y-1.5">
           <FieldLabel>{t("admin.settings.masterPassword")}</FieldLabel>
           <StyledInput
@@ -177,6 +237,16 @@ export function CredentialsTab() {
                     <h3 className="text-xs font-black uppercase tracking-wider text-white">
                       {label}
                     </h3>
+                    {key === "RESEND_FROM" && (
+                      <p className="text-[10px] text-[#84849b]">
+                        {t("admin.settings.resendHintFrom")}
+                      </p>
+                    )}
+                    {key === "RESEND_TO" && (
+                      <p className="text-[10px] text-[#84849b]">
+                        {t("admin.settings.resendHintTo")}
+                      </p>
+                    )}
                     <p className="text-[10px] text-[#84849b] font-mono">
                       {status?.configured
                         ? `${t("admin.settings.configured")} (${status.source})${status.last4 ? ` · ${status.last4}` : ""}`

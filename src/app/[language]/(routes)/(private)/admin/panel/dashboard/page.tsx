@@ -16,11 +16,22 @@ export default async function AdminLegacyPanelRedirectPage({
   searchParams,
 }: {
   params: Promise<{ language: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { language } = await params;
-  const { tab } = await searchParams;
-  const route = tab ? TAB_ROUTES[tab] : null;
+  const { tab, ...rest } = await searchParams;
+  const tabValue = Array.isArray(tab) ? tab[0] : tab;
+  const route = tabValue ? TAB_ROUTES[tabValue] : null;
+  const query = new URLSearchParams();
 
-  redirect(`/${language}/admin/panel/${route || "inventory"}`);
+  for (const [key, value] of Object.entries(rest)) {
+    if (typeof value === "string") {
+      query.set(key, value);
+    } else if (Array.isArray(value)) {
+      value.forEach((item) => query.append(key, item));
+    }
+  }
+
+  const queryString = query.toString();
+  redirect(`/${language}/admin/panel/${route || "inventory"}${queryString ? `?${queryString}` : ""}`);
 }

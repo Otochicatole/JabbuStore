@@ -99,13 +99,71 @@
     --secondary: #2f2846;
     --border: rgba(255, 255, 255, 0.05);
     --foreground: #ffffff;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 body {
     background: var(--background);
     color: var(--foreground);
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
     overflow-x: hidden;
+}
+
+::selection {
+    background: #d946ef;
+    color: #090612;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    @supports ((animation-timeline: view()) and (animation-range: entry)) {
+        @keyframes home-scroll-settle {
+            entry 0% {
+                opacity: 0.72;
+                transform: translateY(18px);
+            }
+            entry 100%,
+            exit 0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .home-scroll-settle {
+            animation: home-scroll-settle auto linear both;
+            animation-timeline: view(block);
+            animation-range: entry 0% entry 35%;
+        }
+    }
+
+    @keyframes home-hero-float {
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-7px);
+        }
+    }
+
+    .home-hero-float {
+        animation: home-hero-float 4.5s ease-in-out infinite;
+    }
+
+    @keyframes home-roulette-pop {
+        0% {
+            opacity: 0;
+            transform: translateY(8px) scale(0.97);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0px) scale(1);
+        }
+    }
+
+    .home-roulette-pop {
+        animation: home-roulette-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
 }
 
 /* Skinswap-like Components */

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Unbounded } from "next/font/google";
 import { headers } from "next/headers";
 import { MainLayout } from "@/shared/components/MainLayout";
 import { JsonLdOrganization, JsonLdWebSite } from "@/shared/components/JsonLd";
@@ -18,6 +18,11 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const unbounded = Unbounded({
+  variable: "--font-unbounded",
   subsets: ["latin"],
 });
 
@@ -122,7 +127,7 @@ export default async function RootLayout({
   return (
     <html
       lang={LANGUAGE_TAG_BY_LOCALE[locale]}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${unbounded.variable} h-full antialiased`}
     >
       <head>
         <JsonLdOrganization />

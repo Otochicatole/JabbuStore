@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { Globe, Loader2, MoreHorizontal, Send } from "lucide-react";
+import { ExternalLink, Loader2, Send } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { SteamLoginButton } from "@/shared/components/SteamLoginButton";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -46,21 +45,14 @@ function initialsFor(name: string) {
 
 function avatarColorFor(seed: string) {
   const colors = [
-    "bg-blue-600",
-    "bg-purple-600",
-    "bg-emerald-600",
-    "bg-amber-600",
-    "bg-pink-600",
-    "bg-indigo-600",
-    "bg-teal-600",
-    "bg-cyan-600",
-    "bg-rose-600",
-    "bg-violet-600",
-    "bg-orange-600",
-    "bg-fuchsia-600",
+    "bg-[#a21caf]",
+    "bg-[#be185d]",
+    "bg-[#86198f]",
+    "bg-[#c026d3]",
+    "bg-[#9d174d]",
   ];
   const index = seed.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % colors.length;
-  return colors[index] ?? "bg-blue-600";
+  return colors[index] ?? "bg-[#a21caf]";
 }
 
 export function HomeReviewsSection() {
@@ -170,155 +162,175 @@ export function HomeReviewsSection() {
   const hasReview = Boolean(profile && myReviewState?.hasReview);
 
   return (
-    <section className="relative z-10 max-w-7xl mx-auto w-full px-6 py-20 border-t border-white/5">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8 }}
-        className="text-center max-w-2xl mx-auto mb-12"
-      >
-        <div className="inline-flex items-center justify-center gap-2 mb-4">
-          <span className="w-8 h-[1px] bg-accent"></span>
-          <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em]">{t("home.recommendations.eyebrow")}</span>
-          <span className="w-8 h-[1px] bg-accent"></span>
-        </div>
-        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-white mb-6">
-          {t("home.recommendations.title")}
-        </h2>
-        <p className="text-white/50 text-base md:text-lg leading-relaxed">
-          {t("home.recommendations.desc")}
-        </p>
-      </motion.div>
-
-      <div className="max-w-3xl mx-auto mb-6 rounded-[2rem] border border-white/5 bg-[#110e1a]/40 p-4 sm:p-5 shadow-2xl backdrop-blur-md">
-        {checkingSession ? (
-          <div className="flex min-h-24 items-center justify-center text-white/40">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        ) : !profile ? (
-          <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+    <section
+      id="community-reviews"
+      className="w-full bg-[#191527] px-5 sm:px-8 lg:px-12 py-24 sm:py-32"
+    >
+      <div className="mx-auto max-w-[1440px] home-scroll-settle">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-14 items-start">
+          {/* Left column: Community heading + Steam review composer/login */}
+          <div className="lg:col-span-5 flex flex-col gap-8">
             <div>
-              <p className="text-sm font-black text-white">{t("home.reviews.login.title")}</p>
-              <p className="mt-1 text-xs font-medium text-white/45">{t("home.reviews.login.desc")}</p>
-            </div>
-            <SteamLoginButton />
-          </div>
-        ) : hasReview ? (
-          <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/10 px-4 py-3 text-center text-xs font-bold text-emerald-300">
-            {submitMessage || t("home.reviews.form.received")}
-          </div>
-        ) : canSubmit ? (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/5">
-                {profile.avatar ? (
-                  <Image src={profile.avatar} alt={profile.name || "Steam User"} fill className="object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-xs font-black text-white">
-                    {initialsFor(profile.name || "SU")}
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 text-left">
-                <p className="truncate text-xs font-black text-white">{profile.name || "Steam User"}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">
-                  {t("home.reviews.form.label")}
-                </p>
-              </div>
-            </div>
-            <textarea
-              value={body}
-              maxLength={500}
-              onChange={(event) => setBody(event.target.value)}
-              placeholder={t("home.reviews.form.placeholder")}
-              className="min-h-28 w-full resize-none rounded-2xl border border-white/10 bg-[#0b0813]/70 px-4 py-3 text-sm font-medium leading-relaxed text-white outline-none transition-all placeholder:text-white/25 focus:border-accent/40"
-            />
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-[10px] font-bold text-white/35">{body.trim().length}/500</span>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-accent/30 bg-accent px-5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {t("home.reviews.form.submit")}
-              </button>
-            </div>
-            {submitError && (
-              <p className="rounded-2xl border border-rose-500/15 bg-rose-500/10 px-4 py-3 text-xs font-bold text-rose-300">
-                {submitError}
+              <h2 className="font-[family-name:var(--font-unbounded)] text-[clamp(1.75rem,3.4vw,2.9rem)] font-extrabold leading-[1.06] tracking-[-0.025em] text-white text-balance">
+                {t("home.recommendations.title")}
+              </h2>
+              <p className="mt-4 text-base sm:text-[17px] leading-[1.6] text-[#c3bdd9] max-w-[44ch]">
+                {t("home.recommendations.desc")}
               </p>
-            )}
-          </form>
-        ) : null}
-      </div>
-
-      <div className="max-w-3xl mx-auto w-full bg-[#110e1a]/40 border border-white/5 rounded-[2rem] p-4 sm:p-6 shadow-2xl backdrop-blur-md">
-        <div className="max-h-[500px] overflow-y-auto pr-2 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          {loadingReviews ? (
-            <div className="flex min-h-40 items-center justify-center text-white/40">
-              <Loader2 className="h-6 w-6 animate-spin" />
             </div>
-          ) : reviews.length === 0 ? (
-            <p className="py-12 text-center text-xs font-black uppercase tracking-widest text-white/35">
-              {t("home.reviews.empty")}
-            </p>
-          ) : (
-            reviews.map((review) => {
-              const name = review.user.name || "Steam User";
-              const initials = initialsFor(name);
-              return (
-                <div
-                  key={review.id}
-                  className="bg-[#242526]/30 border border-white/5 hover:border-accent/30 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 text-left transition-all duration-300 relative group"
-                >
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
 
-                  <div className="flex items-center gap-3 relative z-10">
-                    <div className={`relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-black text-sm text-white shrink-0 shadow-inner ${avatarColorFor(review.id)}`}>
-                      {review.user.avatar ? (
-                        <Image src={review.user.avatar} alt={name} fill className="object-cover" />
+            <div className="rounded-[4px] bg-[#120d1e] p-6 sm:p-7">
+              {checkingSession ? (
+                <div className="flex min-h-20 items-center justify-center text-[#b7b1ce]">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                </div>
+              ) : !profile ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                  <div>
+                    <h3 className="text-base font-bold text-white">
+                      {t("home.reviews.login.title")}
+                    </h3>
+                    <p className="mt-1.5 text-[14px] leading-relaxed text-[#c3bdd9]">
+                      {t("home.reviews.login.desc")}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <SteamLoginButton />
+                  </div>
+                </div>
+              ) : hasReview ? (
+                <div className="rounded-[4px] bg-emerald-950/70 px-4 py-4 text-[14px] font-semibold text-emerald-300">
+                  {submitMessage || t("home.reviews.form.received")}
+                </div>
+              ) : canSubmit ? (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#211c33]">
+                      {profile.avatar ? (
+                        <Image
+                          src={profile.avatar}
+                          alt={profile.name || "Steam User"}
+                          fill
+                          className="object-cover"
+                        />
                       ) : (
-                        initials
+                        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white">
+                          {initialsFor(profile.name || "SU")}
+                        </div>
                       )}
                     </div>
-                    <div className="flex flex-col min-w-0">
-                      <div className="text-xs font-bold text-white leading-tight">
-                        {name}{" "}
-                        <span className="text-white/50 font-normal text-[11px]">
-                          {t("home.reviews.recommends")}
-                        </span>{" "}
-                        <span className="text-accent font-black">JabbuStore.</span>
-                      </div>
-                      <div className="text-[10px] text-white/35 flex items-center gap-1 mt-1 font-semibold">
-                        <span>{dateFormatter.format(new Date(review.createdAt))}</span>
-                        <span>·</span>
-                        <Globe className="w-3 h-3 text-white/30" />
-                      </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] font-bold text-white">
+                        {profile.name || "Steam User"}
+                      </p>
+                      <p className="text-[13px] font-medium text-[#b7b1ce]">
+                        {t("home.reviews.form.label")}
+                      </p>
                     </div>
-                    {review.user.profileUrl ? (
-                      <a
-                        href={review.user.profileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-auto text-white/30 hover:text-white transition-colors p-1"
-                        aria-label={t("home.reviews.openProfile")}
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </a>
-                    ) : (
-                      <MoreHorizontal className="ml-auto w-4 h-4 text-white/20" />
-                    )}
                   </div>
+                  <textarea
+                    value={body}
+                    maxLength={500}
+                    onChange={(event) => setBody(event.target.value)}
+                    placeholder={t("home.reviews.form.placeholder")}
+                    className="min-h-28 w-full resize-none rounded-[4px] bg-[#191527] px-4 py-3 text-base leading-relaxed text-white outline-none placeholder:text-[#9891b3] focus-visible:outline-2 focus-visible:outline-[#d946ef]"
+                  />
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-[13px] font-medium tabular-nums text-[#b7b1ce]">
+                      {body.trim().length}/500
+                    </span>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-[4px] bg-[#d946ef] px-5 text-[14px] font-bold uppercase tracking-[0.06em] text-[#090612] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef]"
+                    >
+                      {submitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      {t("home.reviews.form.submit")}
+                    </button>
+                  </div>
+                  {submitError && (
+                    <p className="rounded-[4px] bg-rose-950/70 px-4 py-3 text-[14px] font-semibold text-rose-200">
+                      {submitError}
+                    </p>
+                  )}
+                </form>
+              ) : null}
+            </div>
+          </div>
 
-                  <p className="text-[13px] sm:text-[14px] text-white/95 font-medium leading-relaxed break-words relative z-10 pl-1 py-1">
-                    {review.body}
+          {/* Right column: Published community reviews */}
+          <div className="lg:col-span-7 rounded-[4px] bg-[#211c33] p-5 sm:p-7">
+            <div className="max-h-[480px] overflow-y-auto pr-1 flex flex-col gap-4 custom-scrollbar">
+              {loadingReviews ? (
+                <div className="flex min-h-44 items-center justify-center text-[#c3bdd9]">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="py-16 text-center">
+                  <p className="text-[14px] font-bold uppercase text-[#c3bdd9]">
+                    {t("home.reviews.empty")}
                   </p>
                 </div>
-              );
-            })
-          )}
+              ) : (
+                reviews.map((review) => {
+                  const name = review.user.name || "Steam User";
+                  const initials = initialsFor(name);
+                  return (
+                    <article
+                      key={review.id}
+                      className="rounded-[4px] bg-[#191527] p-5 sm:p-6 flex flex-col gap-3 text-left transition-colors duration-150 hover:bg-[#141021]"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`relative h-10 w-10 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold text-white shrink-0 ${avatarColorFor(review.id)}`}
+                        >
+                          {review.user.avatar ? (
+                            <Image src={review.user.avatar} alt={name} fill className="object-cover" />
+                          ) : (
+                            initials
+                          )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <div className="text-[15px] font-bold text-white leading-snug">
+                            {name}{" "}
+                            <span className="font-normal text-[#c3bdd9]">
+                              {t("home.reviews.recommends")}
+                            </span>{" "}
+                            <span className="text-[#d946ef]">JabbuStore</span>
+                          </div>
+                          <time
+                            dateTime={review.createdAt}
+                            className="text-[13px] font-medium text-[#b7b1ce] mt-0.5"
+                          >
+                            {dateFormatter.format(new Date(review.createdAt))}
+                          </time>
+                        </div>
+                        {review.user.profileUrl ? (
+                          <a
+                            href={review.user.profileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-auto p-2 text-[#b7b1ce] hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-[#d946ef] rounded-[4px]"
+                            aria-label={t("home.reviews.openProfile")}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        ) : null}
+                      </div>
+
+                      <p className="text-base text-white/95 leading-[1.6] break-words">
+                        {review.body}
+                      </p>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </section>

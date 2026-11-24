@@ -98,9 +98,8 @@ const DEMO_SKINS: RouletteSkin[] = [
 
 const REEL_LENGTH = 46;
 const WINNING_INDEX = 35;
-const CARD_WIDTH_PX = 172;
 const CARD_GAP_PX = 10;
-const STRIDE_PX = CARD_WIDTH_PX + CARD_GAP_PX;
+const TRACK_PADDING_X = 16;
 
 function buildWeightedReel(seedOffset: number): RouletteSkin[] {
   const weightedPool: RouletteSkin[] = [];
@@ -141,6 +140,7 @@ export function HomeRouletteSection() {
   const { t } = useI18n();
   const localizePath = useLocalizedPath();
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const confettiInstanceRef = useRef<confetti.CreateTypes | null>(null);
   const finishTimerRef = useRef<number | null>(null);
@@ -226,9 +226,18 @@ export function HomeRouletteSection() {
     const chosenWinner = nextReel[WINNING_INDEX] ?? DEMO_SKINS[0]!;
 
     const viewportWidth = viewportRef.current?.clientWidth ?? 900;
-    const jitterPx = Math.round((Math.random() - 0.5) * 44);
+    const measuredCardWidth =
+      (trackRef.current?.firstElementChild as HTMLElement | null)?.offsetWidth ??
+      (viewportWidth < 640 ? 136 : 172);
+    const stridePx = measuredCardWidth + CARD_GAP_PX;
+    const maxJitter = viewportWidth < 640 ? 18 : 36;
+    const jitterPx = Math.round((Math.random() - 0.5) * maxJitter);
     const targetOffset =
-      WINNING_INDEX * STRIDE_PX + CARD_WIDTH_PX / 2 - viewportWidth / 2 + jitterPx;
+      TRACK_PADDING_X +
+      WINNING_INDEX * stridePx +
+      measuredCardWidth / 2 -
+      viewportWidth / 2 +
+      jitterPx;
 
     const durationMs = prefersReducedMotion ? 180 : turboMode ? 1400 : 4200;
 
@@ -292,9 +301,9 @@ export function HomeRouletteSection() {
     <section
       id="jabbu-case"
       aria-labelledby="home-roulette-heading"
-      className="w-full bg-[#120d1e] px-5 sm:px-8 lg:px-12 py-14 sm:py-20 scroll-mt-20"
+      className="w-full bg-[#120d1e] px-3 sm:px-8 lg:px-12 py-12 sm:py-20 scroll-mt-20"
     >
-      <div className="relative mx-auto max-w-[1440px] flex flex-col gap-6 rounded-[4px] bg-[#191527] p-5 sm:p-8 overflow-hidden">
+      <div className="relative mx-auto max-w-[1440px] flex flex-col gap-5 sm:gap-6 rounded-[4px] bg-[#191527] p-4 sm:p-8 overflow-hidden">
         {/* Confetti / Serpentinas layer */}
         <canvas
           ref={confettiCanvasRef}
@@ -302,28 +311,41 @@ export function HomeRouletteSection() {
           className="pointer-events-none absolute inset-0 z-40 h-full w-full"
         />
         {/* CS2 Weapon Case Header Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <div className="relative flex h-16 w-20 shrink-0 items-center justify-center rounded-[4px] bg-[#120d1e] p-1.5">
-              <Image
-                src="/category-images/containers-steam.png"
-                alt="CS2 Jabbu Container"
-                width={96}
-                height={74}
-                priority
-                className="h-12 w-auto object-contain select-none"
-              />
-              <Image
-                src="/category-images/keys-steam.png"
-                alt="CS2 Case Key"
-                width={42}
-                height={32}
-                className="absolute -bottom-1 -right-1 h-7 w-auto object-contain select-none"
-              />
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-5">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 min-w-0">
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-14 w-18 sm:h-16 sm:w-20 shrink-0 items-center justify-center rounded-[4px] bg-[#120d1e] p-1.5">
+                <Image
+                  src="/category-images/containers-steam.png"
+                  alt="CS2 Jabbu Container"
+                  width={96}
+                  height={74}
+                  priority
+                  className="h-10 sm:h-12 w-auto object-contain select-none"
+                />
+                <Image
+                  src="/category-images/keys-steam.png"
+                  alt="CS2 Case Key"
+                  width={42}
+                  height={32}
+                  className="absolute -bottom-1 -right-1 h-6 sm:h-7 w-auto object-contain select-none"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 sm:hidden">
+                <h2
+                  className="font-[family-name:var(--font-unbounded)] text-[1.35rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-white"
+                >
+                  {t("home.roulette.title")}
+                </h2>
+                <span className="inline-flex items-center rounded-[4px] bg-[#2f2846] px-2.5 py-1 text-[13px] font-bold text-[#f0abfc]">
+                  {t("home.roulette.badge")}
+                </span>
+              </div>
             </div>
 
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
+            <div className="min-w-0">
+              <div className="hidden sm:flex flex-wrap items-center gap-3">
                 <h2
                   id="home-roulette-heading"
                   className="font-[family-name:var(--font-unbounded)] text-[clamp(1.45rem,2.6vw,2.35rem)] font-extrabold leading-[1.06] tracking-[-0.025em] text-white"
@@ -334,21 +356,21 @@ export function HomeRouletteSection() {
                   {t("home.roulette.badge")}
                 </span>
               </div>
-              <p className="mt-1.5 text-[14px] sm:text-[15px] leading-[1.5] text-[#c3bdd9] max-w-[60ch]">
+              <p className="sm:mt-1.5 text-[14px] sm:text-[15px] leading-[1.5] text-[#c3bdd9] max-w-[60ch]">
                 {renderHighlightedSimulation(t("home.roulette.desc"))}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="grid grid-cols-[1fr_auto] sm:flex sm:flex-wrap items-center gap-2.5 shrink-0">
             <button
               type="button"
               onClick={() => setTurboMode((prev) => !prev)}
               aria-pressed={turboMode}
-              className={`inline-flex items-center gap-2 rounded-[4px] px-3.5 py-2.5 text-[13px] font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef] ${
+              className={`inline-flex items-center justify-center sm:justify-start gap-2 rounded-[4px] px-3.5 py-2.5 text-[13px] font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef] ${
                 turboMode
                   ? "bg-[#2f2846] text-white"
-                  : "bg-[#191527] text-[#c3bdd9] hover:bg-[#211c33] hover:text-white"
+                  : "bg-[#211c33] text-[#c3bdd9] hover:bg-[#2f2846] hover:text-white"
               }`}
             >
               <Zap className={`h-4 w-4 ${turboMode ? "text-[#d946ef]" : ""}`} />
@@ -361,10 +383,10 @@ export function HomeRouletteSection() {
               aria-pressed={soundEnabled}
               aria-label={t("home.roulette.sound")}
               title={t("home.roulette.sound")}
-              className={`inline-flex items-center justify-center rounded-[4px] px-3 py-2.5 text-[13px] font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef] ${
+              className={`inline-flex items-center justify-center rounded-[4px] px-3.5 py-2.5 text-[13px] font-semibold transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef] ${
                 soundEnabled
                   ? "bg-[#2f2846] text-white"
-                  : "bg-[#191527] text-[#c3bdd9] hover:bg-[#211c33] hover:text-white"
+                  : "bg-[#211c33] text-[#c3bdd9] hover:bg-[#2f2846] hover:text-white"
               }`}
             >
               {soundEnabled ? (
@@ -378,7 +400,7 @@ export function HomeRouletteSection() {
               type="button"
               onClick={handleSpin}
               disabled={isSpinning}
-              className="inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#d946ef] px-6 py-3 text-[14px] font-bold uppercase tracking-[0.06em] text-[#090612] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef]"
+              className="col-span-2 sm:col-span-1 w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#d946ef] px-6 py-3.5 sm:py-3 text-[14px] font-bold uppercase tracking-[0.06em] text-[#090612] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef]"
             >
               <KeyRound className={`h-4 w-4 ${isSpinning ? "animate-spin" : ""}`} />
               <span>
@@ -412,6 +434,7 @@ export function HomeRouletteSection() {
           />
 
           <div
+            ref={trackRef}
             style={{
               transform: `translate3d(${translateX}px, 0, 0)`,
               transitionProperty: transitionMs > 0 ? "transform" : "none",
@@ -428,31 +451,30 @@ export function HomeRouletteSection() {
 
               let settleClasses = "scale-100 translate-x-0 opacity-100";
               if (isWinningCard) {
-                settleClasses = "scale-[1.16] z-20 bg-[#211c33] outline-2";
+                settleClasses = "scale-[1.12] sm:scale-[1.16] z-20 bg-[#211c33] outline-2";
               } else if (isLeftCard) {
-                settleClasses = "-translate-x-4 opacity-35 scale-[0.92]";
+                settleClasses = "-translate-x-3 sm:-translate-x-4 opacity-35 scale-[0.92]";
               } else if (isRightCard) {
-                settleClasses = "translate-x-4 opacity-35 scale-[0.92]";
+                settleClasses = "translate-x-3 sm:translate-x-4 opacity-35 scale-[0.92]";
               }
 
               return (
                 <div
                   key={`${spinCount}-${idx}-${item.id}`}
                   style={{
-                    width: `${CARD_WIDTH_PX}px`,
                     outlineColor: isWinningCard ? item.rarityHex : undefined,
                     transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
                   }}
-                  className={`relative shrink-0 rounded-[4px] bg-[#191527] overflow-hidden flex flex-col justify-between transition-[transform,opacity,background-color] duration-500 ${settleClasses}`}
+                  className={`relative w-[136px] sm:w-[172px] shrink-0 rounded-[4px] bg-[#191527] overflow-hidden flex flex-col justify-between transition-[transform,opacity,background-color] duration-500 ${settleClasses}`}
                 >
-                  <div className="px-3 pt-3 pb-2 flex flex-col justify-between flex-1">
-                    <div className="flex items-center justify-center h-[88px]">
+                  <div className="px-2.5 sm:px-3 pt-2.5 sm:pt-3 pb-2 flex flex-col justify-between flex-1">
+                    <div className="flex items-center justify-center h-[72px] sm:h-[88px]">
                       <Image
                         src={item.image}
                         alt={item.name}
                         width={136}
                         height={102}
-                        className="h-[82px] w-auto object-contain select-none"
+                        className="h-[66px] sm:h-[82px] w-auto object-contain select-none"
                       />
                     </div>
                     <div className="mt-2">
@@ -472,54 +494,56 @@ export function HomeRouletteSection() {
         </div>
 
         {/* Unboxed Item Reveal / Live Inspection Bar */}
-        <div className="rounded-[4px] bg-[#191527] p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="rounded-[4px] bg-[#120d1e] p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {winner ? (
-            <div className="flex items-center gap-4 home-roulette-pop">
+            <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 home-roulette-pop">
               <div
                 style={{ backgroundColor: winner.rarityHex }}
                 className="w-1.5 self-stretch rounded-[2px] shrink-0"
                 aria-hidden="true"
               />
-              <div className="flex h-16 w-22 shrink-0 items-center justify-center rounded-[4px] bg-[#090612] p-2">
+              <div className="flex h-14 w-18 sm:h-16 sm:w-22 shrink-0 items-center justify-center rounded-[4px] bg-[#090612] p-1.5 sm:p-2">
                 <Image
                   src={winner.image}
                   alt={winner.name}
                   width={96}
                   height={72}
-                  className="h-12 w-auto object-contain"
+                  className="h-11 sm:h-12 w-auto object-contain"
                 />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p
                   style={{ color: winner.rarityHex }}
-                  className="text-[13px] font-bold"
+                  className="text-[13px] font-bold truncate"
                 >
                   {t("home.roulette.winnerLabel")} · {winner.tierLabel}
                 </p>
-                <p className="mt-0.5 text-lg font-bold text-white">{winner.name}</p>
-                <p className="text-[14px] text-[#c3bdd9] tabular-nums">
+                <p className="mt-0.5 text-base sm:text-lg font-bold text-white truncate">
+                  {winner.name}
+                </p>
+                <p className="text-[13px] sm:text-[14px] text-[#c3bdd9] tabular-nums">
                   Float {winner.floatValue} · USD {winner.priceUsd.toLocaleString("en-US")}
                 </p>
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
               <div
                 style={{ backgroundColor: inspectedSkin.rarityHex }}
                 className="w-1.5 self-stretch rounded-[2px] shrink-0"
                 aria-hidden="true"
               />
-              <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-[4px] bg-[#090612] p-1.5">
+              <div className="flex h-14 w-18 sm:w-20 shrink-0 items-center justify-center rounded-[4px] bg-[#090612] p-1.5">
                 <Image
                   src={inspectedSkin.image}
                   alt={inspectedSkin.name}
                   width={88}
                   height={66}
-                  className="h-11 w-auto object-contain"
+                  className="h-10 sm:h-11 w-auto object-contain"
                 />
               </div>
-              <div>
-                <p className="text-[14px] font-bold text-white">{inspectedSkin.name}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-bold text-white truncate">{inspectedSkin.name}</p>
                 <p className="text-[13px] font-medium text-[#c3bdd9] tabular-nums">
                   {inspectedSkin.tierLabel} · Float {inspectedSkin.floatValue} · USD{" "}
                   {inspectedSkin.priceUsd.toLocaleString("en-US")}
@@ -528,13 +552,13 @@ export function HomeRouletteSection() {
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="rounded-[4px] bg-[#120d1e] px-3.5 py-2 text-[13px] font-medium text-[#e4def7]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between lg:justify-end gap-3 shrink-0">
+            <span className="rounded-[4px] bg-[#191527] px-3.5 py-2 text-[13px] font-medium text-[#e4def7]">
               {renderHighlightedSimulation(t("home.roulette.demoNote"))}
             </span>
             <Link
               href={localizePath("/raffles")}
-              className="inline-flex items-center gap-2 rounded-[4px] bg-[#211c33] px-5 py-3 text-[14px] font-bold text-white hover:bg-[#2f2846] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#211c33] px-5 py-3 text-[14px] font-bold text-white hover:bg-[#2f2846] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef]"
             >
               <span>{t("home.roulette.goRaffles")}</span>
               <ArrowRight className="h-4 w-4 text-[#d946ef]" />
@@ -547,7 +571,7 @@ export function HomeRouletteSection() {
           <p className="text-[14px] font-semibold text-[#c3bdd9]">
             {t("home.roulette.poolLabel")}
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
             {DEMO_SKINS.map((skin) => {
               const selected = skin.id === inspectedId;
               return (
@@ -556,17 +580,17 @@ export function HomeRouletteSection() {
                   type="button"
                   onClick={() => setInspectedId(skin.id)}
                   className={`rounded-[4px] overflow-hidden text-left transition-[background-color,transform] duration-150 hover:-translate-y-0.5 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef] ${
-                    selected ? "bg-[#211c33]" : "bg-[#191527] hover:bg-[#211c33]"
+                    selected ? "bg-[#211c33]" : "bg-[#120d1e] hover:bg-[#211c33]"
                   }`}
                 >
-                  <div className="p-3">
-                    <div className="flex items-center justify-center h-[88px]">
+                  <div className="p-2.5 sm:p-3">
+                    <div className="flex items-center justify-center h-[74px] sm:h-[88px]">
                       <Image
                         src={skin.image}
                         alt={skin.name}
                         width={136}
                         height={102}
-                        className="h-[82px] w-auto object-contain"
+                        className="h-[68px] sm:h-[82px] w-auto object-contain"
                       />
                     </div>
                     <p className="mt-2 text-[13px] font-bold text-white truncate">{skin.weapon}</p>

@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
-import { HeroSpecimenStage } from "@/features/home/ui/HeroSpecimenStage";
+import { Asciify } from "@/components/canvasui/Asciify";
+import { HeroGlitchBlock } from "@/features/home/ui/HeroGlitchBlock";
 import { HomeRouletteSection } from "@/features/home/ui/HomeRouletteSection";
 import { HomeReviewsSection } from "@/features/reviews/ui/HomeReviewsSection";
 import { HomeSponsorsSection } from "@/features/sponsors/ui/HomeSponsorsSection";
@@ -98,42 +99,38 @@ export default function Home() {
 
   return (
     <main className="w-full min-h-dvh bg-[#090612] text-white pt-16 overflow-x-clip">
-      {/* SECTION 1: HERO — Top of the page */}
-      <section className="w-full bg-[#090612] px-5 sm:px-8 lg:px-12 pt-10 pb-16 sm:pt-14 sm:pb-24 lg:py-20">
-        <div className="mx-auto max-w-[1440px] grid gap-10 lg:grid-cols-12 lg:gap-12 items-center">
-          <div className="lg:col-span-6 flex flex-col items-start text-left">
-            <h1 className="font-[family-name:var(--font-unbounded)] text-[clamp(2.2rem,5vw,4.75rem)] font-black uppercase leading-[0.98] tracking-[-0.03em] text-white text-balance max-w-[14ch]">
-              {t("home.hero.title")}
-              <span className="block text-[#d946ef] mt-1">
-                {t("home.hero.highlight")}
-              </span>
-            </h1>
+      {/* CanvasUI Asciify cursor trail — scoped strictly to Home */}
+      <Asciify
+        fixed
+        source="gradient"
+        colors={["#4c1d95", "#d946ef", "#03e9f4", "#fdf4ff"]}
+        characters=" .-=+xX0S8#@"
+        cellSize={13}
+        radius={130}
+        trail={0.75}
+        flow={0.45}
+        density={0.75}
+        opacity={0.85}
+        glow={0.65}
+        veil={0}
+        background="#090612"
+        click="wave"
+        style={{ zIndex: 15 }}
+      />
 
-            <p className="mt-6 text-base sm:text-[18px] leading-[1.6] text-[#c3bdd9] max-w-[44ch]">
-              {t("home.hero.description")}
-            </p>
+      {/* SECTION 1: HERO — Cyber pattern backdrop + CanvasUI Glitch headline */}
+      <section className="relative w-full bg-[#050505] px-5 sm:px-8 lg:px-12 py-20 sm:py-28 lg:py-36 overflow-hidden">
+        <div aria-hidden="true" className="cyber-pattern pointer-events-none absolute inset-0" />
 
-            <div className="mt-9 flex flex-wrap items-center gap-4 w-full sm:w-auto">
-              <Link
-                href={buyPath}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-[4px] bg-[#d946ef] px-7 py-4 text-[14px] font-bold uppercase tracking-[0.06em] text-[#090612] transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef]"
-              >
-                <span>{t("home.buy.cta")}</span>
-                <ArrowRight className="h-4 w-4 shrink-0" />
-              </Link>
-
-              <Link
-                href={sellPath}
-                className="inline-flex w-full sm:w-auto items-center justify-center rounded-[4px] bg-[#211c33] px-7 py-4 text-[14px] font-bold uppercase tracking-[0.06em] text-white transition-[background-color,transform] duration-150 hover:bg-[#2f2846] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d946ef]"
-              >
-                {t("home.sell.cta")}
-              </Link>
-            </div>
-          </div>
-
-          <div className="lg:col-span-6">
-            <HeroSpecimenStage />
-          </div>
+        <div className="relative z-20 mx-auto max-w-[1440px]">
+          <HeroGlitchBlock
+            subtitle={`${t("home.hero.title")} ${t("home.hero.highlight")}`}
+            description={t("home.hero.description")}
+            buyHref={buyPath}
+            buyLabel={t("home.buy.cta")}
+            sellHref={sellPath}
+            sellLabel={t("home.sell.cta")}
+          />
         </div>
       </section>
 

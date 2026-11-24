@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { AlertCircle, CheckCircle, Info } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle, CheckCircle, Info, X } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 
 interface AlertConfirmModalProps {
@@ -28,81 +27,102 @@ export function AlertConfirmModal({
   cancelLabel,
 }: AlertConfirmModalProps) {
   const { t } = useI18n();
-  if (!isOpen) return null;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (onCancel) onCancel();
+        else onConfirm();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onCancel, onConfirm]);
+
+  if (!isOpen || typeof document === "undefined") return null;
 
   const resolvedConfirmLabel = confirmLabel ?? t("common.accept");
   const resolvedCancelLabel = cancelLabel ?? t("common.cancel");
-
   const isConfirm = type === "confirm";
 
-  const getIcon = () => {
-    switch (type) {
-      case "success":
-        return <CheckCircle className="w-6 h-6 text-emerald-400" />;
-      case "error":
-        return <AlertCircle className="w-6 h-6 text-rose-500" />;
-      case "warning":
-        return <AlertCircle className="w-6 h-6 text-amber-500" />;
-      case "confirm":
-        return <AlertCircle className="w-6 h-6 text-indigo-400" />;
-      default:
-        return <Info className="w-6 h-6 text-accent" />;
-    }
-  };
+  const iconStyle =
+    type === "success"
+      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+      : type === "error"
+        ? "border-rose-500/25 bg-rose-500/10 text-rose-400"
+        : type === "warning"
+          ? "border-amber-500/25 bg-amber-500/10 text-amber-400"
+          : type === "confirm"
+            ? "border-sky-500/25 bg-sky-500/10 text-sky-400"
+            : "border-accent/25 bg-accent/10 text-accent";
+
+  const Icon =
+    type === "success"
+      ? CheckCircle
+      : type === "info"
+        ? Info
+        : AlertCircle;
 
   return createPortal(
-    (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.15 }}
-          className="relative w-full max-w-sm overflow-hidden bg-card border border-white/10 rounded-2xl p-6 shadow-2xl shadow-black/90 font-sans text-white flex flex-col gap-4"
-        >
-          <div className="flex items-start gap-4">
-            <div className="shrink-0 p-2 bg-white/5 rounded-xl border border-white/5">
-              {getIcon()}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-black uppercase tracking-wider text-white">
-                {title}
-              </h3>
-              <p className="text-xs text-[#84849b] font-bold leading-relaxed mt-2 whitespace-pre-wrap">
-                {message}
-              </p>
-            </div>
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="fixed inset-0 bg-black/75"
+        onClick={onCancel ?? onConfirm}
+        aria-hidden="true"
+      />
+      <div
+        className="relative z-10 flex w-full max-w-md flex-col gap-4 rounded-xl border border-white/10 bg-[#141124] p-5 text-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3.5">
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${iconStyle}`}>
+            <Icon className="h-4.5 w-4.5" />
           </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-semibold text-white">{title}</h3>
+            <p className="mt-1.5 whitespace-pre-wrap text-xs sm:text-[13px] leading-relaxed text-[#a39db9]">
+              {message}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel ?? onConfirm}
+            aria-label={t("common.close")}
+            className="rounded-md p-1 text-[#8e88a6] hover:bg-white/[0.06] hover:text-white cursor-pointer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-          <div className="flex justify-end gap-3 mt-4 border-t border-white/5 pt-4">
-            {isConfirm && onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-4 py-2 hover:bg-white/5 border border-white/10 rounded-[3px] text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition-all cursor-pointer"
-              >
-                {resolvedCancelLabel}
-              </button>
-            )}
+        <div className="flex justify-end gap-2 border-t border-white/[0.07] pt-3.5">
+          {isConfirm && onCancel && (
             <button
               type="button"
-              onClick={onConfirm}
-              className={`px-5 py-2.5 rounded-[3px] text-[10px] font-black uppercase tracking-widest text-white transition-all cursor-pointer ${
-                type === "error"
-                  ? "bg-rose-600 hover:bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)]"
-                  : type === "confirm"
-                    ? "bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]"
-                    : "bg-accent hover:bg-accent/90 shadow-[0_0_15px_rgba(217,70,239,0.3)]"
-              }`}
+              onClick={onCancel}
+              className="h-9 rounded-md border border-white/10 bg-[#1c1833] px-3.5 text-xs font-medium text-[#d4cfe6] hover:bg-[#252042] hover:text-white transition-colors cursor-pointer"
             >
-              {resolvedConfirmLabel}
+              {resolvedCancelLabel}
             </button>
-          </div>
-        </motion.div>
+          )}
+          <button
+            type="button"
+            onClick={onConfirm}
+            className={`h-9 rounded-md px-4 text-xs font-semibold text-white transition-colors cursor-pointer ${
+              type === "error"
+                ? "bg-rose-600 hover:bg-rose-500"
+                : "bg-accent hover:bg-accent/90"
+            }`}
+          >
+            {resolvedConfirmLabel}
+          </button>
+        </div>
       </div>
-    </AnimatePresence>
-    ),
+    </div>,
     document.body,
   );
 }

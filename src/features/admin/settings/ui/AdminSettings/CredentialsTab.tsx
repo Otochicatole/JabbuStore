@@ -5,6 +5,7 @@ import { Eye, Mail, Trash2 } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
 import type { SecretStatus } from "@/features/admin/types";
+import { AdminAlert, AdminBadge, AdminButton, AdminSection } from "@/features/admin/ui/AdminShell";
 import { SECRET_LABELS } from "./constants";
 import { SectionHeader, FieldLabel, StyledInput } from "./FormControls";
 import { getErrorMessage } from "./helpers";
@@ -172,32 +173,35 @@ export function CredentialsTab() {
     Boolean(sendgridToStatus?.configured);
 
   return (
-    <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
+    <AdminSection>
       <SectionHeader
         title={t("admin.settings.credentialsTitle")}
         desc={t("admin.settings.credentialsDescription")}
       />
 
       <div className="max-w-4xl space-y-5">
-        <div className="p-4 bg-accent/5 border border-accent/20 rounded-[3px] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col justify-between gap-4 rounded-lg border border-accent/25 bg-accent/10 p-4 sm:flex-row sm:items-center">
           <div className="space-y-1">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
-              <Mail className="w-3.5 h-3.5 text-accent" />
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+              <Mail className="h-4 w-4 text-accent" />
               {t("admin.settings.sendgridEmailSectionTitle")}
             </h3>
-            <p className="text-[11px] text-[#84849b] leading-relaxed">
+            <p className="text-xs leading-relaxed text-[#b8b2cd]">
               {t("admin.settings.sendgridEmailSectionHelp")}
             </p>
           </div>
-          <button
+          <AdminButton
             type="button"
+            variant="primary"
+            size="sm"
+            icon={Mail}
+            loading={testingSendGrid}
             onClick={() => void handleTestSendGridEmail()}
             disabled={testingSendGrid || !isSendGridReady}
-            className="shrink-0 px-4 py-2.5 bg-accent text-white rounded-[3px] text-[10px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            className="shrink-0"
           >
-            <Mail className="w-3.5 h-3.5" />
             {testingSendGrid ? t("admin.settings.sendgridTesting") : t("admin.settings.sendgridTestButton")}
-          </button>
+          </AdminButton>
         </div>
 
         <div className="space-y-1.5">
@@ -209,71 +213,59 @@ export function CredentialsTab() {
             placeholder="ADMIN_SECRETS_PASSWORD"
             autoComplete="off"
           />
-          <p className="text-[10px] text-[#84849b] font-mono">
+          <p className="text-xs text-[#9e98b6]">
             {t("admin.settings.masterPasswordHelp")}
           </p>
         </div>
 
-        {secretError && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-bold rounded-[3px]">
-            {secretError}
-          </div>
-        )}
-        {secretMessage && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-bold rounded-[3px]">
-            {secretMessage}
-          </div>
-        )}
+        {secretError && <AdminAlert tone="error">{secretError}</AdminAlert>}
+        {secretMessage && <AdminAlert tone="success">{secretMessage}</AdminAlert>}
 
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-3.5">
           {SECRET_LABELS.map(({ key, label }) => {
             const status = secretStatuses.find((item) => item.key === key);
             const busy = savingSecretKey === key;
 
             return (
-              <div key={key} className="p-4 bg-white/[0.02] border border-white/5 rounded-[3px] space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-white">
+              <div key={key} className="space-y-3 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4">
+                <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                  <div className="min-w-0 space-y-0.5">
+                    <h3 className="text-sm font-semibold text-white">
                       {label}
                     </h3>
                     {key === "SENDGRID_FROM" && (
-                      <p className="text-[10px] text-[#84849b]">
+                      <p className="text-xs text-[#9e98b6]">
                         {t("admin.settings.sendgridHintFrom")}
                       </p>
                     )}
                     {key === "SENDGRID_TO" && (
-                      <p className="text-[10px] text-[#84849b]">
+                      <p className="text-xs text-[#9e98b6]">
                         {t("admin.settings.sendgridHintTo")}
                       </p>
                     )}
-                    <p className="text-[10px] text-[#84849b] font-mono">
+                    <p className="font-mono text-xs text-[#9e98b6]">
                       {status?.configured
                         ? `${t("admin.settings.configured")} (${status.source})${status.last4 ? ` · ${status.last4}` : ""}`
                         : t("admin.settings.notConfigured")}
                     </p>
                   </div>
-                  <span className={`w-fit px-2 py-1 rounded-[3px] text-[9px] font-black uppercase tracking-wider ${
-                    status?.configured
-                      ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
-                      : "bg-red-500/10 text-red-300 border border-red-500/20"
-                  }`}>
+                  <AdminBadge tone={status?.configured ? "success" : "danger"} dot>
                     {status?.configured ? t("admin.settings.active") : t("admin.settings.missing")}
-                  </span>
+                  </AdminBadge>
                 </div>
 
                 {revealedSecrets[key] && (
-                  <div className="p-3 bg-black/20 border border-white/5 rounded-[3px]">
-                    <p className="text-[9px] text-[#84849b] uppercase font-black mb-1">
+                  <div className="rounded-md border border-white/[0.07] bg-[#0d0a18] p-3">
+                    <p className="mb-1 text-xs font-medium text-[#9e98b6]">
                       {t("admin.settings.revealedValue")}
                     </p>
-                    <p className="text-xs text-white font-mono break-all select-all">
+                    <p className="select-all break-all font-mono text-xs text-white">
                       {revealedSecrets[key]}
                     </p>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-2">
+                <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_auto]">
                   <StyledInput
                     type="password"
                     value={secretDrafts[key] || ""}
@@ -284,32 +276,36 @@ export function CredentialsTab() {
                     autoComplete="off"
                   />
                   <div className="grid grid-cols-3 gap-2">
-                    <button
+                    <AdminButton
                       type="button"
+                      variant="primary"
+                      size="sm"
+                      loading={busy}
                       onClick={() => void handleSaveSecret(key)}
                       disabled={busy || !secretDrafts[key] || !masterPassword}
-                      className="px-3 py-2 bg-accent text-white rounded-[3px] text-[9px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer"
                     >
-                      {busy ? "..." : t("common.save")}
-                    </button>
-                    <button
+                      {t("common.save")}
+                    </AdminButton>
+                    <AdminButton
                       type="button"
+                      variant="secondary"
+                      size="sm"
+                      icon={Eye}
                       onClick={() => void handleRevealSecret(key)}
                       disabled={busy || !masterPassword}
-                      className="px-3 py-2 bg-white/5 border border-white/10 text-white rounded-[3px] text-[9px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1"
                     >
-                      <Eye className="w-3 h-3" />
                       {t("common.view")}
-                    </button>
-                    <button
+                    </AdminButton>
+                    <AdminButton
                       type="button"
+                      variant="danger"
+                      size="sm"
+                      icon={Trash2}
                       onClick={() => void handleDeleteSecret(key)}
                       disabled={busy || !masterPassword}
-                      className="px-3 py-2 bg-red-500/10 border border-red-500/20 text-red-200 rounded-[3px] text-[9px] font-black uppercase tracking-wider disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1"
                     >
-                      <Trash2 className="w-3 h-3" />
                       {t("common.delete")}
-                    </button>
+                    </AdminButton>
                   </div>
                 </div>
               </div>
@@ -317,6 +313,6 @@ export function CredentialsTab() {
           })}
         </div>
       </div>
-    </div>
+    </AdminSection>
   );
 }

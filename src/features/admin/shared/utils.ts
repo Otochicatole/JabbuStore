@@ -1,12 +1,12 @@
 import { OrderItem } from "@/features/admin/domain/types";
 
 export const rarityColors: Record<string, string> = {
-  common: 'border-l-4 border-l-[#b0c3d9]',
-  uncommon: 'border-l-4 border-l-[#5e98d9]',
-  rare: 'border-l-4 border-l-[#4b69ff]',
-  mythical: 'border-l-4 border-l-[#8847ff]',
-  legendary: 'border-l-4 border-l-[#d32ce6]',
-  ancient: 'border-l-4 border-l-[#eb4b4b]',
+  common: "border-[#b0c3d9]/35",
+  uncommon: "border-[#5e98d9]/35",
+  rare: "border-[#4b69ff]/35",
+  mythical: "border-[#8847ff]/35",
+  legendary: "border-[#d32ce6]/35",
+  ancient: "border-[#eb4b4b]/35",
 };
 
 export const hashCode = (str: string): number => {

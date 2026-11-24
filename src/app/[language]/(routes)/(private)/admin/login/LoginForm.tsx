@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Lock, Mail, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
-import { useI18n } from '@/shared/i18n/I18nProvider';
-import { useLocalizedPath } from '@/shared/i18n/useLocalizedPath';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Lock, Mail, Loader2, ShieldCheck, AlertCircle, ArrowLeft } from "lucide-react";
+import { useI18n } from "@/shared/i18n/I18nProvider";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 export function LoginForm() {
   const router = useRouter();
   const localizePath = useLocalizedPath();
   const { t } = useI18n();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,10 +28,10 @@ export function LoginForm() {
     setError(null);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
@@ -44,9 +44,8 @@ export function LoginForm() {
         throw new Error(data?.error || t("admin.login.error"));
       }
 
-      // Redirigir al panel. Al cargar, el servidor validará el JWT de la cookie de forma automática.
-      router.push(localizePath('/admin/panel/inventory'));
-      router.refresh(); // Refrescar para activar la carga del Server Component
+      router.push(localizePath("/admin/panel/inventory"));
+      router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("admin.login.serverError"));
     } finally {
@@ -54,116 +53,69 @@ export function LoginForm() {
     }
   };
 
-  if (error !== null) {
-    return (
-      <div className="w-full max-w-md relative z-10">
-        <div className="bg-[#110f1e]/80 border border-red-500/20 backdrop-blur-xl rounded-2xl p-8 shadow-2xl relative overflow-hidden text-center">
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-red-400/50 to-transparent" />
-          <div className="mx-auto mb-5 w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-            <AlertCircle className="w-7 h-7 text-red-400" />
-          </div>
-          <h1 className="text-xl font-black text-white mb-3">
-            {t("admin.login.errorTitle")}
-          </h1>
-          <p className="text-sm leading-6 text-[#aaa6bd] mb-7">{error}</p>
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={() => setError(null)}
-              className="w-full py-3 bg-white hover:bg-white/90 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-300"
-            >
-              {t("admin.login.retry")}
-            </button>
-            <Link
-              href={localizePath('/')}
-              className="block text-[10px] font-black text-[#84849b] hover:text-white uppercase tracking-wider transition-colors font-mono"
-            >
-              {t("checkout.backToStore")}
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full max-w-md relative z-10">
-      {/* Brand / Logo Section */}
-      <div className="flex flex-col items-center mb-8 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-white/[0.02] border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(255,255,255,0.02)] relative group overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-t from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <ShieldCheck className="w-7 h-7 text-white transition-transform duration-500 group-hover:scale-110" />
+    <div className="relative z-10 w-full max-w-md space-y-6">
+      <div className="flex flex-col items-center text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-[#141124] text-accent">
+          <ShieldCheck className="h-6 w-6" />
         </div>
-        <h1 className="text-xl font-black text-white uppercase tracking-wider mb-1 font-sans">
-          Jabbu<span className="text-[#d946ef]">Store</span> Admin
+        <h1 className="text-xl font-semibold tracking-tight text-white">
+          JabbuStore Admin
         </h1>
-        <p className="text-xs text-[#84849b] font-medium font-mono uppercase tracking-widest">
-          {t("admin.login.secureAccess")}
-        </p>
+        <p className="mt-1 text-xs text-[#9e98b6]">{t("admin.login.secureAccess")}</p>
       </div>
 
-      {/* Glass Form Card */}
-      <div className="bg-[#110f1e]/80 border border-white/5 backdrop-blur-xl rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-        {/* Top border ambient glow line */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-
-        <form onSubmit={handleLogin} className="space-y-5">
+      <div className="rounded-xl border border-white/10 bg-[#141124] p-6 sm:p-7 shadow-2xl">
+        <form onSubmit={handleLogin} className="space-y-4">
           {error && (
-            <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium animate-fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2.5 rounded-lg border border-rose-500/25 bg-rose-500/10 p-3 text-xs font-medium text-rose-200">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Email Field */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-[#84849b] uppercase tracking-wider block font-mono">
+            <label className="block text-xs font-medium text-[#c2bdd6]">
               {t("admin.login.email")}
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
-                <Mail className="w-4 h-4" />
-              </div>
+              <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8e88a6]" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
                 placeholder="admin@example.com"
-                className="w-full pl-10 pr-4 py-3 bg-[#161426]/50 border border-white/5 rounded-xl text-xs text-white placeholder-white/20 focus:border-accent/40 focus:outline-none transition-all font-sans"
+                className="h-10 w-full rounded-md border border-white/10 bg-[#0d0a18] pl-9 pr-3 text-sm text-white placeholder-[#746e8d] transition-colors focus:border-accent focus:outline-none"
               />
             </div>
           </div>
 
-          {/* Password Field */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-[#84849b] uppercase tracking-wider block font-mono">
+            <label className="block text-xs font-medium text-[#c2bdd6]">
               {t("admin.login.password")}
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
-                <Lock className="w-4 h-4" />
-              </div>
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8e88a6]" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
                 placeholder="••••••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-[#161426]/50 border border-white/5 rounded-xl text-xs text-white placeholder-white/20 focus:border-accent/40 focus:outline-none transition-all font-sans"
+                className="h-10 w-full rounded-md border border-white/10 bg-[#0d0a18] pl-9 pr-3 text-sm text-white placeholder-[#746e8d] transition-colors focus:border-accent focus:outline-none"
               />
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-white hover:bg-white/90 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-2 mt-2 shadow-[0_4px_20px_rgba(255,255,255,0.1)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-accent text-sm font-semibold text-white transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-black" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 <span>{t("admin.login.verifying")}</span>
               </>
             ) : (
@@ -173,13 +125,13 @@ export function LoginForm() {
         </form>
       </div>
 
-      {/* Back Link */}
-      <div className="text-center mt-6">
+      <div className="text-center">
         <Link
-          href="/"
-          className="text-[10px] font-black text-[#84849b] hover:text-white uppercase tracking-wider transition-colors font-mono"
+          href={localizePath("/")}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#9e98b6] hover:text-white transition-colors"
         >
-          ← {t("checkout.backToStore")}
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>{t("checkout.backToStore")}</span>
         </Link>
       </div>
     </div>

@@ -2,11 +2,15 @@
 
 import React, { useState } from "react";
 import {
+  ArrowRight,
   Copy,
   Check,
+  ExternalLink,
+  FileText,
   ShieldCheck,
   CreditCard,
   Layers,
+  Package,
   ShoppingCart,
   UserRound,
   WalletCards,
@@ -18,8 +22,16 @@ import { BACKEND_URL } from "@/shared/lib/api";
 import { PaymentProofModal } from "@/shared/components/PaymentProofModal";
 import { AdminOrderTicketsModal } from "@/shared/components/AdminOrderTicketsModal";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import {
+  AdminBadge,
+  AdminButton,
+  AdminSection,
+  AdminStatusTabs,
+} from "@/features/admin/ui/AdminShell";
 import { OrderDetailItem } from "./OrderDetailItem";
-import { OrderDetailPayoutDetails } from "./OrderDetailPayoutDetails";
+import { OrderDetailPayoutDetails, getPaymentMethodLabel } from "./OrderDetailPayoutDetails";
+
+type PurchaseDetailTab = "overview" | "items" | "payment" | "buyer";
 
 interface OrderDetailRowProps {
   order: Order;
@@ -41,12 +53,14 @@ export function OrderDetailRow({
   resolvedItemsMap,
 }: OrderDetailRowProps) {
   const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState<PurchaseDetailTab>("overview");
+  const [copiedOrderId, setCopiedOrderId] = useState(false);
+  const [copiedTradeUrl, setCopiedTradeUrl] = useState(false);
   const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
   const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false);
   const [proofOpen, setProofOpen] = useState(false);
 
-  // Workflow steps based on order status
   const getWorkflowStep = (): number => {
     switch (order.status) {
       case "PENDING_PAYMENT":
@@ -62,22 +76,29 @@ export function OrderDetailRow({
     }
   };
 
+  const handleCopyOrderId = () => {
+    navigator.clipboard.writeText(order.id);
+    setCopiedOrderId(true);
+    setTimeout(() => setCopiedOrderId(false), 1500);
+  };
+
+  const handleCopyTradeUrl = (tradeUrl: string) => {
+    navigator.clipboard.writeText(tradeUrl);
+    setCopiedTradeUrl(true);
+    setTimeout(() => setCopiedTradeUrl(false), 1500);
+  };
+
   const handleCopyAssetId = (assetId: string) => {
     navigator.clipboard.writeText(assetId);
     setCopiedAssetId(assetId);
-    setTimeout(() => {
-      setCopiedAssetId(null);
-    }, 1500);
+    setTimeout(() => setCopiedAssetId(null), 1500);
   };
 
-  // AUTOMATION: Copies ALL Asset IDs in a comma-separated format for quick search in Steam Trade Window
   const handleCopyAllAssetIds = () => {
     const assetIds = order.items.map((item) => item.assetId).join(", ");
     navigator.clipboard.writeText(assetIds);
     setCopiedAllAssets(true);
-    setTimeout(() => {
-      setCopiedAllAssets(false);
-    }, 2000);
+    setTimeout(() => setCopiedAllAssets(false), 2000);
   };
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
@@ -94,375 +115,550 @@ export function OrderDetailRow({
     typeof order.metadata.paymentQuote.settlement.amount === "number"
       ? order.metadata.paymentQuote.settlement.amount
       : null;
-  const statusLabel =
+  const createdLabel = order.createdAt ? new Date(order.createdAt).toLocaleString() : null;
+  const paymentMethodLabel = getPaymentMethodLabel(order.paymentMethod, t);
+
+  const statusBadge =
     order.status === "PENDING_PAYMENT"
-      ? t("purchases.status.paymentPending")
+      ? { label: t("purchases.status.paymentPending"), tone: "warning" as const }
       : order.status === "PAID"
-        ? t("purchases.status.paid")
+        ? { label: t("purchases.status.paid"), tone: "info" as const }
         : order.status === "TRADE_PENDING"
-          ? t("purchases.status.tradePending")
+          ? { label: t("purchases.status.tradePending"), tone: "accent" as const }
           : order.status === "COMPLETED"
-            ? t("purchases.status.completed")
-            : t("purchases.status.cancelled");
+            ? { label: t("purchases.status.completed"), tone: "success" as const }
+            : { label: t("purchases.status.cancelled"), tone: "danger" as const };
+
+  const steps = [
+    {
+      num: 1,
+      title: t("admin.orders.reviewPayment"),
+      sub: currentStep === 1 ? t("admin.orders.paymentPending") : t("admin.orders.paymentVerified"),
+    },
+    {
+      num: 2,
+      title: t("admin.orders.sourcingItems"),
+      sub:
+        currentStep === 2
+          ? t("admin.orders.searchYouPin")
+          : currentStep > 2
+            ? t("admin.orders.skinsReady")
+            : t("admin.orders.queued"),
+    },
+    {
+      num: 3,
+      title: t("admin.orders.sendTrade"),
+      sub:
+        currentStep === 3
+          ? t("admin.orders.activeTrade")
+          : currentStep > 3
+            ? t("admin.orders.tradeAccepted")
+            : t("admin.orders.queued"),
+    },
+    {
+      num: 4,
+      title: t("admin.orders.stepCompleted"),
+      sub: currentStep === 4 ? t("purchases.step.skinDelivered") : t("admin.orders.queued"),
+    },
+  ];
+
+  const tabs: { value: PurchaseDetailTab; label: string; count?: number }[] = [
+    { value: "overview", label: t("admin.orders.tabs.overview") },
+    { value: "items", label: t("admin.orders.tabs.items"), count: order.items.length },
+    {
+      value: "payment",
+      label: t("admin.orders.tabs.payment"),
+      count: buyerProof ? 1 : undefined,
+    },
+    { value: "buyer", label: t("admin.orders.tabs.buyer") },
+  ];
 
   return (
-    <div
-      className={`bg-[#0e0d16]/90 border border-t-2 border-t-blue-400/70 p-4 sm:p-6 transition-all duration-300 relative overflow-hidden rounded-[3px] ${
-        order.status === "PENDING_PAYMENT"
-          ? "border-white/5 hover:border-orange-500/20"
-          : order.status === "PAID"
-            ? "border-blue-500/10 hover:border-blue-500/30"
-            : order.status === "TRADE_PENDING"
-              ? "border-purple-500/20 hover:border-purple-500/40 shadow-[0_0_25px_rgba(168,85,247,0.05)]"
-              : "border-emerald-500/10 hover:border-emerald-500/30"
-      }`}
-    >
-      <div className="mb-5 overflow-hidden rounded-[3px] border border-blue-400/15 bg-[linear-gradient(135deg,rgba(59,130,246,0.16),rgba(17,15,30,0.62)_48%,rgba(217,70,239,0.08))]">
-        <div className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="min-w-0">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-[3px] border border-blue-400/25 bg-blue-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-blue-300">
+    <div className="space-y-4">
+      {/* Persistent Operational Header */}
+      <AdminSection className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <AdminBadge tone="info">
                 <ShoppingCart className="h-3.5 w-3.5" />
                 {t("admin.orders.operationKindPurchase")}
-              </span>
-              <span className="rounded-[3px] border border-white/10 bg-black/20 px-2.5 py-1 font-mono text-[10px] font-black uppercase tracking-wider text-white/45">
-                {t("purchases.order")} ID: {order.id}
-              </span>
+              </AdminBadge>
+              <AdminBadge tone={statusBadge.tone} dot>
+                {statusBadge.label}
+              </AdminBadge>
+              <button
+                type="button"
+                onClick={handleCopyOrderId}
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-[#0d0a18] px-2.5 py-0.5 font-mono text-xs text-[#c2bdd6] hover:border-white/20 hover:text-white transition-colors cursor-pointer tabular-nums"
+              >
+                <span>#{order.id}</span>
+                {copiedOrderId ? (
+                  <Check className="h-3 w-3 text-emerald-400" />
+                ) : (
+                  <Copy className="h-3 w-3 text-[#8e88a6]" />
+                )}
+              </button>
+              {createdLabel && (
+                <span className="font-mono text-xs text-[#8e88a6] tabular-nums">
+                  {createdLabel}
+                </span>
+              )}
             </div>
-            <h3 className="text-xl font-black tracking-tight text-white">
+            <h3 className="text-lg font-semibold tracking-tight text-white sm:text-xl">
               {t("admin.orders.purchaseOperationTitle")}
             </h3>
-            <p className="mt-1 max-w-3xl text-xs font-semibold leading-relaxed text-[#a8a8bc]">
+            <p className="max-w-2xl text-xs sm:text-[13px] leading-relaxed text-[#9e98b6]">
               {t("admin.orders.purchaseOperationDescription")}
             </p>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[520px]">
-            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
-              <span className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-[#84849b]">
-                <UserRound className="h-3 w-3" />
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {buyerProof && (
+              <AdminButton
+                type="button"
+                variant="success"
+                size="sm"
+                icon={FileText}
+                onClick={() => setProofOpen(true)}
+              >
+                {t("purchases.viewProof")}
+              </AdminButton>
+            )}
+            <AdminButton
+              type="button"
+              variant="secondary"
+              size="sm"
+              icon={MessageSquare}
+              onClick={() => setIsTicketsModalOpen(true)}
+            >
+              {t("admin.tickets.panelButton")}
+            </AdminButton>
+          </div>
+        </div>
+
+        {/* Unified Key Summary Strip (no nested cards) */}
+        <div className="grid grid-cols-1 divide-y divide-white/[0.06] rounded-lg border border-white/[0.06] bg-[#1a1630] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <div className="flex items-center gap-3 p-3.5">
+            {order.user?.avatar ? (
+              <img
+                src={order.user.avatar}
+                alt=""
+                className="h-9 w-9 shrink-0 rounded-md border border-white/10 object-cover"
+              />
+            ) : (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-white/10 bg-[#0d0a18] text-[#9e98b6]">
+                <UserRound className="h-4 w-4" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <span className="block text-[11px] font-medium text-[#8e88a6]">
                 {t("admin.orders.buyer")}
               </span>
-              <p className="truncate text-sm font-black text-white">{order.user?.name || t("admin.common.unknownUser")}</p>
-              <p className="truncate font-mono text-[10px] font-bold text-accent">{order.user?.steamId || "-"}</p>
-            </div>
-            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
-              <span className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-[#84849b]">
-                <WalletCards className="h-3 w-3" />
-                {t("admin.orders.totalAmount")}
-              </span>
-              <p className="text-lg font-black leading-none text-emerald-400">${order.totalPrice.toLocaleString()} USD</p>
-              {arsSettlement !== null && (
-                <p className="mt-1 text-[10px] font-bold text-emerald-300">
-                  {formatArs(arsSettlement)} ARS
-                </p>
-              )}
-              <p className="mt-1 text-[10px] font-bold text-white/35">{statusLabel}</p>
-            </div>
-            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
-              <span className="mb-1 block text-[9px] font-black uppercase tracking-widest text-[#84849b]">
-                {t("common.status")}
-              </span>
-              <span
-                className={`inline-flex rounded-[3px] border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
-                  order.status === "PENDING_PAYMENT"
-                    ? "border-orange-500/20 bg-orange-500/10 text-orange-400"
-                    : order.status === "PAID"
-                      ? "border-blue-500/20 bg-blue-500/10 text-blue-400"
-                      : order.status === "TRADE_PENDING"
-                        ? "border-purple-500/20 bg-purple-500/10 text-purple-400"
-                        : order.status === "COMPLETED"
-                          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                          : "border-red-500/20 bg-red-500/10 text-red-400"
-                }`}
-              >
-                {statusLabel}
-              </span>
-            </div>
-          {/* Bot selector omitted for purchases; sending bot is not fixed per buy order. */}
-          </div>
-        </div>
-      </div>
-
-      {/* Workflow */}
-      <div className="mb-6 bg-white/[0.01] border border-white/5 p-4 rounded-[3px]">
-        <div className="flex items-center justify-between flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider font-mono text-[#84849b] mb-4">
-          <span className="flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5 text-accent" />
-            {t("purchases.transactionProgress", { type: t("purchases.buy") })}
-          </span>
-          <span className="text-white/40 font-mono">{t("purchases.order")} ID: {order.id}</span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-          {/* Paso 1: Pago */}
-          <div
-            className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-              currentStep === 1
-                ? "bg-orange-500/5 border-orange-500/20 text-orange-400"
-                : currentStep > 1
-                  ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60"
-                  : "bg-white/[0.01] border-white/5 text-white/30"
-            }`}
-          >
-            <div
-              className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                currentStep === 1
-                  ? "bg-orange-400 text-black"
-                  : currentStep > 1
-                    ? "bg-emerald-400 text-black"
-                    : "bg-white/10 text-white/40"
-              }`}
-            >
-              {currentStep > 1 ? "✓" : "1"}
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-black uppercase block leading-tight">
-                {t("admin.orders.reviewPayment")}
-              </span>
-              <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 1 ? t("admin.orders.paymentPending") : t("admin.orders.paymentVerified")}
-              </span>
+              <p className="truncate text-sm font-semibold text-white">
+                {order.user?.name || t("admin.common.unknownUser")}
+              </p>
+              <p className="truncate font-mono text-xs text-[#a39db9] tabular-nums">
+                {order.user?.steamId || "—"}
+              </p>
             </div>
           </div>
 
-          {/* Paso 2: Preparación */}
-          <div
-            className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-              currentStep === 2
-                ? "bg-blue-500/5 border-blue-500/20 text-blue-400"
-                : currentStep > 2
-                  ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60"
-                  : "bg-white/[0.01] border-white/5 text-white/30"
-            }`}
-          >
-            <div
-              className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                currentStep === 2
-                  ? "bg-blue-400 text-black"
-                  : currentStep > 2
-                    ? "bg-emerald-400 text-black"
-                    : "bg-white/10 text-white/40"
-              }`}
-            >
-              {currentStep > 2 ? "✓" : "2"}
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-black uppercase block leading-tight">
-                {t("admin.orders.sourcingItems")}
-              </span>
-              <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 2
-                  ? t("admin.orders.searchYouPin")
-                  : currentStep > 2
-                    ? t("admin.orders.skinsReady")
-                    : t("admin.orders.queued")}
-              </span>
-            </div>
-          </div>
-
-          {/* Paso 3: Trade */}
-          <div
-            className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-              currentStep === 3
-                ? "bg-purple-500/10 border-purple-500/30 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.05)]"
-                : currentStep > 3
-                  ? "bg-emerald-500/5 border-emerald-500/10 text-emerald-400 opacity-60"
-                  : "bg-white/[0.01] border-white/5 text-white/30"
-            }`}
-          >
-            <div
-              className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                currentStep === 3
-                  ? "bg-purple-400 text-black animate-pulse"
-                  : currentStep > 3
-                    ? "bg-emerald-400 text-black"
-                    : "bg-white/10 text-white/40"
-              }`}
-            >
-              {currentStep > 3 ? "✓" : "3"}
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-black uppercase block leading-tight">
-                {t("admin.orders.sendTrade")}
-              </span>
-              <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 3
-                  ? t("admin.orders.activeTrade")
-                  : currentStep > 3
-                    ? t("admin.orders.tradeAccepted")
-                    : t("admin.orders.queued")}
-              </span>
-            </div>
-          </div>
-
-          {/* Paso 4: Completar */}
-          <div
-            className={`flex items-center gap-2.5 p-2 border transition-all rounded-[3px] ${
-              currentStep === 4
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                : "bg-white/[0.01] border-white/5 text-white/30"
-            }`}
-          >
-            <div
-              className={`w-5 h-5 flex items-center justify-center text-[10px] font-black font-mono rounded-[3px] ${
-                currentStep === 4
-                  ? "bg-emerald-400 text-black"
-                  : "bg-white/10 text-white/40"
-              }`}
-            >
-              4
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-black uppercase block leading-tight">
-                {t("admin.orders.stepCompleted")}
-              </span>
-              <span className="text-[8.5px] font-mono opacity-60">
-                {currentStep === 4 ? t("purchases.step.skinDelivered") : t("admin.orders.queued")}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 border-b border-white/5 pb-5 mb-5 lg:grid-cols-[280px_1fr]">
-        <div className="flex flex-col gap-4">
-          {/* Tickets / Chat Box */}
-          <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4 flex flex-col gap-2">
-            <span className="flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
-              <MessageSquare className="h-3.5 w-3.5 text-accent" />
-              {t("admin.tickets.panelTitle") || "Soporte y Chat"}
+          <div className="p-3.5">
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-[#8e88a6]">
+              <WalletCards className="h-3.5 w-3.5" />
+              {t("admin.orders.totalAmount")}
             </span>
-            <p className="text-[10px] font-semibold leading-relaxed text-white/35">
-              {t("admin.tickets.panelDescBuy") || "Si necesitás comunicarte con el usuario por esta orden de compra, podés abrir un ticket de chat directo."}
+            <p className="mt-1 text-base font-semibold text-emerald-400 tabular-nums">
+              ${order.totalPrice.toLocaleString()} USD
             </p>
+            <p className="mt-0.5 truncate text-xs text-[#b8b2cd] tabular-nums">
+              {arsSettlement !== null
+                ? `${formatArs(arsSettlement)} ARS · ${paymentMethodLabel}`
+                : paymentMethodLabel}
+            </p>
+          </div>
+
+          <div className="p-3.5">
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-[#8e88a6]">
+              <Package className="h-3.5 w-3.5" />
+              {t("admin.orders.tabs.items")}
+            </span>
+            <p className="mt-1 text-sm font-semibold text-white tabular-nums">
+              {t("admin.orders.itemsInOrder", { count: order.items.length })}
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+              {buyerProof ? (
+                <button
+                  type="button"
+                  onClick={() => setProofOpen(true)}
+                  className="font-medium text-emerald-300 hover:underline cursor-pointer"
+                >
+                  {t("admin.orders.proofAttached")} · {t("common.view")}
+                </button>
+              ) : (
+                <span className="text-[#8e88a6]">
+                  {order.user?.tradeUrl
+                    ? t("admin.orders.customerTradeLink")
+                    : t("admin.common.noTradeUrl")}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Always-Visible Status Controls */}
+        <div className="border-t border-white/[0.06] pt-4 space-y-2.5">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <h4 className="text-xs font-semibold text-white">
+              {t("admin.orders.manualStatusChange")}
+            </h4>
+            <p className="text-xs text-[#9e98b6]">
+              {t("admin.orders.purchaseStatusHelper")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => setIsTicketsModalOpen(true)}
-              className="w-full h-9 bg-accent/15 hover:bg-accent/25 border border-accent/30 text-accent text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              {t("admin.tickets.panelButton") || "Soporte / Chat"}
-            </button>
-          </div>
-        </div>
-
-        <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4">
-          <span className="text-[10px] text-[#84849b] font-mono block mb-1 uppercase tracking-wider">
-            {t("admin.orders.manualStatusChange")}
-          </span>
-          <p className="mb-3 text-[10px] font-semibold text-white/35">
-            {t("admin.orders.purchaseStatusHelper")}
-          </p>
-          <div className="grid grid-cols-1 gap-1.5 xl:flex xl:flex-wrap xl:items-center">
-            {/* Paso 1: Pago */}
-            <button
-              onClick={() => {
-                if (!isCancelled) {
-                  handleUpdateStatus(order.id, "PAID");
-                }
-              }}
+              onClick={() => !isCancelled && handleUpdateStatus(order.id, "PAID")}
               disabled={isCancelled}
               title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.markPaid")}
-              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
-                isCancelled
-                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
-                  : order.status === "PAID"
-                  ? "bg-blue-500/20 border-blue-500/40 text-blue-400 font-extrabold shadow-[0_0_10px_rgba(59,130,246,0.1)]"
-                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
+              className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
+                order.status === "PAID"
+                  ? "border-sky-500/40 bg-sky-500/15 text-sky-200"
+                  : "border-white/10 bg-[#1c1833] text-[#c2bdd6] hover:bg-[#252042] hover:text-white"
               }`}
             >
-              <CreditCard className="w-3.5 h-3.5" />
+              <CreditCard className="h-3.5 w-3.5" />
               {t("admin.orders.step1PaymentReceived")}
             </button>
 
-            {/* Paso 2: Trade */}
             <button
-              onClick={() => {
-                if (!isCancelled) {
-                  handleUpdateStatus(order.id, "TRADE_PENDING");
-                }
-              }}
+              type="button"
+              onClick={() => !isCancelled && handleUpdateStatus(order.id, "TRADE_PENDING")}
               disabled={isCancelled}
               title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.markTradePending")}
-              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
-                isCancelled
-                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
-                  : order.status === "TRADE_PENDING"
-                  ? "bg-purple-500/20 border-purple-500/40 text-purple-400 font-extrabold shadow-[0_0_10px_rgba(168,85,247,0.1)]"
-                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
+              className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
+                order.status === "TRADE_PENDING"
+                  ? "border-accent/50 bg-accent/15 text-fuchsia-200"
+                  : "border-white/10 bg-[#1c1833] text-[#c2bdd6] hover:bg-[#252042] hover:text-white"
               }`}
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <ShieldCheck className="h-3.5 w-3.5" />
               {t("admin.orders.step2TradePending")}
             </button>
 
-            {/* Paso 3: Completar */}
             <button
-              onClick={() => {
-                if (!isCancelled) {
-                  handleUpdateStatus(order.id, "COMPLETED");
-                }
-              }}
+              type="button"
+              onClick={() => !isCancelled && handleUpdateStatus(order.id, "COMPLETED")}
               disabled={isCancelled}
               title={isCancelled ? t("admin.common.backToPendingFromCancelled") : t("admin.orders.completeOrder")}
-              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
-                isCancelled
-                  ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
-                  : order.status === "COMPLETED"
-                  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 font-extrabold shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                  : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
+              className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
+                order.status === "COMPLETED"
+                  ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-200"
+                  : "border-white/10 bg-[#1c1833] text-[#c2bdd6] hover:bg-[#252042] hover:text-white"
               }`}
             >
-              <Check className="w-3.5 h-3.5" />
+              <Check className="h-3.5 w-3.5" />
               {t("admin.orders.step3Complete")}
             </button>
 
-            {/* Volver a Pendiente */}
             <button
+              type="button"
               onClick={() => handleUpdateStatus(order.id, "PENDING_PAYMENT")}
-              className={`w-full sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer ${
-                order.status === "PENDING_PAYMENT"
-                  ? "bg-[#110f1e] border-[#84849b]/40 text-[#84849b]"
-                  : "bg-white/5 border-white/5 text-white/30 hover:text-white"
-              }`}
               title={t("admin.orders.resetToPending")}
+              className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors cursor-pointer ${
+                order.status === "PENDING_PAYMENT"
+                  ? "border-amber-500/35 bg-amber-500/12 text-amber-200"
+                  : "border-white/10 bg-[#0d0a18] text-[#9e98b6] hover:text-white"
+              }`}
             >
               {t("admin.orders.resetToPending")}
             </button>
 
-            {/* Rechazar / Cancelar */}
             <button
-              onClick={() => {
-                if (canCancel) {
-                  handleUpdateStatus(order.id, "CANCELLED");
-                }
-              }}
+              type="button"
+              onClick={() => canCancel && handleUpdateStatus(order.id, "CANCELLED")}
               disabled={!canCancel}
-              title={
-                canCancel
-                  ? t("admin.orders.cancelOrder")
-                  : t("admin.orders.cancelFromPending")
-              }
-              className={`w-full justify-center sm:w-auto px-3 py-2 border text-[9.5px] font-black uppercase tracking-wider transition-all rounded-[3px] cursor-pointer flex items-center gap-1.5 ${
+              title={canCancel ? t("admin.orders.cancelOrder") : t("admin.orders.cancelFromPending")}
+              className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
                 order.status === "CANCELLED"
-                  ? "bg-red-500/20 border-red-500/40 text-red-400"
-                  : !canCancel
-                    ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed opacity-50"
-                    : "bg-white/5 border-white/5 text-[#84849b] hover:text-white"
+                  ? "border-rose-500/40 bg-rose-500/15 text-rose-200"
+                  : "border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
               }`}
             >
-              <XCircle className="w-3.5 h-3.5" />
+              <XCircle className="h-3.5 w-3.5" />
               {t("admin.orders.rejectCancel")}
             </button>
           </div>
         </div>
-      </div>
+      </AdminSection>
 
-      <OrderDetailPayoutDetails
-        order={order}
-        onOpenProofModal={() => setProofOpen(true)}
+      {/* Section Tabs */}
+      <AdminStatusTabs
+        items={tabs}
+        value={activeTab}
+        onChange={setActiveTab}
       />
+
+      {/* Tab Panel Content */}
+      {activeTab === "overview" && (
+        <div role="tabpanel" className="space-y-4">
+          <AdminSection className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+              <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                <Layers className="h-4 w-4 text-accent" />
+                {t("purchases.transactionProgress", { type: t("purchases.buy") })}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              {steps.map((step) => {
+                const done = currentStep > step.num;
+                const active = currentStep === step.num;
+                return (
+                  <div
+                    key={step.num}
+                    className={`flex items-center gap-2.5 rounded-md border p-3 transition-colors ${
+                      active
+                        ? "border-accent/40 bg-accent/10 text-white"
+                        : done
+                          ? "border-emerald-500/25 bg-emerald-500/[0.07] text-emerald-200"
+                          : "border-white/[0.06] bg-[#1a1630] text-[#8e88a6]"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-semibold tabular-nums ${
+                        active
+                          ? "bg-accent text-white"
+                          : done
+                            ? "bg-emerald-500 text-black"
+                            : "bg-white/[0.06] text-[#9e98b6]"
+                      }`}
+                    >
+                      {done ? "✓" : step.num}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block truncate text-xs font-semibold leading-tight">
+                        {step.title}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[11px] opacity-80">
+                        {step.sub}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </AdminSection>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Quick Trade URL card */}
+            <AdminSection className="flex flex-col justify-between gap-3.5">
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="text-sm font-semibold text-white">
+                    {t("admin.orders.customerTradeLink")}
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("buyer")}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline cursor-pointer"
+                  >
+                    <span>{t("admin.orders.tabs.buyer")}</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+                <p className="mt-2 break-all rounded-md border border-white/[0.06] bg-[#0d0a18] p-2.5 font-mono text-xs leading-relaxed text-[#d4cfe6] select-all">
+                  {order.user?.tradeUrl || t("admin.common.noTradeUrl")}
+                </p>
+              </div>
+
+              {order.user?.tradeUrl && (
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={order.user.tradeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-indigo-500/30 bg-indigo-500/15 px-3 text-xs font-semibold text-indigo-200 hover:bg-indigo-500/25 transition-colors"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    {t("admin.orders.openTrade")}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => order.user?.tradeUrl && handleCopyTradeUrl(order.user.tradeUrl)}
+                    className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors cursor-pointer ${
+                      copiedTradeUrl
+                        ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
+                        : "border-white/10 bg-[#1c1833] text-[#c2bdd6] hover:bg-[#252042] hover:text-white"
+                    }`}
+                  >
+                    {copiedTradeUrl ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>{t("admin.orders.copied")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        <span>{t("admin.orders.copy")}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </AdminSection>
+
+            {/* Quick Items Preview card */}
+            <AdminSection className="flex flex-col justify-between gap-3.5">
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="text-sm font-semibold text-white">
+                    {t("admin.orders.quickActions")}
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("items")}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline cursor-pointer"
+                  >
+                    <span>{t("admin.orders.viewAllItems", { count: order.items.length })}</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+
+                <div className="mt-2.5 divide-y divide-white/[0.06] rounded-md border border-white/[0.06] bg-[#1a1630]">
+                  {order.items.slice(0, 3).map((item) => (
+                    <div key={item.id} className="flex items-center justify-between gap-3 px-3 py-2 text-xs">
+                      <span className="truncate font-medium text-white">{item.name}</span>
+                      <span className="shrink-0 font-mono font-semibold text-emerald-400 tabular-nums">
+                        ${item.price.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                  {order.items.length > 3 && (
+                    <div className="px-3 py-1.5 text-[11px] text-[#9e98b6]">
+                      +{order.items.length - 3} {t("common.items").toLowerCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <AdminButton
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  icon={Package}
+                  onClick={() => setActiveTab("items")}
+                >
+                  {t("admin.orders.viewAllItems", { count: order.items.length })}
+                </AdminButton>
+                <AdminButton
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  icon={CreditCard}
+                  onClick={() => setActiveTab("payment")}
+                >
+                  {t("admin.orders.tabs.payment")}
+                </AdminButton>
+              </div>
+            </AdminSection>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "items" && (
+        <div role="tabpanel">
+          <AdminSection className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+              <div>
+                <h4 className="text-sm font-semibold text-white">
+                  {t("admin.orders.itemsInOrder", { count: order.items.length })}
+                </h4>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCopyAllAssetIds}
+                className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors cursor-pointer ${
+                  copiedAllAssets
+                    ? "border-emerald-500/30 bg-emerald-500/12 text-emerald-300"
+                    : "border-white/10 bg-[#1c1833] text-[#c2bdd6] hover:bg-[#252042] hover:text-white"
+                }`}
+                title={t("admin.orders.copySteamIds")}
+              >
+                {copiedAllAssets ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>{t("admin.orders.idsCopied")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" />
+                    <span>{t("admin.orders.copySteamIds")}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {order.items.map((item) => (
+                <OrderDetailItem
+                  key={item.id}
+                  item={item}
+                  resolvedDetails={resolvedItemsMap[item.assetId] || {}}
+                  copiedAssetId={copiedAssetId}
+                  onCopyAssetId={handleCopyAssetId}
+                />
+              ))}
+            </div>
+          </AdminSection>
+        </div>
+      )}
+
+      {activeTab === "payment" && (
+        <div role="tabpanel">
+          <OrderDetailPayoutDetails
+            order={order}
+            mode="payment"
+            onOpenProofModal={() => setProofOpen(true)}
+          />
+        </div>
+      )}
+
+      {activeTab === "buyer" && (
+        <div role="tabpanel" className="space-y-4">
+          <OrderDetailPayoutDetails
+            order={order}
+            mode="buyer"
+            onOpenProofModal={() => setProofOpen(true)}
+          />
+
+          <AdminSection className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                <MessageSquare className="h-4 w-4 text-accent" />
+                {t("admin.tickets.panelTitle")}
+              </span>
+              <p className="mt-1 text-xs leading-relaxed text-[#9e98b6]">
+                {t("admin.tickets.panelDescBuy")}
+              </p>
+            </div>
+            <AdminButton
+              type="button"
+              variant="secondary"
+              icon={MessageSquare}
+              onClick={() => setIsTicketsModalOpen(true)}
+              className="shrink-0"
+            >
+              {t("admin.tickets.panelButton")}
+            </AdminButton>
+          </AdminSection>
+        </div>
+      )}
 
       <PaymentProofModal
         open={proofOpen}
@@ -472,49 +668,6 @@ export function OrderDetailRow({
         title={t("admin.orders.buyerProof")}
       />
 
-      {/* 📦 SECCIÓN DE ÍTEMS PERMANENTEMENTE ABIERTA */}
-      <div className="space-y-3 border-t border-white/5 pt-5 mt-5">
-        <div className="flex items-center justify-between font-sans mb-3 text-[10px] text-[#84849b] font-black uppercase tracking-widest">
-          <span className="flex items-center gap-1.5">
-            {t("admin.orders.itemsInOrder", { count: order.items.length })}
-          </span>
-
-          {/* AUTOMATION BUTTON: Copia todos los Asset IDs de golpe */}
-          <button
-            onClick={handleCopyAllAssetIds}
-            className={`px-3 py-1 border text-[8.5px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 rounded-[3px] ${
-              copiedAllAssets
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
-                : "bg-[#110f1e] border-white/5 text-[#84849b] hover:text-white hover:bg-white/5"
-            }`}
-            title={t("admin.orders.copySteamIds")}
-          >
-            {copiedAllAssets ? (
-              <>
-                <Check className="w-3 h-3 text-emerald-400 animate-pulse" />
-                <span>{t("admin.orders.idsCopied")}</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3 h-3" />
-                <span>{t("admin.orders.copySteamIds")}</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {order.items.map((item) => (
-            <OrderDetailItem
-              key={item.id}
-              item={item}
-              resolvedDetails={resolvedItemsMap[item.assetId] || {}}
-              copiedAssetId={copiedAssetId}
-              onCopyAssetId={handleCopyAssetId}
-            />
-          ))}
-        </div>
-      </div>
       <AdminOrderTicketsModal
         isOpen={isTicketsModalOpen}
         onClose={() => setIsTicketsModalOpen(false)}

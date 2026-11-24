@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { Bot } from "./useAdminBots";
+import { AdminBadge, AdminButton } from "@/features/admin/ui/AdminShell";
 
 interface BotCardProps {
   bot: Bot;
@@ -23,38 +24,13 @@ interface BotCardProps {
 
 const statusConfig: Record<
   string,
-  { labelKey: string; color: string; bg: string; dot: string }
+  { labelKey: string; tone: "success" | "neutral" | "warning" | "danger" }
 > = {
-  active: {
-    labelKey: "admin.bots.status.active",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10 border-emerald-500/20",
-    dot: "bg-emerald-500",
-  },
-  inactive: {
-    labelKey: "admin.bots.status.inactive",
-    color: "text-slate-400",
-    bg: "bg-slate-500/10 border-slate-500/20",
-    dot: "bg-slate-500",
-  },
-  maintenance: {
-    labelKey: "admin.bots.status.maintenance",
-    color: "text-yellow-400",
-    bg: "bg-yellow-500/10 border-yellow-500/20",
-    dot: "bg-yellow-500",
-  },
-  full: {
-    labelKey: "admin.bots.status.full",
-    color: "text-orange-400",
-    bg: "bg-orange-500/10 border-orange-500/20",
-    dot: "bg-orange-500",
-  },
-  error: {
-    labelKey: "admin.bots.status.error",
-    color: "text-red-400",
-    bg: "bg-red-500/10 border-red-500/20",
-    dot: "bg-red-500",
-  },
+  active: { labelKey: "admin.bots.status.active", tone: "success" },
+  inactive: { labelKey: "admin.bots.status.inactive", tone: "neutral" },
+  maintenance: { labelKey: "admin.bots.status.maintenance", tone: "warning" },
+  full: { labelKey: "admin.bots.status.full", tone: "warning" },
+  error: { labelKey: "admin.bots.status.error", tone: "danger" },
 };
 
 export function BotCard({
@@ -68,62 +44,46 @@ export function BotCard({
   const status = statusConfig[bot.status] || statusConfig.inactive;
   const pct = bot.maxItems > 0 ? (bot.currentItems / bot.maxItems) * 100 : 0;
   const pctColor =
-    pct > 90
-      ? "bg-red-500"
-      : pct > 75
-        ? "bg-orange-400"
-        : "bg-accent";
+    pct > 90 ? "bg-rose-500" : pct > 75 ? "bg-amber-400" : "bg-accent";
 
   return (
-    <div className="bg-[#110f1e]/30 border border-white/5 rounded-[3px] p-4 sm:p-5 space-y-5 relative overflow-hidden group min-w-0">
-      {/* Status Indicator Bar */}
-      <div className={`absolute top-0 left-0 w-full h-[2px] ${status.dot}`} />
-
-      {/* Card Header */}
-      <div className="flex items-start justify-between gap-3 min-w-0">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-[3px] bg-white/[0.02] border border-white/8 flex items-center justify-center shrink-0">
-            <Cpu className="w-4 h-4 text-white/50 group-hover:text-accent transition-colors" />
+    <div className="flex min-w-0 flex-col justify-between gap-4 rounded-lg border border-white/[0.07] bg-[#141124] p-4 sm:p-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-white/10 bg-[#1c1833] text-[#b8b2cd]">
+            <Cpu className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-black text-sm text-white truncate max-w-[150px]">
-              {bot.name}
-            </h3>
-            <p className="text-[9px] text-[#84849b] font-mono mt-0.5 uppercase tracking-wider">
-              {t("admin.bots.steamBotAccount")}
-            </p>
+            <h3 className="truncate text-sm font-semibold text-white">{bot.name}</h3>
+            <p className="text-xs text-[#8e88a6]">{t("admin.bots.steamBotAccount")}</p>
           </div>
         </div>
 
-        <span
-          className={`px-2 py-0.5 rounded-[3px] text-[8px] font-black uppercase tracking-wider border flex items-center gap-1 shrink-0 ${status.bg} ${status.color}`}
-        >
-          <span className={`w-1 h-1 rounded-full ${status.dot}`} />
+        <AdminBadge tone={status.tone} dot>
           {t(status.labelKey)}
-        </span>
+        </AdminBadge>
       </div>
 
       {/* Properties */}
-      <div className="space-y-2.5 pt-1.5 border-t border-white/[0.03]">
+      <div className="space-y-3 border-t border-white/[0.06] pt-3">
         <div>
-          <span className="text-[8px] font-black uppercase text-[#84849b] tracking-wider block">
-            SteamID64 del Bot
-          </span>
-          <span className="text-[10px] font-mono text-white/70 block mt-0.5 break-all">
+          <span className="block text-xs text-[#8e88a6]">SteamID64</span>
+          <span className="mt-0.5 block break-all font-mono text-xs text-[#d4cfe6] select-all tabular-nums">
             {bot.steamId}
           </span>
         </div>
 
         <div>
-          <div className="flex justify-between items-center text-[8px] font-black uppercase text-[#84849b] tracking-wider mb-1">
-            <span>{t("admin.bots.storageCapacity")}</span>
-            <span className="text-white/80">
-              {t("admin.bots.itemsCount", { count: `${bot.currentItems} / ${bot.maxItems}` })} ({pct.toFixed(0)}%)
+          <div className="mb-1.5 flex items-center justify-between text-xs">
+            <span className="text-[#8e88a6]">{t("admin.bots.storageCapacity")}</span>
+            <span className="font-medium text-white tabular-nums">
+              {bot.currentItems} / {bot.maxItems} ({pct.toFixed(0)}%)
             </span>
           </div>
-          <div className="w-full h-1.5 bg-white/[0.03] rounded-full overflow-hidden">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${pctColor}`}
+              className={`h-full rounded-full transition-all duration-300 ${pctColor}`}
               style={{ width: `${Math.min(100, pct)}%` }}
             />
           </div>
@@ -131,53 +91,51 @@ export function BotCard({
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-white/[0.03] gap-2">
+      <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
             onClick={() => onEdit(bot)}
-            className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-white/60 hover:text-white transition-all cursor-pointer"
+            className="rounded-md border border-white/10 bg-[#1c1833] p-2 text-[#b8b2cd] hover:text-white transition-colors cursor-pointer"
             title={t("admin.bots.editConfig")}
+            aria-label={t("admin.bots.editConfig")}
           >
-            <Edit3 className="w-3.5 h-3.5" />
+            <Edit3 className="h-3.5 w-3.5" />
           </button>
           <button
+            type="button"
             onClick={() => onDelete(bot)}
-            className="p-2 bg-white/[0.02] hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 rounded-[3px] text-white/40 hover:text-red-400 transition-all cursor-pointer"
+            className="rounded-md border border-white/10 bg-[#1c1833] p-2 text-[#9e98b6] hover:border-rose-500/30 hover:bg-rose-500/12 hover:text-rose-300 transition-colors cursor-pointer"
             title={t("admin.bots.deleteBot")}
+            aria-label={t("admin.bots.deleteBot")}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
           {bot.tradeUrl && (
             <a
               href={bot.tradeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[3px] text-[#84849b] hover:text-white transition-all cursor-pointer"
+              className="rounded-md border border-white/10 bg-[#1c1833] p-2 text-[#9e98b6] hover:text-white transition-colors"
               title={t("admin.bots.viewTradeOffer")}
+              aria-label={t("admin.bots.viewTradeOffer")}
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
           )}
         </div>
 
-        <button
+        <AdminButton
+          type="button"
+          size="sm"
           onClick={() => onToggle(bot)}
           disabled={actionLoading === bot.id}
-          className={`flex w-full items-center justify-center gap-1.5 px-3 py-2 text-[9px] font-black uppercase tracking-wider rounded-[3px] transition-all cursor-pointer select-none border disabled:opacity-45 sm:w-auto ${
-            bot.isActive
-              ? "bg-red-500/10 hover:bg-red-500/20 border-red-500/20 text-red-400"
-              : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400"
-          }`}
+          variant={bot.isActive ? "danger" : "success"}
+          icon={actionLoading === bot.id ? Loader2 : bot.isActive ? PowerOff : Power}
+          loading={actionLoading === bot.id}
         >
-          {actionLoading === bot.id ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
-          ) : bot.isActive ? (
-            <PowerOff className="w-3 h-3" />
-          ) : (
-            <Power className="w-3 h-3" />
-          )}
           {bot.isActive ? t("admin.bots.deactivate") : t("admin.bots.activate")}
-        </button>
+        </AdminButton>
       </div>
     </div>
   );

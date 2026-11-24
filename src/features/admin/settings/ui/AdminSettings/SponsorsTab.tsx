@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
-import { AdminAlert, AdminButton, AdminEmptyState } from "@/features/admin/ui/AdminShell";
+import { AdminAlert, AdminButton, AdminEmptyState, AdminSection } from "@/features/admin/ui/AdminShell";
 import { FieldLabel, SectionHeader, StyledInput, ToggleSwitch } from "./FormControls";
 
 interface AdminSponsor {
@@ -246,7 +246,7 @@ export function SponsorsTab() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[3px] border border-white/5 bg-[#110f1e]/40 p-4 sm:p-6">
+      <AdminSection>
         <SectionHeader
           title={t("admin.sponsors.form.title")}
           desc={t("admin.sponsors.form.desc")}
@@ -265,9 +265,9 @@ export function SponsorsTab() {
 
           <div className="space-y-1.5">
             <FieldLabel>{t("admin.sponsors.image")}</FieldLabel>
-            <label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[3px] border border-white/10 bg-white/[0.03] px-4 text-xs font-black uppercase tracking-wider text-white transition-all hover:border-accent/40 hover:bg-white/[0.05]">
-              <Upload className="h-4 w-4 text-accent" />
-              {newImage ? newImage.name : t("admin.sponsors.selectImage")}
+            <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-white/10 bg-[#1a1630] px-4 text-xs font-semibold text-white transition-colors hover:border-accent/40 hover:bg-[#221d3d]">
+              <Upload className="h-4 w-4 shrink-0 text-accent" />
+              <span className="truncate">{newImage ? newImage.name : t("admin.sponsors.selectImage")}</span>
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
@@ -283,26 +283,26 @@ export function SponsorsTab() {
             loading={creating}
             disabled={creating}
             variant="primary"
-            className="h-11"
+            className="h-10"
           >
             {t("admin.sponsors.create")}
           </AdminButton>
         </form>
 
         {previewUrl && (
-          <div className="mt-4 flex items-center gap-3 rounded-[3px] border border-white/5 bg-black/20 p-3">
-            <div className="relative h-14 w-24 overflow-hidden rounded-[3px] border border-white/10 bg-white/[0.04]">
+          <div className="mt-4 flex items-center gap-3 rounded-lg border border-white/[0.06] bg-[#1a1630] p-3">
+            <div className="relative h-14 w-24 overflow-hidden rounded-md border border-white/10 bg-[#0d0a18]">
               <Image src={previewUrl} alt={newName || "Sponsor"} fill className="object-contain p-2" />
             </div>
-            <p className="min-w-0 truncate text-xs font-bold text-[#84849b]">{newImage?.name}</p>
+            <p className="min-w-0 truncate text-xs font-medium text-[#b8b2cd]">{newImage?.name}</p>
           </div>
         )}
-      </div>
+      </AdminSection>
 
       {error && <AdminAlert>{error}</AdminAlert>}
       {success && <AdminAlert tone="success">{success}</AdminAlert>}
 
-      <div className="rounded-[3px] border border-white/5 bg-[#110f1e]/40 p-4 sm:p-6">
+      <AdminSection>
         <SectionHeader
           title={t("admin.sponsors.list.title")}
           desc={t("admin.sponsors.list.desc")}
@@ -310,7 +310,7 @@ export function SponsorsTab() {
 
         {loading ? (
           <div className="flex min-h-40 items-center justify-center text-white/40">
-            <Loader2 className="h-7 w-7 animate-spin" />
+            <Loader2 className="h-7 w-7 animate-spin text-accent" />
           </div>
         ) : sponsors.length === 0 ? (
           <AdminEmptyState icon={ImagePlus} title={t("admin.sponsors.empty")} />
@@ -324,9 +324,9 @@ export function SponsorsTab() {
               return (
                 <div
                   key={sponsor.id}
-                  className="grid gap-4 rounded-[3px] border border-white/5 bg-black/20 p-4 lg:grid-cols-[96px_minmax(0,1fr)_auto] lg:items-center"
+                  className="grid gap-4 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4 lg:grid-cols-[96px_minmax(0,1fr)_auto] lg:items-center"
                 >
-                  <div className="relative h-20 w-24 overflow-hidden rounded-[3px] border border-white/10 bg-white/[0.04]">
+                  <div className="relative h-20 w-24 overflow-hidden rounded-md border border-white/10 bg-[#0d0a18]">
                     <Image src={sponsorImageUrl(sponsor)} alt={sponsor.name} fill className="object-contain p-2" />
                   </div>
 
@@ -346,6 +346,7 @@ export function SponsorsTab() {
                         />
                       </div>
                       <AdminButton
+                        size="sm"
                         icon={Save}
                         loading={isMutating}
                         disabled={isMutating || !nameChanged || draftName.trim().length === 0}
@@ -355,8 +356,8 @@ export function SponsorsTab() {
                       </AdminButton>
                     </div>
 
-                    <div className="flex flex-col gap-2 text-[10px] font-bold uppercase tracking-wider text-[#84849b] sm:flex-row sm:items-center sm:justify-between">
-                      <span className="truncate">
+                    <div className="flex flex-col gap-2 text-xs text-[#9e98b6] sm:flex-row sm:items-center sm:justify-between">
+                      <span className="truncate font-mono">
                         {sponsor.imageOriginalName} · {formatBytes(sponsor.imageSize)}
                       </span>
                       <ToggleSwitch
@@ -369,6 +370,7 @@ export function SponsorsTab() {
 
                   <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:flex-col">
                     <AdminButton
+                      size="sm"
                       icon={ArrowUp}
                       disabled={isMutating || index === 0}
                       onClick={() => void reorderSponsors(index, -1)}
@@ -376,14 +378,15 @@ export function SponsorsTab() {
                       {t("admin.sponsors.moveUp")}
                     </AdminButton>
                     <AdminButton
+                      size="sm"
                       icon={ArrowDown}
                       disabled={isMutating || index === sponsors.length - 1}
                       onClick={() => void reorderSponsors(index, 1)}
                     >
                       {t("admin.sponsors.moveDown")}
                     </AdminButton>
-                    <label className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-[3px] border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-white/[0.07] sm:w-auto lg:w-full">
-                      <Upload className="h-4 w-4" />
+                    <label className="inline-flex h-8 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-white/10 bg-[#1c1833] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#252042] sm:w-auto lg:w-full">
+                      <Upload className="h-3.5 w-3.5" />
                       <span className="truncate">{t("common.replace")}</span>
                       <input
                         type="file"
@@ -393,6 +396,7 @@ export function SponsorsTab() {
                       />
                     </label>
                     <AdminButton
+                      size="sm"
                       icon={Trash2}
                       variant="danger"
                       loading={isMutating}
@@ -407,7 +411,7 @@ export function SponsorsTab() {
             })}
           </div>
         )}
-      </div>
+      </AdminSection>
     </div>
   );
 }

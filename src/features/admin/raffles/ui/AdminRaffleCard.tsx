@@ -1,39 +1,77 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Gift, ExternalLink, Calendar, Ticket, Package, Clock, ShieldCheck, ShieldAlert, Activity } from "lucide-react";
-import { AdminSection } from "@/features/admin/ui/AdminShell";
+import {
+  Gift,
+  ExternalLink,
+  Calendar,
+  Ticket,
+  Package,
+  Clock,
+  ShieldAlert,
+  Activity,
+  Trophy,
+  ArrowRight,
+} from "lucide-react";
+import { AdminBadge, AdminSection } from "@/features/admin/ui/AdminShell";
 import { RaffleManageActions, type RaffleManageData } from "@/features/admin/raffles/ui/RaffleManageActions";
 import { RaffleAdminWinnersList } from "@/features/admin/raffles/ui/RaffleAdminWinnersList";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
+interface RafflePrizeItem {
+  id: string;
+  name: string;
+  iconUrl: string | null;
+  position?: number;
+  winnerId?: string | null;
+  winner?: { id: string; name: string | null; steamId: string | null; avatar: string | null; tradeUrl?: string | null } | null;
+  winningTicket?: { ticketNumber: number } | null;
+}
+
+interface AdminRaffleData {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  isPublic?: boolean;
+  drawDate: string;
+  ticketPrice: number;
+  maxTickets: number | null;
+  prizes?: RafflePrizeItem[];
+  tickets?: { status: string }[];
+}
+
 interface AdminRaffleCardProps {
-  raffle: any; // Using any for simplicity in this extraction, though ideally we'd type it based on the parent.
+  raffle: AdminRaffleData;
   fetchRaffles: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-const getRaffleStatusBadge = (status: string) => {
+type RaffleCardTab = "summary" | "prizes" | "winners";
+
+const getRaffleStatusTone = (status: string): "neutral" | "accent" | "success" | "danger" => {
   switch (status) {
-    case "PENDING":
-      return "bg-[#84849b]/10 text-[#84849b] border-[#84849b]/20";
     case "ACTIVE":
-      return "bg-accent/10 text-accent border-accent/20";
+      return "accent";
     case "FINISHED":
-      return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+      return "success";
     case "CANCELLED":
-      return "bg-red-500/10 text-red-500 border-red-500/20";
+      return "danger";
     default:
-      return "bg-[#84849b]/10 text-[#84849b] border-[#84849b]/20";
+      return "neutral";
   }
 };
 
 export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchRaffles, t }) => {
   const localizePath = useLocalizedPath();
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<RaffleCardTab>("summary");
   const isFinished = raffle.status === "FINISHED";
   const isActive = raffle.status === "ACTIVE";
-  const soldTickets = raffle.tickets?.filter((t: any) => t.status === "PAID").length || 0;
-  
+  const prizes = raffle.prizes ?? [];
+  const leadPrize = prizes[0];
+  const soldTickets = raffle.tickets?.filter((ticket) => ticket.status === "PAID").length || 0;
+  const winnersCount = prizes.filter((p) => Boolean(p.winner || p.winnerId)).length;
+
   const pct = raffle.maxTickets
     ? Math.min(100, Math.round((soldTickets / raffle.maxTickets) * 100))
     : 0;
@@ -51,213 +89,340 @@ export const AdminRaffleCard: React.FC<AdminRaffleCardProps> = ({ raffle, fetchR
   };
 
   useEffect(() => {
-    if (isActive) {
-      const updateCountdown = () => {
-        const now = new Date().getTime();
-        const drawTime = new Date(raffle.drawDate).getTime();
-        const diff = drawTime - now;
+    if (!isActive) return;
 
-        if (diff <= 0) {
-          setTimeLeft(t("raffles.drawingSoon") || "Sorteando pronto...");
-          return;
-        }
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const drawTime = new Date(raffle.drawDate).getTime();
+      const diff = drawTime - now;
 
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      if (diff <= 0) {
+        setTimeLeft(t("raffles.drawingSoon"));
+        return;
+      }
 
-        const pad = (n: number) => n.toString().padStart(2, "0");
-        let formatted = "";
-        if (days > 0) formatted += `${days}d `;
-        formatted += `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
-        
-        setTimeLeft(formatted);
-      };
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      updateCountdown();
-      const interval = setInterval(updateCountdown, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setTimeLeft("");
-    }
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      let formatted = "";
+      if (days > 0) formatted += `${days}d `;
+      formatted += `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+
+      setTimeLeft(formatted);
+    };
+
+    const initTimeout = window.setTimeout(updateCountdown, 0);
+    const interval = setInterval(updateCountdown, 1000);
+    return () => {
+      window.clearTimeout(initTimeout);
+      clearInterval(interval);
+    };
   }, [isActive, raffle.drawDate, t]);
 
+  const displayTimeLeft = isActive ? timeLeft : "";
+  const effectiveTab: RaffleCardTab = !isFinished && activeTab === "winners" ? "summary" : activeTab;
+
   return (
-    <AdminSection className="relative overflow-hidden p-6 border border-white/[0.05] bg-linear-to-b from-[#141221] to-[#0f0d1e] shadow-2xl transition-all duration-300 hover:border-white/10 group">
-      {isActive && (
-        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 blur-[80px] rounded-full pointer-events-none" />
-      )}
-      
-      <div className="relative flex flex-col xl:flex-row xl:items-start justify-between gap-8">
-        
-        {/* Principal Info */}
-        <div className="flex-1 space-y-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="text-xl font-black text-white uppercase tracking-wider drop-shadow-sm">
-              {raffle.name}
-            </h3>
-            <div className="flex items-center gap-2">
-              <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-[4px] border ${getRaffleStatusBadge(raffle.status)} flex items-center gap-1.5 shadow-xs`}>
-                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />}
-                {t(`admin.status${raffle.status.charAt(0).toUpperCase() + raffle.status.slice(1).toLowerCase()}`) || raffle.status}
-              </span>
-              {!raffle.isPublic && (
-                <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-[4px] border bg-[#84849b]/10 text-[#84849b] border-[#84849b]/20 flex items-center gap-1.5">
-                  <ShieldAlert className="w-3 h-3" />
-                  {t("admin.raffles.hiddenFromClient") || "Oculto"}
+    <AdminSection padded={false} className="overflow-hidden">
+      <div className="space-y-4 p-4 sm:p-5">
+        {/* Top Row: Lead Skin + Identity + Countdown */}
+        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+          <div className="flex min-w-0 items-start gap-3.5">
+            <div className="relative flex h-14 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#0d0a18] p-1.5">
+              {leadPrize?.iconUrl ? (
+                <img
+                  src={leadPrize.iconUrl}
+                  alt={leadPrize.name}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <Gift className="h-6 w-6 text-white/25" />
+              )}
+              {prizes.length > 1 && (
+                <span className="absolute -right-1.5 -bottom-1.5 rounded border border-white/15 bg-[#1c1833] px-1.5 py-0.5 text-[10px] font-semibold text-white tabular-nums">
+                  +{prizes.length - 1}
                 </span>
               )}
             </div>
-          </div>
-          
-          <p className="text-sm text-[#84849b] leading-relaxed max-w-3xl">
-            {raffle.description || t("raffles.noDescription") || "Sin descripción proporcionada."}
-          </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white/[0.02] border border-white/[0.03] rounded-lg p-3 flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-[#84849b] text-[10px] font-bold uppercase tracking-widest">
-                <Calendar className="w-3.5 h-3.5 text-accent" />
-                {t("admin.raffles.drawDateLabel")}
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="truncate text-base font-semibold tracking-tight text-white sm:text-lg">
+                  {raffle.name}
+                </h3>
+                <AdminBadge tone={getRaffleStatusTone(raffle.status)} dot={isActive}>
+                  {t(
+                    `admin.status${raffle.status.charAt(0).toUpperCase() + raffle.status.slice(1).toLowerCase()}`,
+                  ) || raffle.status}
+                </AdminBadge>
+                {raffle.isPublic === false && (
+                  <AdminBadge tone="warning">
+                    <ShieldAlert className="h-3 w-3" />
+                    {t("admin.raffles.hiddenFromClient")}
+                  </AdminBadge>
+                )}
               </div>
-              <span className="text-xs text-white font-medium">
-                {new Date(raffle.drawDate).toLocaleString()}
-              </span>
-            </div>
-
-            <div className="bg-white/[0.02] border border-white/[0.03] rounded-lg p-3 flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-[#84849b] text-[10px] font-bold uppercase tracking-widest">
-                <Ticket className="w-3.5 h-3.5 text-accent" />
-                {t("common.price")}
-              </div>
-              <span className="text-xs text-white font-medium">
-                ${raffle.ticketPrice.toFixed(2)} {t("admin.raffles.perChance")}
-              </span>
-            </div>
-
-            <div className="bg-white/[0.02] border border-white/[0.03] rounded-lg p-3 flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-[#84849b] text-[10px] font-bold uppercase tracking-widest">
-                <Gift className="w-3.5 h-3.5 text-accent" />
-                {t("raffles.prizes")}
-              </div>
-              <span className="text-xs text-white font-medium">
-                {t("admin.raffles.prizesCount", { count: raffle.prizes?.length || 0 })}
-              </span>
-            </div>
-
-            <div className="bg-white/[0.02] border border-white/[0.03] rounded-lg p-3 flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-[#84849b] text-[10px] font-bold uppercase tracking-widest">
-                <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                {t("admin.raffles.revenue")}
-              </div>
-              <span className="text-xs text-emerald-400 font-bold">
-                ${(soldTickets * raffle.ticketPrice).toFixed(2)}
-              </span>
+              <p className="line-clamp-2 max-w-3xl text-xs sm:text-[13px] leading-relaxed text-[#9e98b6]">
+                {raffle.description || t("raffles.noDescription")}
+              </p>
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-white/[0.05]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-[#84849b] uppercase tracking-widest flex items-center gap-1.5">
-                {t("admin.raffles.ticketProgress")}
-                <span className="text-white bg-white/10 px-1.5 py-0.5 rounded ml-1">{soldTickets} {raffle.maxTickets ? `/ ${raffle.maxTickets}` : ""}</span>
-              </span>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {isActive && (
+              <div className="inline-flex h-8 items-center gap-2 rounded-md border border-accent/30 bg-accent/10 px-3 text-xs">
+                <Clock className="h-3.5 w-3.5 text-accent" />
+                <span className="font-mono font-semibold text-white tabular-nums">
+                  {displayTimeLeft || t("admin.raffles.calculating")}
+                </span>
+              </div>
+            )}
+            <Link
+              href={localizePath(`/admin/panel/raffle-purchases?raffle=${raffle.id}`)}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-white/10 bg-[#1c1833] px-3 text-xs font-semibold text-white hover:bg-[#252042] transition-colors"
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-[#9e98b6]" />
+              {t("raffles.viewParticipants")}
+            </Link>
+          </div>
+        </div>
+
+        {/* Unified Horizontal Metrics Strip */}
+        <div className="grid grid-cols-2 divide-y divide-white/[0.06] rounded-lg border border-white/[0.06] bg-[#1a1630] sm:grid-cols-5 sm:divide-x sm:divide-y-0">
+          <div className="p-3">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#8e88a6]">
+              <Calendar className="h-3.5 w-3.5 text-accent" />
+              {t("admin.raffles.drawDateLabel")}
+            </div>
+            <span className="mt-1 block truncate text-xs font-semibold text-white tabular-nums">
+              {new Date(raffle.drawDate).toLocaleString()}
+            </span>
+          </div>
+
+          <div className="p-3">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#8e88a6]">
+              <Ticket className="h-3.5 w-3.5 text-accent" />
+              {t("common.price")}
+            </div>
+            <span className="mt-1 block text-xs font-semibold text-white tabular-nums">
+              ${raffle.ticketPrice.toFixed(2)} {t("admin.raffles.perChance")}
+            </span>
+          </div>
+
+          <div className="p-3">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#8e88a6]">
+              <Gift className="h-3.5 w-3.5 text-accent" />
+              {t("raffles.prizes")}
+            </div>
+            <span className="mt-1 block text-xs font-semibold text-white tabular-nums">
+              {t("admin.raffles.prizesCount", { count: prizes.length })}
+            </span>
+          </div>
+
+          <div className="p-3">
+            <div className="flex items-center justify-between gap-1 text-[11px] font-medium text-[#8e88a6]">
+              <span>{t("admin.raffles.ticketProgress")}</span>
               {raffle.maxTickets && (
-                <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{pct}%</span>
+                <span className="font-semibold text-accent tabular-nums">{pct}%</span>
               )}
             </div>
-            
+            <span className="mt-1 block text-xs font-semibold text-white tabular-nums">
+              {soldTickets} {raffle.maxTickets ? `/ ${raffle.maxTickets}` : ""}
+            </span>
             {raffle.maxTickets ? (
-              <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5 relative">
+              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.08]">
                 <div
-                  className="absolute top-0 left-0 h-full bg-linear-to-r from-accent/80 to-accent rounded-full shadow-[0_0_10px_rgba(var(--accent-rgb),0.5)] transition-all duration-1000"
+                  className="h-full rounded-full bg-accent transition-all duration-300"
                   style={{ width: `${pct}%` }}
                 />
               </div>
             ) : (
-              <div className="text-[10px] text-[#84849b] italic">{t("admin.raffles.unlimitedTickets")}</div>
+              <span className="mt-0.5 block text-[11px] text-[#8e88a6]">
+                {t("admin.raffles.unlimitedTickets")}
+              </span>
             )}
+          </div>
+
+          <div className="col-span-2 p-3 sm:col-span-1">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#8e88a6]">
+              <Activity className="h-3.5 w-3.5 text-emerald-400" />
+              {t("admin.raffles.revenue")}
+            </div>
+            <span className="mt-1 block text-sm font-semibold text-emerald-400 tabular-nums">
+              ${(soldTickets * raffle.ticketPrice).toFixed(2)}
+            </span>
           </div>
         </div>
 
-        {/* Aside Info: Countdown & Prizes */}
-        <div className="flex flex-col gap-6 xl:w-72 shrink-0">
-          
-          {isActive && (
-            <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex flex-col items-center justify-center text-center gap-2 shadow-[inset_0_0_20px_rgba(255,170,0,0.05)]">
-              <div className="flex items-center gap-2 text-accent/80 text-[10px] font-black uppercase tracking-widest">
-                <Clock className="w-4 h-4 animate-pulse" />
-                {t("admin.raffles.timeRemaining")}
-              </div>
-              <div className="text-2xl font-black text-accent tracking-wider font-mono drop-shadow-md">
-                {timeLeft || t("admin.raffles.calculating")}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-black/20 border border-white/5 rounded-xl p-4">
-            <h4 className="text-[10px] font-bold text-[#84849b] uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Package className="w-3.5 h-3.5" />
-              {t("admin.raffles.prizesPreview")}
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {raffle.prizes?.slice(0, 5).map((p: any) => (
-                <div
-                  key={p.id}
-                  className="w-11 h-11 rounded-md border border-white/10 bg-white/[0.03] p-1 flex items-center justify-center relative group/prize transition-transform hover:scale-110"
-                  title={p.name}
+        {/* Inline Tab Switcher */}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div
+              role="tablist"
+              className="inline-flex items-center gap-1 rounded-md border border-white/[0.07] bg-[#0e0b1a] p-1"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={effectiveTab === "summary"}
+                onClick={() => setActiveTab("summary")}
+                className={`h-7 rounded px-2.5 text-xs font-medium transition-colors cursor-pointer ${
+                  effectiveTab === "summary"
+                    ? "bg-accent text-white font-semibold"
+                    : "text-[#9e98b6] hover:text-white"
+                }`}
+              >
+                {t("admin.raffles.tabSummary")}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={effectiveTab === "prizes"}
+                onClick={() => setActiveTab("prizes")}
+                className={`inline-flex h-7 items-center gap-1.5 rounded px-2.5 text-xs font-medium transition-colors cursor-pointer ${
+                  effectiveTab === "prizes"
+                    ? "bg-accent text-white font-semibold"
+                    : "text-[#9e98b6] hover:text-white"
+                }`}
+              >
+                <span>{t("raffles.prizes")}</span>
+                <span className="rounded bg-white/[0.1] px-1.5 py-0.5 text-[11px] tabular-nums">
+                  {prizes.length}
+                </span>
+              </button>
+              {isFinished && (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={effectiveTab === "winners"}
+                  onClick={() => setActiveTab("winners")}
+                  className={`inline-flex h-7 items-center gap-1.5 rounded px-2.5 text-xs font-medium transition-colors cursor-pointer ${
+                    effectiveTab === "winners"
+                      ? "bg-emerald-600 text-white font-semibold"
+                      : "text-emerald-300 hover:bg-emerald-500/10"
+                  }`}
                 >
-                  {p.iconUrl ? (
-                    <img
-                      src={p.iconUrl}
-                      alt={p.name}
-                      className="w-full h-full object-contain drop-shadow-md"
-                    />
-                  ) : (
-                    <Package className="w-4 h-4 text-white/20" />
-                  )}
-                  {/* Tooltip on hover */}
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/90 border border-white/10 text-[9px] text-white px-2 py-1 rounded opacity-0 group-hover/prize:opacity-100 whitespace-nowrap pointer-events-none transition-opacity z-10">
-                    {p.name}
-                  </div>
-                </div>
-              ))}
-              {(raffle.prizes?.length || 0) > 5 && (
-                <div className="w-11 h-11 rounded-md border border-white/10 bg-white/[0.01] flex items-center justify-center text-xs font-black text-[#84849b]">
-                  +{(raffle.prizes?.length || 0) - 5}
-                </div>
+                  <Trophy className="h-3 w-3" />
+                  <span>{t("raffles.winners")}</span>
+                  <span className="rounded bg-black/25 px-1.5 py-0.5 text-[11px] tabular-nums">
+                    {winnersCount}/{prizes.length}
+                  </span>
+                </button>
               )}
             </div>
           </div>
 
+          {effectiveTab === "summary" && (
+            <div className="space-y-2.5">
+              {prizes.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {prizes.slice(0, 6).map((p, idx) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setActiveTab("prizes")}
+                      className="inline-flex max-w-[240px] items-center gap-2 rounded-md border border-white/[0.06] bg-[#1a1630] px-2.5 py-1.5 text-left transition-colors hover:border-white/15 cursor-pointer"
+                    >
+                      <span className="text-[11px] font-mono text-[#8e88a6] tabular-nums">
+                        #{p.position ?? idx + 1}
+                      </span>
+                      {p.iconUrl ? (
+                        <img
+                          src={p.iconUrl}
+                          alt={p.name}
+                          className="h-6 w-7 shrink-0 object-contain"
+                        />
+                      ) : (
+                        <Package className="h-4 w-4 shrink-0 text-[#746e8d]" />
+                      )}
+                      <span className="truncate text-xs font-medium text-white">{p.name}</span>
+                    </button>
+                  ))}
+                  {prizes.length > 6 && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("prizes")}
+                      className="inline-flex items-center rounded-md border border-white/[0.06] bg-[#1a1630] px-2.5 py-1.5 text-xs font-medium text-[#b8b2cd] hover:text-white cursor-pointer"
+                    >
+                      +{prizes.length - 6} {t("admin.raffles.more")}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {isFinished && prizes.length > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-xs">
+                  <span className="flex items-center gap-2 font-medium text-emerald-200">
+                    <Trophy className="h-3.5 w-3.5 text-emerald-400" />
+                    {t("admin.raffles.prizesDelivered", {
+                      delivered: winnersCount,
+                      total: prizes.length,
+                    })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("winners")}
+                    className="inline-flex items-center gap-1 font-semibold text-emerald-300 hover:underline cursor-pointer"
+                  >
+                    <span>{t("raffles.winners")}</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {effectiveTab === "prizes" && (
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {prizes.map((p, idx) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-[#1a1630] p-3"
+                >
+                  <div className="flex h-12 w-14 shrink-0 items-center justify-center rounded-md border border-white/10 bg-[#0d0a18] p-1">
+                    {p.iconUrl ? (
+                      <img src={p.iconUrl} alt={p.name} className="h-full w-full object-contain" />
+                    ) : (
+                      <Package className="h-4 w-4 text-[#746e8d]" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium text-[#9e98b6] tabular-nums">
+                      #{p.position ?? idx + 1}
+                    </p>
+                    <p className="truncate text-xs sm:text-[13px] font-semibold text-white">
+                      {p.name}
+                    </p>
+                    {p.winner && (
+                      <p className="mt-0.5 truncate text-xs text-emerald-300">
+                        {p.winner.name || p.winner.steamId}
+                        {p.winningTicket ? ` · #${p.winningTicket.ticketNumber}` : ""}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {effectiveTab === "winners" && isFinished && raffle.prizes && (
+            <RaffleAdminWinnersList prizes={raffle.prizes as never} t={t} />
+          )}
         </div>
       </div>
 
       {/* Actions Footer */}
-      <div className="mt-6 pt-5 border-t border-white/[0.05] flex flex-wrap items-center gap-3 bg-black/10 -mx-6 -mb-6 px-6 py-4">
-        <Link
-          href={localizePath(`/admin/panel/raffle-purchases?raffle=${raffle.id}`)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-white text-[11px] font-black uppercase tracking-widest transition-all hover:scale-[1.02]"
-        >
-          <ExternalLink className="w-3.5 h-3.5 text-[#84849b]" />
-          {t("raffles.viewParticipants")}
-        </Link>
-
+      <div className="flex flex-wrap items-center gap-2 border-t border-white/[0.06] bg-[#100d1e] px-4 py-3 sm:px-5">
         <RaffleManageActions
           raffle={manageData}
           onUpdated={fetchRaffles}
           onDeleted={fetchRaffles}
           layout="toolbar"
         />
-
-        {isFinished && (
-          <div className="w-full mt-4 pt-4 border-t border-white/5">
-            <RaffleAdminWinnersList prizes={raffle.prizes} t={t} />
-          </div>
-        )}
       </div>
-
     </AdminSection>
   );
 };

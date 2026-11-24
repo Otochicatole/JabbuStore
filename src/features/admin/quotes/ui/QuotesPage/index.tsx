@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -8,19 +8,28 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Loader2,
   Trash2,
   DollarSign,
-  ArrowRight,
+  ExternalLink,
   User as UserIcon,
   Send,
   RefreshCw,
-  Search,
-  Filter
 } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import {
+  AdminAlert,
+  AdminBadge,
+  AdminButton,
+  AdminEmptyState,
+  AdminHeader,
+  AdminLoadingState,
+  AdminSearchInput,
+  AdminSection,
+  AdminStatusTabs,
+  AdminToolbar,
+} from "@/features/admin/ui/AdminShell";
 
 interface QuoteItem {
   id: string;
@@ -59,17 +68,14 @@ export function QuotesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedQuotes, setExpandedQuotes] = useState<Record<string, boolean>>({});
-  
-  // Form pricing states: quoteId -> { assetId: price }
+
   const [pricesInput, setPricesInput] = useState<Record<string, Record<string, string>>>({});
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Modal State
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -85,7 +91,11 @@ export function QuotesPage() {
     onConfirm: () => {},
   });
 
-  const showAlert = (title: string, message: string, type: "info" | "success" | "warning" | "error" = "info") => {
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "info" | "success" | "warning" | "error" = "info",
+  ) => {
     setModalConfig({
       isOpen: true,
       title,
@@ -129,7 +139,6 @@ export function QuotesPage() {
       const data = (await res.json()) as Quote[];
       setQuotes(data);
 
-      // Initialize pricing inputs with existing prices if any
       const initialInputs: Record<string, Record<string, string>> = {};
       data.forEach((q: Quote) => {
         initialInputs[q.id] = {};
@@ -174,8 +183,6 @@ export function QuotesPage() {
   const handleSubmitQuote = async (quoteId: string, e: React.FormEvent) => {
     e.preventDefault();
     const inputs = pricesInput[quoteId];
-    
-    // Validate that all items have a valid price
     const quote = quotes.find((q) => q.id === quoteId);
     if (!quote) return;
 
@@ -184,7 +191,11 @@ export function QuotesPage() {
       const val = inputs[item.assetId];
       const parsed = parseFloat(val);
       if (isNaN(parsed) || parsed < 0) {
-        showAlert("Precio Inválido", `Por favor, ingresa un precio válido para el ítem: ${item.name}`, "warning");
+        showAlert(
+          "Precio Inválido",
+          `Por favor, ingresa un precio válido para el ítem: ${item.name}`,
+          "warning",
+        );
         return;
       }
       prices.push({ assetId: item.assetId, price: parsed });
@@ -206,11 +217,13 @@ export function QuotesPage() {
       const updated = (await res.json()) as Quote;
       setQuotes((prev) => prev.map((q) => (q.id === quoteId ? updated : q)));
       showAlert("Cotización Enviada", "¡Cotización enviada exitosamente al usuario!", "success");
-      
-      // Close card details
       setExpandedQuotes((prev) => ({ ...prev, [quoteId]: false }));
     } catch (err: unknown) {
-      showAlert("Error", err instanceof Error ? err.message : "Error al enviar la cotización.", "error");
+      showAlert(
+        "Error",
+        err instanceof Error ? err.message : "Error al enviar la cotización.",
+        "error",
+      );
     } finally {
       setSubmittingId(null);
     }
@@ -234,262 +247,237 @@ export function QuotesPage() {
           }
 
           const updated = (await res.json()) as Quote;
-          setQuotes((prev) => prev.map((q) => (q.id === quoteId ? { ...q, status: updated.status } : q)));
-          showAlert("Cotización Cancelada", "La solicitud de cotización ha sido rechazada/cancelada correctamente.", "success");
-          
-          // Close details
+          setQuotes((prev) =>
+            prev.map((q) => (q.id === quoteId ? { ...q, status: updated.status } : q)),
+          );
+          showAlert(
+            "Cotización Cancelada",
+            "La solicitud de cotización ha sido rechazada/cancelada correctamente.",
+            "success",
+          );
           setExpandedQuotes((prev) => ({ ...prev, [quoteId]: false }));
         } catch (err: unknown) {
-          showAlert("Error", err instanceof Error ? err.message : "Error al cancelar la cotización.", "error");
+          showAlert(
+            "Error",
+            err instanceof Error ? err.message : "Error al cancelar la cotización.",
+            "error",
+          );
         } finally {
           setCancellingId(null);
         }
-      }
+      },
     );
   };
 
-  const getStatusBadgeConfig = (status: Quote["status"]) => {
+  const getStatusConfig = (status: Quote["status"]) => {
     switch (status) {
       case "PENDING":
-        return {
-          label: t("admin.quotes.statusPending"),
-          color: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-          icon: Clock,
-        };
+        return { label: t("admin.quotes.statusPending"), tone: "warning" as const, icon: Clock };
       case "QUOTED":
-        return {
-          label: t("admin.quotes.statusQuoted"),
-          color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
-          icon: DollarSign,
-        };
+        return { label: t("admin.quotes.statusQuoted"), tone: "info" as const, icon: DollarSign };
       case "ACCEPTED":
         return {
           label: t("admin.quotes.statusAcceptedBought"),
-          color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+          tone: "success" as const,
           icon: CheckCircle,
         };
       case "CANCELLED":
-        return {
-          label: t("admin.quotes.statusCancelled"),
-          color: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-          icon: XCircle,
-        };
+        return { label: t("admin.quotes.statusCancelled"), tone: "danger" as const, icon: XCircle };
     }
   };
 
-  // Filter logic
-  const filteredQuotes = quotes.filter((q) => {
-    // Search user name, email, steamId or quote id
-    const matchSearch =
-      q.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (q.user.name && q.user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (q.user.email && q.user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (q.user.steamId && q.user.steamId.includes(searchTerm));
+  const searchFiltered = useMemo(() => {
+    const qLower = searchTerm.toLowerCase().trim();
+    if (!qLower) return quotes;
+    return quotes.filter(
+      (q) =>
+        q.id.toLowerCase().includes(qLower) ||
+        (q.user.name && q.user.name.toLowerCase().includes(qLower)) ||
+        (q.user.email && q.user.email.toLowerCase().includes(qLower)) ||
+        (q.user.steamId && q.user.steamId.includes(qLower)),
+    );
+  }, [quotes, searchTerm]);
 
-    const matchStatus = statusFilter === "all" || q.status === statusFilter;
+  const statusTabs = useMemo(() => {
+    const countOf = (st: Quote["status"]) =>
+      searchFiltered.filter((q) => q.status === st).length;
+    return [
+      { value: "all", label: t("admin.quotes.filterAll"), count: searchFiltered.length },
+      { value: "PENDING", label: t("admin.quotes.filterPending"), count: countOf("PENDING") },
+      { value: "QUOTED", label: t("admin.quotes.filterQuoted"), count: countOf("QUOTED") },
+      { value: "ACCEPTED", label: t("admin.quotes.filterAccepted"), count: countOf("ACCEPTED") },
+      { value: "CANCELLED", label: t("admin.quotes.filterCancelled"), count: countOf("CANCELLED") },
+    ];
+  }, [searchFiltered, t]);
 
-    return matchSearch && matchStatus;
-  });
+  const filteredQuotes = useMemo(() => {
+    if (statusFilter === "all") return searchFiltered;
+    return searchFiltered.filter((q) => q.status === statusFilter);
+  }, [searchFiltered, statusFilter]);
 
   return (
-    <div className="space-y-6 text-white font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white flex items-center gap-2">
-            {t("admin.quotes.title")}
-          </h2>
-          <p className="text-xs text-[#84849b] mt-1 font-bold">
-            {t("admin.quotes.intro")}
-          </p>
-        </div>
+    <div className="space-y-5">
+      <AdminHeader
+        title={t("admin.quotes.title")}
+        description={t("admin.quotes.intro")}
+        icon={DollarSign}
+        actions={
+          <AdminButton
+            type="button"
+            onClick={fetchQuotes}
+            disabled={loading}
+            loading={loading}
+            icon={RefreshCw}
+            variant="secondary"
+          >
+            {t("admin.quotes.refreshList")}
+          </AdminButton>
+        }
+      />
 
-        <button
-          onClick={fetchQuotes}
-          disabled={loading}
-          className="flex items-center justify-center gap-2 h-10 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-xs font-bold text-white transition-all disabled:opacity-50 cursor-pointer"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-accent" : ""}`} />
-          {t("admin.quotes.refreshList")}
-        </button>
-      </div>
+      {error && <AdminAlert>{error}</AdminAlert>}
 
-      {error && (
-        <div className="p-4 rounded-lg bg-rose-500/5 border border-rose-500/15 text-rose-400 text-xs font-bold">
-          {error}
-        </div>
-      )}
+      <AdminStatusTabs
+        items={statusTabs}
+        value={statusFilter}
+        onChange={setStatusFilter}
+      />
 
-      {/* Filters bar */}
-      <div className="bg-[#110f1e]/80 border border-white/5 p-4 rounded-[3px] flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-          <input
-            type="text"
-            placeholder={t("admin.quotes.searchPlaceholder")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-10 pl-9 pr-4 bg-white/5 border border-white/5 rounded-[3px] text-xs text-white placeholder-white/30 focus:border-accent/40 focus:outline-none transition-colors"
-          />
-        </div>
-
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-white/30 shrink-0" />
-          <div className="flex bg-white/5 border border-white/5 p-1 rounded-[3px] w-full sm:w-auto justify-between">
-            {["all", "PENDING", "QUOTED", "ACCEPTED", "CANCELLED"].map((st) => {
-              const label =
-                st === "all"
-                  ? t("admin.quotes.filterAll")
-                  : st === "PENDING"
-                    ? t("admin.quotes.filterPending")
-                    : st === "QUOTED"
-                      ? t("admin.quotes.filterQuoted")
-                      : st === "ACCEPTED"
-                        ? t("admin.quotes.filterAccepted")
-                        : t("admin.quotes.filterCancelled");
-              return (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-[3px] transition-all cursor-pointer ${
-                    statusFilter === st
-                      ? "bg-accent text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]"
-                      : "text-white/60 hover:text-white"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <AdminToolbar>
+        <AdminSearchInput
+          placeholder={t("admin.quotes.searchPlaceholder")}
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+      </AdminToolbar>
 
       {loading && quotes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-[#110f1e]/20 border border-white/5 rounded-lg">
-          <Loader2 className="w-8 h-8 animate-spin text-accent mb-2" />
-          <span className="text-xs text-[#84849b] font-black uppercase tracking-wider font-mono">
-            {t("admin.quotes.loadingServer")}
-          </span>
-        </div>
+        <AdminLoadingState label={t("admin.quotes.loadingServer")} />
       ) : filteredQuotes.length === 0 ? (
-        <div className="p-8 text-center bg-[#110f1e]/20 border border-white/5 rounded-lg">
-          <p className="text-xs text-[#84849b] font-black uppercase tracking-wider">
-            {t("admin.quotes.noMatchingQuotes")}
-          </p>
-        </div>
+        <AdminEmptyState icon={DollarSign} title={t("admin.quotes.noMatchingQuotes")} />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredQuotes.map((quote) => {
             const isExpanded = !!expandedQuotes[quote.id];
-            const badge = getStatusBadgeConfig(quote.status);
+            const badge = getStatusConfig(quote.status);
             const StatusIcon = badge.icon;
-            
             const totalQuoted = quote.items.reduce((sum, item) => sum + (item.price ?? 0), 0);
+            const liveFormTotal = quote.items.reduce((sum, item) => {
+              const parsed = parseFloat(pricesInput[quote.id]?.[item.assetId] ?? "");
+              return sum + (isNaN(parsed) || parsed < 0 ? 0 : parsed);
+            }, 0);
+            const isQuoteEditable = quote.status === "PENDING" || quote.status === "QUOTED";
 
             return (
-              <div
-                key={quote.id}
-                className="bg-[#110f1e]/40 border border-white/5 rounded-[3px] hover:border-white/10 transition-colors backdrop-blur-sm relative overflow-hidden"
-              >
+              <AdminSection key={quote.id} padded={false} className="overflow-hidden">
                 <div
-                  className={`absolute top-0 bottom-0 left-0 w-1 ${
-                    quote.status === "PENDING"
-                      ? "bg-amber-500"
-                      : quote.status === "QUOTED"
-                        ? "bg-indigo-500"
-                        : quote.status === "ACCEPTED"
-                          ? "bg-emerald-500"
-                          : "bg-rose-500"
-                  }`}
-                />
-
-                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => toggleExpand(quote.id)}
-                  className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleExpand(quote.id);
+                    }
+                  }}
+                  aria-expanded={isExpanded}
+                  className="flex cursor-pointer flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center sm:p-5 hover:bg-white/[0.02] transition-colors select-none"
                 >
-                  <div className="flex items-center gap-3">
-                    {/* User profile avatar or generic */}
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white/5 shrink-0 border border-white/10 flex items-center justify-center">
+                  <div className="flex min-w-0 items-center gap-3.5">
+                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#1c1833]">
                       {quote.user.avatar ? (
                         <Image src={quote.user.avatar} alt="Avatar" fill className="object-cover" />
                       ) : (
-                        <UserIcon className="w-5 h-5 text-white/40" />
+                        <UserIcon className="h-4.5 w-4.5 text-[#9e98b6]" />
                       )}
                     </div>
 
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-bold text-white/90">
-                          {t("admin.quotes.quoteId")} <span className="text-accent">{quote.id.slice(0, 8)}</span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-semibold text-white tabular-nums">
+                          {t("admin.quotes.quoteId")} #{quote.id.slice(0, 8)}
                         </span>
-                        <span
-                          className={`px-2 py-0.5 rounded-[3px] text-[8.5px] font-black tracking-widest uppercase border ${badge.color} flex items-center gap-1`}
-                        >
-                          <StatusIcon className="w-2.5 h-2.5 shrink-0" />
+                        <AdminBadge tone={badge.tone}>
+                          <StatusIcon className="h-3 w-3" />
                           {badge.label}
-                        </span>
+                        </AdminBadge>
                       </div>
 
-                      <p className="text-[10px] text-[#84849b] mt-1 font-bold">
-                        {t("admin.quotes.user")} <span className="text-white">{quote.user.name || "Steam User"}</span>
+                      <p className="mt-1 truncate text-xs text-[#9e98b6]">
+                        {t("admin.quotes.user")}{" "}
+                        <span className="font-medium text-white">
+                          {quote.user.name || "Steam User"}
+                        </span>
                         {" · "}
                         {quote.user.email || "Sin email"}
                         {" · "}
-                        {quote.items.length} {t("admin.quotes.item")}{quote.items.length === 1 ? "" : "s"}
+                        <span className="tabular-nums">
+                          {quote.items.length} {t("admin.quotes.item")}
+                          {quote.items.length === 1 ? "" : "s"}
+                        </span>
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-5 w-full sm:w-auto border-t border-white/5 sm:border-t-0 pt-3 sm:pt-0">
+                  <div className="flex w-full items-center justify-between gap-4 border-t border-white/[0.06] pt-3 sm:w-auto sm:justify-end sm:border-t-0 sm:pt-0">
                     <div className="text-left sm:text-right">
-                      <span className="text-[8px] text-[#84849b] font-mono block uppercase tracking-widest">
+                      <span className="block text-[11px] text-[#8e88a6]">
                         {t("admin.quotes.totalRequestedQuoted")}
                       </span>
-                      <span className="text-sm font-black text-white">
-                        {quote.status === "PENDING" && quote.items.every(i => i.price === null)
+                      <span className="text-sm font-semibold text-white tabular-nums">
+                        {quote.status === "PENDING" && quote.items.every((i) => i.price === null)
                           ? t("admin.quotes.statusPending")
                           : `$${totalQuoted.toLocaleString()} USD`}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      {(quote.status === "PENDING" || quote.status === "QUOTED") && (
-                        <button
-                          onClick={(e) => handleCancelQuote(quote.id, e)}
+                    <div className="flex shrink-0 items-center gap-2">
+                      {isQuoteEditable && (
+                        <AdminButton
+                          type="button"
+                          size="sm"
+                          variant="danger"
+                          icon={Trash2}
+                          loading={cancellingId === quote.id}
                           disabled={cancellingId === quote.id}
-                          className="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-black uppercase tracking-wider text-rose-400 rounded-[3px] transition-all cursor-pointer flex items-center gap-1"
+                          onClick={(e) => handleCancelQuote(quote.id, e)}
                         >
-                          {cancellingId === quote.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
-                          )}
                           {t("admin.quotes.reject")}
-                        </button>
+                        </AdminButton>
                       )}
 
                       <ChevronDown
-                        className={`w-4 h-4 text-white/40 transition-transform duration-300 ${
-                          isExpanded ? "rotate-180" : ""
+                        className={`h-4 w-4 text-[#9e98b6] transition-transform duration-150 ${
+                          isExpanded ? "rotate-180 text-white" : ""
                         }`}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Expanded items & quoting form */}
                 {isExpanded && (
-                  <div className="border-t border-white/5 bg-[#0f0d1e]/30 p-5">
-                    {/* User profile complete card */}
-                    <div className="mb-6 p-4 rounded-[3px] border border-white/5 bg-background/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <h4 className="text-[10px] font-black text-white uppercase tracking-widest mb-1.5">
+                  <div className="space-y-5 border-t border-white/[0.07] bg-[#100d1e] p-4 sm:p-5">
+                    {/* User Info */}
+                    <div className="flex flex-col justify-between gap-4 rounded-lg border border-white/[0.06] bg-[#17142b] p-4 md:flex-row md:items-center">
+                      <div className="space-y-1.5">
+                        <h4 className="text-xs font-semibold text-[#b8b2cd]">
                           {t("admin.quotes.userInfo")}
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-2 gap-x-6 text-xs font-bold text-[#84849b]">
-                          <p>{t("admin.quotes.name")} <span className="text-white">{quote.user.name || "N/A"}</span></p>
-                          <p>{t("admin.quotes.email")} <span className="text-white">{quote.user.email || "N/A"}</span></p>
-                          <p>{t("admin.quotes.steamId")} <span className="text-white font-mono">{quote.user.steamId || "N/A"}</span></p>
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-1.5 text-xs text-[#9e98b6] sm:grid-cols-3">
+                          <p>
+                            {t("admin.quotes.name")}{" "}
+                            <span className="font-medium text-white">{quote.user.name || "N/A"}</span>
+                          </p>
+                          <p>
+                            {t("admin.quotes.email")}{" "}
+                            <span className="font-medium text-white">{quote.user.email || "N/A"}</span>
+                          </p>
+                          <p>
+                            {t("admin.quotes.steamId")}{" "}
+                            <span className="font-mono font-medium text-white tabular-nums">
+                              {quote.user.steamId || "N/A"}
+                            </span>
+                          </p>
                         </div>
                       </div>
 
@@ -498,42 +486,53 @@ export function QuotesPage() {
                           href={`https://steamcommunity.com/profiles/${quote.user.steamId}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 h-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[3px] text-[10px] font-black uppercase tracking-wider text-white transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-white/10 bg-[#1c1833] px-3 text-xs font-medium text-white hover:bg-[#252042] transition-colors"
                         >
-                          {t("admin.quotes.steamProfile")} <ArrowRight className="w-3 h-3" />
+                          <span>{t("admin.quotes.steamProfile")}</span>
+                          <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                       )}
                     </div>
 
-                    <form onSubmit={(e) => handleSubmitQuote(quote.id, e)} className="space-y-6">
-                      <h4 className="text-[10px] font-black text-[#84849b] uppercase tracking-widest">
-                        {t("admin.quotes.itemsToQuote")}
-                      </h4>
+                    {/* Items Quoting Form */}
+                    <form onSubmit={(e) => handleSubmitQuote(quote.id, e)} className="space-y-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-semibold text-[#b8b2cd]">
+                          {t("admin.quotes.itemsToQuote")}
+                        </h4>
+                        <span className="text-xs font-semibold text-emerald-400 tabular-nums">
+                          {t("admin.quotes.quotedTotal")}: ${liveFormTotal.toFixed(2)} USD
+                        </span>
+                      </div>
 
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         {quote.items.map((item) => {
                           const inputValue = pricesInput[quote.id]?.[item.assetId] ?? "";
-                          const isQuoteEditable = quote.status === "PENDING" || quote.status === "QUOTED";
 
                           return (
                             <div
                               key={item.id}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-lg border border-white/5 bg-background/30"
+                              className="flex flex-col justify-between gap-3 rounded-lg border border-white/[0.06] bg-[#17142b] p-3 sm:flex-row sm:items-center"
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="relative w-12 h-12 bg-white/5 rounded-lg shrink-0 flex items-center justify-center p-1 border border-white/5">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-white/10 bg-[#0d0a18] p-1">
                                   {item.iconUrl ? (
-                                    <Image src={item.iconUrl} alt={item.name} fill className="object-contain p-1" />
+                                    <Image
+                                      src={item.iconUrl}
+                                      alt={item.name}
+                                      fill
+                                      className="object-contain p-1"
+                                    />
                                   ) : (
-                                    <DollarSign className="w-5 h-5 text-white/20" />
+                                    <DollarSign className="h-4 w-4 text-[#746e8d]" />
                                   )}
                                 </div>
 
                                 <div className="min-w-0">
-                                  <h5 className="text-[10px] font-black text-white uppercase truncate">
+                                  <h5 className="truncate text-sm font-semibold text-white">
                                     {item.name}
                                   </h5>
-                                  <p className="text-[9px] text-[#84849b] mt-0.5 font-bold">
+                                  <p className="mt-0.5 text-xs text-[#9e98b6] tabular-nums">
                                     {item.exterior || "Exterior no especificado"}
                                     {item.float !== null && ` · Float: ${item.float.toFixed(6)}`}
                                     {item.pattern !== null && ` · Seed: ${item.pattern}`}
@@ -541,8 +540,8 @@ export function QuotesPage() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
-                                <span className="text-xs text-[#84849b] font-bold">$</span>
+                              <div className="flex shrink-0 items-center gap-2 sm:ml-auto">
+                                <span className="text-xs font-medium text-[#9e98b6]">$</span>
                                 <input
                                   type="number"
                                   step="0.01"
@@ -550,43 +549,41 @@ export function QuotesPage() {
                                   placeholder="0.00"
                                   disabled={!isQuoteEditable || submittingId === quote.id}
                                   value={inputValue}
-                                  onChange={(e) => handlePriceChange(quote.id, item.assetId, e.target.value)}
-                                  className="w-28 h-9 px-3 bg-white/5 border border-white/5 rounded-[3px] text-xs text-white placeholder-white/20 focus:border-accent/40 focus:outline-none disabled:opacity-50 font-mono text-right"
+                                  onChange={(e) =>
+                                    handlePriceChange(quote.id, item.assetId, e.target.value)
+                                  }
+                                  className="h-9 w-28 rounded-md border border-white/10 bg-[#0d0a18] px-3 text-right font-mono text-sm font-medium text-white outline-none transition-colors placeholder:text-[#746e8d] focus:border-accent disabled:opacity-50"
                                   required
                                 />
-                                <span className="text-xs text-[#84849b] font-bold">USD</span>
+                                <span className="text-xs font-medium text-[#9e98b6]">USD</span>
                               </div>
                             </div>
                           );
                         })}
                       </div>
 
-                      {(quote.status === "PENDING" || quote.status === "QUOTED") && (
-                        <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
-                          <button
+                      {isQuoteEditable && (
+                        <div className="flex justify-end border-t border-white/[0.06] pt-4">
+                          <AdminButton
                             type="submit"
+                            variant="primary"
+                            icon={Send}
+                            loading={submittingId === quote.id}
                             disabled={submittingId === quote.id}
-                            className="px-5 py-2.5 bg-accent hover:bg-accent/90 border border-accent/20 hover:border-accent/40 rounded-[3px] text-xs font-black uppercase tracking-widest text-white transition-all shadow-[0_0_20px_rgba(217,70,239,0.3)] disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                           >
-                            {submittingId === quote.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Send className="w-3.5 h-3.5" />
-                            )}
                             {t("admin.quotes.sendQuote")}
-                          </button>
+                          </AdminButton>
                         </div>
                       )}
                     </form>
                   </div>
                 )}
-              </div>
+              </AdminSection>
             );
           })}
         </div>
       )}
 
-      {/* Custom alert and confirmation modal */}
       <AlertConfirmModal
         isOpen={modalConfig.isOpen}
         title={modalConfig.title}

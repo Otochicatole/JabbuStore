@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Eye, EyeOff, Pencil, Play, RotateCcw, Trash2, X, Bot } from "lucide-react";
+import { Loader2, Eye, EyeOff, Pencil, Play, RotateCcw, Trash2, Bot } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
+import { AdminButton, AdminModal } from "@/features/admin/ui/AdminShell";
 
 export interface RaffleManageData {
   id: string;
@@ -23,6 +24,11 @@ interface RaffleManageActionsProps {
   onUpdated?: () => void;
   onDeleted?: () => void;
   layout?: "toolbar" | "compact";
+}
+
+interface FakeBotItem {
+  id: string;
+  name: string;
 }
 
 type PendingConfirmAction = "reactivate" | "cancel" | "draw" | "delete" | "hide" | "show" | null;
@@ -45,7 +51,7 @@ export function RaffleManageActions({
   const [isSaving, setIsSaving] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingConfirmAction>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
-  
+
   const [isAddBotsOpen, setIsAddBotsOpen] = useState(false);
   const [botMode, setBotMode] = useState<"new" | "existing">("new");
   const [formBotName, setFormBotName] = useState("");
@@ -53,8 +59,8 @@ export function RaffleManageActions({
   const [formBotAvatarFile, setFormBotAvatarFile] = useState<File | null>(null);
   const [formBotId, setFormBotId] = useState("");
   const [botTickets, setBotTickets] = useState("10");
-  
-  const [existingBots, setExistingBots] = useState<any[]>([]);
+
+  const [existingBots, setExistingBots] = useState<FakeBotItem[]>([]);
   const [isLoadingBots, setIsLoadingBots] = useState(false);
 
   useEffect(() => {
@@ -70,14 +76,14 @@ export function RaffleManageActions({
         })
         .finally(() => setIsLoadingBots(false));
     }
-  }, [isAddBotsOpen]);
+  }, [isAddBotsOpen, existingBots.length]);
 
   const [formName, setFormName] = useState(raffle.name);
   const [formDesc, setFormDesc] = useState(raffle.description ?? "");
   const [formDrawDate, setFormDrawDate] = useState(toDatetimeLocalValue(raffle.drawDate));
   const [formPrice, setFormPrice] = useState(String(raffle.ticketPrice));
   const [formMaxTickets, setFormMaxTickets] = useState(
-    raffle.maxTickets != null ? String(raffle.maxTickets) : ""
+    raffle.maxTickets != null ? String(raffle.maxTickets) : "",
   );
 
   const isFinished = raffle.status === "FINISHED";
@@ -240,11 +246,8 @@ export function RaffleManageActions({
       const data = await res.json().catch(() => null);
       throw new Error(data?.error || t("common.error"));
     }
-    if (onDeleted) {
-      onDeleted();
-    } else {
-      refresh();
-    }
+    if (onDeleted) onDeleted();
+    else refresh();
   };
 
   const executeSetVisibility = async (nextIsPublic: boolean) => {
@@ -324,8 +327,8 @@ export function RaffleManageActions({
 
   const buttonBase =
     layout === "compact"
-      ? "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[3px] text-[9px] font-black uppercase tracking-wider transition-colors cursor-pointer"
-      : "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[3px] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer";
+      ? "inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-xs font-medium transition-colors cursor-pointer"
+      : "inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors cursor-pointer";
 
   return (
     <>
@@ -334,8 +337,12 @@ export function RaffleManageActions({
         onClick={(e) => e.stopPropagation()}
       >
         {canEdit && (
-          <button type="button" onClick={openEdit} className={`${buttonBase} bg-white/5 hover:bg-white/10 text-white`}>
-            <Pencil className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+          <button
+            type="button"
+            onClick={openEdit}
+            className={`${buttonBase} border border-white/10 bg-[#1c1833] text-white hover:bg-[#252042]`}
+          >
+            <Pencil className="h-3.5 w-3.5" />
             {t("raffles.editRaffle")}
           </button>
         )}
@@ -344,7 +351,7 @@ export function RaffleManageActions({
           <button
             type="button"
             onClick={handleActivate}
-            className={`${buttonBase} bg-purple-500/10 hover:bg-purple-500/20 text-purple-300`}
+            className={`${buttonBase} border border-accent/30 bg-accent/15 text-fuchsia-200 hover:bg-accent/25`}
           >
             {t("raffles.activate")}
           </button>
@@ -354,29 +361,20 @@ export function RaffleManageActions({
           <button
             type="button"
             onClick={() => setPendingAction("reactivate")}
-            className={`${buttonBase} bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400`}
+            className={`${buttonBase} border border-emerald-500/25 bg-emerald-500/12 text-emerald-300 hover:bg-emerald-500/20`}
           >
-            <RotateCcw className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+            <RotateCcw className="h-3.5 w-3.5" />
             {t("admin.rafflePurchases.reactivate")}
           </button>
         )}
-
-        <button
-          type="button"
-          onClick={() => setPendingAction("delete")}
-          className={`${buttonBase} bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-500/20`}
-        >
-          <Trash2 className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
-          {t("admin.rafflePurchases.deleteRaffle")}
-        </button>
 
         {canManage && isActive && (
           <button
             type="button"
             onClick={() => setPendingAction("draw")}
-            className={`${buttonBase} bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400`}
+            className={`${buttonBase} border border-emerald-500/30 bg-emerald-600 text-white hover:bg-emerald-500`}
           >
-            <Play className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+            <Play className="h-3.5 w-3.5" />
             {t("raffles.executeDraw")}
           </button>
         )}
@@ -389,9 +387,9 @@ export function RaffleManageActions({
               e.stopPropagation();
               setIsAddBotsOpen(true);
             }}
-            className={`${buttonBase} bg-blue-500/10 hover:bg-blue-500/20 text-blue-400`}
+            className={`${buttonBase} border border-sky-500/25 bg-sky-500/12 text-sky-200 hover:bg-sky-500/20`}
           >
-            <Bot className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+            <Bot className="h-3.5 w-3.5" />
             {t("admin.raffles.bots")}
           </button>
         )}
@@ -400,20 +398,29 @@ export function RaffleManageActions({
           <button
             type="button"
             onClick={() => setPendingAction("cancel")}
-            className={`${buttonBase} bg-red-500/10 hover:bg-red-500/20 text-red-400`}
+            className={`${buttonBase} border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20`}
           >
-            <Trash2 className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+            <Trash2 className="h-3.5 w-3.5" />
             {t("raffles.cancelRaffle")}
           </button>
         )}
+
+        <button
+          type="button"
+          onClick={() => setPendingAction("delete")}
+          className={`${buttonBase} border border-rose-500/25 bg-rose-500/12 text-rose-300 hover:bg-rose-500/20`}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          {t("admin.rafflePurchases.deleteRaffle")}
+        </button>
 
         {isFinished && isPublic && (
           <button
             type="button"
             onClick={() => setPendingAction("hide")}
-            className={`${buttonBase} bg-amber-500/10 hover:bg-amber-500/20 text-amber-400`}
+            className={`${buttonBase} border border-amber-500/25 bg-amber-500/12 text-amber-200 hover:bg-amber-500/20`}
           >
-            <EyeOff className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+            <EyeOff className="h-3.5 w-3.5" />
             {t("admin.raffles.hideFromClient")}
           </button>
         )}
@@ -422,297 +429,255 @@ export function RaffleManageActions({
           <button
             type="button"
             onClick={() => setPendingAction("show")}
-            className={`${buttonBase} bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400`}
+            className={`${buttonBase} border border-indigo-500/25 bg-indigo-500/12 text-indigo-200 hover:bg-indigo-500/20`}
           >
-            <Eye className={layout === "compact" ? "h-3 w-3" : "h-3.5 w-3.5"} />
+            <Eye className="h-3.5 w-3.5" />
             {t("admin.raffles.showOnClient")}
           </button>
         )}
       </div>
 
-      {isAddBotsOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <form
-            onSubmit={handleAddBots}
-            className="w-full max-w-sm bg-[#0f0d1e] border border-white/5 rounded-[3px] p-6 relative shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+      {/* Add Bots Modal */}
+      <AdminModal
+        open={isAddBotsOpen}
+        onClose={() => setIsAddBotsOpen(false)}
+        size="sm"
+        title={
+          <span className="inline-flex items-center gap-2">
+            <Bot className="h-4.5 w-4.5 text-sky-400" />
+            <span>{t("admin.raffles.addBots")}</span>
+          </span>
+        }
+      >
+        <form onSubmit={handleAddBots} className="space-y-4">
+          <div className="flex rounded-md border border-white/10 bg-[#0d0a18] p-1">
             <button
               type="button"
-              onClick={() => setIsAddBotsOpen(false)}
-              className="absolute top-5 right-5 text-white/50 hover:text-white cursor-pointer"
+              onClick={() => setBotMode("new")}
+              className={`flex-1 rounded py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                botMode === "new" ? "bg-accent text-white font-semibold" : "text-[#9e98b6] hover:text-white"
+              }`}
             >
-              <X className="w-5 h-5" />
+              {t("admin.raffles.createNew")}
             </button>
-
-            <h2 className="text-base font-black uppercase tracking-tight text-white mb-6 flex items-center gap-2">
-              <Bot className="w-5 h-5 text-blue-400" />
-              {t("admin.raffles.addBots")}
-            </h2>
-
-            <div className="flex bg-[#141221] p-1 rounded-[3px] border border-white/5 mb-6">
-              <button
-                type="button"
-                onClick={() => setBotMode("new")}
-                className={`flex-1 text-[10px] font-bold uppercase tracking-wider py-2 rounded-[2px] transition-colors cursor-pointer ${
-                  botMode === "new" ? "bg-accent text-white" : "text-[#84849b] hover:text-white"
-                }`}
-              >
-                {t("admin.raffles.createNew")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setBotMode("existing")}
-                className={`flex-1 text-[10px] font-bold uppercase tracking-wider py-2 rounded-[2px] transition-colors cursor-pointer ${
-                  botMode === "existing" ? "bg-accent text-white" : "text-[#84849b] hover:text-white"
-                }`}
-              >
-                {t("admin.raffles.existing")}
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {botMode === "new" ? (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                      {t("admin.raffles.userName")}
-                    </label>
-                    <input
-                      type="text"
-                      value={formBotName}
-                      onChange={(e) => setFormBotName(e.target.value)}
-                      placeholder="Ej. SniperGod"
-                      required
-                      className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                      {t("admin.raffles.userAvatarOptional")}
-                    </label>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            const file = e.target.files[0];
-                            setFormBotAvatarFile(file);
-                            setFormBotAvatar(URL.createObjectURL(file));
-                          }
-                        }}
-                        className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-2 text-xs text-white focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-[3px] file:border-0 file:text-xs file:font-black file:uppercase file:bg-white/10 file:text-white hover:file:bg-white/20 transition-all cursor-pointer"
-                      />
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-[#84849b] uppercase font-bold">{t("admin.raffles.orUseUrl")}</span>
-                        <input
-                          type="url"
-                          value={formBotAvatarFile ? "" : formBotAvatar}
-                          onChange={(e) => {
-                            setFormBotAvatar(e.target.value);
-                            setFormBotAvatarFile(null);
-                          }}
-                          placeholder="https://..."
-                          className="flex-1 bg-[#141221] border border-white/5 rounded-[3px] px-3 py-2 text-xs text-white focus:outline-none focus:border-accent"
-                        />
-                      </div>
-                    </div>
-                    {formBotAvatar && (
-                      <div className="mt-2 flex items-center gap-3 bg-white/5 p-2 rounded-[3px] border border-white/5">
-                        <img src={formBotAvatar} alt="Preview" className="w-8 h-8 rounded-md object-cover bg-black" />
-                        <span className="text-xs text-[#84849b]">{t("admin.raffles.preview")}</span>                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                    {t("admin.raffles.selectBot")}
-                  </label>
-                  {isLoadingBots ? (
-                    <div className="flex items-center gap-2 text-xs text-[#84849b] p-3">
-                      <Loader2 className="w-3 h-3 animate-spin" /> {t("admin.raffles.loadingBots")}
-                    </div>
-                  ) : existingBots.length === 0 ? (
-                    <div className="text-xs text-[#84849b] p-3 border border-white/5 rounded-[3px] bg-[#141221]">
-                      {t("admin.raffles.noBotsCreated")}
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <select
-                        value={formBotId}
-                        onChange={(e) => setFormBotId(e.target.value)}
-                        required
-                        className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent appearance-none cursor-pointer"
-                      >
-                        {existingBots.map((bot) => (
-                          <option key={bot.id} value={bot.id}>
-                            {bot.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                        <div className="w-2 h-2 border-b border-r border-[#84849b] transform rotate-45 mb-1" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="space-y-2 pt-2 border-t border-white/5">
-                <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                  {t("admin.raffles.chancesToBuy")}
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={botTickets}
-                  onChange={(e) => setBotTickets(e.target.value)}
-                  required
-                  className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setIsAddBotsOpen(false)}
-                className="px-4 py-2 text-xs font-bold uppercase text-white/70 hover:text-white transition-colors cursor-pointer"
-                disabled={isSaving}
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-              >
-                {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
-                {t("admin.raffles.add")}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {isEditOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <form
-            onSubmit={handleSaveEdit}
-            className="w-full max-w-lg bg-[#0f0d1e] border border-white/5 rounded-[3px] p-6 relative shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
             <button
               type="button"
-              onClick={() => setIsEditOpen(false)}
-              className="absolute top-5 right-5 text-white/50 hover:text-white cursor-pointer"
+              onClick={() => setBotMode("existing")}
+              className={`flex-1 rounded py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                botMode === "existing" ? "bg-accent text-white font-semibold" : "text-[#9e98b6] hover:text-white"
+              }`}
             >
-              <X className="w-5 h-5" />
+              {t("admin.raffles.existing")}
             </button>
+          </div>
 
-            <h2 className="text-base font-black uppercase tracking-tight text-white mb-6">
-              {t("raffles.editRaffle")}
-            </h2>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                  {t("raffles.name")}
+          {botMode === "new" ? (
+            <>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-[#b8b2cd]">
+                  {t("admin.raffles.userName")}
                 </label>
                 <input
                   type="text"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
+                  value={formBotName}
+                  onChange={(e) => setFormBotName(e.target.value)}
+                  placeholder="Ej. SniperGod"
                   required
-                  className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent"
+                  className="h-9 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3 text-sm text-white outline-none focus:border-accent"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                  {t("raffles.desc")}
-                </label>
-                <textarea
-                  value={formDesc}
-                  onChange={(e) => setFormDesc(e.target.value)}
-                  className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent h-20 resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                    {t("raffles.adminDrawDate")}
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={formDrawDate}
-                    onChange={(e) => setFormDrawDate(e.target.value)}
-                    required
-                    disabled={hasSoldChances}
-                    className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent disabled:opacity-50"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                    {t("raffles.ticketPriceLabel")}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.10"
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
-                    required
-                    disabled={hasSoldChances}
-                    className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent disabled:opacity-50"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-[#84849b] tracking-wider">
-                  {t("raffles.maxTicketsLabel")}
+                <label className="block text-xs font-medium text-[#b8b2cd]">
+                  {t("admin.raffles.userAvatarOptional")}
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  value={formMaxTickets}
-                  onChange={(e) => setFormMaxTickets(e.target.value)}
-                  disabled={hasSoldChances}
-                  className="w-full bg-[#141221] border border-white/5 rounded-[3px] px-4 py-3 text-xs text-white focus:outline-none focus:border-accent disabled:opacity-50"
-                  placeholder={t("raffles.maxTicketsLabel")}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const file = e.target.files[0];
+                      setFormBotAvatarFile(file);
+                      setFormBotAvatar(URL.createObjectURL(file));
+                    }
+                  }}
+                  className="w-full rounded-md border border-white/10 bg-[#0d0a18] px-3 py-2 text-xs text-white file:mr-3 file:rounded file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white cursor-pointer"
                 />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#9e98b6]">{t("admin.raffles.orUseUrl")}</span>
+                  <input
+                    type="url"
+                    value={formBotAvatarFile ? "" : formBotAvatar}
+                    onChange={(e) => {
+                      setFormBotAvatar(e.target.value);
+                      setFormBotAvatarFile(null);
+                    }}
+                    placeholder="https://..."
+                    className="h-9 flex-1 rounded-md border border-white/10 bg-[#0d0a18] px-3 text-xs text-white outline-none focus:border-accent"
+                  />
+                </div>
+                {formBotAvatar && (
+                  <div className="flex items-center gap-3 rounded-md border border-white/10 bg-[#1a1630] p-2">
+                    <img src={formBotAvatar} alt="Preview" className="h-8 w-8 rounded object-cover bg-black" />
+                    <span className="text-xs text-[#9e98b6]">{t("admin.raffles.preview")}</span>
+                  </div>
+                )}
               </div>
-
-              {hasSoldChances && (
-                <p className="text-[10px] text-amber-300/80 font-bold">
-                  {t("admin.rafflePurchases.editRestrictedHint")}
-                </p>
+            </>
+          ) : (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-[#b8b2cd]">
+                {t("admin.raffles.selectBot")}
+              </label>
+              {isLoadingBots ? (
+                <div className="flex items-center gap-2 p-2 text-xs text-[#9e98b6]">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("admin.raffles.loadingBots")}
+                </div>
+              ) : existingBots.length === 0 ? (
+                <div className="rounded-md border border-white/10 bg-[#0d0a18] p-3 text-xs text-[#9e98b6]">
+                  {t("admin.raffles.noBotsCreated")}
+                </div>
+              ) : (
+                <select
+                  value={formBotId}
+                  onChange={(e) => setFormBotId(e.target.value)}
+                  required
+                  className="h-9 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3 text-xs text-white outline-none focus:border-accent cursor-pointer"
+                >
+                  {existingBots.map((bot) => (
+                    <option key={bot.id} value={bot.id}>
+                      {bot.name}
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
+          )}
 
-            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setIsEditOpen(false)}
-                className="px-4 py-2.5 rounded-[3px] hover:bg-white/5 text-xs font-bold text-white uppercase tracking-wider cursor-pointer"
-              >
-                {t("common.cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-5 py-2.5 rounded-[3px] bg-accent hover:bg-accent/90 text-xs font-black uppercase text-white tracking-widest transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("raffles.save")}
-              </button>
+          <div className="space-y-1.5 border-t border-white/[0.06] pt-3">
+            <label className="block text-xs font-medium text-[#b8b2cd]">
+              {t("admin.raffles.chancesToBuy")}
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={botTickets}
+              onChange={(e) => setBotTickets(e.target.value)}
+              required
+              className="h-9 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3 text-sm text-white outline-none focus:border-accent"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-white/[0.06] pt-4">
+            <AdminButton
+              type="button"
+              variant="secondary"
+              disabled={isSaving}
+              onClick={() => setIsAddBotsOpen(false)}
+            >
+              {t("common.cancel")}
+            </AdminButton>
+            <AdminButton type="submit" variant="primary" loading={isSaving} disabled={isSaving}>
+              {t("admin.raffles.add")}
+            </AdminButton>
+          </div>
+        </form>
+      </AdminModal>
+
+      {/* Edit Raffle Modal */}
+      <AdminModal
+        open={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        size="md"
+        title={t("raffles.editRaffle")}
+      >
+        <form onSubmit={handleSaveEdit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-[#b8b2cd]">
+              {t("raffles.name")}
+            </label>
+            <input
+              type="text"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              required
+              className="h-9 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3 text-sm text-white outline-none focus:border-accent"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-[#b8b2cd]">
+              {t("raffles.desc")}
+            </label>
+            <textarea
+              value={formDesc}
+              onChange={(e) => setFormDesc(e.target.value)}
+              className="h-20 w-full resize-none rounded-md border border-white/10 bg-[#0d0a18] p-3 text-sm text-white outline-none focus:border-accent"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-[#b8b2cd]">
+                {t("raffles.adminDrawDate")}
+              </label>
+              <input
+                type="datetime-local"
+                value={formDrawDate}
+                onChange={(e) => setFormDrawDate(e.target.value)}
+                required
+                disabled={hasSoldChances}
+                className="h-9 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3 text-xs text-white outline-none focus:border-accent disabled:opacity-50 [color-scheme:dark]"
+              />
             </div>
-          </form>
-        </div>
-      )}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-[#b8b2cd]">
+                {t("raffles.ticketPriceLabel")}
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0.10"
+                value={formPrice}
+                onChange={(e) => setFormPrice(e.target.value)}
+                required
+                disabled={hasSoldChances}
+                className="h-9 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3 text-sm text-white outline-none focus:border-accent disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-[#b8b2cd]">
+              {t("raffles.maxTicketsLabel")}
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={formMaxTickets}
+              onChange={(e) => setFormMaxTickets(e.target.value)}
+              disabled={hasSoldChances}
+              placeholder={t("raffles.maxTicketsLabel")}
+              className="h-9 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3 text-sm text-white outline-none focus:border-accent disabled:opacity-50"
+            />
+          </div>
+
+          {hasSoldChances && (
+            <p className="text-xs font-medium text-amber-300">
+              {t("admin.rafflePurchases.editRestrictedHint")}
+            </p>
+          )}
+
+          <div className="flex justify-end gap-2 border-t border-white/[0.06] pt-4">
+            <AdminButton type="button" variant="secondary" onClick={() => setIsEditOpen(false)}>
+              {t("common.cancel")}
+            </AdminButton>
+            <AdminButton type="submit" variant="primary" loading={isSaving} disabled={isSaving}>
+              {t("raffles.save")}
+            </AdminButton>
+          </div>
+        </form>
+      </AdminModal>
 
       {confirmModalConfig && (
         <AlertConfirmModal

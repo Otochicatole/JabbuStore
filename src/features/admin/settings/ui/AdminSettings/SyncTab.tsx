@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Loader2, RefreshCw, Save, Play, CheckCircle2, XCircle, X } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { BACKEND_URL } from "@/shared/lib/api";
+import { AdminAlert, AdminBadge, AdminButton, AdminSection } from "@/features/admin/ui/AdminShell";
+import { FieldLabel, SectionHeader, StyledInput, ToggleSwitch } from "./FormControls";
 
 import { getErrorMessage } from "./helpers";
 
@@ -33,7 +35,7 @@ interface CatalogFilters {
   catalogMinPrice: number;
 }
 
-function ToggleSwitch({
+function FilterToggle({
   label,
   checked,
   onChange,
@@ -45,8 +47,8 @@ function ToggleSwitch({
   disabled?: boolean;
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 py-1.5 cursor-pointer select-none group">
-      <span className="text-xs font-medium text-white/80 group-hover:text-white transition-colors">
+    <label className="group flex cursor-pointer items-center justify-between gap-3 py-1.5 select-none">
+      <span className="text-xs sm:text-[13px] font-medium text-[#c2bdd6] transition-colors group-hover:text-white">
         {label}
       </span>
       <button
@@ -55,9 +57,9 @@ function ToggleSwitch({
         aria-checked={checked}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none ${
-          checked ? "bg-accent" : "bg-white/10"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+          checked ? "bg-accent" : "bg-[#1c1833] border border-white/10"
+        } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
       >
         <span
           className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
@@ -382,89 +384,102 @@ export function SyncTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-[3px] border text-xs font-bold shadow-lg animate-in slide-in-from-top ${
-          toast.type === "success"
-            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-            : "bg-red-500/10 border-red-500/20 text-red-400"
-        }`}>
-          {toast.type === "success" ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
+        <div
+          className={`fixed top-4 right-4 z-50 flex items-center gap-3 rounded-lg border px-4 py-3 text-xs font-medium shadow-xl ${
+            toast.type === "success"
+              ? "border-emerald-500/30 bg-[#141124] text-emerald-300"
+              : "border-rose-500/30 bg-[#141124] text-rose-300"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+          ) : (
+            <XCircle className="h-4 w-4 shrink-0" />
+          )}
           <span>{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 p-0.5 hover:bg-white/10 rounded cursor-pointer">
-            <X className="w-3 h-3" />
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            className="ml-2 rounded p-0.5 hover:bg-white/10 cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
-      <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px] space-y-6">
-        <div className="max-w-xl w-full space-y-6">
+
+      <AdminSection>
+        <div className="max-w-2xl space-y-6">
           {/* Filtros del Catálogo Global */}
-          <div className="space-y-4 p-5 bg-white/[0.02] border border-white/10 rounded-[3px]">
-            <div className="border-b border-white/5 pb-3">
-              <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                {t("admin.settings.catalogFiltersTitle")}
-              </h3>
-              <p className="text-[11px] text-[#84849b] mt-1 font-mono">
-                {t("admin.settings.catalogFiltersDesc")}
-              </p>
-            </div>
+          <div className="space-y-4 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4 sm:p-5">
+            <SectionHeader
+              title={t("admin.settings.catalogFiltersTitle")}
+              desc={t("admin.settings.catalogFiltersDesc")}
+            />
 
             {filtersLoading ? (
               <div className="flex items-center justify-center py-6">
-                <Loader2 className="w-5 h-5 animate-spin text-accent" />
+                <Loader2 className="h-5 w-5 animate-spin text-accent" />
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="space-y-4">
-                  <div className="border-b border-white/5 pb-3">
-                    <ToggleSwitch
+                  <div className="border-b border-white/[0.06] pb-3">
+                    <FilterToggle
                       label={t("admin.settings.catalogFilterAllTypes")}
                       checked={allCatalogTypesEnabled}
                       onChange={setAllCatalogTypes}
                     />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
                     <div className="space-y-1">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b] mb-1">
-                      {t("admin.settings.catalogFilterCategories")}
-                    </p>
-                    {CATEGORY_FILTERS.slice(0, 10).map(([key, labelKey]) => (
-                      <ToggleSwitch
-                        key={key}
-                        label={t(labelKey)}
-                        checked={filters[key]}
-                        onChange={(value) => setFilters((current) => ({ ...current, [key]: value }))}
-                      />
-                    ))}
+                      <p className="mb-1 text-xs font-semibold text-[#9e98b6]">
+                        {t("admin.settings.catalogFilterCategories")}
+                      </p>
+                      {CATEGORY_FILTERS.slice(0, 10).map(([key, labelKey]) => (
+                        <FilterToggle
+                          key={key}
+                          label={t(labelKey)}
+                          checked={filters[key]}
+                          onChange={(value) => setFilters((current) => ({ ...current, [key]: value }))}
+                        />
+                      ))}
                     </div>
                     <div className="space-y-1">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b] mb-1">
-                      {t("admin.settings.catalogFilterOtherTypes")}
-                    </p>
-                    {CATEGORY_FILTERS.slice(10).map(([key, labelKey]) => (
-                      <ToggleSwitch
-                        key={key}
-                        label={t(labelKey)}
-                        checked={filters[key]}
-                        onChange={(value) => setFilters((current) => ({ ...current, [key]: value }))}
-                      />
-                    ))}
+                      <p className="mb-1 text-xs font-semibold text-[#9e98b6]">
+                        {t("admin.settings.catalogFilterOtherTypes")}
+                      </p>
+                      {CATEGORY_FILTERS.slice(10).map(([key, labelKey]) => (
+                        <FilterToggle
+                          key={key}
+                          label={t(labelKey)}
+                          checked={filters[key]}
+                          onChange={(value) => setFilters((current) => ({ ...current, [key]: value }))}
+                        />
+                      ))}
                     </div>
                   </div>
-                  <div className="border-t border-white/5 pt-3 space-y-1">
-                    <ToggleSwitch label={t("admin.settings.catalogFilterSouvenir")} checked={filters.catalogFilterSouvenirEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterSouvenirEnabled: v }))} />
-                    <ToggleSwitch label={t("admin.settings.catalogFilterStatTrak")} checked={filters.catalogFilterStatTrakEnabled} onChange={(v) => setFilters((p) => ({ ...p, catalogFilterStatTrakEnabled: v }))} />
+                  <div className="space-y-1 border-t border-white/[0.06] pt-3">
+                    <FilterToggle
+                      label={t("admin.settings.catalogFilterSouvenir")}
+                      checked={filters.catalogFilterSouvenirEnabled}
+                      onChange={(v) => setFilters((p) => ({ ...p, catalogFilterSouvenirEnabled: v }))}
+                    />
+                    <FilterToggle
+                      label={t("admin.settings.catalogFilterStatTrak")}
+                      checked={filters.catalogFilterStatTrakEnabled}
+                      onChange={(v) => setFilters((p) => ({ ...p, catalogFilterStatTrakEnabled: v }))}
+                    />
                   </div>
                 </div>
 
-                <div className="border-t border-white/5 pt-4 space-y-3">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b] mb-2">
-                      {t("admin.settings.catalogFilterMinPrice")}
-                    </p>
+                <div className="space-y-3 border-t border-white/[0.06] pt-4">
+                  <div className="space-y-1.5">
+                    <FieldLabel>{t("admin.settings.catalogFilterMinPrice")}</FieldLabel>
                     <div className="flex items-center gap-2">
-                      <span className="text-white/50 text-xs font-mono">$</span>
-                      <input
+                      <span className="font-mono text-xs text-[#9e98b6]">$</span>
+                      <StyledInput
                         type="number"
                         min={0}
                         step={0.01}
@@ -473,30 +488,25 @@ export function SyncTab() {
                           const val = parseFloat(e.target.value) || 0;
                           setFilters((prev) => ({ ...prev, catalogMinPrice: val }));
                         }}
-                        className="w-24 px-3 py-1.5 bg-[#110f1e] border border-white/10 rounded-[3px] text-xs font-mono text-white focus:outline-none focus:border-accent/50 transition-colors"
+                        className="max-w-28 font-mono tabular-nums"
                       />
-                      <span className="text-[10px] text-[#84849b] font-mono">USD</span>
+                      <span className="font-mono text-xs text-[#9e98b6]">USD</span>
                     </div>
                   </div>
 
-                  <button
+                  <AdminButton
                     type="button"
+                    variant="primary"
+                    icon={Save}
+                    loading={filtersSaving}
                     onClick={handleSaveFilters}
                     disabled={filtersSaving}
-                    className="w-full sm:w-auto px-6 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase text-white rounded-[3px] transition flex items-center justify-center gap-2 cursor-pointer select-none"
                   >
-                    {filtersSaving ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Save className="w-3.5 h-3.5" />
-                    )}
                     {t("admin.settings.saveCatalogFilters")}
-                  </button>
+                  </AdminButton>
 
                   {filtersSaved && (
-                    <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">
-                      {t("admin.settings.catalogFiltersSaved")}
-                    </div>
+                    <AdminAlert tone="success">{t("admin.settings.catalogFiltersSaved")}</AdminAlert>
                   )}
                 </div>
               </div>
@@ -504,91 +514,89 @@ export function SyncTab() {
           </div>
 
           {/* Sincronización Modular Paso a Paso */}
-          <div className="space-y-4 p-5 bg-white/[0.02] border border-white/10 rounded-[3px]">
-            <div className="border-b border-white/5 pb-3">
-              <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                {t("admin.settings.stepByStepTitle")}
-              </h3>
-              <p className="text-[11px] text-[#84849b] mt-1 font-mono">
-                {t("admin.settings.youpinSyncIntro")}
-              </p>
-            </div>
+          <div className="space-y-4 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4 sm:p-5">
+            <SectionHeader
+              title={t("admin.settings.stepByStepTitle")}
+              desc={t("admin.settings.youpinSyncIntro")}
+            />
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {/* Paso 1 */}
-              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-accent tracking-wider">{t("admin.settings.step", { number: 1 })}</span>
-                  <span className="text-[10px] font-mono text-white/50">items-catalog.json</span>
+              <div className="space-y-3 rounded-lg border border-white/[0.06] bg-[#141124] p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <AdminBadge tone="accent">{t("admin.settings.step", { number: 1 })}</AdminBadge>
+                  <span className="font-mono text-xs text-[#9e98b6]">items-catalog.json</span>
                 </div>
-                <p className="text-xs text-[#84849b]">{t("admin.settings.downloadBaseCatalog")}</p>
-                {step1Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step1Error}</div>}
-                {step1Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step1Result}</div>}
-                <button
+                <p className="text-xs text-[#c2bdd6]">{t("admin.settings.downloadBaseCatalog")}</p>
+                {step1Error && <AdminAlert tone="error">{step1Error}</AdminAlert>}
+                {step1Result && <AdminAlert tone="success">{step1Result}</AdminAlert>}
+                <AdminButton
                   type="button"
+                  variant="primary"
+                  size="sm"
+                  icon={RefreshCw}
+                  loading={step1Loading}
                   onClick={handleStep1DownloadCatalog}
                   disabled={step1Loading}
-                  className="w-full py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
                 >
-                  {step1Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                   {t("admin.settings.step1Button")}
-                </button>
+                </AdminButton>
               </div>
 
               {/* Paso 2 */}
-              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-accent tracking-wider">{t("admin.settings.step", { number: 2 })}</span>
-                  <span className="text-[10px] font-mono text-white/50">catalog-global.json</span>
+              <div className="space-y-3 rounded-lg border border-white/[0.06] bg-[#141124] p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <AdminBadge tone="info">{t("admin.settings.step", { number: 2 })}</AdminBadge>
+                  <span className="font-mono text-xs text-[#9e98b6]">catalog-global.json</span>
                 </div>
-                <p className="text-xs text-[#84849b]">{t("admin.settings.filterBaseCatalog")}</p>
-                {step3Error && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{step3Error}</div>}
-                {step3Result && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{step3Result}</div>}
-                <button
+                <p className="text-xs text-[#c2bdd6]">{t("admin.settings.filterBaseCatalog")}</p>
+                {step3Error && <AdminAlert tone="error">{step3Error}</AdminAlert>}
+                {step3Result && <AdminAlert tone="success">{step3Result}</AdminAlert>}
+                <AdminButton
                   type="button"
+                  variant="secondary"
+                  size="sm"
+                  icon={RefreshCw}
+                  loading={step3Loading}
                   onClick={handleStep3GenerateCatalogGlobal}
                   disabled={step3Loading}
-                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
                 >
-                  {step3Loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                   {t("admin.settings.step2Button")}
-                </button>
+                </AdminButton>
               </div>
 
               {/* Paso 3 */}
-              <div className="p-4 bg-[#110f1e]/60 border border-white/5 rounded-[3px] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-accent tracking-wider">{t("admin.settings.step", { number: 3 })}</span>
-                  <span className="text-[10px] font-mono text-white/50">store/bots</span>
+              <div className="space-y-3 rounded-lg border border-white/[0.06] bg-[#141124] p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <AdminBadge tone="success">{t("admin.settings.step", { number: 3 })}</AdminBadge>
+                  <span className="font-mono text-xs text-[#9e98b6]">store/bots</span>
                 </div>
-                <p className="text-xs text-[#84849b]">{t("admin.settings.applyCatalogPrices")}</p>
-                {syncPricesError && <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">{syncPricesError}</div>}
-                {syncPricesResult && <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">{syncPricesResult}</div>}
-                <button
+                <p className="text-xs text-[#c2bdd6]">{t("admin.settings.applyCatalogPrices")}</p>
+                {syncPricesError && <AdminAlert tone="error">{syncPricesError}</AdminAlert>}
+                {syncPricesResult && <AdminAlert tone="success">{syncPricesResult}</AdminAlert>}
+                <AdminButton
                   type="button"
+                  variant="success"
+                  size="sm"
+                  icon={RefreshCw}
+                  loading={syncingPrices}
                   onClick={handleSyncPrices}
                   disabled={syncingPrices}
-                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded transition flex items-center justify-center gap-2 cursor-pointer select-none"
                 >
-                  {syncingPrices ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                   {syncingPrices
                     ? t("admin.settings.applyingBotPrices")
                     : t("admin.settings.applyCatalogPrices")}
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
 
           {/* Auto Sync */}
-          <div className="space-y-4 p-5 bg-white/[0.02] border border-white/10 rounded-[3px]">
-            <div className="border-b border-white/5 pb-3">
-              <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                {t("admin.settings.autoSyncTitle")}
-              </h3>
-              <p className="text-[11px] text-[#84849b] mt-1 font-mono">
-                {t("admin.settings.autoSyncDesc")}
-              </p>
-            </div>
+          <div className="space-y-4 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4 sm:p-5">
+            <SectionHeader
+              title={t("admin.settings.autoSyncTitle")}
+              desc={t("admin.settings.autoSyncDesc")}
+            />
 
             <div className="space-y-4">
               <ToggleSwitch
@@ -598,75 +606,70 @@ export function SyncTab() {
               />
 
               {autoSyncEnabled && (
-                <div className="pl-2 border-l-2 border-accent/30 space-y-4">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-wider text-[#84849b] mb-2">
-                      {t("admin.settings.autoSyncInterval")}
-                    </p>
+                <div className="space-y-4 rounded-lg border border-white/[0.06] bg-[#141124] p-4">
+                  <div className="space-y-1.5">
+                    <FieldLabel>{t("admin.settings.autoSyncInterval")}</FieldLabel>
                     <div className="flex items-center gap-2">
-                      <input
+                      <StyledInput
                         type="number"
                         min={1}
                         max={120}
                         step={1}
                         value={autoSyncInterval}
                         onChange={(e) => setAutoSyncInterval(parseInt(e.target.value) || 1)}
-                        className="w-20 px-3 py-1.5 bg-[#110f1e] border border-white/10 rounded-[3px] text-xs font-mono text-white focus:outline-none focus:border-accent/50 transition-colors"
+                        className="max-w-24 font-mono tabular-nums"
                       />
-                      <span className="text-[10px] text-[#84849b] font-mono">min</span>
+                      <span className="font-mono text-xs text-[#9e98b6]">min</span>
                     </div>
                   </div>
 
                   {autoSyncStatus && (
-                    <div className="space-y-2 text-xs">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-2.5">
-                          <span className="text-[9px] text-[#84849b] uppercase font-bold block">{t("admin.settings.autoSyncStep")}</span>
-                          <span className="text-white font-mono text-[11px] font-bold">{stepLabel(autoSyncStatus.currentStep)}</span>
-                        </div>
-                        <div className="bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-2.5">
-                          <span className="text-[9px] text-[#84849b] uppercase font-bold block">{t("admin.settings.autoSyncLastRun")}</span>
-                          <span className="text-white font-mono text-[11px] font-bold">
-                            {autoSyncStatus.lastRunAt ? new Date(autoSyncStatus.lastRunAt).toLocaleTimeString() : t("admin.settings.autoSyncNever")}
-                          </span>
-                        </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="rounded-md border border-white/[0.06] bg-[#1a1630] p-3">
+                        <span className="block text-xs text-[#9e98b6]">{t("admin.settings.autoSyncStep")}</span>
+                        <span className="mt-0.5 block font-mono text-xs font-semibold text-white">
+                          {stepLabel(autoSyncStatus.currentStep)}
+                        </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-2.5">
-                          <span className="text-[9px] text-[#84849b] uppercase font-bold block">{t("admin.settings.autoSyncNextRun")}</span>
-                          <span className="text-white font-mono text-[11px] font-bold">
-                            {autoSyncStatus.nextRunAt ? new Date(autoSyncStatus.nextRunAt).toLocaleTimeString() : "—"}
-                          </span>
-                        </div>
-                        <div className="bg-[#110f1e]/60 border border-white/5 rounded-[3px] p-2.5">
-                          <span className="text-[9px] text-[#84849b] uppercase font-bold block">{t("admin.settings.autoSyncStatus")}</span>
-                          <span className={`font-mono text-[11px] font-bold ${autoSyncStatus.currentStep !== "idle" ? "text-emerald-400" : "text-[#84849b]"}`}>
-                            {autoSyncStatus.currentStep !== "idle" ? t("admin.settings.autoSyncRunning") : t("admin.settings.autoSyncIdle")}
-                          </span>
-                        </div>
+                      <div className="rounded-md border border-white/[0.06] bg-[#1a1630] p-3">
+                        <span className="block text-xs text-[#9e98b6]">{t("admin.settings.autoSyncLastRun")}</span>
+                        <span className="mt-0.5 block font-mono text-xs font-semibold text-white tabular-nums">
+                          {autoSyncStatus.lastRunAt ? new Date(autoSyncStatus.lastRunAt).toLocaleTimeString() : t("admin.settings.autoSyncNever")}
+                        </span>
+                      </div>
+                      <div className="rounded-md border border-white/[0.06] bg-[#1a1630] p-3">
+                        <span className="block text-xs text-[#9e98b6]">{t("admin.settings.autoSyncNextRun")}</span>
+                        <span className="mt-0.5 block font-mono text-xs font-semibold text-white tabular-nums">
+                          {autoSyncStatus.nextRunAt ? new Date(autoSyncStatus.nextRunAt).toLocaleTimeString() : "—"}
+                        </span>
+                      </div>
+                      <div className="rounded-md border border-white/[0.06] bg-[#1a1630] p-3">
+                        <span className="block text-xs text-[#9e98b6]">{t("admin.settings.autoSyncStatus")}</span>
+                        <span className={`mt-0.5 block font-mono text-xs font-semibold ${autoSyncStatus.currentStep !== "idle" ? "text-emerald-400" : "text-[#9e98b6]"}`}>
+                          {autoSyncStatus.currentStep !== "idle" ? t("admin.settings.autoSyncRunning") : t("admin.settings.autoSyncIdle")}
+                        </span>
                       </div>
                       {autoSyncStatus.lastError && (
-                        <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono rounded">
-                          {autoSyncStatus.lastError}
+                        <div className="sm:col-span-2">
+                          <AdminAlert tone="error">{autoSyncStatus.lastError}</AdminAlert>
                         </div>
                       )}
                     </div>
                   )}
 
-                  <button
+                  <AdminButton
                     type="button"
+                    variant="primary"
+                    icon={Save}
+                    loading={autoSyncSaving}
                     onClick={handleSaveAutoSync}
                     disabled={autoSyncSaving}
-                    className="w-full sm:w-auto px-6 py-2.5 bg-accent hover:brightness-110 disabled:opacity-50 text-xs font-black uppercase text-white rounded-[3px] transition flex items-center justify-center gap-2 cursor-pointer select-none"
                   >
-                    {autoSyncSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                     {t("admin.settings.saveAutoSync")}
-                  </button>
+                  </AdminButton>
 
                   {autoSyncSaved && (
-                    <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono rounded">
-                      {t("admin.settings.autoSyncSaved")}
-                    </div>
+                    <AdminAlert tone="success">{t("admin.settings.autoSyncSaved")}</AdminAlert>
                   )}
                 </div>
               )}
@@ -674,27 +677,24 @@ export function SyncTab() {
           </div>
 
           {/* Run Now */}
-          <div className="space-y-4 p-5 bg-white/[0.02] border border-white/10 rounded-[3px]">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wider text-white">
-                {t("admin.settings.autoSyncRunNow")}
-              </p>
-              <p className="text-[11px] text-[#84849b] mt-1 font-mono">
-                {t("admin.settings.autoSyncRunNowDesc")}
-              </p>
-            </div>
-            <button
+          <div className="space-y-4 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4 sm:p-5">
+            <SectionHeader
+              title={t("admin.settings.autoSyncRunNow")}
+              desc={t("admin.settings.autoSyncRunNowDesc")}
+            />
+            <AdminButton
               type="button"
+              variant="success"
+              icon={Play}
+              loading={autoSyncRunning}
               onClick={handleRunAutoSyncNow}
               disabled={autoSyncRunning || autoSyncStatus?.currentStep !== "idle"}
-              className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-black uppercase text-white rounded-[3px] transition flex items-center justify-center gap-2 cursor-pointer select-none"
             >
-              {autoSyncRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               {autoSyncRunning ? t("admin.settings.autoSyncRunning") : t("admin.settings.autoSyncRunNow")}
-            </button>
+            </AdminButton>
           </div>
         </div>
-      </div>
+      </AdminSection>
     </div>
   );
 }

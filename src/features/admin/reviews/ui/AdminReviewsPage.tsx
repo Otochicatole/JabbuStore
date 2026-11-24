@@ -8,12 +8,15 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import {
   AdminAlert,
+  AdminBadge,
   AdminButton,
   AdminEmptyState,
   AdminHeader,
   AdminLoadingState,
   AdminSearchInput,
   AdminSection,
+  AdminStatCard,
+  AdminStatusTabs,
   AdminToolbar,
 } from "@/features/admin/ui/AdminShell";
 
@@ -38,8 +41,6 @@ interface AdminReview {
     email: string | null;
   };
 }
-
-const statusFilters: StatusFilter[] = ["ALL", "PENDING", "APPROVED", "REJECTED"];
 
 function getInitialStatusFilter(): StatusFilter {
   if (typeof window === "undefined") return "ALL";
@@ -159,59 +160,66 @@ export function AdminReviewsPage() {
   const statusConfig = (status: ReviewStatus) => {
     switch (status) {
       case "PENDING":
-        return {
-          label: t("admin.reviews.status.pending"),
-          className: "border-amber-500/20 bg-amber-500/10 text-amber-300",
-          icon: Clock,
-        };
+        return { label: t("admin.reviews.status.pending"), tone: "warning" as const, icon: Clock };
       case "APPROVED":
-        return {
-          label: t("admin.reviews.status.approved"),
-          className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300",
-          icon: CheckCircle,
-        };
+        return { label: t("admin.reviews.status.approved"), tone: "success" as const, icon: CheckCircle };
       case "REJECTED":
-        return {
-          label: t("admin.reviews.status.rejected"),
-          className: "border-rose-500/20 bg-rose-500/10 text-rose-300",
-          icon: XCircle,
-        };
+        return { label: t("admin.reviews.status.rejected"), tone: "danger" as const, icon: XCircle };
     }
   };
 
+  const statusTabs = useMemo(
+    () => [
+      { value: "ALL" as StatusFilter, label: t("admin.reviews.status.all") },
+      { value: "PENDING" as StatusFilter, label: t("admin.reviews.status.pending") },
+      { value: "APPROVED" as StatusFilter, label: t("admin.reviews.status.approved") },
+      { value: "REJECTED" as StatusFilter, label: t("admin.reviews.status.rejected") },
+    ],
+    [t],
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AdminHeader
         title={t("admin.reviews.title")}
         description={t("admin.reviews.description")}
         icon={MessageSquare}
         actions={
-          <AdminButton icon={RefreshCw} onClick={fetchReviews} disabled={loading}>
+          <AdminButton icon={RefreshCw} onClick={fetchReviews} disabled={loading} loading={loading}>
             {t("admin.reviews.refresh")}
           </AdminButton>
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <AdminSection>
-          <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">
-            {t("admin.reviews.status.pending")}
-          </p>
-          <p className="mt-2 text-2xl font-black text-amber-300">{statusSummary.PENDING}</p>
-        </AdminSection>
-        <AdminSection>
-          <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">
-            {t("admin.reviews.status.approved")}
-          </p>
-          <p className="mt-2 text-2xl font-black text-emerald-300">{statusSummary.APPROVED}</p>
-        </AdminSection>
-        <AdminSection>
-          <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">
-            {t("admin.reviews.status.rejected")}
-          </p>
-          <p className="mt-2 text-2xl font-black text-rose-300">{statusSummary.REJECTED}</p>
-        </AdminSection>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <AdminStatCard
+          label={t("admin.reviews.status.pending")}
+          value={<span className="text-amber-300">{statusSummary.PENDING}</span>}
+          icon={Clock}
+          tone="yellow"
+          loading={loading}
+        />
+        <AdminStatCard
+          label={t("admin.reviews.status.approved")}
+          value={<span className="text-emerald-400">{statusSummary.APPROVED}</span>}
+          icon={CheckCircle}
+          tone="green"
+          loading={loading}
+        />
+        <AdminStatCard
+          label={t("admin.reviews.status.rejected")}
+          value={<span className="text-rose-300">{statusSummary.REJECTED}</span>}
+          icon={XCircle}
+          tone="accent"
+          loading={loading}
+        />
       </div>
+
+      <AdminStatusTabs
+        items={statusTabs}
+        value={statusFilter}
+        onChange={setStatusFilter}
+      />
 
       <AdminToolbar>
         <AdminSearchInput
@@ -219,21 +227,6 @@ export function AdminReviewsPage() {
           onChange={setSearchTerm}
           placeholder={t("admin.reviews.search")}
         />
-        <div className="flex min-w-0 overflow-x-auto rounded-[3px] border border-white/5 bg-white/[0.03] p-1">
-          {statusFilters.map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`h-9 shrink-0 rounded-[3px] px-3 text-[10px] font-black uppercase tracking-wider transition-all ${
-                statusFilter === status
-                  ? "bg-accent text-white"
-                  : "text-[#84849b] hover:bg-white/[0.04] hover:text-white"
-              }`}
-            >
-              {status === "ALL" ? t("admin.reviews.status.all") : statusConfig(status).label}
-            </button>
-          ))}
-        </div>
       </AdminToolbar>
 
       {error && <AdminAlert>{error}</AdminAlert>}
@@ -243,7 +236,7 @@ export function AdminReviewsPage() {
       ) : filteredReviews.length === 0 ? (
         <AdminEmptyState icon={MessageSquare} title={t("admin.reviews.empty")} />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredReviews.map((review) => {
             const name = review.user.name || "Steam User";
             const status = statusConfig(review.status);
@@ -252,34 +245,32 @@ export function AdminReviewsPage() {
             return (
               <AdminSection key={review.id}>
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 space-y-3">
                     <div className="flex min-w-0 items-start gap-3">
-                      <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-white/10 bg-white/[0.04] text-xs font-black text-white">
+                      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-white/10 bg-[#1c1833] text-xs font-semibold text-white">
                         {review.user.avatar ? (
                           <Image src={review.user.avatar} alt={name} fill className="object-cover" />
                         ) : (
-                          initialsFor(name) || <User className="h-5 w-5 text-white/40" />
+                          initialsFor(name) || <User className="h-4 w-4 text-[#9e98b6]" />
                         )}
                       </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm font-black text-white">{name}</p>
-                          <span className={`inline-flex items-center gap-1 rounded-[3px] border px-2 py-1 text-[9px] font-black uppercase tracking-wider ${status.className}`}>
+                          <p className="text-sm font-semibold text-white">{name}</p>
+                          <AdminBadge tone={status.tone}>
                             <StatusIcon className="h-3 w-3" />
                             {status.label}
-                          </span>
-                          <span className="rounded-[3px] border border-white/10 bg-white/[0.03] px-2 py-1 text-[9px] font-black uppercase tracking-wider text-white/45">
-                            {review.source}
-                          </span>
+                          </AdminBadge>
+                          <AdminBadge tone="neutral">{review.source}</AdminBadge>
                         </div>
-                        <p className="mt-1 text-[10px] font-bold text-[#84849b]">
+                        <p className="mt-0.5 text-xs text-[#8e88a6]">
                           {dateFormatter.format(new Date(review.createdAt))}
                           {review.user.steamId ? ` · Steam ID: ${review.user.steamId}` : ""}
                         </p>
                       </div>
                     </div>
 
-                    <p className="mt-4 whitespace-pre-wrap break-words rounded-[3px] border border-white/5 bg-black/20 p-4 text-sm font-medium leading-relaxed text-white/90">
+                    <p className="whitespace-pre-wrap break-words rounded-lg border border-white/[0.06] bg-[#0e0b1a] p-3.5 text-sm leading-relaxed text-white/90">
                       {review.body}
                     </p>
                   </div>
@@ -290,9 +281,9 @@ export function AdminReviewsPage() {
                         href={review.user.profileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-[3px] border border-white/10 bg-white/[0.04] px-4 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-white/[0.07]"
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-white/10 bg-[#1c1833] px-3.5 text-xs font-semibold text-white hover:bg-[#252042] transition-colors"
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <ExternalLink className="h-3.5 w-3.5" />
                         {t("admin.reviews.profile")}
                       </a>
                     )}

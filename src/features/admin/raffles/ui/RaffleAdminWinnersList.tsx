@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy, ExternalLink, Gift, Trophy, User as UserIcon } from "lucide-react";
+import { AdminBadge } from "@/features/admin/ui/AdminShell";
 
 import {
   countPrizeWinners,
@@ -32,36 +33,36 @@ function WinnerTradeUrlActions({ tradeUrl, t }: { tradeUrl: string; t: Translate
 
   return (
     <div className="mt-2 space-y-2">
-      <span className="font-mono text-[8.5px] text-white/80 block break-all select-all leading-normal">
+      <span className="block break-all select-all font-mono text-xs leading-normal text-[#c2bdd6]">
         {tradeUrl}
       </span>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <a
           href={tradeUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 h-8 flex items-center justify-center gap-1.5 border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer rounded-[3px]"
+          className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-white/10 bg-[#1c1833] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#252042]"
         >
-          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-accent" />
           {t("admin.orders.openTrade")}
         </a>
         <button
           type="button"
           onClick={handleCopy}
-          className={`h-8 px-3 flex items-center justify-center gap-1.5 border text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer rounded-[3px] ${
+          className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors ${
             copied
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-              : "bg-white/5 border-white/5 text-[#84849b] hover:text-white hover:bg-white/10 hover:border-white/10"
+              ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
+              : "border-white/10 bg-[#1c1833] text-[#b8b2cd] hover:bg-[#252042] hover:text-white"
           }`}
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5 text-emerald-400" />
+              <Check className="h-3.5 w-3.5 text-emerald-400" />
               <span>{t("admin.orders.copied")}</span>
             </>
           ) : (
             <>
-              <Copy className="w-3.5 h-3.5" />
+              <Copy className="h-3.5 w-3.5" />
               <span>{t("admin.orders.copy")}</span>
             </>
           )}
@@ -75,17 +76,17 @@ export function RaffleAdminWinnersList({ prizes, t }: RaffleAdminWinnersListProp
   const winnersCount = countPrizeWinners(prizes);
 
   return (
-    <div className="rounded-[3px] border border-emerald-500/15 bg-emerald-500/5 p-4">
-      <div className="flex items-center justify-between gap-3 mb-3">
+    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-emerald-400" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-white">
+          <Trophy className="h-4 w-4 text-emerald-400" />
+          <span className="text-xs font-semibold text-white">
             {t("raffles.winners")}
           </span>
         </div>
-        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+        <AdminBadge tone="success">
           {t("admin.raffles.prizesDelivered", { delivered: winnersCount, total: prizes.length })}
-        </span>
+        </AdminBadge>
       </div>
 
       <div className="space-y-2">
@@ -96,64 +97,62 @@ export function RaffleAdminWinnersList({ prizes, t }: RaffleAdminWinnersListProp
           return (
             <div
               key={prize.id}
-              className="flex items-start gap-3 rounded-[3px] border border-white/5 bg-[#0b0818]/60 p-3"
+              className="flex items-start gap-3 rounded-lg border border-white/[0.06] bg-[#141124] p-3"
             >
-              <div className="w-10 h-10 rounded-[3px] border border-white/5 bg-white/5 flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-white/10 bg-[#0d0a18]">
                 {prize.iconUrl ? (
-                  <img src={prize.iconUrl} alt={prize.name} className="w-full h-full object-contain p-0.5" />
+                  <img src={prize.iconUrl} alt={prize.name} className="h-full w-full object-contain p-0.5" />
                 ) : (
-                  <Gift className="w-4 h-4 text-white/20" />
+                  <Gift className="h-4 w-4 text-white/25" />
                 )}
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black text-white truncate uppercase">{prize.name}</p>
+                <p className="truncate text-xs font-semibold text-white">{prize.name}</p>
                 {won && winner ? (
-                  <div className="mt-1">
+                  <div className="mt-1.5">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full overflow-hidden border border-emerald-500/30 shrink-0">
+                      <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-emerald-500/30">
                         {winner.avatar ? (
-                          <img src={winner.avatar} alt="" className="w-full h-full object-cover" />
+                          <img src={winner.avatar} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-white/5">
-                            <UserIcon className="w-3 h-3 text-[#84849b]" />
+                          <div className="flex h-full w-full items-center justify-center bg-white/5">
+                            <UserIcon className="h-3 w-3 text-[#9e98b6]" />
                           </div>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <p className="text-[9px] font-bold text-emerald-400 truncate">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <p className="truncate text-xs font-semibold text-emerald-300">
                             {winner.name || winner.steamId || "Steam User"}
                           </p>
-                          {(winner as any).isFake && (
-                            <span className="px-1 py-0.5 text-[8px] bg-red-500/20 text-red-400 font-black uppercase rounded tracking-wider border border-red-500/30 shrink-0 leading-none">
-                              [BOT]
-                            </span>
+                          {(winner as { isFake?: boolean }).isFake && (
+                            <AdminBadge tone="danger">BOT</AdminBadge>
                           )}
                         </div>
                         {prize.winningTicket && (
-                          <p className="text-[8px] font-mono text-[#84849b]">
+                          <p className="font-mono text-xs text-[#9e98b6]">
                             {t("raffles.ticketNumber", { number: prize.winningTicket.ticketNumber })}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="mt-2 pt-2 border-t border-white/5">
-                      <p className="text-[8px] font-black uppercase tracking-wider text-[#84849b] mb-1">
+                    <div className="mt-2.5 border-t border-white/[0.06] pt-2">
+                      <p className="mb-1 text-xs font-medium text-[#9e98b6]">
                         {t("profile.tradeUrl")}
                       </p>
                       {winner.tradeUrl ? (
                         <WinnerTradeUrlActions tradeUrl={winner.tradeUrl} t={t} />
                       ) : (
-                        <p className="text-[8px] font-bold text-amber-400/80">
+                        <p className="text-xs font-medium text-amber-300">
                           {t("admin.common.noTradeUrl")}
                         </p>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-[9px] font-bold text-[#84849b] mt-1">{t("raffles.noWinnerAssigned")}</p>
+                  <p className="mt-1 text-xs text-[#9e98b6]">{t("raffles.noWinnerAssigned")}</p>
                 )}
               </div>
             </div>

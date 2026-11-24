@@ -1,16 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, MessageSquare, RefreshCw, Search, X } from "lucide-react";
-import { AdminSelect } from "@/shared/components/AdminSelect";
+import { ArrowLeft, Loader2, MessageSquare, RefreshCw, X } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import type { OrderTicket, TicketStatus } from "../../domain/types";
 import { getTicketSocket } from "../../infrastructure/ticketSocket";
 import { TicketChat } from "../TicketChat";
+import {
+  AdminAlert,
+  AdminBadge,
+  AdminButton,
+  AdminEmptyState,
+  AdminHeader,
+  AdminSearchInput,
+  AdminStatusTabs,
+  AdminToolbar,
+} from "@/features/admin/ui/AdminShell";
 
 export function AdminTicketsPage() {
   const { t } = useI18n();
@@ -104,7 +113,6 @@ export function AdminTicketsPage() {
     }
   };
 
-  // Sync selection based on requestedTicketId in URL reactively
   useEffect(() => {
     const syncSelectedTicket = async () => {
       if (!requestedTicketId) {
@@ -112,7 +120,7 @@ export function AdminTicketsPage() {
         return;
       }
 
-      const found = tickets.find((t) => t.id === requestedTicketId);
+      const found = tickets.find((item) => item.id === requestedTicketId);
       if (found) {
         if (selected !== found) {
           setSelected(found);
@@ -147,82 +155,218 @@ export function AdminTicketsPage() {
     router.replace(`${localizePath("/admin/panel/tickets")}?${params.toString()}`);
   };
 
-  const closeTicket = () => {
+  const closeTicket = useCallback(() => {
     setSelected(null);
     const params = new URLSearchParams(window.location.search);
     params.delete("ticket");
     router.replace(`${localizePath("/admin/panel/tickets")}?${params.toString()}`);
-  };
+  }, [localizePath, router]);
+
+  useEffect(() => {
+    if (!selected) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeTicket();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selected, closeTicket]);
+
+  const statusTabs = useMemo(
+    () => [
+      { value: "OPEN", label: t("tickets.status.open") },
+      { value: "CLOSED", label: t("tickets.status.closed") },
+      { value: "ALL", label: t("tickets.status.all") },
+    ],
+    [t],
+  );
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-black text-white"><MessageSquare className="h-5 w-5 text-accent" />{t("tickets.adminTitle")}</h2>
-          <p className="mt-1 text-xs text-[#84849b]">{t("tickets.adminDescription")}</p>
-        </div>
-        <button type="button" onClick={loadTickets} className="flex cursor-pointer items-center justify-center gap-2 rounded-[3px] border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white"><RefreshCw className="h-4 w-4" />{t("common.refresh")}</button>
-      </div>
+      <AdminHeader
+        title={t("tickets.adminTitle")}
+        description={t("tickets.adminDescription")}
+        icon={MessageSquare}
+        actions={
+          <AdminButton
+            type="button"
+            onClick={loadTickets}
+            disabled={loading}
+            loading={loading}
+            icon={RefreshCw}
+            variant="secondary"
+          >
+            {t("common.refresh")}
+          </AdminButton>
+        }
+      />
 
-      <div className="flex flex-col gap-3 rounded-[3px] border border-white/5 bg-[#110f1e]/40 p-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("tickets.searchPlaceholder")} className="w-full rounded-[3px] border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-xs text-white outline-none focus:border-accent/40" />
-        </div>
-        <AdminSelect value={status} onChange={setStatus} options={[
-          { value: "OPEN", label: t("tickets.status.open") },
-          { value: "CLOSED", label: t("tickets.status.closed") },
-          { value: "ALL", label: t("tickets.status.all") },
-        ]} />
-      </div>
+      <AdminStatusTabs
+        items={statusTabs}
+        value={status}
+        onChange={setStatus}
+      />
 
-      {error && <p className="rounded-[3px] border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">{error}</p>}
+      <AdminToolbar>
+        <AdminSearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder={t("tickets.searchPlaceholder")}
+        />
+      </AdminToolbar>
 
-      <div className="min-h-[420px] overflow-hidden rounded-[3px] border border-white/5 bg-[#110f1e]/30">
-        {loading ? <Loader2 className="mx-auto mt-20 h-6 w-6 animate-spin text-accent" /> : tickets.length === 0 ? (
-          <p className="p-10 text-center text-xs text-white/35">{t("tickets.noTickets")}</p>
-        ) : (
-          <div className="max-h-[680px] divide-y divide-white/5 overflow-y-auto">
-            {tickets.map((ticket) => (
-              <button key={ticket.id} type="button" onClick={() => handleSelectTicket(ticket)} className="w-full cursor-pointer p-4 text-left transition-colors hover:bg-white/[0.03] sm:px-5 sm:py-4">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="truncate text-xs font-black text-white">{ticket.subject}</span>
-                  {ticket.unreadCount > 0 && <span className="rounded-full bg-accent px-1.5 py-0.5 text-[8px] font-black text-white">{ticket.unreadCount}</span>}
-                </div>
-                <p className="mt-1 truncate text-[10px] text-white/45">{ticket.user?.name || t("admin.common.unknownUser")}</p>
-                <div className="mt-2 flex items-center justify-between text-[9px] font-mono text-white/30">
-                  <span>{ticket.order.type} · #{ticket.orderId.slice(0, 8)}</span>
-                  <span>{t(`tickets.status.${ticket.status.toLowerCase()}`)}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {error && <AdminAlert>{error}</AdminAlert>}
 
-      {selected && createPortal(
-        <div className="fixed inset-0 z-[120] flex h-dvh flex-col bg-[#070510]">
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#0f0d1e] px-4 py-3 sm:px-6">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[9px] font-mono text-white/45">
-                {t("tickets.orderReference")}: <span className="text-white">{selected.orderId}</span> · {selected.order.type}
-              </p>
-              <h2 className="truncate text-sm font-black text-white sm:text-base">{selected.subject}</h2>
-              <p className="mt-0.5 truncate text-[10px] text-white/45">{selected.user?.name || t("admin.common.unknownUser")} · {t("admin.tickets.steamIdLabel")} {selected.user?.steamId || "N/A"}</p>
+      {/* Master-Detail Workspace on Desktop, List + Sheet on Mobile */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px_1fr]">
+        {/* Ticket Queue List */}
+        <div className="overflow-hidden rounded-lg border border-white/[0.07] bg-[#141124]">
+          {loading ? (
+            <div className="flex min-h-[420px] items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-accent" />
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <button type="button" disabled={updating} onClick={() => changeStatus(selected.status === "OPEN" ? "CLOSED" : "OPEN")} className="cursor-pointer rounded-[3px] border border-white/10 bg-white/5 px-3 py-2.5 text-[9px] font-black uppercase text-white disabled:cursor-not-allowed disabled:opacity-40">
+          ) : tickets.length === 0 ? (
+            <div className="flex min-h-[320px] items-center justify-center p-6 text-center text-xs text-[#9e98b6]">
+              {t("tickets.noTickets")}
+            </div>
+          ) : (
+            <div className="max-h-[640px] divide-y divide-white/[0.05] overflow-y-auto custom-scrollbar">
+              {tickets.map((ticket) => {
+                const isSelected = selected?.id === ticket.id;
+                return (
+                  <button
+                    key={ticket.id}
+                    type="button"
+                    onClick={() => handleSelectTicket(ticket)}
+                    className={`w-full cursor-pointer p-4 text-left transition-colors ${
+                      isSelected
+                        ? "bg-accent/15 ring-1 ring-inset ring-accent/40"
+                        : "hover:bg-white/[0.03]"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="truncate text-sm font-semibold text-white">
+                        {ticket.subject}
+                      </span>
+                      {ticket.unreadCount > 0 && (
+                        <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-white tabular-nums">
+                          {ticket.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 truncate text-xs text-[#9e98b6]">
+                      {ticket.user?.name || t("admin.common.unknownUser")}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+                      <span className="font-mono text-[#8e88a6] tabular-nums">
+                        {ticket.order.type} · #{ticket.orderId.slice(0, 8)}
+                      </span>
+                      <AdminBadge tone={ticket.status === "OPEN" ? "success" : "neutral"}>
+                        {t(`tickets.status.${ticket.status.toLowerCase()}`)}
+                      </AdminBadge>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Inline Conversation Pane */}
+        <div className="hidden min-h-[540px] max-h-[640px] flex-col overflow-hidden rounded-lg border border-white/[0.07] bg-[#141124] lg:flex">
+          {selected ? (
+            <>
+              <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] bg-[#1a1630] px-5 py-3.5">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-mono text-xs text-[#9e98b6] tabular-nums">
+                    {t("tickets.orderReference")}:{" "}
+                    <span className="text-white">{selected.orderId}</span> · {selected.order.type}
+                  </p>
+                  <h3 className="mt-0.5 truncate text-base font-semibold text-white">
+                    {selected.subject}
+                  </h3>
+                  <p className="mt-0.5 truncate text-xs text-[#9e98b6]">
+                    {selected.user?.name || t("admin.common.unknownUser")} ·{" "}
+                    {t("admin.tickets.steamIdLabel")} {selected.user?.steamId || "N/A"}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <AdminButton
+                    type="button"
+                    size="sm"
+                    variant={selected.status === "OPEN" ? "danger" : "success"}
+                    disabled={updating}
+                    loading={updating}
+                    onClick={() => changeStatus(selected.status === "OPEN" ? "CLOSED" : "OPEN")}
+                  >
+                    {selected.status === "OPEN" ? t("tickets.close") : t("tickets.reopen")}
+                  </AdminButton>
+                  <button
+                    type="button"
+                    onClick={closeTicket}
+                    aria-label={t("common.close")}
+                    className="rounded-md border border-white/10 bg-[#141124] p-2 text-[#9e98b6] hover:text-white cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1">
+                <TicketChat ticket={selected} actor="ADMIN" onTicketUpdated={loadTickets} />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-1 items-center justify-center p-8">
+              <AdminEmptyState
+                icon={MessageSquare}
+                title={t("admin.tickets.selectHint")}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Drawer Sheet for Selected Ticket */}
+      {selected &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 z-[120] flex h-dvh flex-col bg-[#0b0914] lg:hidden">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] bg-[#120f22] px-4 py-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={closeTicket}
+                  aria-label={t("common.close")}
+                  className="rounded-md border border-white/10 bg-[#1c1833] p-2 text-white cursor-pointer"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <div className="min-w-0">
+                  <p className="truncate font-mono text-xs text-[#9e98b6]">
+                    #{selected.orderId.slice(0, 8)} · {selected.order.type}
+                  </p>
+                  <h2 className="truncate text-sm font-semibold text-white">
+                    {selected.subject}
+                  </h2>
+                </div>
+              </div>
+              <AdminButton
+                type="button"
+                size="sm"
+                variant={selected.status === "OPEN" ? "danger" : "success"}
+                disabled={updating}
+                onClick={() => changeStatus(selected.status === "OPEN" ? "CLOSED" : "OPEN")}
+              >
                 {selected.status === "OPEN" ? t("tickets.close") : t("tickets.reopen")}
-              </button>
-              <button type="button" onClick={closeTicket} className="cursor-pointer rounded-full bg-white/10 p-2.5 text-white hover:bg-white/15" aria-label={t("common.close")}><X className="h-5 w-5" /></button>
+              </AdminButton>
             </div>
-          </div>
-          <div className="min-h-0 flex-1">
-            <TicketChat ticket={selected} actor="ADMIN" onTicketUpdated={loadTickets} fullscreen />
-          </div>
-        </div>,
-        document.body,
-      )}
+            <div className="min-h-0 flex-1">
+              <TicketChat ticket={selected} actor="ADMIN" onTicketUpdated={loadTickets} fullscreen />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

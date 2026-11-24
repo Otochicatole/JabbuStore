@@ -2,7 +2,15 @@
 
 import React from "react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
-import { SectionHeader, ToggleSwitch, FieldLabel, StyledInput, StyledTextarea, SaveButton } from "./FormControls";
+import { AdminAlert, AdminSection } from "@/features/admin/ui/AdminShell";
+import {
+  SectionHeader,
+  ToggleSwitch,
+  FieldLabel,
+  StyledInput,
+  StyledTextarea,
+  SaveButton,
+} from "./FormControls";
 import { SettingsState } from "./index";
 
 interface TransferTabProps {
@@ -23,12 +31,12 @@ export function TransferTab({
   const { t } = useI18n();
 
   return (
-    <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
+    <AdminSection>
       <SectionHeader
         title={t("admin.settings.manualTransferTitle")}
         desc={t("admin.settings.manualTransferDesc")}
       />
-      <form onSubmit={onSubmit} className="space-y-6 max-w-3xl">
+      <form onSubmit={onSubmit} className="max-w-3xl space-y-5">
         <ToggleSwitch
           checked={settings.manualTransferEnabled}
           onChange={(v) =>
@@ -37,9 +45,9 @@ export function TransferTab({
           label={t("admin.settings.enableManualTransfer")}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div className="space-y-4 p-4 bg-white/[0.02] border border-white/5 rounded-[3px]">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="space-y-4 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4">
+            <h3 className="text-sm font-semibold text-white">
               {t("admin.settings.bankTransfer")}
             </h3>
             <div className="space-y-1.5">
@@ -47,7 +55,10 @@ export function TransferTab({
               <StyledInput
                 value={settings.manualBankAlias || ""}
                 onChange={(e) =>
-                  setSettings((prev: SettingsState) => ({ ...prev, manualBankAlias: e.target.value }))
+                  setSettings((prev: SettingsState) => ({
+                    ...prev,
+                    manualBankAlias: e.target.value,
+                  }))
                 }
                 placeholder="ej. jabbu.store.mp"
               />
@@ -57,7 +68,10 @@ export function TransferTab({
               <StyledInput
                 value={settings.manualBankCbu || ""}
                 onChange={(e) =>
-                  setSettings((prev: SettingsState) => ({ ...prev, manualBankCbu: e.target.value }))
+                  setSettings((prev: SettingsState) => ({
+                    ...prev,
+                    manualBankCbu: e.target.value,
+                  }))
                 }
                 placeholder="0000003100012345678901"
               />
@@ -67,7 +81,10 @@ export function TransferTab({
               <StyledInput
                 value={settings.manualBankHolder || ""}
                 onChange={(e) =>
-                  setSettings((prev: SettingsState) => ({ ...prev, manualBankHolder: e.target.value }))
+                  setSettings((prev: SettingsState) => ({
+                    ...prev,
+                    manualBankHolder: e.target.value,
+                  }))
                 }
                 placeholder={t("admin.settings.bankHolderPlaceholder")}
               />
@@ -87,8 +104,8 @@ export function TransferTab({
             </div>
           </div>
 
-          <div className="space-y-4 p-4 bg-white/[0.02] border border-white/5 rounded-[3px]">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">
+          <div className="space-y-4 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4">
+            <h3 className="text-sm font-semibold text-white">
               {t("admin.settings.cryptoTransfer")}
             </h3>
             <div className="space-y-1.5">
@@ -133,11 +150,7 @@ export function TransferTab({
           </div>
         </div>
 
-        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-[3px]">
-          <p className="text-[10px] text-amber-100/80 font-bold uppercase tracking-wider leading-relaxed">
-            {t("admin.settings.manualTransferWarning")}
-          </p>
-        </div>
+        <AdminAlert tone="warning">{t("admin.settings.manualTransferWarning")}</AdminAlert>
 
         <SaveButton
           saving={saving}
@@ -145,6 +158,6 @@ export function TransferTab({
           label={t("admin.settings.saveManualTransfer")}
         />
       </form>
-    </div>
+    </AdminSection>
   );
 }

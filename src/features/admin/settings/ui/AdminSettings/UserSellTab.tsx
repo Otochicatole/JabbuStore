@@ -3,6 +3,7 @@
 import React from "react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { AdminSelect } from "@/shared/components/AdminSelect";
+import { AdminSection } from "@/features/admin/ui/AdminShell";
 import { SectionHeader, ToggleSwitch, FieldLabel, StyledInput, SaveButton } from "./FormControls";
 import { SettingsState } from "./index";
 
@@ -31,12 +32,12 @@ export function UserSellTab({
   ];
 
   return (
-    <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
+    <AdminSection>
       <SectionHeader
         title={t("admin.settings.userSellRulesTitle")}
         desc={t("admin.settings.userSellRulesDesc")}
       />
-      <form onSubmit={onSubmit} className="space-y-5 max-w-xl">
+      <form onSubmit={onSubmit} className="max-w-xl space-y-5">
         <ToggleSwitch
           checked={settings.userSellModifierEnabled}
           onChange={(v) =>
@@ -74,6 +75,6 @@ export function UserSellTab({
           label={t("admin.settings.saveSellRules")}
         />
       </form>
-    </div>
+    </AdminSection>
   );
 }

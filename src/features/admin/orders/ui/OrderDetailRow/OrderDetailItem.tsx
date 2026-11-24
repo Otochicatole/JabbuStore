@@ -6,6 +6,7 @@ import { getItemRarity, getItemExterior } from "@/features/admin/shared/utils";
 import { buildYoupinItemUrl } from "@/shared/lib/youpin";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { OrderItem } from "@/features/admin/domain/types";
+import { AdminBadge } from "@/features/admin/ui/AdminShell";
 
 interface OrderDetailItemProps {
   item: OrderItem;
@@ -27,25 +28,8 @@ export function OrderDetailItem({
 }: OrderDetailItemProps) {
   const { t } = useI18n();
 
-  const finalFloat =
-    item.float !== null && item.float !== undefined
-      ? item.float
-      : resolvedDetails.float !== undefined
-        ? resolvedDetails.float
-        : null;
-
-  const finalPattern =
-    item.pattern !== null && item.pattern !== undefined
-      ? item.pattern
-      : resolvedDetails.pattern !== undefined
-        ? resolvedDetails.pattern
-        : null;
-
-  const finalRarity =
-    item.rarity || resolvedDetails.rarity || getItemRarity(item);
-
-  const finalExterior =
-    item.exterior || resolvedDetails.exterior || getItemExterior(item);
+  const finalRarity = item.rarity || resolvedDetails.rarity || getItemRarity(item);
+  const finalExterior = item.exterior || resolvedDetails.exterior || getItemExterior(item);
 
   const finalProvider =
     item.provider ||
@@ -71,78 +55,52 @@ export function OrderDetailItem({
   const isStar = item.name.includes("★");
 
   return (
-    <div
-      className={`flex flex-col sm:flex-row sm:items-center gap-6 bg-[#090812] p-5 border relative overflow-hidden group rounded-[3px] transition-all duration-300 hover:bg-[#0c0a1a] ${
-        isPhysical
-          ? "border-emerald-500/10 hover:border-emerald-500/25 shadow-[0_0_20px_rgba(16,185,129,0.02)]"
-          : "border-white/5 hover:border-white/10"
-      }`}
-    >
-
-
+    <div className="flex flex-col gap-4 rounded-lg border border-white/[0.07] bg-[#1a1630] p-4 sm:flex-row sm:items-center">
       {/* Icon image */}
-      <div className="w-24 h-16 relative bg-[#131124] border border-white/5 p-2 flex items-center justify-center flex-shrink-0 font-sans rounded-[4px] shadow-inner group-hover:scale-[1.02] transition-transform duration-300">
+      <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md border border-white/10 bg-[#0d0a18] p-2">
         {item.iconUrl ? (
           <img
             src={item.iconUrl}
-            className="w-full h-full object-contain drop-shadow-md"
+            className="h-full w-full object-contain"
             alt={item.name}
           />
         ) : (
-          <span className="text-[8px] text-[#84849b] font-mono">
-            {t("common.noImage")}
-          </span>
+          <span className="text-xs text-[#8e88a6]">{t("common.noImage")}</span>
         )}
       </div>
 
       {/* Item Details */}
-      <div className="flex-1 min-w-0 space-y-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-extrabold text-white block truncate tracking-wide">
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="truncate text-sm font-semibold text-white">
             {item.name}
           </span>
-
-          {/* STATTRAK / SOUVENIR SPECIAL BADGES */}
-          {isStatTrak && (
-            <span className="text-[7.5px] font-black uppercase tracking-wider bg-orange-500/15 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded-[2px] shadow-[0_0_8px_rgba(249,115,22,0.1)]">
-              StatTrak™
-            </span>
-          )}
-          {isSouvenir && (
-            <span className="text-[7.5px] font-black uppercase tracking-wider bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded-[2px] shadow-[0_0_8px_rgba(234,179,8,0.1)]">
-              Souvenir
-            </span>
-          )}
-          {isStar && (
-            <span className="text-[7.5px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-400 border border-purple-500/30 px-1.5 py-0.5 rounded-[2px] shadow-[0_0_8px_rgba(168,85,247,0.1)]">
-              ★ {t("admin.orders.specialBadge")}
-            </span>
-          )}
+          {isStatTrak && <AdminBadge tone="warning">StatTrak™</AdminBadge>}
+          {isSouvenir && <AdminBadge tone="warning">Souvenir</AdminBadge>}
+          {isStar && <AdminBadge tone="accent">★ {t("admin.orders.specialBadge")}</AdminBadge>}
           {finalExterior && (
-            item.float !== null && item.float !== undefined ? (
-              <span className="text-[7.5px] font-black uppercase tracking-wider bg-blue-500/15 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded-[2px] shadow-[0_0_8px_rgba(59,130,246,0.1)]">
-                {t("admin.orders.specificFloat") || "Float Específico"}
-              </span>
-            ) : (
-              <span className="text-[7.5px] font-black uppercase tracking-wider bg-neutral-500/15 text-neutral-400 border border-neutral-500/30 px-1.5 py-0.5 rounded-[2px]">
-                {t("admin.orders.anyFloat") || "Cualquier Float"}
-              </span>
-            )
+            <AdminBadge tone={item.float !== null && item.float !== undefined ? "info" : "neutral"}>
+              {item.float !== null && item.float !== undefined
+                ? t("admin.orders.specificFloat")
+                : t("admin.orders.anyFloat")}
+            </AdminBadge>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-[9px] font-mono text-[#84849b]">
-          {/* ENHANCED LABELS & PROVIDER BADGES */}
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-[#9e98b6]">
+          <AdminBadge tone={isPhysical ? "success" : "info"}>
+            {isPhysical ? t("admin.orders.physicalSkins") : t("admin.orders.resellOrder")}
+          </AdminBadge>
+
           {finalProvider === "youpin" && (
             <a
               href={youpinUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105"
+              className="inline-flex items-center gap-1 rounded-md border border-indigo-500/25 bg-indigo-500/12 px-2 py-0.5 text-xs font-medium text-indigo-300 hover:bg-indigo-500/20 transition-colors"
             >
-              <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse mr-0.5" />
               <span>{t("admin.orders.resaleYouPin")}</span>
-              <ExternalLink className="w-2.5 h-2.5" />
+              <ExternalLink className="h-3 w-3" />
             </a>
           )}
 
@@ -151,158 +109,116 @@ export function OrderDetailItem({
               href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.name)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105 shadow-[0_0_10px_rgba(16,185,129,0.05)]"
+              className="inline-flex items-center gap-1 rounded-md border border-emerald-500/25 bg-emerald-500/12 px-2 py-0.5 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20 transition-colors"
             >
-              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-0.5 animate-pulse" />
               <span>{t("admin.orders.physicalStockBot")}</span>
-              <ExternalLink className="w-2.5 h-2.5" />
+              <ExternalLink className="h-3 w-3" />
             </a>
           )}
+
           {finalProvider === "user" && (
             <a
               href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.name)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 px-2.5 py-0.5 rounded-[2px] font-sans transition-all hover:scale-105 shadow-[0_0_10px_rgba(244,63,94,0.05)]"
+              className="inline-flex items-center gap-1 rounded-md border border-rose-500/25 bg-rose-500/12 px-2 py-0.5 text-xs font-medium text-rose-300 hover:bg-rose-500/20 transition-colors"
             >
-              <span className="w-1.5 h-1.5 bg-rose-400 rounded-full mr-0.5 animate-pulse" />
               <span>{t("admin.orders.clientInventorySale")}</span>
-              <ExternalLink className="w-2.5 h-2.5" />
+              <ExternalLink className="h-3 w-3" />
             </a>
           )}
 
-          {/* PHYSICAL VS RESELL BADGES */}
-          {isPhysical ? (
-            <span className="text-[8.5px] font-black uppercase bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-[2px] font-sans tracking-wide">
-              {t("admin.orders.physicalSkins")}
-            </span>
-          ) : (
-            <span className="text-[8.5px] font-black uppercase bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-[2px] font-sans tracking-wide">
-              {t("admin.orders.resellOrder")}
-            </span>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 mt-2 text-[9.5px] font-mono">
-          {finalExterior && (
-            <span className="text-white font-sans uppercase tracking-wider font-extrabold bg-white/10 px-2 py-0.5 rounded-sm border border-white/5">
-              {finalExterior}
-            </span>
-          )}
-
-          {finalRarity && (
-            <span className="text-white/90 font-sans uppercase tracking-wider font-bold bg-white/5 px-2 py-0.5 rounded-sm border border-white/5">
-              {finalRarity}
-            </span>
-          )}
+          {finalExterior && <span>{finalExterior}</span>}
+          {finalRarity && <span>· {finalRarity}</span>}
 
           {displayPattern !== null && displayPattern !== undefined && (
-            <span className="text-white/90 bg-white/5 px-2 py-0.5 rounded-sm border border-white/5 flex items-center gap-1">
-              <span className="text-[#84849b]">{t("admin.orders.seed")}:</span>
-              <span className="font-extrabold text-accent">{displayPattern}</span>
-              {isPhysical && (
-                <span className="text-[8px] bg-emerald-500/10 text-emerald-400 px-1 rounded-[2px] ml-1 uppercase font-black font-sans tracking-wide">
-                  {t("admin.orders.physical")}
-                </span>
-              )}
+            <span className="inline-flex items-center gap-1 text-xs text-[#d4cfe6]">
+              <span className="text-[#8e88a6]">{t("admin.orders.seed")}:</span>
+              <span className="font-mono font-semibold text-accent tabular-nums">{displayPattern}</span>
             </span>
           )}
 
           <button
+            type="button"
             onClick={() => onCopyAssetId(item.assetId)}
-            className="text-[#84849b] bg-[#141223] hover:bg-white/10 hover:text-white px-2 py-0.5 rounded-sm border border-white/5 font-mono text-[9.5px] flex items-center gap-1 transition-all cursor-pointer rounded-[3px]"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-[#0d0a18] px-2 py-0.5 font-mono text-xs text-[#a39db9] hover:border-white/20 hover:text-white transition-colors cursor-pointer tabular-nums"
             title={t("admin.orders.copyAssetId")}
           >
-            <span>AssetID:</span>
-            <span className="text-white font-semibold select-all">
-              {item.assetId}
-            </span>
+            <span>Asset:</span>
+            <span className="text-white">{item.assetId}</span>
             {copiedAssetId === item.assetId ? (
-              <Check className="w-2.5 h-2.5 text-emerald-400 animate-pulse" />
+              <Check className="h-3 w-3 text-emerald-400" />
             ) : (
-              <Copy className="w-2.5 h-2.5 text-white/35" />
+              <Copy className="h-3 w-3 text-[#8e88a6]" />
             )}
           </button>
         </div>
       </div>
 
-      {/* Float display */}
-      {displayFloat !== null && displayFloat !== undefined ? (
-        <div className="sm:w-48 flex-shrink-0 bg-[#121021]/80 border border-white/5 p-3 rounded-[3px]">
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono">
-              {t("purchases.registeredFloat")}
-            </span>
-            {isPhysical && (
-              <span className="text-[7.5px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded font-sans tracking-wider">
-                ✓ {t("admin.orders.realBadge")}
-              </span>
-            )}
-          </div>
-          <span className="text-[11px] font-black font-mono text-white block mt-1 select-all">
-            {displayFloat.toFixed(10)}
-          </span>
-          <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mt-1.5 relative">
-            <div
-              className={`h-full rounded-full ${
-                displayFloat < 0.07
-                  ? "bg-emerald-400"
-                  : displayFloat < 0.15
-                    ? "bg-blue-400"
-                    : displayFloat < 0.38
-                      ? "bg-yellow-400"
-                      : displayFloat < 0.45
-                        ? "bg-orange-400"
-                        : "bg-red-400"
-              }`}
-              style={{
-                width: `${Math.min(100, displayFloat * 100)}%`,
-              }}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="sm:w-48 flex-shrink-0 bg-[#121021]/80 border border-white/5 p-3 rounded-[3px] flex flex-col justify-center">
-          <span className="text-[9px] uppercase tracking-wider font-black text-white/25 font-mono">
+      {/* Float Box */}
+      <div className="sm:w-48 shrink-0 rounded-md border border-white/[0.07] bg-[#0e0b1a] p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-medium text-[#8e88a6]">
             {t("purchases.registeredFloat")}
           </span>
-          <span className="text-[10px] text-white/35 font-mono mt-1 font-bold">
-            {t("admin.orders.chooseAnyFloat") || "A Criterio (Cualquiera)"}
-          </span>
+          {displayFloat !== null && isPhysical && (
+            <span className="text-[11px] font-medium text-emerald-400">
+              {t("admin.orders.realBadge")}
+            </span>
+          )}
         </div>
-      )}
+        {displayFloat !== null ? (
+          <>
+            <span className="mt-1 block font-mono text-xs font-semibold text-white select-all tabular-nums">
+              {displayFloat.toFixed(8)}
+            </span>
+            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div
+                className={`h-full rounded-full ${
+                  displayFloat < 0.07
+                    ? "bg-emerald-400"
+                    : displayFloat < 0.15
+                      ? "bg-sky-400"
+                      : displayFloat < 0.38
+                        ? "bg-amber-400"
+                        : displayFloat < 0.45
+                          ? "bg-orange-400"
+                          : "bg-rose-400"
+                }`}
+                style={{ width: `${Math.min(100, displayFloat * 100)}%` }}
+              />
+            </div>
+          </>
+        ) : (
+          <span className="mt-1 block text-xs text-[#746e8d]">
+            {t("admin.orders.chooseAnyFloat")}
+          </span>
+        )}
+      </div>
 
       {finalProvider === "youpin" && (
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <a
             href={youpinUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 hover:text-indigo-200 rounded-[3px] text-[10px] font-black uppercase tracking-wider transition-all hover:scale-[1.02] shadow-[0_0_16px_rgba(99,102,241,0.08)]"
-            title={
-              item.externalId
-                ? t("admin.orders.openExactYouPin")
-                : t("admin.orders.searchItemYouPin")
-            }
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-indigo-500/30 bg-indigo-500/15 px-3 text-xs font-semibold text-indigo-200 hover:bg-indigo-500/25 transition-colors"
+            title={item.externalId ? t("admin.orders.openExactYouPin") : t("admin.orders.searchItemYouPin")}
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="h-3.5 w-3.5" />
             {item.externalId ? t("admin.orders.viewItemYouPin") : t("admin.orders.searchYouPin")}
           </a>
         </div>
       )}
 
       {/* Price */}
-      <div className="text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0">
-        <span className="text-[9px] uppercase tracking-wider font-black text-[#84849b] font-mono block sm:hidden">
-          {t("common.price")}
-        </span>
-        <div>
-          <span className="text-sm sm:text-base font-black text-accent">
+      <div className="flex shrink-0 items-center justify-between border-t border-white/[0.06] pt-2.5 sm:flex-col sm:items-end sm:border-t-0 sm:pt-0">
+        <span className="text-xs text-[#8e88a6] sm:hidden">{t("common.price")}</span>
+        <div className="text-right">
+          <span className="block text-base font-semibold text-emerald-400 tabular-nums">
             ${item.price.toLocaleString()}
           </span>
-          <span className="text-[9px] text-[#84849b] font-bold block">
-            USD
-          </span>
+          <span className="block text-[11px] text-[#8e88a6]">USD</span>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { AdminBadge, AdminSection } from "@/features/admin/ui/AdminShell";
 import { SectionHeader, FieldLabel, StyledInput, SaveButton } from "./FormControls";
 import { SettingsState } from "./index";
 
@@ -23,12 +24,12 @@ export function WebhookTab({
   const { t } = useI18n();
 
   return (
-    <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
+    <AdminSection>
       <SectionHeader
         title={t("admin.settings.webhookTitle")}
         desc={t("admin.settings.webhookDescFull")}
       />
-      <form onSubmit={onSubmit} className="space-y-5 max-w-xl">
+      <form onSubmit={onSubmit} className="max-w-xl space-y-5">
         <div className="space-y-1.5">
           <FieldLabel>{t("admin.settings.webhookUrl")}</FieldLabel>
           <StyledInput
@@ -38,25 +39,22 @@ export function WebhookTab({
             onChange={(e) =>
               setSettings((prev: SettingsState) => ({ ...prev, webhookUrl: e.target.value }))
             }
-            style={{ fontFamily: "monospace" }}
+            className="font-mono"
           />
-          <p className="text-[10px] text-[#84849b] font-mono leading-relaxed">
+          <p className="text-xs leading-relaxed text-[#9e98b6]">
             {t("admin.settings.webhookHelp")}
           </p>
         </div>
 
-        <div className="p-4 bg-white/[0.02] border border-white/[0.05] space-y-1.5 rounded-[3px]">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#84849b]">
+        <div className="space-y-2 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4">
+          <p className="text-xs font-semibold text-[#c2bdd6]">
             {t("admin.settings.triggeredEvents")}
           </p>
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2">
             {["order.created", "order.status_updated"].map((ev) => (
-              <span
-                key={ev}
-                className="px-2 py-1 bg-accent/10 border border-accent/20 text-accent text-[10px] font-mono rounded-[3px]"
-              >
+              <AdminBadge key={ev} tone="accent" className="font-mono">
                 {ev}
-              </span>
+              </AdminBadge>
             ))}
           </div>
         </div>
@@ -67,6 +65,6 @@ export function WebhookTab({
           label={t("admin.settings.saveWebhook")}
         />
       </form>
-    </div>
+    </AdminSection>
   );
 }

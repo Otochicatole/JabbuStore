@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink, Ticket, UserRound } from "lucide-react";
+import { ChevronRight, Ticket, UserRound } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import type { PaymentQuoteSnapshot } from "@/features/admin/domain/types";
+import { AdminBadge } from "@/features/admin/ui/AdminShell";
 
 interface RaffleOrderMetadata extends Record<string, unknown> {
   paymentQuote?: PaymentQuoteSnapshot | null;
@@ -25,12 +26,12 @@ export interface RafflePurchaseOrder {
   items: { id: string; name: string; iconUrl: string | null; price: number }[];
 }
 
-function getOrderStatusTone(status: string) {
-  if (status === "COMPLETED") return "border-emerald-500/20 bg-emerald-500/10 text-emerald-400";
-  if (status === "CANCELLED") return "border-red-500/20 bg-red-500/10 text-red-400";
-  if (status === "PAID") return "border-blue-500/20 bg-blue-500/10 text-blue-400";
-  if (status === "TRADE_PENDING") return "border-purple-500/20 bg-purple-500/10 text-purple-400";
-  return "border-orange-500/20 bg-orange-500/10 text-orange-400";
+function getOrderStatusTone(status: string): "success" | "danger" | "info" | "accent" | "warning" {
+  if (status === "COMPLETED") return "success";
+  if (status === "CANCELLED") return "danger";
+  if (status === "PAID") return "info";
+  if (status === "TRADE_PENDING") return "accent";
+  return "warning";
 }
 
 function getOrderStatusLabel(status: string, t: (key: string) => string) {
@@ -67,83 +68,96 @@ export function RafflePurchaseOrderCard({
       : null;
 
   return (
-    <div className="rounded-[3px] border border-white/5 bg-[#110f1e]/35 p-4 hover:border-white/10 transition-colors">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
+    <Link
+      href={detailHref}
+      className="group block rounded-lg border border-white/[0.07] bg-[#141124] p-4 transition-colors hover:border-accent/40 hover:bg-[#19152d]"
+    >
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-3 lg:w-72">
           {order.user?.avatar ? (
             <img
               src={order.user.avatar}
               alt=""
-              className="h-10 w-10 shrink-0 rounded-[3px] border border-white/10"
+              className="h-10 w-10 shrink-0 rounded-md border border-white/10 object-cover"
             />
           ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] border border-white/10 bg-white/3 text-[#84849b]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/10 bg-[#1c1833] text-[#9e98b6]">
               <UserRound className="h-4 w-4" />
             </div>
           )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-white">
+            <p className="truncate text-sm font-semibold text-white">
               {order.user?.name || t("admin.rafflePurchases.steamUser")}
             </p>
-            <p className="truncate text-[10px] font-mono text-accent">
-              {order.user?.steamId || order.id}
+            <p className="truncate font-mono text-xs text-[#a39db9] tabular-nums">
+              {order.user?.steamId || order.id.slice(0, 8)}
             </p>
             {showRaffle && (
-              <p className="truncate text-[10px] font-bold uppercase tracking-wider text-[#84849b] mt-0.5">
+              <p className="mt-0.5 truncate text-xs font-medium text-accent">
                 {order.raffle.name}
               </p>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex lg:items-center lg:gap-5">
+        <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-4 lg:items-center lg:gap-5">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnOrder")}</p>
-            <p className="font-mono text-xs font-bold text-white/80">{order.id.slice(0, 8)}</p>
+            <p className="text-[11px] font-medium text-[#8e88a6]">
+              {t("admin.rafflePurchases.columnOrder")}
+            </p>
+            <p className="mt-0.5 font-mono text-xs font-medium text-[#d4cfe6] tabular-nums">
+              #{order.id.slice(0, 8)}
+            </p>
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnTotal")}</p>
-            <p className="text-sm font-black text-emerald-400">${order.totalPrice.toFixed(2)}</p>
+            <p className="text-[11px] font-medium text-[#8e88a6]">
+              {t("admin.rafflePurchases.columnTotal")}
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-emerald-400 tabular-nums">
+              ${order.totalPrice.toFixed(2)} USD
+            </p>
             {arsSettlement !== null && (
-              <p className="text-[10px] font-bold text-emerald-300">
+              <p className="text-xs font-medium text-emerald-300/85 tabular-nums">
                 {formatArs(arsSettlement)} ARS
               </p>
             )}
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnChances")}</p>
-            <p className="text-sm font-black text-white flex items-center gap-1">
-              <Ticket className="w-3 h-3 text-accent" />
+            <p className="text-[11px] font-medium text-[#8e88a6]">
+              {t("admin.rafflePurchases.columnChances")}
+            </p>
+            <p className="mt-0.5 flex items-center gap-1.5 text-sm font-semibold text-white tabular-nums">
+              <Ticket className="h-3.5 w-3.5 text-accent" />
               {order.ticketsCount}
             </p>
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#84849b]">{t("admin.rafflePurchases.columnStatus")}</p>
-            <span
-              className={`inline-flex rounded-[3px] border px-2 py-1 text-[9px] font-black uppercase tracking-wider ${getOrderStatusTone(order.status)}`}
-            >
+            <p className="mb-1 text-[11px] font-medium text-[#8e88a6]">
+              {t("admin.rafflePurchases.columnStatus")}
+            </p>
+            <AdminBadge tone={getOrderStatusTone(order.status)} dot>
               {getOrderStatusLabel(order.status, t)}
-            </span>
+            </AdminBadge>
           </div>
         </div>
 
-        <Link
-          href={detailHref}
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-[3px] bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-wider transition-colors"
-        >
-          <ExternalLink className="w-3 h-3" />
-          {t("admin.rafflePurchases.orderView")}
-        </Link>
+        <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-2.5 text-xs text-[#8e88a6] lg:border-t-0 lg:pt-0">
+          <span className="lg:hidden">{new Date(order.createdAt).toLocaleDateString()}</span>
+          <span className="inline-flex items-center gap-1 font-medium text-[#9e98b6] group-hover:text-white transition-colors">
+            <span>{t("admin.rafflePurchases.orderView")}</span>
+            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-[#84849b]">
-        <span className="font-mono">{new Date(order.createdAt).toLocaleString()}</span>
-        <span className="font-bold uppercase tracking-wider">{order.paymentMethod || "—"}</span>
+      <div className="mt-3 hidden items-center justify-between border-t border-white/[0.05] pt-2.5 text-xs text-[#8e88a6] lg:flex">
+        <span className="tabular-nums">{new Date(order.createdAt).toLocaleString()}</span>
+        <span className="font-medium text-[#b8b2cd]">{order.paymentMethod || "—"}</span>
       </div>
-    </div>
+    </Link>
   );
 }
 

@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 import {
+  CheckCircle2,
+  Clock,
   Plus,
   Loader2,
   Trophy,
@@ -16,15 +18,17 @@ import { useI18n } from "@/shared/i18n/I18nProvider";
 import { toValidationId } from "@/features/cart/domain/cart";
 import {
   AdminAlert,
+  AdminBadge,
   AdminButton,
   AdminEmptyState,
   AdminHeader,
   AdminLoadingState,
   AdminPage,
-  AdminSection,
   AdminSearchInput,
+  AdminStatCard,
+  AdminStatusTabs,
+  AdminToolbar,
 } from "@/features/admin/ui/AdminShell";
-import { AdminSelect } from "@/shared/components/AdminSelect";
 import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
 import { AdminParticipationDrawCard } from "@/features/admin/participation-draws/ui/AdminParticipationDrawCard";
 
@@ -635,42 +639,82 @@ function ParticipationDrawsAdminContent() {
 
   return (
     <AdminPage>
-      <AdminSection>
-        <AdminHeader
-          title={t("admin.participationDraws.title")}
-          description={t("admin.participationDraws.description")}
-          icon={Trophy}
-          actions={
-            <AdminButton variant="primary" icon={Plus} onClick={openCreateModal}>
-              {t("admin.participationDraws.create")}
-            </AdminButton>
-          }
-        />
+      <AdminHeader
+        title={t("admin.participationDraws.title")}
+        description={t("admin.participationDraws.description")}
+        icon={Trophy}
+        actions={
+          <AdminButton variant="primary" icon={Plus} onClick={openCreateModal}>
+            {t("admin.participationDraws.create")}
+          </AdminButton>
+        }
+      />
 
-        <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
-          <AdminSearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder={t("admin.participationDraws.searchPlaceholder")}
+      {draws.length > 0 && (
+        <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+          <AdminStatCard
+            label={t("admin.participationDraws.kpiTotal")}
+            value={draws.length}
+            icon={Trophy}
+            tone="blue"
           />
-          <AdminSelect
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={[
-              { value: "ALL", label: t("admin.participationDraws.allStatuses") },
-              { value: "OPEN", label: t("participationDraws.status.open") },
-              { value: "FINISHED", label: t("participationDraws.status.finished") },
-              { value: "CANCELLED", label: t("participationDraws.status.cancelled") },
-            ]}
+          <AdminStatCard
+            label={t("admin.participationDraws.kpiOpen")}
+            value={draws.filter((d) => d.status === "OPEN").length}
+            icon={Clock}
+            tone="accent"
+          />
+          <AdminStatCard
+            label={t("admin.participationDraws.kpiFinished")}
+            value={draws.filter((d) => d.status === "FINISHED").length}
+            icon={CheckCircle2}
+            tone="green"
+          />
+          <AdminStatCard
+            label={t("admin.participationDraws.kpiEligible")}
+            value={draws.reduce((acc, d) => acc + d.eligibleCount, 0)}
+            icon={Users}
+            tone="yellow"
           />
         </div>
+      )}
 
-        {error && (
-          <div className="mt-4">
-            <AdminAlert tone="error">{error}</AdminAlert>
-          </div>
-        )}
-      </AdminSection>
+      <AdminStatusTabs
+        items={[
+          {
+            value: "ALL",
+            label: t("admin.participationDraws.allStatuses"),
+            count: draws.length,
+          },
+          {
+            value: "OPEN",
+            label: t("participationDraws.status.open"),
+            count: draws.filter((d) => d.status === "OPEN").length,
+          },
+          {
+            value: "FINISHED",
+            label: t("participationDraws.status.finished"),
+            count: draws.filter((d) => d.status === "FINISHED").length,
+          },
+          {
+            value: "CANCELLED",
+            label: t("participationDraws.status.cancelled"),
+            count: draws.filter((d) => d.status === "CANCELLED").length,
+          },
+        ]}
+        value={statusFilter}
+        onChange={setStatusFilter}
+      />
+
+      <AdminToolbar>
+        <AdminSearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder={t("admin.participationDraws.searchPlaceholder")}
+        />
+      </AdminToolbar>
+
+      {error && <AdminAlert tone="error">{error}</AdminAlert>}
 
       {filteredDraws.length === 0 ? (
         <AdminEmptyState
@@ -701,10 +745,10 @@ function ParticipationDrawsAdminContent() {
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-100 flex items-center justify-center overflow-y-auto bg-black/75 p-4">
           <form
             onSubmit={handleSubmit}
-            className="w-full max-w-3xl bg-linear-to-b from-[#1a172c] to-[#0f0d1e] border border-white/10 rounded-2xl p-8 relative flex flex-col max-h-[90vh] overflow-y-auto shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]"
+            className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-y-auto rounded-xl border border-white/10 bg-[#141124] p-6 sm:p-7 shadow-2xl"
           >
             <button
               type="button"
@@ -712,39 +756,39 @@ function ParticipationDrawsAdminContent() {
                 setIsModalOpen(false);
                 resetForm();
               }}
-              className="absolute top-6 right-6 text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-colors cursor-pointer"
+              className="absolute top-5 right-5 cursor-pointer rounded-md p-2 text-[#9e98b6] transition-colors hover:bg-white/[0.06] hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-xl font-black uppercase tracking-tight text-white mb-8 flex items-center gap-3">
-              <Trophy className="w-6 h-6 text-accent" />
+            <h2 className="mb-6 flex items-center gap-2.5 text-lg font-semibold tracking-tight text-white">
+              <Trophy className="h-5 w-5 text-accent" />
               {editingDraw
                 ? t("admin.participationDraws.editTitle")
                 : t("admin.participationDraws.createTitle")}
             </h2>
 
-            <div className="space-y-6 flex-1">
-              <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase text-[#84849b] tracking-wider ml-1">
+            <div className="space-y-5 flex-1">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-[#c2bdd6]">
                   {t("admin.participationDraws.fieldName")} *
                 </label>
                 <input
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   required
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all"
+                  className="h-10 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3.5 text-sm text-white transition-colors focus:border-accent focus:outline-none"
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase text-[#84849b] tracking-wider ml-1">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-[#c2bdd6]">
                   {t("admin.participationDraws.fieldDescription")}
                 </label>
                 <textarea
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none focus:border-accent h-28 resize-none transition-all"
+                  className="h-28 w-full resize-none rounded-md border border-white/10 bg-[#0d0a18] px-3.5 py-2.5 text-sm text-white transition-colors focus:border-accent focus:outline-none"
                 />
               </div>
 
@@ -883,28 +927,28 @@ function ParticipationDrawsAdminContent() {
       )}
 
       {isPickerOpen && (
-        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-          <div className="w-full max-w-xl bg-[#0f0d1e] border border-white/5 rounded-[3px] p-6 relative flex flex-col max-h-[85vh] shadow-2xl">
+        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/75 p-4">
+          <div className="relative flex max-h-[85vh] w-full max-w-xl flex-col rounded-xl border border-white/10 bg-[#141124] p-6 shadow-2xl">
             <button
               type="button"
               onClick={() => setIsPickerOpen(false)}
-              className="absolute top-5 right-5 text-white/50 hover:text-white cursor-pointer"
+              className="absolute top-4 right-4 cursor-pointer rounded-md p-1.5 text-[#9e98b6] hover:bg-white/[0.06] hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-black uppercase tracking-tight text-white mb-4">
+            <h3 className="mb-4 text-base font-semibold text-white">
               {t("raffles.selectPrizes")}
             </h3>
 
-            <div className="flex gap-1 bg-white/5 border border-white/5 p-1 rounded-[3px] mb-4 shrink-0">
+            <div className="mb-4 flex shrink-0 gap-1 rounded-lg border border-white/[0.06] bg-[#0d0a18] p-1">
               <button
                 type="button"
                 onClick={() => setPickerTab("bot")}
-                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm transition-colors cursor-pointer ${
+                className={`flex-1 cursor-pointer rounded-md py-2 text-xs font-semibold transition-colors ${
                   pickerTab === "bot"
-                    ? "bg-white/5 text-white"
-                    : "text-white/40 hover:text-white/60"
+                    ? "bg-accent text-white"
+                    : "text-[#9e98b6] hover:text-white"
                 }`}
               >
                 {t("raffles.botSkinsTab")}
@@ -912,10 +956,10 @@ function ParticipationDrawsAdminContent() {
               <button
                 type="button"
                 onClick={() => setPickerTab("youpin")}
-                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm transition-colors cursor-pointer ${
+                className={`flex-1 cursor-pointer rounded-md py-2 text-xs font-semibold transition-colors ${
                   pickerTab === "youpin"
-                    ? "bg-white/5 text-white"
-                    : "text-white/40 hover:text-white/60"
+                    ? "bg-accent text-white"
+                    : "text-[#9e98b6] hover:text-white"
                 }`}
               >
                 {t("raffles.youpinSkinsTab")}
@@ -964,21 +1008,21 @@ function ParticipationDrawsAdminContent() {
                             className="w-8 h-8 object-contain shrink-0"
                           />
                           <div className="min-w-0">
-                            <span className="block text-[10px] font-black uppercase truncate tracking-wide text-white">
+                            <span className="block truncate text-xs font-semibold text-white">
                               {item.weapon} | {item.name}
                             </span>
-                            <span className="block text-[8px] font-mono text-[#84849b] uppercase mt-0.5">
+                            <span className="mt-0.5 block font-mono text-xs text-[#9e98b6]">
                               ID: {item.id}
                               {item.float ? ` · Float: ${item.float.toFixed(4)}` : ""}
                             </span>
                           </div>
                         </div>
                         <div className="shrink-0 text-right">
-                          <span className="block text-[10px] font-black">
+                          <span className="block font-mono text-xs font-semibold tabular-nums text-white">
                             ${item.price.toFixed(2)}
                           </span>
                           <span
-                            className={`block text-[8px] font-bold uppercase mt-0.5 ${
+                            className={`mt-0.5 block text-xs font-medium ${
                               isSelected ? "text-accent" : "text-emerald-400"
                             }`}
                           >
@@ -1004,14 +1048,14 @@ function ParticipationDrawsAdminContent() {
       )}
 
       {participantsDraw && (
-        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-[#0f0d1e] border border-white/5 rounded-[3px] shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between border-b border-white/5 px-5 py-4 shrink-0">
+        <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/75 p-4">
+          <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-xl border border-white/10 bg-[#141124] shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-white/[0.07] px-5 py-4">
               <div className="min-w-0">
-                <h3 className="text-sm font-black uppercase tracking-wider text-white truncate">
+                <h3 className="truncate text-base font-semibold text-white">
                   {t("admin.participationDraws.showEligible")}
                 </h3>
-                <p className="mt-1 text-[11px] font-bold text-[#84849b] truncate">
+                <p className="mt-0.5 truncate text-xs text-[#9e98b6]">
                   {participantsDraw.name} · {participantsDraw.eligibleCount}{" "}
                   {t("admin.participationDraws.eligible").toLowerCase()}
                 </p>
@@ -1019,22 +1063,22 @@ function ParticipationDrawsAdminContent() {
               <button
                 type="button"
                 onClick={closeParticipantsModal}
-                className="rounded-full p-2 text-[#84849b] hover:bg-white/5 hover:text-white"
+                className="cursor-pointer rounded-md p-1.5 text-[#9e98b6] hover:bg-white/[0.06] hover:text-white"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+            <div className="custom-scrollbar flex-1 overflow-y-auto p-5">
               {loadingParticipants || !participantsDetails ? (
-                <div className="flex items-center justify-center gap-2 py-12 text-[#84849b]">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-xs font-bold uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-2 py-12 text-[#9e98b6]">
+                  <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                  <span className="text-xs font-medium">
                     {t("common.loading")}
                   </span>
                 </div>
               ) : (participantsDetails.eligibleUsers || []).length === 0 ? (
-                <p className="text-center text-xs font-bold uppercase tracking-wider text-[#84849b] py-10">
+                <p className="py-10 text-center text-xs font-medium text-[#9e98b6]">
                   {t("admin.participationDraws.noEligible")}
                 </p>
               ) : (
@@ -1046,7 +1090,7 @@ function ParticipationDrawsAdminContent() {
                     return (
                       <div
                         key={user.id}
-                        className="flex items-center justify-between gap-3 rounded-[3px] border border-white/5 bg-[#141221] px-3 py-2.5"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-white/[0.06] bg-[#1a1630] px-3.5 py-2.5"
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           {user.avatar ? (
@@ -1056,25 +1100,23 @@ function ParticipationDrawsAdminContent() {
                               className="h-8 w-8 rounded-full border border-white/10"
                             />
                           ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[10px] font-black">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold">
                               ?
                             </div>
                           )}
-                          <span className="truncate text-xs font-black text-white">
+                          <span className="truncate text-xs font-semibold text-white">
                             {user.name || t("participationDraws.anonymous")}
                           </span>
                           {user.isBot && (
-                            <span className="rounded-[3px] border border-blue-500/20 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-300">
-                              BOT
-                            </span>
+                            <AdminBadge tone="info">BOT</AdminBadge>
                           )}
                           {won && (
-                            <span className="rounded-[3px] border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-300">
+                            <AdminBadge tone="success">
                               {t("admin.participationDraws.winner")}
-                            </span>
+                            </AdminBadge>
                           )}
                         </div>
-                        <span className="shrink-0 text-[11px] font-black text-accent">
+                        <span className="shrink-0 font-mono text-xs font-semibold text-accent tabular-nums">
                           {user.isBot
                             ? `${user.chances || 1} chances`
                             : t("admin.participationDraws.rafflesPlayed", {
@@ -1092,46 +1134,46 @@ function ParticipationDrawsAdminContent() {
       )}
 
       {manualDraw && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/75 p-4">
           <form
             onSubmit={handleManualDrawSubmit}
-            className="w-full max-w-lg bg-[#0f0d1e] border border-white/5 rounded-[3px] p-6 relative shadow-2xl flex flex-col max-h-[85vh]"
+            className="relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-xl border border-white/10 bg-[#141124] p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={closeManualDrawModal}
-              className="absolute top-5 right-5 text-white/50 hover:text-white cursor-pointer"
+              className="absolute top-4 right-4 cursor-pointer rounded-md p-1.5 text-[#9e98b6] hover:bg-white/[0.06] hover:text-white"
               disabled={savingManualDraw}
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-base font-black uppercase tracking-tight text-white mb-2 flex items-center gap-2 pr-8">
-              <Trophy className="w-5 h-5 text-accent" />
+            <h2 className="mb-1.5 flex items-center gap-2 pr-8 text-base font-semibold text-white">
+              <Trophy className="h-5 w-5 text-accent" />
               {t("admin.participationDraws.manualDrawTitle")}
             </h2>
-            <p className="text-xs text-[#84849b] mb-5">
+            <p className="mb-5 text-xs text-[#9e98b6]">
               {manualDraw.name} · {t("admin.participationDraws.manualDrawHint")}
             </p>
 
-            <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1">
+            <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-1">
               {loadingManualDraw || !manualDrawDetails ? (
-                <div className="flex items-center justify-center gap-2 py-12 text-[#84849b]">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-xs font-bold uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-2 py-12 text-[#9e98b6]">
+                  <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                  <span className="text-xs font-medium">
                     {t("common.loading")}
                   </span>
                 </div>
               ) : (manualDrawDetails.eligibleUsers || []).length === 0 ? (
-                <p className="text-center text-xs font-bold uppercase tracking-wider text-[#84849b] py-10">
+                <p className="py-10 text-center text-xs font-medium text-[#9e98b6]">
                   {t("admin.participationDraws.noEligible")}
                 </p>
               ) : (
                 (manualDrawDetails.prizes || []).map((prize) => (
                   <div
                     key={prize.id}
-                    className="rounded-[3px] border border-white/5 bg-[#141221] p-4 space-y-3"
+                    className="space-y-3 rounded-lg border border-white/[0.06] bg-[#1a1630] p-4"
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-[3px] border border-white/10 bg-black/30 flex items-center justify-center overflow-hidden shrink-0">
@@ -1245,19 +1287,19 @@ function ParticipationDrawsAdminContent() {
 
           {pickingPrizeId && manualDrawDetails && (
             <div
-              className="absolute inset-0 z-[150] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+              className="absolute inset-0 z-[150] flex items-center justify-center bg-black/75 p-4"
               onClick={closeWinnerPicker}
             >
               <div
-                className="w-full max-w-md bg-[#0f0d1e] border border-white/10 rounded-[3px] shadow-2xl flex flex-col max-h-[80vh]"
+                className="flex max-h-[80vh] w-full max-w-md flex-col rounded-xl border border-white/10 bg-[#141124] shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center justify-between border-b border-white/5 px-5 py-4 shrink-0">
+                <div className="flex shrink-0 items-center justify-between border-b border-white/[0.07] px-5 py-4">
                   <div className="min-w-0">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-white truncate">
+                    <h3 className="truncate text-sm font-semibold text-white">
                       {t("admin.participationDraws.manualDrawPickerTitle")}
                     </h3>
-                    <p className="mt-1 text-[11px] font-bold text-[#84849b]">
+                    <p className="mt-0.5 text-xs text-[#9e98b6]">
                       {(manualDrawDetails.eligibleUsers || []).length}{" "}
                       {t("admin.participationDraws.eligible").toLowerCase()}
                     </p>
@@ -1328,12 +1370,10 @@ function ParticipationDrawsAdminContent() {
                                   {user.name || t("participationDraws.anonymous")}
                                 </p>
                                 {user.isBot && (
-                                  <span className="rounded-[3px] border border-blue-500/20 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-300 shrink-0">
-                                    BOT
-                                  </span>
+                                  <AdminBadge tone="info" className="shrink-0">BOT</AdminBadge>
                                 )}
                               </div>
-                              <p className="text-[10px] font-bold text-[#84849b] uppercase tracking-wider mt-0.5">
+                              <p className="mt-0.5 text-xs text-[#9e98b6]">
                                 {alreadyPicked
                                   ? t("admin.participationDraws.manualDrawAlreadyPicked")
                                   : user.isBot
@@ -1345,7 +1385,7 @@ function ParticipationDrawsAdminContent() {
                             </div>
                           </div>
                           {isSelected && (
-                            <span className="text-[9px] font-black uppercase tracking-wider text-accent shrink-0">
+                            <span className="shrink-0 text-xs font-semibold text-accent">
                               {t("admin.participationDraws.selected")}
                             </span>
                           )}
@@ -1361,31 +1401,31 @@ function ParticipationDrawsAdminContent() {
       )}
 
       {botsDraw && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/75 p-4">
           <form
             onSubmit={handleAddBots}
-            className="w-full max-w-sm bg-[#0f0d1e] border border-white/5 rounded-[3px] p-6 relative shadow-2xl"
+            className="relative w-full max-w-sm rounded-xl border border-white/10 bg-[#141124] p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={closeAddBotsModal}
-              className="absolute top-5 right-5 text-white/50 hover:text-white cursor-pointer"
+              className="absolute top-4 right-4 cursor-pointer rounded-md p-1.5 text-[#9e98b6] hover:bg-white/[0.06] hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-base font-black uppercase tracking-tight text-white mb-6 flex items-center gap-2">
-              <Bot className="w-5 h-5 text-blue-400" />
+            <h2 className="mb-5 flex items-center gap-2 text-base font-semibold text-white">
+              <Bot className="h-5 w-5 text-sky-400" />
               {t("admin.raffles.addBots")}
             </h2>
 
-            <div className="flex bg-[#141221] p-1 rounded-[3px] border border-white/5 mb-6">
+            <div className="mb-5 flex rounded-lg border border-white/[0.06] bg-[#0d0a18] p-1">
               <button
                 type="button"
                 onClick={() => setBotMode("new")}
-                className={`flex-1 text-[10px] font-bold uppercase tracking-wider py-2 rounded-[2px] transition-colors cursor-pointer ${
-                  botMode === "new" ? "bg-accent text-white" : "text-[#84849b] hover:text-white"
+                className={`flex-1 cursor-pointer rounded-md py-2 text-xs font-semibold transition-colors ${
+                  botMode === "new" ? "bg-accent text-white" : "text-[#9e98b6] hover:text-white"
                 }`}
               >
                 {t("admin.raffles.createNew")}
@@ -1393,10 +1433,10 @@ function ParticipationDrawsAdminContent() {
               <button
                 type="button"
                 onClick={() => setBotMode("existing")}
-                className={`flex-1 text-[10px] font-bold uppercase tracking-wider py-2 rounded-[2px] transition-colors cursor-pointer ${
+                className={`flex-1 cursor-pointer rounded-md py-2 text-xs font-semibold transition-colors ${
                   botMode === "existing"
                     ? "bg-accent text-white"
-                    : "text-[#84849b] hover:text-white"
+                    : "text-[#9e98b6] hover:text-white"
                 }`}
               >
                 {t("admin.raffles.existing")}

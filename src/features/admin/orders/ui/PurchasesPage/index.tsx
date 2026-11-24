@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Database, RefreshCw } from 'lucide-react';
-import { Order } from '@/features/admin/domain/types';
-import { BACKEND_URL } from '@/shared/lib/api';
-import { AdminSelect } from '@/shared/components/AdminSelect';
-import { useI18n } from '@/shared/i18n/I18nProvider';
-import { useLocalizedPath } from '@/shared/i18n/useLocalizedPath';
-import { AdminOrderListCard } from '@/features/admin/orders/ui/AdminOrderListCard';
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { Database, RefreshCw, ShoppingBag } from "lucide-react";
+import { Order } from "@/features/admin/domain/types";
+import { BACKEND_URL } from "@/shared/lib/api";
+import { AdminSelect } from "@/shared/components/AdminSelect";
+import { useI18n } from "@/shared/i18n/I18nProvider";
+import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
+import { AdminOrderListCard } from "@/features/admin/orders/ui/AdminOrderListCard";
 import {
   AdminAlert,
   AdminButton,
@@ -16,6 +16,7 @@ import {
   AdminHeader,
   AdminLoadingState,
   AdminSearchInput,
+  AdminStatusTabs,
   AdminToolbar,
 } from "@/features/admin/ui/AdminShell";
 
@@ -27,10 +28,9 @@ export function PurchasesPage() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Filtros interactivos
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
 
   const getUnknownErrorMessage = (err: unknown, fallback: string) =>
     err instanceof Error ? err.message : fallback;
@@ -41,18 +41,18 @@ export function PurchasesPage() {
     try {
       const response = await fetch(`${BACKEND_URL}/orders/all`, {
         headers: {
-          'X-Tunnel-Skip-AntiPhishing-Page': 'true',
+          "X-Tunnel-Skip-AntiPhishing-Page": "true",
         },
-        credentials: 'include'
+        credentials: "include",
       });
       if (response.status === 401) {
-        router.push('/admin/login');
+        router.push("/admin/login");
         return;
       }
       if (!response.ok) throw new Error(t("admin.orders.loadError"));
       const data: Order[] = await response.json();
       const filtered = data.filter(
-        (o) => o.type === 'BUY' && !(o.metadata && (o.metadata as any).raffleId)
+        (o) => o.type === "BUY" && !(o.metadata && (o.metadata as Record<string, unknown>).raffleId),
       );
       setOrders(filtered);
     } catch (err: unknown) {
@@ -71,27 +71,73 @@ export function PurchasesPage() {
     return () => window.clearTimeout(timeoutId);
   }, []);
 
+  const searchAndMethodFiltered = useMemo(() => {
+    const cleanSearch = searchTerm.toLowerCase().trim();
+    return orders.filter((order) => {
+      if (cleanSearch !== "") {
+        const orderIdMatch = order.id.toLowerCase().includes(cleanSearch);
+        const userNameMatch = order.user?.name?.toLowerCase().includes(cleanSearch);
+        const userSteamIdMatch = order.user?.steamId?.toLowerCase().includes(cleanSearch);
+        const itemsMatch = order.items?.some(
+          (item) =>
+            item.name.toLowerCase().includes(cleanSearch) ||
+            item.assetId.includes(cleanSearch),
+        );
+        if (!orderIdMatch && !userNameMatch && !userSteamIdMatch && !itemsMatch) {
+          return false;
+        }
+      }
+      if (paymentFilter !== "all" && order.paymentMethod !== paymentFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [orders, searchTerm, paymentFilter]);
+
+  const statusTabs = useMemo(() => {
+    const countOf = (st: string) =>
+      searchAndMethodFiltered.filter((o) => o.status === st).length;
+    return [
+      { value: "all", label: t("admin.common.allStatuses"), count: searchAndMethodFiltered.length },
+      { value: "PENDING_PAYMENT", label: t("purchases.status.paymentPending"), count: countOf("PENDING_PAYMENT") },
+      { value: "PAID", label: t("purchases.status.paid"), count: countOf("PAID") },
+      { value: "TRADE_PENDING", label: t("purchases.status.tradePending"), count: countOf("TRADE_PENDING") },
+      { value: "COMPLETED", label: t("purchases.status.completed"), count: countOf("COMPLETED") },
+      { value: "CANCELLED", label: t("purchases.status.cancelled"), count: countOf("CANCELLED") },
+    ];
+  }, [searchAndMethodFiltered, t]);
+
+  const filteredOrders = useMemo(() => {
+    if (statusFilter === "all") return searchAndMethodFiltered;
+    return searchAndMethodFiltered.filter((o) => o.status === statusFilter);
+  }, [searchAndMethodFiltered, statusFilter]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AdminHeader
         title={t("admin.orders.title")}
         description={t("admin.orders.description")}
-        actions={(
+        icon={ShoppingBag}
+        actions={
           <AdminButton
-          onClick={fetchOrders}
-          disabled={loadingOrders}
+            onClick={fetchOrders}
+            disabled={loadingOrders}
             icon={RefreshCw}
             loading={loadingOrders}
             variant="secondary"
-        >
-          {t("common.refresh")}
+          >
+            {t("common.refresh")}
           </AdminButton>
-        )}
+        }
       />
 
-      {error && (
-        <AdminAlert>{error}</AdminAlert>
-      )}
+      {error && <AdminAlert>{error}</AdminAlert>}
+
+      <AdminStatusTabs
+        items={statusTabs}
+        value={statusFilter}
+        onChange={setStatusFilter}
+      />
 
       <AdminToolbar>
         <AdminSearchInput
@@ -101,78 +147,37 @@ export function PurchasesPage() {
         />
 
         <AdminSelect
-          value={statusFilter}
-          onChange={setStatusFilter}
-          className="w-full md:w-52"
-          options={[
-            { value: 'all', label: t("admin.common.allStatuses") },
-            { value: 'PENDING_PAYMENT', label: t("purchases.status.paymentPending") },
-            { value: 'PAID', label: t("purchases.status.paid") },
-            { value: 'TRADE_PENDING', label: t("purchases.status.tradePending") },
-            { value: 'COMPLETED', label: t("purchases.status.completed") },
-            { value: 'CANCELLED', label: t("purchases.status.cancelled") },
-          ]}
-        />
-
-        <AdminSelect
           value={paymentFilter}
           onChange={setPaymentFilter}
           className="w-full md:w-56"
           options={[
-            { value: 'all', label: t("admin.common.allMethods") },
-            { value: 'mercado_pago', label: t("paymentMethod.mercado_pago.name") },
-            { value: 'paypal', label: 'PayPal' },
-            { value: 'nowpayments', label: t("paymentMethod.nowpayments.name") },
+            { value: "all", label: t("admin.common.allMethods") },
+            { value: "mercado_pago", label: t("paymentMethod.mercado_pago.name") },
+            { value: "manual_transfer", label: t("paymentMethod.manual_transfer.name") },
+            { value: "paypal", label: "PayPal" },
+            { value: "nowpayments", label: t("paymentMethod.nowpayments.name") },
           ]}
         />
       </AdminToolbar>
 
       {loadingOrders ? (
         <AdminLoadingState />
-      ) : (() => {
-        const filteredOrders = orders.filter(order => {
-          if (searchTerm.trim() !== '') {
-            const cleanSearch = searchTerm.toLowerCase().trim();
-            const orderIdMatch = order.id.toLowerCase().includes(cleanSearch);
-            const userNameMatch = order.user?.name?.toLowerCase().includes(cleanSearch);
-            const userSteamIdMatch = order.user?.steamId?.toLowerCase().includes(cleanSearch);
-            const itemsMatch = order.items?.some(item => item.name.toLowerCase().includes(cleanSearch) || item.assetId.includes(cleanSearch));
-            
-            if (!orderIdMatch && !userNameMatch && !userSteamIdMatch && !itemsMatch) {
-              return false;
-            }
-          }
-
-          if (statusFilter !== 'all' && order.status !== statusFilter) {
-            return false;
-          }
-
-          if (paymentFilter !== 'all' && order.paymentMethod !== paymentFilter) {
-            return false;
-          }
-
-          return true;
-        });
-
-        if (filteredOrders.length === 0) {
-          return (
-            <AdminEmptyState icon={Database} title={t("purchases.noOrders")} />
-          );
-        }
-
-        return (
-          <div className="space-y-3">
-            {filteredOrders.map(order => (
-              <AdminOrderListCard
-                key={order.id} 
-                order={order}
-                kind="purchase"
-                onOpen={(orderId) => router.push(`${localizePath("/admin/panel/orders/purchase")}?id=${orderId}`)}
-              />
-            ))}
-          </div>
-        );
-      })()}
+      ) : filteredOrders.length === 0 ? (
+        <AdminEmptyState icon={Database} title={t("purchases.noOrders")} />
+      ) : (
+        <div className="space-y-2.5">
+          {filteredOrders.map((order) => (
+            <AdminOrderListCard
+              key={order.id}
+              order={order}
+              kind="purchase"
+              onOpen={(orderId) =>
+                router.push(`${localizePath("/admin/panel/orders/purchase")}?id=${orderId}`)
+              }
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

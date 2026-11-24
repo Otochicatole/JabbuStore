@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { DollarSign, Hash, RefreshCw, Ticket, Users } from "lucide-react";
+import { DollarSign, Hash, RefreshCw, Ticket, TicketPlus, Users } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
@@ -15,6 +15,7 @@ import {
   AdminLoadingState,
   AdminSearchInput,
   AdminStatCard,
+  AdminStatusTabs,
   AdminToolbar,
 } from "@/features/admin/ui/AdminShell";
 import {
@@ -77,22 +78,38 @@ export function RafflePurchasesListPage() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [orders]);
 
-  const filteredOrders = orders.filter((order) => {
-    if (raffleFilter !== "all" && order.raffleId !== raffleFilter) return false;
+  const baseFiltered = useMemo(() => {
+    return orders.filter((order) => {
+      if (raffleFilter !== "all" && order.raffleId !== raffleFilter) return false;
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const idMatch = order.id.toLowerCase().includes(q);
+        const nameMatch = order.user?.name?.toLowerCase().includes(q);
+        const steamMatch = order.user?.steamId?.toLowerCase().includes(q);
+        const raffleMatch = order.raffle.name.toLowerCase().includes(q);
+        if (!idMatch && !nameMatch && !steamMatch && !raffleMatch) return false;
+      }
+      if (paymentFilter !== "all" && order.paymentMethod !== paymentFilter) return false;
+      return true;
+    });
+  }, [orders, raffleFilter, searchTerm, paymentFilter]);
 
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase();
-      const idMatch = order.id.toLowerCase().includes(q);
-      const nameMatch = order.user?.name?.toLowerCase().includes(q);
-      const steamMatch = order.user?.steamId?.toLowerCase().includes(q);
-      const raffleMatch = order.raffle.name.toLowerCase().includes(q);
-      if (!idMatch && !nameMatch && !steamMatch && !raffleMatch) return false;
-    }
+  const statusTabs = useMemo(() => {
+    const countOf = (st: string) => baseFiltered.filter((o) => o.status === st).length;
+    return [
+      { value: "all", label: t("admin.rafflePurchases.allStatuses"), count: baseFiltered.length },
+      { value: "PENDING_PAYMENT", label: t("admin.rafflePurchases.workflowPending"), count: countOf("PENDING_PAYMENT") },
+      { value: "PAID", label: t("admin.rafflePurchases.workflowPaid"), count: countOf("PAID") },
+      { value: "TRADE_PENDING", label: t("admin.rafflePurchases.workflowProcessing"), count: countOf("TRADE_PENDING") },
+      { value: "COMPLETED", label: t("admin.rafflePurchases.workflowCompleted"), count: countOf("COMPLETED") },
+      { value: "CANCELLED", label: t("admin.rafflePurchases.cancelOrder"), count: countOf("CANCELLED") },
+    ];
+  }, [baseFiltered, t]);
 
-    if (statusFilter !== "all" && order.status !== statusFilter) return false;
-    if (paymentFilter !== "all" && order.paymentMethod !== paymentFilter) return false;
-    return true;
-  });
+  const filteredOrders = useMemo(() => {
+    if (statusFilter === "all") return baseFiltered;
+    return baseFiltered.filter((o) => o.status === statusFilter);
+  }, [baseFiltered, statusFilter]);
 
   const uniqueParticipants = new Set(filteredOrders.map((o) => o.userId)).size;
   const nonCancelled = filteredOrders.filter((o) => o.status !== "CANCELLED");
@@ -100,10 +117,11 @@ export function RafflePurchasesListPage() {
   const avgOrder = nonCancelled.length > 0 ? totalRevenue / nonCancelled.length : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AdminHeader
         title={t("admin.rafflePurchases.title")}
         description={t("admin.rafflePurchases.description")}
+        icon={TicketPlus}
         actions={
           <AdminButton
             onClick={fetchOrders}
@@ -120,10 +138,10 @@ export function RafflePurchasesListPage() {
       {error && <AdminAlert>{error}</AdminAlert>}
 
       {!loading && orders.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <AdminStatCard
             label={t("admin.rafflePurchases.revenue")}
-            value={`$${totalRevenue.toFixed(2)}`}
+            value={<span className="text-emerald-400">${totalRevenue.toFixed(2)}</span>}
             icon={DollarSign}
             tone="green"
           />
@@ -148,6 +166,12 @@ export function RafflePurchasesListPage() {
         </div>
       )}
 
+      <AdminStatusTabs
+        items={statusTabs}
+        value={statusFilter}
+        onChange={setStatusFilter}
+      />
+
       <AdminToolbar>
         <AdminSearchInput
           placeholder={t("admin.rafflePurchases.searchPlaceholder")}
@@ -164,22 +188,9 @@ export function RafflePurchasesListPage() {
           ]}
         />
         <AdminSelect
-          value={statusFilter}
-          onChange={setStatusFilter}
-          className="w-full md:w-48"
-          options={[
-            { value: "all", label: t("admin.rafflePurchases.allStatuses") },
-            { value: "PENDING_PAYMENT", label: t("admin.rafflePurchases.workflowPending") },
-            { value: "PAID", label: t("admin.rafflePurchases.workflowPaid") },
-            { value: "TRADE_PENDING", label: t("admin.rafflePurchases.workflowProcessing") },
-            { value: "COMPLETED", label: t("admin.rafflePurchases.workflowCompleted") },
-            { value: "CANCELLED", label: t("admin.rafflePurchases.cancelOrder") },
-          ]}
-        />
-        <AdminSelect
           value={paymentFilter}
           onChange={setPaymentFilter}
-          className="w-full md:w-48"
+          className="w-full md:w-52"
           options={[
             { value: "all", label: t("admin.rafflePurchases.allPayments") },
             { value: "mercado_pago", label: t("paymentMethod.mercado_pago.name") },
@@ -199,13 +210,13 @@ export function RafflePurchasesListPage() {
           description={t("admin.rafflePurchases.emptyFiltered")}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {filteredOrders.map((order) => (
             <RafflePurchaseOrderCard
               key={order.id}
               order={order}
               detailHref={localizePath(
-                `/admin/panel/raffle-purchases/${order.raffleId}/${order.id}`
+                `/admin/panel/raffle-purchases/${order.raffleId}/${order.id}`,
               )}
             />
           ))}

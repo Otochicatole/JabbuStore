@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
-import { Save, Loader2, LayoutDashboard } from "lucide-react";
 import { useI18n } from "@/shared/i18n/I18nProvider";
+import { AdminSection } from "@/features/admin/ui/AdminShell";
 import { SectionHeader, StyledInput, FieldLabel, SaveButton } from "./FormControls";
 import { SettingsState } from "./index";
 
@@ -22,13 +22,19 @@ export function HomeStatsTab({
   const { t } = useI18n();
 
   return (
-    <div className="bg-[#110f1e]/40 border border-white/5 p-4 sm:p-6 rounded-[3px]">
+    <AdminSection>
       <SectionHeader
-        title={t("admin.settings.homeStats", { defaultValue: "Estadísticas del Home" })}
-        desc={t("admin.settings.homeStatsDesc", { defaultValue: "Configura los textos de las estadísticas principales mostradas en el Home." })}
+        title={t("admin.settings.homeStats")}
+        desc={t("admin.settings.homeStatsDesc")}
       />
 
-      <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="space-y-5 max-w-xl">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSave();
+        }}
+        className="max-w-xl space-y-4"
+      >
         <div className="space-y-1.5">
           <FieldLabel>{t("admin.settings.homeStats.activeUsers")}</FieldLabel>
           <StyledInput
@@ -70,12 +76,12 @@ export function HomeStatsTab({
           />
         </div>
 
-        <SaveButton 
-          saving={isSaving} 
-          saved={isSaved} 
-          label={t("admin.settings.save", { defaultValue: "Guardar" })} 
+        <SaveButton
+          saving={isSaving}
+          saved={isSaved}
+          label={t("common.save")}
         />
       </form>
-    </div>
+    </AdminSection>
   );
 }

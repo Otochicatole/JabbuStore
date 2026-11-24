@@ -1,21 +1,18 @@
 import { Check, Loader2 } from "lucide-react";
-
 import { useI18n } from "@/shared/i18n/I18nProvider";
 
 export function SectionHeader({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="mb-6">
-      <h2 className="text-base font-black uppercase tracking-wider text-white">
-        {title}
-      </h2>
-      <p className="text-xs text-[#84849b] mt-1 leading-relaxed">{desc}</p>
+    <div className="mb-5 border-b border-white/[0.06] pb-4">
+      <h2 className="text-base font-semibold text-white">{title}</h2>
+      <p className="mt-1 text-xs sm:text-[13px] leading-relaxed text-[#9e98b6]">{desc}</p>
     </div>
   );
 }
 
 export function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="text-[10px] font-black uppercase tracking-widest text-[#84849b] font-mono">
+    <label className="block text-xs font-medium text-[#c2bdd6]">
       {children}
     </label>
   );
@@ -25,7 +22,7 @@ export function StyledInput(props: React.InputHTMLAttributes<HTMLInputElement>) 
   return (
     <input
       {...props}
-      className="w-full px-4 py-3 bg-white/[0.03] border border-white/8 rounded-[3px] text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all"
+      className={`h-10 w-full rounded-md border border-white/10 bg-[#0d0a18] px-3.5 text-sm text-white placeholder-[#746e8d] transition-colors focus:border-accent focus:outline-none ${props.className || ""}`}
     />
   );
 }
@@ -34,7 +31,7 @@ export function StyledTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaE
   return (
     <textarea
       {...props}
-      className="w-full min-h-28 px-4 py-3 bg-white/[0.03] border border-white/8 rounded-[3px] text-sm text-white placeholder-white/20 focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all resize-y"
+      className={`min-h-24 w-full resize-y rounded-md border border-white/10 bg-[#0d0a18] px-3.5 py-2.5 text-sm text-white placeholder-[#746e8d] transition-colors focus:border-accent focus:outline-none ${props.className || ""}`}
     />
   );
 }
@@ -52,12 +49,13 @@ export function SaveButton({
   return (
     <button
       type="submit"
-      className="mt-2 px-6 py-3 bg-accent hover:bg-accent/90 rounded-[3px] text-xs font-black uppercase tracking-wider text-white transition-all flex items-center gap-2 shadow-[0_4px_20px_rgba(217,70,239,0.25)] hover:shadow-[0_4px_30px_rgba(217,70,239,0.4)] disabled:opacity-60 cursor-pointer"
+      disabled={saving}
+      className="mt-2 inline-flex h-9 items-center justify-center gap-2 rounded-md bg-accent px-4 text-xs sm:text-[13px] font-semibold text-white transition-colors hover:bg-accent/90 disabled:opacity-55 cursor-pointer"
     >
       {saving ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
+        <Loader2 className="h-4 w-4 animate-spin" />
       ) : saved ? (
-        <Check className="w-4 h-4" />
+        <Check className="h-4 w-4" />
       ) : null}
       {saving ? t("common.saving") : saved ? t("admin.settings.saved") : label}
     </button>
@@ -74,7 +72,7 @@ export function ToggleSwitch({
   label: string;
 }) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer select-none w-fit">
+    <label className="flex w-fit cursor-pointer items-center gap-3 select-none">
       <div className="relative">
         <input
           type="checkbox"
@@ -82,10 +80,10 @@ export function ToggleSwitch({
           onChange={(e) => onChange(e.target.checked)}
           className="sr-only peer"
         />
-        <div className="w-11 h-6 bg-white/5 rounded-full border border-white/10 peer peer-checked:bg-accent peer-checked:border-accent/50 transition-all" />
-        <div className="absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow transition-all peer-checked:translate-x-5" />
+        <div className="h-6 w-11 rounded-full border border-white/10 bg-[#1c1833] transition-colors peer-checked:border-accent/50 peer-checked:bg-accent" />
+        <div className="absolute top-[2px] left-[2px] h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
       </div>
-      <span className="text-sm text-white/80 font-semibold">{label}</span>
+      <span className="text-sm font-medium text-white/90">{label}</span>
     </label>
   );
 }

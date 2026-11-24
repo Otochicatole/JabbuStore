@@ -15,10 +15,12 @@ import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { BotCard } from "./BotCard";
 import {
   AdminAlert,
+  AdminBadge,
   AdminButton,
   AdminEmptyState,
   AdminHeader,
   AdminLoadingState,
+  AdminSection,
   AdminStatCard,
 } from "@/features/admin/ui/AdminShell";
 
@@ -51,11 +53,12 @@ export function AdminBotsPanel() {
   } = useAdminBots();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AdminHeader
         title={t("admin.botManagement")}
         description={t("admin.bots.description")}
-        actions={(
+        icon={BotIcon}
+        actions={
           <>
             <AdminButton
               onClick={handleRefreshPriceCatalog}
@@ -83,7 +86,7 @@ export function AdminBotsPanel() {
               {t("admin.bots.newBot")}
             </AdminButton>
           </>
-        )}
+        }
       />
 
       {(syncMessage || syncError) && (
@@ -93,33 +96,44 @@ export function AdminBotsPanel() {
       )}
 
       {catalogStatus && (
-        <div className="rounded-[3px] border border-white/10 bg-white/3 px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-[#84849b] break-words">
-          {t("admin.bots.priceCatalog")}:{" "}
-          <span className="text-white">
+        <AdminSection className="flex flex-wrap items-center gap-3 py-3!">
+          <span className="text-xs font-medium text-[#9e98b6]">
+            {t("admin.bots.priceCatalog")}:
+          </span>
+          <span className="text-xs font-semibold text-white tabular-nums">
             {t("admin.bots.itemsCount", { count: catalogStatus.itemCount.toLocaleString() })}
           </span>
-          {" · "}
-          <span className={catalogStatus.running ? "text-sky-400" : catalogStatus.stale ? "text-amber-400" : "text-emerald-400"}>
+          <AdminBadge
+            tone={
+              catalogStatus.running
+                ? "info"
+                : catalogStatus.exists
+                  ? catalogStatus.stale
+                    ? "warning"
+                    : "success"
+                  : "neutral"
+            }
+          >
             {catalogStatus.running
               ? t("admin.bots.catalogDownloading")
               : catalogStatus.exists
-              ? catalogStatus.stale
-                ? t("admin.bots.catalogStale")
-                : t("admin.bots.catalogReady")
-              : t("admin.bots.catalogNotDownloaded")}
-          </span>
+                ? catalogStatus.stale
+                  ? t("admin.bots.catalogStale")
+                  : t("admin.bots.catalogReady")
+                : t("admin.bots.catalogNotDownloaded")}
+          </AdminBadge>
           {catalogStatus.fetchedAt && (
-            <>
-              {" · "}{t("admin.bots.updated")}{" "}
-              <span className="text-white">
+            <span className="text-xs text-[#9e98b6]">
+              {t("admin.bots.updated")}{" "}
+              <span className="font-medium text-white">
                 {new Date(catalogStatus.fetchedAt).toLocaleString()}
               </span>
-            </>
+            </span>
           )}
-        </div>
+        </AdminSection>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <AdminStatCard
           label={t("admin.bots.totalBots")}
           value={bots.length}
@@ -136,30 +150,27 @@ export function AdminBotsPanel() {
       {loading ? (
         <AdminLoadingState />
       ) : error ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <AlertTriangle className="w-10 h-10 text-red-500/80" />
-          <p className="text-sm font-black text-white">{t("admin.bots.loadError")}</p>
-          <p className="text-xs text-[#84849b]">{error}</p>
-          <button
-            onClick={fetchBots}
-            className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-[3px] text-xs font-bold uppercase tracking-wider transition-colors mt-1"
-          >
+        <AdminSection className="flex flex-col items-center gap-3 py-14 text-center">
+          <AlertTriangle className="h-9 w-9 text-rose-400" />
+          <p className="text-sm font-semibold text-white">{t("admin.bots.loadError")}</p>
+          <p className="text-xs text-[#9e98b6]">{error}</p>
+          <AdminButton onClick={fetchBots} variant="secondary">
             {t("common.retry")}
-          </button>
-        </div>
+          </AdminButton>
+        </AdminSection>
       ) : bots.length === 0 ? (
         <AdminEmptyState
           icon={BotIcon}
           title={t("admin.bots.emptyTitle")}
           description={t("admin.bots.emptyDescription")}
-          action={(
+          action={
             <AdminButton onClick={openCreate} icon={Plus} variant="primary">
               {t("admin.bots.registerFirst")}
             </AdminButton>
-          )}
+          }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {bots.map((b) => (
             <BotCard
               key={b.id}
@@ -173,13 +184,8 @@ export function AdminBotsPanel() {
         </div>
       )}
 
-      {/* Forms and Deletions Modal Popups */}
       {showModal && (
-        <BotModal
-          bot={editingBot}
-          onClose={closeModal}
-          onSaved={onSaved}
-        />
+        <BotModal bot={editingBot} onClose={closeModal} onSaved={onSaved} />
       )}
 
       {botToDelete && (
@@ -194,4 +200,3 @@ export function AdminBotsPanel() {
   );
 }
 export default AdminBotsPanel;
-

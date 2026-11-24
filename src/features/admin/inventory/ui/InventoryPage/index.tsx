@@ -19,6 +19,7 @@ import {
   AdminAlert,
   AdminButton,
   AdminEmptyState,
+  AdminHeader,
   AdminLoadingState,
   AdminSearchInput,
   AdminSection,
@@ -67,13 +68,29 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
   } = useInventoryPage(initialItems);
 
   return (
-    <div className="space-y-8">
-      {/* Statistics Grid */}
+    <div className="space-y-5">
+      <AdminHeader
+        title={t("admin.inventoryBots")}
+        description={t("admin.inventory.syncedItems")}
+        icon={Database}
+        actions={
+          <AdminButton
+            type="button"
+            onClick={triggerSync}
+            disabled={syncing}
+            icon={RefreshCw}
+            loading={syncing}
+            variant="primary"
+          >
+            {syncing ? t("admin.inventory.syncingInventory") : t("admin.inventory.syncInventoryBots")}
+          </AdminButton>
+        }
+      />
+
       <InventoryStats stats={stats} loading={loading} />
 
-      {/* Filters and Inventory List Section */}
-      <AdminSection className="space-y-6">
-        <AdminToolbar className="justify-between">
+      <AdminSection className="space-y-4">
+        <AdminToolbar className="justify-between border-0 bg-transparent p-0">
           <AdminSearchInput
             value={search}
             onChange={setSearch}
@@ -81,7 +98,7 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
             className="md:max-w-md"
           />
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+          <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center md:w-auto">
             <AdminSelect
               value={sortBy}
               onChange={(v) => setSortBy(v as InventorySortBy)}
@@ -92,24 +109,15 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
                 { value: "float_desc", label: t("sort.Float: Mayor a Menor") },
               ]}
             />
-
-            <AdminButton
-              type="button"
-              onClick={triggerSync}
-              disabled={syncing}
-              icon={RefreshCw}
-              loading={syncing}
-              variant="primary"
-            >
-              {syncing ? t("admin.inventory.syncingInventory") : t("admin.inventory.syncInventoryBots")}
-            </AdminButton>
           </div>
         </AdminToolbar>
 
         {selectedCount > 0 && (
-          <div className="flex flex-col gap-3 rounded-[3px] border border-accent/20 bg-accent/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-accent">
-              <span>{t("admin.inventory.selectedCount", { count: selectedCount })}</span>
+          <div className="flex flex-col gap-3 rounded-lg border border-accent/25 bg-accent/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-fuchsia-200">
+              <span className="font-semibold text-white">
+                {t("admin.inventory.selectedCount", { count: selectedCount })}
+              </span>
               {selectedCount < filteredCount && (
                 <button
                   type="button"
@@ -122,7 +130,7 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
               <button
                 type="button"
                 onClick={clearSelection}
-                className="text-[#84849b] underline underline-offset-2 hover:text-white cursor-pointer"
+                className="text-[#c2bdd6] underline underline-offset-2 hover:text-white cursor-pointer"
               >
                 {t("admin.inventory.clearSelection")}
               </button>
@@ -131,6 +139,7 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <AdminButton
                 type="button"
+                size="sm"
                 onClick={() => handleBulkMarketable(true)}
                 disabled={bulkUpdating}
                 loading={bulkUpdating}
@@ -141,6 +150,7 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
               </AdminButton>
               <AdminButton
                 type="button"
+                size="sm"
                 onClick={() => handleBulkMarketable(false)}
                 disabled={bulkUpdating}
                 loading={bulkUpdating}
@@ -153,14 +163,12 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
           </div>
         )}
 
-        {syncSuccess && (
-          <AdminAlert tone="success">{syncSuccess}</AdminAlert>
-        )}
+        {syncSuccess && <AdminAlert tone="success">{syncSuccess}</AdminAlert>}
 
         {error && (
           <AdminAlert>
-            <div className="flex items-center gap-3">
-            <ShieldAlert className="w-5 h-5 shrink-0" />
+            <div className="flex items-center gap-2.5">
+              <ShieldAlert className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           </AdminAlert>
@@ -188,7 +196,6 @@ export function InventoryPage({ initialItems = [] }: InventoryPageProps) {
         )}
       </AdminSection>
 
-      {/* Price Edit Modal popup */}
       {priceModalItem && (
         <PriceEditModal
           item={priceModalItem}

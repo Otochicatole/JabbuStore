@@ -18,7 +18,7 @@ export function InventoryStats({ stats, loading }: InventoryStatsProps) {
   const { t } = useI18n();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       <AdminStatCard
         label={t("admin.inventory.totalStock")}
         value={stats.totalItems.toLocaleString()}
@@ -28,7 +28,7 @@ export function InventoryStats({ stats, loading }: InventoryStatsProps) {
       />
       <AdminStatCard
         label={t("admin.inventory.totalValue")}
-        value={<span className="text-green-400">${stats.inventoryValue.toLocaleString()}</span>}
+        value={<span className="text-emerald-400">${stats.inventoryValue.toLocaleString()}</span>}
         description={t("admin.inventory.estimatedUsdStock")}
         icon={TrendingUp}
         tone="green"
@@ -36,7 +36,7 @@ export function InventoryStats({ stats, loading }: InventoryStatsProps) {
       />
       <AdminStatCard
         label={t("admin.inventory.steamBots")}
-        value={<span className="text-blue-400">{stats.botsConnected}</span>}
+        value={<span className="text-sky-400">{stats.botsConnected}</span>}
         description={t("admin.inventory.activeSyncers")}
         icon={Cpu}
         tone="blue"
@@ -44,8 +44,8 @@ export function InventoryStats({ stats, loading }: InventoryStatsProps) {
       <AdminStatCard
         label="Cronjob Sync"
         value={
-          <span className="flex items-center gap-1.5 text-lg uppercase text-yellow-400">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-2 text-lg font-semibold text-amber-300">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
             {t("admin.settings.active")}
           </span>
         }

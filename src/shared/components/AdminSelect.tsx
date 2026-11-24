@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Check, ChevronDown } from "lucide-react";
 
 interface Option {
   value: string;
@@ -37,83 +36,101 @@ export function AdminSelect({
 
   const selectedLabel = options.find((o) => o.value === value)?.label || String(value);
 
-  // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsOpen(false);
+    }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   return (
-    <div className={`${className || "w-full sm:w-auto min-w-0 sm:min-w-[180px]"} min-w-0 ${isOpen ? 'relative z-50' : 'relative z-20'}`} ref={containerRef}>
+    <div
+      className={`${className || "w-full sm:w-auto min-w-0 sm:min-w-[180px]"} min-w-0 ${isOpen ? "relative z-50" : "relative z-20"}`}
+      ref={containerRef}
+    >
       <button
         type="button"
         aria-label={ariaLabel}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((prev) => !prev)}
         className={
           buttonClassName
-            ? `${buttonClassName} ${isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : ''} ${disabled ? 'cursor-wait opacity-50' : ''}`
-            : `flex h-10 min-w-0 items-center justify-between gap-2 px-3 py-2 bg-white/[0.025] border transition-all duration-300 rounded-[3px] max-w-full group cursor-pointer flex-1 sm:flex-initial w-full ${
-                isOpen ? 'border-accent shadow-[0_0_15px_rgba(217,70,239,0.15)]' : 'border-white/5 hover:border-white/10'
-              } ${disabled ? 'cursor-wait opacity-50' : ''}`
+            ? `${buttonClassName} ${isOpen ? "border-accent" : ""} ${disabled ? "cursor-wait opacity-50" : ""}`
+            : `flex h-9 min-w-0 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-left transition-colors cursor-pointer ${
+                isOpen
+                  ? "border-accent bg-[#1a1630]"
+                  : "border-white/10 bg-[#0d0a18] hover:border-white/20"
+              } ${disabled ? "cursor-wait opacity-50" : ""}`
         }
       >
-        <span className={buttonClassName ? "truncate min-w-0 text-left" : "min-w-0 text-[10px] sm:text-xs font-black text-white uppercase tracking-tight truncate max-w-[180px]"}>
+        <span
+          className={
+            buttonClassName
+              ? "truncate min-w-0 text-left"
+              : "min-w-0 truncate text-xs sm:text-[13px] font-medium text-white"
+          }
+        >
           {selectedLabel}
         </span>
-        <ChevronDown className={`h-3.5 w-3.5 text-white/40 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180 text-accent' : 'group-hover:text-white'}`} />
+        <ChevronDown
+          className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 ${
+            isOpen ? "rotate-180 text-accent" : "text-[#8e88a6]"
+          }`}
+        />
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <motion.div
-              role="listbox"
-              aria-label={ariaLabel}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className={
-                menuClassName ||
-                "absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-full min-w-0 sm:min-w-[180px] bg-card border border-white/10 rounded-[3px] overflow-hidden shadow-2xl z-40 backdrop-blur-xl"
-              }
-            >
-              <div className="py-2 max-h-64 overflow-y-auto custom-scrollbar">
-                {options.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="option"
-                    aria-selected={value === option.value}
-                    onClick={() => {
-                      onChange(option.value);
-                      setIsOpen(false);
-                    }}
-                    className={
-                      optionClassName
-                        ? `${optionClassName} ${value === option.value ? 'bg-accent/10 text-accent' : 'text-white/60 hover:text-white hover:bg-white/5'}`
-                        : `w-full text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide transition-all ${
-                            value === option.value
-                              ? 'bg-accent/10 text-accent border-r-2 border-accent'
-                              : 'text-muted hover:bg-white/5 hover:text-white'
-                          }`
-                    }
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {isOpen && (
+        <div
+          role="listbox"
+          aria-label={ariaLabel}
+          className={
+            menuClassName ||
+            "absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-full min-w-[190px] rounded-lg border border-white/10 bg-[#1a1630] py-1 shadow-xl z-40"
+          }
+        >
+          <div className="max-h-64 overflow-y-auto custom-scrollbar">
+            {options.map((option) => {
+              const selected = value === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={
+                    optionClassName
+                      ? `${optionClassName} ${selected ? "bg-accent/15 text-white" : "text-white/70 hover:text-white hover:bg-white/5"}`
+                      : `flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-medium transition-colors cursor-pointer ${
+                          selected
+                            ? "bg-accent/15 text-white font-semibold"
+                            : "text-[#b8b2cd] hover:bg-white/[0.06] hover:text-white"
+                        }`
+                  }
+                >
+                  <span className="truncate">{option.label}</span>
+                  {selected && <Check className="h-3.5 w-3.5 shrink-0 text-accent" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

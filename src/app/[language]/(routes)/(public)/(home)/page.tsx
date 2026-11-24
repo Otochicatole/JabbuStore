@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { BACKEND_URL } from "@/shared/lib/api";
-import { Asciify } from "@/components/canvasui/Asciify";
 import { HeroGlitchBlock } from "@/features/home/ui/HeroGlitchBlock";
 import { HomeRouletteSection } from "@/features/home/ui/HomeRouletteSection";
 import { HomeReviewsSection } from "@/features/reviews/ui/HomeReviewsSection";
@@ -99,25 +98,6 @@ export default function Home() {
 
   return (
     <main className="w-full min-h-dvh bg-[#090612] text-white pt-16 overflow-x-clip">
-      {/* CanvasUI Asciify cursor trail — scoped strictly to Home */}
-      <Asciify
-        fixed
-        source="gradient"
-        colors={["#4c1d95", "#d946ef", "#03e9f4", "#fdf4ff"]}
-        characters=" .-=+xX0S8#@"
-        cellSize={13}
-        radius={130}
-        trail={0.75}
-        flow={0.45}
-        density={0.75}
-        opacity={0.85}
-        glow={0.65}
-        veil={0}
-        background="#090612"
-        click="wave"
-        style={{ zIndex: 15 }}
-      />
-
       {/* SECTION 1: HERO — Cyber pattern backdrop + CanvasUI Glitch headline */}
       <section className="relative w-full bg-[#050505] px-5 sm:px-8 lg:px-12 py-20 sm:py-28 lg:py-36 overflow-hidden">
         <div aria-hidden="true" className="cyber-pattern pointer-events-none absolute inset-0" />

@@ -16,7 +16,6 @@ interface RouletteSkin {
   image: string;
   rarityHex: string;
   tierLabel: string;
-  priceUsd: number;
   floatValue: string;
   weight: number;
 }
@@ -30,20 +29,18 @@ const DEMO_SKINS: RouletteSkin[] = [
     image: "/category-images/gloves-steam.png",
     rarityHex: "#e4ae39",
     tierLabel: "Rare Special Item",
-    priceUsd: 5420,
     floatValue: "0.0912",
     weight: 6,
   },
   {
     id: "stiletto",
-    name: "Stiletto Knife | Case Hardened",
+    name: "Stiletto Knife | Forest DDPAT",
     weapon: "Stiletto Knife",
-    skin: "Case Hardened",
+    skin: "Forest DDPAT",
     image: "/category-images/knives-steam.png",
     rarityHex: "#e4ae39",
     tierLabel: "Rare Special Item",
-    priceUsd: 890,
-    floatValue: "0.0751",
+    floatValue: "0.1482",
     weight: 10,
   },
   {
@@ -54,7 +51,6 @@ const DEMO_SKINS: RouletteSkin[] = [
     image: "/category-images/rifles-steam.png",
     rarityHex: "#eb4b4b",
     tierLabel: "Covert",
-    priceUsd: 4650,
     floatValue: "0.0418",
     weight: 12,
   },
@@ -66,31 +62,28 @@ const DEMO_SKINS: RouletteSkin[] = [
     image: "/category-images/snipers-steam.png",
     rarityHex: "#eb4b4b",
     tierLabel: "Covert",
-    priceUsd: 2980,
     floatValue: "0.1124",
     weight: 16,
   },
   {
-    id: "deagle",
-    name: "Desert Eagle | Printstream",
-    weapon: "Desert Eagle",
-    skin: "Printstream",
+    id: "glock-fade",
+    name: "Glock-18 | Fade",
+    weapon: "Glock-18",
+    skin: "Fade",
     image: "/category-images/pistols-steam.png",
     rarityHex: "#d32ce6",
-    tierLabel: "Classified",
-    priceUsd: 165,
+    tierLabel: "Restricted",
     floatValue: "0.0295",
     weight: 24,
   },
   {
-    id: "smg",
-    name: "MP9 | Starlight Protector",
-    weapon: "MP9",
-    skin: "Starlight Protector",
+    id: "ump-labyrinth",
+    name: "UMP-45 | Labyrinth",
+    weapon: "UMP-45",
+    skin: "Labyrinth",
     image: "/category-images/smgs-steam.png",
     rarityHex: "#4b69ff",
     tierLabel: "Mil-Spec",
-    priceUsd: 48,
     floatValue: "0.0610",
     weight: 32,
   },
@@ -522,7 +515,7 @@ export function HomeRouletteSection() {
                   {winner.name}
                 </p>
                 <p className="text-[13px] sm:text-[14px] text-[#c3bdd9] tabular-nums">
-                  Float {winner.floatValue} · USD {winner.priceUsd.toLocaleString("en-US")}
+                  Float {winner.floatValue}
                 </p>
               </div>
             </div>
@@ -545,8 +538,7 @@ export function HomeRouletteSection() {
               <div className="min-w-0 flex-1">
                 <p className="text-[14px] font-bold text-white truncate">{inspectedSkin.name}</p>
                 <p className="text-[13px] font-medium text-[#c3bdd9] tabular-nums">
-                  {inspectedSkin.tierLabel} · Float {inspectedSkin.floatValue} · USD{" "}
-                  {inspectedSkin.priceUsd.toLocaleString("en-US")}
+                  {inspectedSkin.tierLabel} · Float {inspectedSkin.floatValue}
                 </p>
               </div>
             </div>
@@ -595,9 +587,6 @@ export function HomeRouletteSection() {
                     </div>
                     <p className="mt-2 text-[13px] font-bold text-white truncate">{skin.weapon}</p>
                     <p className="text-[13px] font-medium text-[#c3bdd9] truncate">{skin.skin}</p>
-                    <p className="mt-0.5 text-[13px] font-bold text-[#f0abfc] tabular-nums">
-                      USD {skin.priceUsd.toLocaleString("en-US")}
-                    </p>
                   </div>
                   <div
                     aria-hidden="true"

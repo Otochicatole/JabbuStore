@@ -94,6 +94,7 @@ export interface SkinCatalogQuery {
   sort?: string;
   immediate?: boolean;
   group?: boolean;
+  excludeStatTrak?: boolean;
 }
 
 export interface SkinRepository {

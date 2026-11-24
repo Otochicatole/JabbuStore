@@ -26,6 +26,7 @@ export interface FilterState {
   sortOption: SortOption;
   immediateTradeOnly: boolean;
   groupSameItems: boolean;
+  excludeStatTrak: boolean;
 }
 
 interface FilterContextType extends FilterState {
@@ -40,6 +41,7 @@ interface FilterContextType extends FilterState {
   setSortOption: (option: SortOption) => void;
   setImmediateTradeOnly: (value: boolean) => void;
   setGroupSameItems: (value: boolean) => void;
+  setExcludeStatTrak: (value: boolean) => void;
   replaceFilters: (state: FilterState) => void;
   clearFilters: () => void;
 }
@@ -53,6 +55,7 @@ const DEFAULT_FILTER_STATE: FilterState = {
   sortOption: "Precio: Mayor a Menor",
   immediateTradeOnly: false,
   groupSameItems: true,
+  excludeStatTrak: false,
 };
 
 export function cloneFilterState(state: FilterState): FilterState {
@@ -77,6 +80,8 @@ const FILTER_QUERY_KEYS = [
   "sort",
   "immediate",
   "group",
+  "excludeStatTrak",
+  "noSt",
   // Legacy keys are deleted when rewriting the URL.
   "q",
   "min",
@@ -208,6 +213,7 @@ export function filterStateFromSearchParams(params: URLSearchParams): FilterStat
     sortOption: parseSortOption(params.get("sort")),
     immediateTradeOnly: (params.get("immediate") ?? params.get("instant")) === "1",
     groupSameItems: params.get("group") !== "0",
+    excludeStatTrak: (params.get("excludeStatTrak") ?? params.get("noSt")) === "1",
   };
 }
 
@@ -240,6 +246,7 @@ function writeFilterStateToSearchParams(
   }
   if (state.immediateTradeOnly) next.set("immediate", "1");
   if (!state.groupSameItems) next.set("group", "0");
+  if (state.excludeStatTrak) next.set("excludeStatTrak", "1");
 
   return next;
 }
@@ -263,6 +270,7 @@ export function getImmediateFilterSignature(state: FilterState): string {
     sortOption: state.sortOption,
     immediateTradeOnly: state.immediateTradeOnly,
     groupSameItems: state.groupSameItems,
+    excludeStatTrak: state.excludeStatTrak,
   });
 }
 
@@ -489,6 +497,13 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
     }));
   }, []);
 
+  const setExcludeStatTrak = useCallback((excludeStatTrak: boolean) => {
+    setFilterStore((current) => ({
+      ...current,
+      filterState: { ...current.filterState, excludeStatTrak },
+    }));
+  }, []);
+
   const clearFilters = useCallback(() => {
     replaceFilters(createDefaultFilterState());
   }, [replaceFilters]);
@@ -508,6 +523,7 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
         setSortOption,
         setImmediateTradeOnly,
         setGroupSameItems,
+        setExcludeStatTrak,
         replaceFilters,
         clearFilters,
       }}

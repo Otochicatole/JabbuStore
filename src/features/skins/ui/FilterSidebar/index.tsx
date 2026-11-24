@@ -64,6 +64,7 @@ interface FilterControlsProps {
   onMaxPriceChange: (value: string) => void;
   onToggleCategory: (category: string) => void;
   onToggleCondition: (condition: string) => void;
+  onToggleExcludeStatTrak: () => void;
   onReset: () => void;
   categories: CatalogCategory[];
 }
@@ -75,12 +76,13 @@ function FilterControls({
   onMaxPriceChange,
   onToggleCategory,
   onToggleCondition,
+  onToggleExcludeStatTrak,
   onReset,
   categories,
 }: FilterControlsProps) {
   const { t } = useI18n();
   const { effectiveCurrency, effectiveRate, convertUsd, displayToUsd, ready } = useCurrency();
-  const [isConditionOpen, setIsConditionOpen] = useState(false);
+  const [isConditionOpen, setIsConditionOpen] = useState(true);
 
   const toDisplayValue = useCallback((canonicalUsd: string) => {
     if (!canonicalUsd || !canonicalUsd.trim()) return "";
@@ -264,6 +266,38 @@ function FilterControls({
                     </button>
                   );
                 })}
+
+                <div className="pt-2 mt-2 border-t border-white/5">
+                  <button
+                    type="button"
+                    aria-pressed={value.excludeStatTrak}
+                    onClick={onToggleExcludeStatTrak}
+                    className="flex w-full items-center gap-3 cursor-pointer group text-left"
+                  >
+                    <span
+                      className={`relative flex items-center justify-center h-4 w-4 rounded-[2px] border transition-all duration-200 ${
+                        value.excludeStatTrak
+                          ? "border-accent bg-accent/10"
+                          : "border-white/10 bg-background group-hover:border-white/20"
+                      }`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-200 ${
+                          value.excludeStatTrak ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                    </span>
+                    <span
+                      className={`text-[11px] font-bold transition-colors duration-200 ${
+                        value.excludeStatTrak
+                          ? "text-white"
+                          : "text-[#84849b] group-hover:text-white/70"
+                      }`}
+                    >
+                      {t("filters.excludeStatTrak")}
+                    </span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
@@ -402,6 +436,7 @@ export const FilterSidebar = ({
           onMaxPriceChange={filters.setMaxPrice}
           onToggleCategory={filters.toggleCategory}
           onToggleCondition={filters.toggleCondition}
+          onToggleExcludeStatTrak={() => filters.setExcludeStatTrak(!filters.filterState.excludeStatTrak)}
           onReset={filters.clearFilters}
           categories={categories}
         />
@@ -468,6 +503,9 @@ export const FilterSidebar = ({
                     onMaxPriceChange={(value) => updateMobileDraft("maxPrice", value)}
                     onToggleCategory={toggleMobileCategory}
                     onToggleCondition={toggleMobileCondition}
+                    onToggleExcludeStatTrak={() =>
+                      updateMobileDraft("excludeStatTrak", !mobileDraft.excludeStatTrak)
+                    }
                     onReset={() => setMobileDraft(createDefaultFilterState())}
                     categories={categories}
                   />

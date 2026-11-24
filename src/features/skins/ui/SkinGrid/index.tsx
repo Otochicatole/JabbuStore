@@ -149,7 +149,7 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
     );
   }
 
-  const hasActiveFilters = !!(filters.searchQuery || filters.minPrice || filters.maxPrice || filters.selectedCategories.length || filters.selectedConditions.length);
+  const hasActiveFilters = !!(filters.searchQuery || filters.minPrice || filters.maxPrice || filters.selectedCategories.length || filters.selectedConditions.length || filters.excludeStatTrak);
 
   if (skins.length === 0) {
     return (

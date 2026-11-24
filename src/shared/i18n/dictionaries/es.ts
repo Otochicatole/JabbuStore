@@ -209,6 +209,8 @@ export const es = {
 
   "filters.category": "Categoría",
   "filters.exterior": "Exterior",
+  "filters.statTrak": "StatTrak™",
+  "filters.excludeStatTrak": "Sin StatTrak™ (ST)",
   "filters.rarity": "Rareza",
   "filters.sort": "Orden",
   "filters.minPrice": "Precio mínimo",

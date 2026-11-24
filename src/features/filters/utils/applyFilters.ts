@@ -94,6 +94,13 @@ export function applyFilters(skins: Skin[], filters: FilterState): Skin[] {
     result = result.filter(skin => skin.isImmediate !== false);
   }
 
+  // 4.6. Exclude StatTrak items
+  if (filters.excludeStatTrak) {
+    result = result.filter(
+      skin => !skin.isStatTrak && !skin.name.toLowerCase().includes("stattrak"),
+    );
+  }
+
   // 5. Sort
   switch (filters.sortOption) {
     case 'Precio: Mayor a Menor':

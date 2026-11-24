@@ -111,6 +111,7 @@ export const useSkins = (marketType: "express" | "market") => {
             sort: catalogFilters.sortOption,
             immediate: marketType === "express",
             group: catalogFilters.groupSameItems,
+            excludeStatTrak: catalogFilters.excludeStatTrak,
           });
 
           if (controller.signal.aborted || requestId !== requestSequenceRef.current) {

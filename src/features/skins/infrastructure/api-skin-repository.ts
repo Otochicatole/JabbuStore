@@ -155,6 +155,7 @@ function buildCatalogQuery(query: SkinCatalogQuery = {}): string {
   if (query.sort) params.set("sort", SORT_LABEL_TO_TOKEN[query.sort] ?? query.sort);
   if (query.immediate) params.set("immediate", "1");
   if (query.group) params.set("group", "1");
+  if (query.excludeStatTrak) params.set("excludeStatTrak", "1");
 
   return params.toString();
 }

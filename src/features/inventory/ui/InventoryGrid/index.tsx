@@ -185,7 +185,8 @@ export const InventoryGrid = ({ variant = "sell" }: InventoryGridProps) => {
     filters.minPrice ||
     filters.maxPrice ||
     filters.selectedCategories.length ||
-    filters.selectedConditions.length
+    filters.selectedConditions.length ||
+    filters.excludeStatTrak
   );
 
   if (filteredItems.length === 0) {

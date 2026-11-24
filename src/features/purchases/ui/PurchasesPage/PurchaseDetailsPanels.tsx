@@ -34,7 +34,7 @@ export function PurchaseDetailsPanels({
     <>
       <PaymentInfoPanel order={order} t={t} />
       {isBuy && isManualTransfer && <ManualTransferPanel order={order} t={t} />}
-      {order.bot && !isRaffle && <BotAccountPanel order={order} t={t} />}
+      {order.bot && order.type === "SELL" && !isRaffle && <BotAccountPanel order={order} t={t} />}
 
       <div className="bg-[#110f1e]/40 p-5 border border-white/10 rounded-[3px]">
         <span className="text-[10px] font-black uppercase text-[#84849b] tracking-wider font-mono block mb-3">

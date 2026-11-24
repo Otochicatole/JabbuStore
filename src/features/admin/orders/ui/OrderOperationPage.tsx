@@ -261,7 +261,7 @@ export function OrderOperationPage({ kind }: OrderOperationPageProps) {
       ) : !order ? (
         <AdminEmptyState title="Order not found" description="The requested operation does not exist or belongs to another type." />
       ) : kind === "purchase" ? (
-        <OrderDetailRow order={order} onUpdateStatus={updateOrderStatus} resolvedItemsMap={resolvedItemsMap} bots={bots} />
+        <OrderDetailRow order={order} onUpdateStatus={updateOrderStatus} resolvedItemsMap={resolvedItemsMap} />
       ) : (
         <SellOrderDetailRow order={order} onUpdateStatus={updateOrderStatus} resolvedItemsMap={resolvedItemsMap} bots={bots} />
       )}

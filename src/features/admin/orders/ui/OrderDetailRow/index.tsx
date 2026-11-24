@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  Bot,
   Copy,
   Check,
   ShieldCheck,
@@ -14,15 +13,13 @@ import {
   XCircle,
   MessageSquare,
 } from "lucide-react";
-import { AdminBotOption, Order } from "@/features/admin/domain/types";
+import { Order } from "@/features/admin/domain/types";
 import { BACKEND_URL } from "@/shared/lib/api";
 import { PaymentProofModal } from "@/shared/components/PaymentProofModal";
 import { AdminOrderTicketsModal } from "@/shared/components/AdminOrderTicketsModal";
 import { useI18n } from "@/shared/i18n/I18nProvider";
 import { OrderDetailItem } from "./OrderDetailItem";
 import { OrderDetailPayoutDetails } from "./OrderDetailPayoutDetails";
-import { AdminSelect } from "@/shared/components/AdminSelect";
-import { AlertConfirmModal } from "@/shared/components/AlertConfirmModal";
 
 interface OrderDetailRowProps {
   order: Order;
@@ -36,23 +33,18 @@ interface OrderDetailRowProps {
       exterior?: string;
     }
   >;
-  bots?: AdminBotOption[];
 }
 
 export function OrderDetailRow({
   order,
   onUpdateStatus,
   resolvedItemsMap,
-  bots = [],
 }: OrderDetailRowProps) {
   const { t } = useI18n();
   const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null);
   const [copiedAllAssets, setCopiedAllAssets] = useState(false);
   const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false);
   const [proofOpen, setProofOpen] = useState(false);
-  const [selectedBotId, setSelectedBotId] = useState<string>(order.botId || "");
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
 
   // Workflow steps based on order status
   const getWorkflowStep = (): number => {
@@ -89,12 +81,7 @@ export function OrderDetailRow({
   };
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
-    if (newStatus !== "CANCELLED" && newStatus !== "PENDING_PAYMENT" && !selectedBotId) {
-      setAlertMessage(t("admin.orders.selectBotRequiredError") || "Debes seleccionar una cuenta de bot para poder cambiar el estado.");
-      setAlertOpen(true);
-      return;
-    }
-    await onUpdateStatus(orderId, newStatus, selectedBotId || null);
+    await onUpdateStatus(orderId, newStatus);
   };
 
   const currentStep = getWorkflowStep();
@@ -107,7 +94,6 @@ export function OrderDetailRow({
     typeof order.metadata.paymentQuote.settlement.amount === "number"
       ? order.metadata.paymentQuote.settlement.amount
       : null;
-  const assignedBotLabel = order.bot ? `${order.bot.name} (${order.bot.steamId.slice(-4)})` : t("admin.common.notAssigned") || "Not assigned";
   const statusLabel =
     order.status === "PENDING_PAYMENT"
       ? t("purchases.status.paymentPending")
@@ -193,13 +179,7 @@ export function OrderDetailRow({
                 {statusLabel}
               </span>
             </div>
-            <div className="rounded-[3px] border border-white/5 bg-black/15 p-3">
-              <span className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-[#84849b]">
-                <Bot className="h-3 w-3" />
-                {t("admin.orders.selectedBot")}
-              </span>
-              <p className="truncate text-xs font-black text-white">{assignedBotLabel}</p>
-            </div>
+          {/* Bot selector omitted for purchases; sending bot is not fixed per buy order. */}
           </div>
         </div>
       </div>
@@ -347,32 +327,6 @@ export function OrderDetailRow({
 
       <div className="grid grid-cols-1 gap-4 border-b border-white/5 pb-5 mb-5 lg:grid-cols-[280px_1fr]">
         <div className="flex flex-col gap-4">
-          {/* Bot Selection Box */}
-          <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4">
-            <span className="mb-2 flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
-              <Bot className="h-3.5 w-3.5" />
-              {t("admin.orders.selectBotAccount") || "Bot de Envio"}
-            </span>
-            {order.status !== "COMPLETED" && order.status !== "CANCELLED" ? (
-              <AdminSelect
-                value={selectedBotId}
-                onChange={setSelectedBotId}
-                className="w-full"
-                options={[
-                  { value: "", label: t("admin.orders.selectBotPlaceholder") || "Seleccionar bot..." },
-                  ...bots.filter((b) => b.isActive).map((b) => ({ value: b.id, label: `${b.name} (${b.steamId.slice(-4)})` }))
-                ]}
-              />
-            ) : (
-              <span className="block rounded-[3px] border border-white/10 bg-white/5 px-2.5 py-2 text-xs font-bold text-white/80">
-                {assignedBotLabel}
-              </span>
-            )}
-            <p className="mt-2 text-[10px] font-semibold leading-relaxed text-white/35">
-              {t("admin.orders.purchaseBotHelper")}
-            </p>
-          </div>
-
           {/* Tickets / Chat Box */}
           <div className="rounded-[3px] border border-white/5 bg-white/[0.015] p-4 flex flex-col gap-2">
             <span className="flex items-center gap-1.5 text-[10px] text-[#84849b] font-mono uppercase tracking-wider">
@@ -561,13 +515,6 @@ export function OrderDetailRow({
           ))}
         </div>
       </div>
-      <AlertConfirmModal
-        isOpen={alertOpen}
-        title={t("admin.orders.alertTitle") || "Atención"}
-        message={alertMessage}
-        type="warning"
-        onConfirm={() => setAlertOpen(false)}
-      />
       <AdminOrderTicketsModal
         isOpen={isTicketsModalOpen}
         onClose={() => setIsTicketsModalOpen(false)}

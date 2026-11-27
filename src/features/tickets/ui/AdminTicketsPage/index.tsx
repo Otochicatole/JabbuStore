@@ -18,7 +18,6 @@ import {
   AdminHeader,
   AdminSearchInput,
   AdminStatusTabs,
-  AdminToolbar,
 } from "@/features/admin/ui/AdminShell";
 
 export function AdminTicketsPage() {
@@ -36,8 +35,8 @@ export function AdminTicketsPage() {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTickets = useCallback(async () => {
-    setLoading(true);
+  const loadTickets = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
@@ -50,14 +49,20 @@ export function AdminTicketsPage() {
       const data: OrderTicket[] = await response.json();
       setTickets(data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t("tickets.error.load"));
+      if (!silent) {
+        setError(err instanceof Error ? err.message : t("tickets.error.load"));
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [search, status, t]);
 
+  const refreshTicketsSilently = useCallback(() => {
+    void loadTickets(true);
+  }, [loadTickets]);
+
   useEffect(() => {
-    const timeoutId = window.setTimeout(loadTickets, 0);
+    const timeoutId = window.setTimeout(() => void loadTickets(false), 0);
     return () => window.clearTimeout(timeoutId);
   }, [loadTickets]);
 
@@ -71,7 +76,7 @@ export function AdminTicketsPage() {
     let cancelled = false;
 
     const handleUpdate = () => {
-      loadTicketsRef.current();
+      void loadTicketsRef.current(true);
     };
 
     const connect = async () => {
@@ -80,11 +85,11 @@ export function AdminTicketsPage() {
         if (cancelled) return;
         socketRef = socket;
         socket.on("ticket:updated", handleUpdate);
-      } catch {
-        setError(t("tickets.error.connection"));
+      } catch (err) {
+        console.warn("[AdminTicketsPage] Realtime socket unavailable:", err);
       }
     };
-    connect();
+    void connect();
 
     return () => {
       cancelled = true;
@@ -92,7 +97,7 @@ export function AdminTicketsPage() {
         socketRef.off("ticket:updated", handleUpdate);
       }
     };
-  }, [t]);
+  }, []);
 
   const changeStatus = async (nextStatus: TicketStatus) => {
     if (!selected) return;
@@ -105,7 +110,7 @@ export function AdminTicketsPage() {
       });
       if (!response.ok) throw new Error(t("tickets.error.status"));
       setSelected({ ...selected, status: nextStatus });
-      await loadTickets();
+      await loadTickets(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("tickets.error.status"));
     } finally {
@@ -122,13 +127,18 @@ export function AdminTicketsPage() {
 
       const found = tickets.find((item) => item.id === requestedTicketId);
       if (found) {
-        if (selected !== found) {
-          setSelected(found);
-        }
-        return;
-      }
-
-      if (selected?.id === requestedTicketId) {
+        setSelected((current) => {
+          if (
+            current &&
+            current.id === found.id &&
+            current.status === found.status &&
+            current.updatedAt === found.updatedAt &&
+            current.unreadCount === found.unreadCount
+          ) {
+            return current;
+          }
+          return found;
+        });
         return;
       }
 
@@ -137,8 +147,18 @@ export function AdminTicketsPage() {
           headers: { "X-Ticket-Actor": "ADMIN" },
         });
         if (response.ok) {
-          const data = await response.json();
-          setSelected(data);
+          const data: OrderTicket = await response.json();
+          setSelected((current) => {
+            if (
+              current &&
+              current.id === data.id &&
+              current.status === data.status &&
+              current.updatedAt === data.updatedAt
+            ) {
+              return current;
+            }
+            return data;
+          });
         }
       } catch (err) {
         console.error("Failed to fetch requested ticket:", err);
@@ -146,20 +166,24 @@ export function AdminTicketsPage() {
     };
 
     void syncSelectedTicket();
-  }, [requestedTicketId, tickets, selected]);
+  }, [requestedTicketId, tickets]);
 
   const handleSelectTicket = (ticket: OrderTicket) => {
     setSelected(ticket);
     const params = new URLSearchParams(window.location.search);
     params.set("ticket", ticket.id);
-    router.replace(`${localizePath("/admin/panel/tickets")}?${params.toString()}`);
+    router.replace(`${localizePath("/admin/panel/tickets")}?${params.toString()}`, {
+      scroll: false,
+    });
   };
 
   const closeTicket = useCallback(() => {
     setSelected(null);
     const params = new URLSearchParams(window.location.search);
     params.delete("ticket");
-    router.replace(`${localizePath("/admin/panel/tickets")}?${params.toString()}`);
+    router.replace(`${localizePath("/admin/panel/tickets")}?${params.toString()}`, {
+      scroll: false,
+    });
   }, [localizePath, router]);
 
   useEffect(() => {
@@ -181,7 +205,7 @@ export function AdminTicketsPage() {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <AdminHeader
         title={t("tickets.adminTitle")}
         description={t("tickets.adminDescription")}
@@ -189,7 +213,7 @@ export function AdminTicketsPage() {
         actions={
           <AdminButton
             type="button"
-            onClick={loadTickets}
+            onClick={() => void loadTickets(false)}
             disabled={loading}
             loading={loading}
             icon={RefreshCw}
@@ -200,36 +224,38 @@ export function AdminTicketsPage() {
         }
       />
 
-      <AdminStatusTabs
-        items={statusTabs}
-        value={status}
-        onChange={setStatus}
-      />
+      <div className="flex flex-col gap-2 rounded-lg border border-white/[0.07] bg-[#141124] p-1.5 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+        <AdminStatusTabs
+          items={statusTabs}
+          value={status}
+          onChange={setStatus}
+          className="border-0 bg-transparent p-0"
+        />
 
-      <AdminToolbar>
         <AdminSearchInput
           value={search}
           onChange={setSearch}
           placeholder={t("tickets.searchPlaceholder")}
+          className="lg:max-w-md"
         />
-      </AdminToolbar>
+      </div>
 
       {error && <AdminAlert>{error}</AdminAlert>}
 
       {/* Master-Detail Workspace on Desktop, List + Sheet on Mobile */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[360px_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
         {/* Ticket Queue List */}
-        <div className="overflow-hidden rounded-lg border border-white/[0.07] bg-[#141124]">
+        <div className="flex h-[320px] lg:h-[clamp(440px,calc(100dvh-268px),700px)] min-w-0 flex-col overflow-hidden rounded-lg border border-white/[0.07] bg-[#141124]">
           {loading ? (
-            <div className="flex min-h-[420px] items-center justify-center">
+            <div className="flex flex-1 items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-accent" />
             </div>
           ) : tickets.length === 0 ? (
-            <div className="flex min-h-[320px] items-center justify-center p-6 text-center text-xs text-[#9e98b6]">
+            <div className="flex flex-1 items-center justify-center p-6 text-center text-xs text-[#9e98b6]">
               {t("tickets.noTickets")}
             </div>
           ) : (
-            <div className="max-h-[640px] divide-y divide-white/[0.05] overflow-y-auto custom-scrollbar">
+            <div className="min-h-0 flex-1 divide-y divide-white/[0.05] overflow-y-auto custom-scrollbar">
               {tickets.map((ticket) => {
                 const isSelected = selected?.id === ticket.id;
                 return (
@@ -272,15 +298,20 @@ export function AdminTicketsPage() {
         </div>
 
         {/* Desktop Inline Conversation Pane */}
-        <div className="hidden min-h-[540px] max-h-[640px] flex-col overflow-hidden rounded-lg border border-white/[0.07] bg-[#141124] lg:flex">
+        <div className="hidden lg:h-[clamp(440px,calc(100dvh-268px),700px)] min-w-0 flex-col overflow-hidden rounded-lg border border-white/[0.07] bg-[#141124] lg:flex">
           {selected ? (
             <>
               <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] bg-[#1a1630] px-5 py-3.5">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-mono text-xs text-[#9e98b6] tabular-nums">
-                    {t("tickets.orderReference")}:{" "}
-                    <span className="text-white">{selected.orderId}</span> · {selected.order.type}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="truncate font-mono text-xs text-[#9e98b6] tabular-nums">
+                      {t("tickets.orderReference")}:{" "}
+                      <span className="text-white">{selected.orderId}</span> · {selected.order.type}
+                    </p>
+                    <AdminBadge tone={selected.status === "OPEN" ? "success" : "neutral"}>
+                      {t(`tickets.status.${selected.status.toLowerCase()}`)}
+                    </AdminBadge>
+                  </div>
                   <h3 className="mt-0.5 truncate text-base font-semibold text-white">
                     {selected.subject}
                   </h3>
@@ -312,8 +343,14 @@ export function AdminTicketsPage() {
                 </div>
               </div>
 
-              <div className="min-h-0 flex-1">
-                <TicketChat ticket={selected} actor="ADMIN" onTicketUpdated={loadTickets} />
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                <TicketChat
+                  ticket={selected}
+                  actor="ADMIN"
+                  onTicketUpdated={refreshTicketsSilently}
+                  fillHeight
+                  hideHeader
+                />
               </div>
             </>
           ) : (
@@ -361,8 +398,14 @@ export function AdminTicketsPage() {
                 {selected.status === "OPEN" ? t("tickets.close") : t("tickets.reopen")}
               </AdminButton>
             </div>
-            <div className="min-h-0 flex-1">
-              <TicketChat ticket={selected} actor="ADMIN" onTicketUpdated={loadTickets} fullscreen />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <TicketChat
+                ticket={selected}
+                actor="ADMIN"
+                onTicketUpdated={refreshTicketsSilently}
+                fullscreen
+                hideHeader
+              />
             </div>
           </div>,
           document.body,

@@ -35,15 +35,13 @@ async function requestSocketToken(actor: TicketActor) {
 
 export async function getTicketSocket(actor: TicketActor) {
   let socket = sockets.get(actor);
-  if (socket?.connected || socket?.active) return socket;
+  if (socket?.connected) return socket;
 
   const token = await requestSocketToken(actor);
   if (!socket) {
     socket = io(socketOrigin(), {
       autoConnect: false,
       path: "/socket.io/",
-      // Start with the proxy-friendly transport and upgrade to WebSocket when
-      // the production reverse proxy forwards the Upgrade headers correctly.
       transports: ["polling", "websocket"],
       upgrade: true,
       auth: { token },

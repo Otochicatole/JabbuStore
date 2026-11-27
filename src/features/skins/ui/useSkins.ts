@@ -107,11 +107,9 @@ export const useSkins = (marketType: "express" | "market") => {
             minPrice: catalogFilters.minPrice,
             maxPrice: catalogFilters.maxPrice,
             categories: catalogFilters.selectedCategories,
-            conditions: catalogFilters.selectedConditions,
             sort: catalogFilters.sortOption,
             immediate: marketType === "express",
             group: catalogFilters.groupSameItems,
-            excludeStatTrak: catalogFilters.excludeStatTrak,
           });
 
           if (controller.signal.aborted || requestId !== requestSequenceRef.current) {

@@ -18,7 +18,10 @@ import {
   rarityColors,
   getConditionLabelKey,
   getExteriorLabelKey,
+  getExteriorAbbreviation,
 } from "./helpers";
+
+const EXTERIOR_ORDER = ["FN", "MW", "FT", "WW", "BS"];
 
 export interface SkinCardProps {
   skinsInGroup: Skin[];
@@ -55,6 +58,16 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
     return labelKey ? t(labelKey) : fallback;
   };
   const isMultiple = sortedSkinsInGroup.length >= 2;
+  const distinctExteriors = Array.from(
+    new Set(
+      sortedSkinsInGroup
+        .map((s) => getExteriorAbbreviation(s.exterior))
+        .filter(Boolean),
+    ),
+  ).sort((a, b) => EXTERIOR_ORDER.indexOf(a) - EXTERIOR_ORDER.indexOf(b));
+  const hasMixedStatTrak =
+    sortedSkinsInGroup.some((s) => s.isStatTrak) &&
+    sortedSkinsInGroup.some((s) => !s.isStatTrak);
 
   const cartItemsInGroup = items.filter((item) =>
     sortedSkinsInGroup.some((s) => s.id === item.skin.id),
@@ -93,11 +106,12 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
       }
     `}
     >
-      <SkinCardHeader skin={skin} />
+      <SkinCardHeader skin={skin} hasMixedStatTrak={hasMixedStatTrak} />
 
       <SkinCardInfoPanel
         skin={skin}
         isMultiple={isMultiple}
+        distinctExteriors={distinctExteriors}
         conditionLabel={conditionLabel}
         translateExterior={translateExterior}
         setIsModalOpen={setIsModalOpen}
@@ -116,7 +130,10 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
         className={`h-[2px] w-full mb-3 rounded-full ${rarityColors[skin.rarity] || "bg-white/10"} shadow-[0_0_10px_rgba(255,255,255,0.1)]`}
       />
 
-      <SkinCardPrice price={skin.price} />
+      <SkinCardPrice
+        price={skin.price}
+        priceFromLabel={distinctExteriors.length > 1 ? t("skinCard.priceFrom") : undefined}
+      />
 
       <SkinCardActions
         skin={skin}

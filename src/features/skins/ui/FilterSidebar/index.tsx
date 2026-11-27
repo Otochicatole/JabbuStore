@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ChevronRight, RotateCcw, Filter, X } from "lucide-react";
+import { Search, RotateCcw, Filter, X } from "lucide-react";
 import {
   cloneFilterState,
   createDefaultFilterState,
@@ -49,22 +49,12 @@ const GLOBAL_CATEGORIES: CatalogCategory[] = [
   { value: "Etiquetas", token: "tags", labelKey: "filters.category.tags", icon: "tags-steam.png" },
 ];
 
-const CONDITIONS = [
-  { value: "Recién fabricado", labelKey: "filters.condition.factoryNew" },
-  { value: "Casi nuevo", labelKey: "filters.condition.minimalWear" },
-  { value: "Algo desgastado", labelKey: "filters.condition.fieldTested" },
-  { value: "Bastante desgastado", labelKey: "filters.condition.wellWorn" },
-  { value: "Deplorable", labelKey: "filters.condition.battleScarred" },
-];
-
 interface FilterControlsProps {
   value: FilterState;
   onSearchQueryChange: (value: string) => void;
   onMinPriceChange: (value: string) => void;
   onMaxPriceChange: (value: string) => void;
   onToggleCategory: (category: string) => void;
-  onToggleCondition: (condition: string) => void;
-  onToggleExcludeStatTrak: () => void;
   onReset: () => void;
   categories: CatalogCategory[];
 }
@@ -75,14 +65,11 @@ function FilterControls({
   onMinPriceChange,
   onMaxPriceChange,
   onToggleCategory,
-  onToggleCondition,
-  onToggleExcludeStatTrak,
   onReset,
   categories,
 }: FilterControlsProps) {
   const { t } = useI18n();
   const { effectiveCurrency, effectiveRate, convertUsd, displayToUsd, ready } = useCurrency();
-  const [isConditionOpen, setIsConditionOpen] = useState(true);
 
   const toDisplayValue = useCallback((canonicalUsd: string) => {
     if (!canonicalUsd || !canonicalUsd.trim()) return "";
@@ -221,89 +208,6 @@ function FilterControls({
         </div>
       </div>
 
-      <div className="border-b border-white/5 pb-5">
-        <button
-          type="button"
-          onClick={() => setIsConditionOpen((current) => !current)}
-          className="w-full flex items-center justify-between mb-2 group text-left cursor-pointer"
-        >
-          <h3 className="text-[10px] font-bold text-muted uppercase tracking-widest group-hover:text-white/50 transition-colors">{t("filters.exterior")}</h3>
-          <ChevronRight className={`h-3.5 w-3.5 text-muted transition-transform duration-200 ${isConditionOpen ? "rotate-90 text-accent" : ""}`} />
-        </button>
-
-        <AnimatePresence>
-          {isConditionOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <div className="space-y-2 py-3">
-                {CONDITIONS.map((condition) => {
-                  const isSelected = value.selectedConditions.includes(condition.value);
-                  return (
-                    <button
-                      type="button"
-                      key={condition.value}
-                      aria-pressed={isSelected}
-                      onClick={() => onToggleCondition(condition.value)}
-                      className="flex w-full items-center gap-3 cursor-pointer group"
-                    >
-                      <span
-                        className={`relative flex items-center justify-center h-4 w-4 rounded-[2px] border transition-all duration-200 ${
-                          isSelected
-                            ? "border-accent bg-accent/10"
-                            : "border-white/10 bg-background group-hover:border-white/20"
-                        }`}
-                      >
-                        <span className={`h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-200 ${isSelected ? "opacity-100" : "opacity-0"}`} />
-                      </span>
-                      <span className={`text-[11px] font-bold transition-colors duration-200 ${isSelected ? "text-white" : "text-[#84849b] group-hover:text-white/70"}`}>
-                        {t(condition.labelKey)}
-                      </span>
-                    </button>
-                  );
-                })}
-
-                <div className="pt-2 mt-2 border-t border-white/5">
-                  <button
-                    type="button"
-                    aria-pressed={value.excludeStatTrak}
-                    onClick={onToggleExcludeStatTrak}
-                    className="flex w-full items-center gap-3 cursor-pointer group text-left"
-                  >
-                    <span
-                      className={`relative flex items-center justify-center h-4 w-4 rounded-[2px] border transition-all duration-200 ${
-                        value.excludeStatTrak
-                          ? "border-accent bg-accent/10"
-                          : "border-white/10 bg-background group-hover:border-white/20"
-                      }`}
-                    >
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-200 ${
-                          value.excludeStatTrak ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
-                    </span>
-                    <span
-                      className={`text-[11px] font-bold transition-colors duration-200 ${
-                        value.excludeStatTrak
-                          ? "text-white"
-                          : "text-[#84849b] group-hover:text-white/70"
-                      }`}
-                    >
-                      {t("filters.excludeStatTrak")}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
       <div>
         <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">{t("filters.category")}</h3>
         <div className="grid grid-cols-2 gap-2">
@@ -417,15 +321,6 @@ export const FilterSidebar = ({
     }));
   };
 
-  const toggleMobileCondition = (condition: string) => {
-    setMobileDraft((current) => ({
-      ...current,
-      selectedConditions: current.selectedConditions.includes(condition)
-        ? current.selectedConditions.filter((item) => item !== condition)
-        : [...current.selectedConditions, condition],
-    }));
-  };
-
   return (
     <>
       <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto pr-4 custom-scrollbar overscroll-contain lg:fixed lg:top-24 lg:left-6 pb-10">
@@ -435,8 +330,6 @@ export const FilterSidebar = ({
           onMinPriceChange={filters.setMinPrice}
           onMaxPriceChange={filters.setMaxPrice}
           onToggleCategory={filters.toggleCategory}
-          onToggleCondition={filters.toggleCondition}
-          onToggleExcludeStatTrak={() => filters.setExcludeStatTrak(!filters.filterState.excludeStatTrak)}
           onReset={filters.clearFilters}
           categories={categories}
         />
@@ -502,10 +395,6 @@ export const FilterSidebar = ({
                     onMinPriceChange={(value) => updateMobileDraft("minPrice", value)}
                     onMaxPriceChange={(value) => updateMobileDraft("maxPrice", value)}
                     onToggleCategory={toggleMobileCategory}
-                    onToggleCondition={toggleMobileCondition}
-                    onToggleExcludeStatTrak={() =>
-                      updateMobileDraft("excludeStatTrak", !mobileDraft.excludeStatTrak)
-                    }
                     onReset={() => setMobileDraft(createDefaultFilterState())}
                     categories={categories}
                   />

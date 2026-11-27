@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X, ShoppingCart, Eye } from "lucide-react";
+import { X, ShoppingCart, Eye, Check } from "lucide-react";
 import { Skin } from "../../domain/skin";
 import { CartItem } from "../../../cart/domain/cart";
 import { SkinImage } from "@/shared/components/SkinImage";
 import type { TranslationParams } from "@/shared/i18n/types";
-import { getFloatColorClass } from "./helpers";
+import {
+  getFloatColorClass,
+  getExteriorAbbreviation as getHelperExteriorAbbr,
+} from "./helpers";
 import { Money } from "@/features/currency/ui/Money";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 
@@ -23,24 +26,68 @@ interface SkinCardModalProps {
   t: (key: string, params?: TranslationParams) => string;
 }
 
+const MODAL_EXTERIOR_OPTIONS = [
+  {
+    abbr: "FN",
+    labelKey: "filters.condition.factoryNew",
+    dotClass: "bg-[#10b981]",
+    rangeWidth: 7,
+  },
+  {
+    abbr: "MW",
+    labelKey: "filters.condition.minimalWear",
+    dotClass: "bg-[#84cc16]",
+    rangeWidth: 8,
+  },
+  {
+    abbr: "FT",
+    labelKey: "filters.condition.fieldTested",
+    dotClass: "bg-[#eab308]",
+    rangeWidth: 23,
+  },
+  {
+    abbr: "WW",
+    labelKey: "filters.condition.wellWorn",
+    dotClass: "bg-[#f97316]",
+    rangeWidth: 7,
+  },
+  {
+    abbr: "BS",
+    labelKey: "filters.condition.battleScarred",
+    dotClass: "bg-[#ef4444]",
+    rangeWidth: 55,
+  },
+] as const;
+
+const getVariantExteriorAbbr = (variant: Skin): string => {
+  const fromExterior = getHelperExteriorAbbr(variant.exterior);
+  if (fromExterior) return fromExterior;
+  if (variant.float === undefined) return "";
+  if (variant.float < 0.07) return "FN";
+  if (variant.float < 0.15) return "MW";
+  if (variant.float < 0.38) return "FT";
+  if (variant.float < 0.45) return "WW";
+  return "BS";
+};
+
 const getRarityDetails = (rarity: string) => {
   const r = rarity?.toLowerCase() || "";
   switch (r) {
     case "immortal":
-      return { label: "Contrabando", color: "text-[#e0a814]" };
+      return { label: "Contrabando", color: "text-[#e4ae39]" };
     case "ancient":
-      return { label: "Encubierto (Covert)", color: "text-[#eb4b4b]" };
+      return { label: "Encubierto (Covert)", color: "text-[#f87171]" };
     case "legendary":
-      return { label: "Clasificado (Classified)", color: "text-[#d32ce6]" };
+      return { label: "Clasificado (Classified)", color: "text-[#e879f9]" };
     case "mythical":
-      return { label: "Restringido (Restricted)", color: "text-[#8847ff]" };
+      return { label: "Restringido (Restricted)", color: "text-[#a78bfa]" };
     case "rare":
-      return { label: "Grado Militar (Mil-Spec)", color: "text-[#4b69ff]" };
+      return { label: "Grado Militar (Mil-Spec)", color: "text-[#60a5fa]" };
     case "uncommon":
-      return { label: "Grado Industrial", color: "text-[#5e98d9]" };
+      return { label: "Grado Industrial", color: "text-[#7dd3fc]" };
     case "common":
     default:
-      return { label: "Grado De Consumo", color: "text-[#b0c3d9]" };
+      return { label: "Grado De Consumo", color: "text-[#cbd5e1]" };
   }
 };
 
@@ -54,16 +101,6 @@ const getTheoreticalFloat = (exterior: string | null | undefined): number | unde
   return undefined;
 };
 
-const getExteriorAbbreviation = (exterior: string | null | undefined): string => {
-  const ext = exterior?.toLowerCase() || "";
-  if (ext.includes("factory new") || ext === "fn") return "FN";
-  if (ext.includes("minimal wear") || ext === "mw") return "MW";
-  if (ext.includes("field-tested") || ext === "ft") return "FT";
-  if (ext.includes("well-worn") || ext === "ww") return "WW";
-  if (ext.includes("battle-scarred") || ext === "bs") return "BS";
-  return "";
-};
-
 export const SkinCardModal = ({
   skin,
   skinsInGroup,
@@ -74,19 +111,94 @@ export const SkinCardModal = ({
   translateExterior,
   t,
 }: SkinCardModalProps) => {
-  const theoreticalFloat = getTheoreticalFloat(skin.exterior);
-  const exteriorAbbr = getExteriorAbbreviation(skin.exterior);
+  const [selectedExterior, setSelectedExterior] = useState<string | null>(null);
+  const [statTrakOnly, setStatTrakOnly] = useState(false);
+
+  const sortedVariants = useMemo(() => {
+    const source = skinsInGroup?.length ? skinsInGroup : [skin];
+    return [...source].sort((a, b) => {
+      const priceDiff = a.price - b.price;
+      return priceDiff !== 0 ? priceDiff : a.id.localeCompare(b.id);
+    });
+  }, [skinsInGroup, skin]);
+
+  const hasExteriorOptions = useMemo(
+    () => sortedVariants.some((variant) => Boolean(getVariantExteriorAbbr(variant))),
+    [sortedVariants],
+  );
+
+  const hasAnyStatTrak = useMemo(
+    () => sortedVariants.some((variant) => variant.isStatTrak),
+    [sortedVariants],
+  );
+  const hasAnyStandard = useMemo(
+    () => sortedVariants.some((variant) => !variant.isStatTrak),
+    [sortedVariants],
+  );
+  const effectiveStatTrakOnly =
+    hasAnyStatTrak && (!hasAnyStandard || statTrakOnly);
+
+  const poolForExteriorSelection = useMemo(() => {
+    if (effectiveStatTrakOnly) {
+      return sortedVariants.filter((variant) => variant.isStatTrak);
+    }
+    return sortedVariants;
+  }, [sortedVariants, effectiveStatTrakOnly]);
+
+  const effectiveExterior = useMemo(() => {
+    if (!hasExteriorOptions) return null;
+    if (
+      selectedExterior &&
+      poolForExteriorSelection.some(
+        (variant) => getVariantExteriorAbbr(variant) === selectedExterior,
+      )
+    ) {
+      return selectedExterior;
+    }
+    const fallbackPool = effectiveStatTrakOnly
+      ? poolForExteriorSelection
+      : sortedVariants;
+    const standardFirst = !effectiveStatTrakOnly
+      ? fallbackPool.find((variant) => !variant.isStatTrak) ?? fallbackPool[0]
+      : fallbackPool[0];
+    return standardFirst ? getVariantExteriorAbbr(standardFirst) : null;
+  }, [
+    hasExteriorOptions,
+    selectedExterior,
+    poolForExteriorSelection,
+    effectiveStatTrakOnly,
+    sortedVariants,
+  ]);
+
+  const matchingVariants = useMemo(() => {
+    const byWear =
+      !hasExteriorOptions || !effectiveExterior
+        ? sortedVariants
+        : sortedVariants.filter(
+            (variant) => getVariantExteriorAbbr(variant) === effectiveExterior,
+          );
+    if (effectiveStatTrakOnly) {
+      return byWear.filter((variant) => variant.isStatTrak);
+    }
+    const nonStatTrak = byWear.filter((variant) => !variant.isStatTrak);
+    return nonStatTrak.length > 0 ? nonStatTrak : byWear;
+  }, [sortedVariants, hasExteriorOptions, effectiveExterior, effectiveStatTrakOnly]);
+
+  const activeVariant = matchingVariants[0] ?? sortedVariants[0];
+  const theoreticalFloat = getTheoreticalFloat(activeVariant.exterior);
+  const exteriorAbbr = getVariantExteriorAbbr(activeVariant);
+  const rarityDetails = getRarityDetails(activeVariant.rarity);
 
   const isYoupinMarketItem =
-    skin.provider === "youpin" || skin.isImmediate === false;
+    activeVariant.provider === "youpin" || activeVariant.isImmediate === false;
   const [resolvedInspect, setResolvedInspect] = useState<{
     id: string;
     link: string | null;
   } | null>(null);
   const resolvedInspectLink =
-    resolvedInspect?.id === skin.id
+    resolvedInspect?.id === activeVariant.id
       ? resolvedInspect.link
-      : skin.inspectLink ?? null;
+      : activeVariant.inspectLink ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -96,17 +208,17 @@ export const SkinCardModal = ({
     const resolveInspectLink = async () => {
       try {
         const response = await fetchWithAuth(
-          `${BACKEND_URL}/market/listings/${encodeURIComponent(skin.id)}/inspect`,
+          `${BACKEND_URL}/market/listings/${encodeURIComponent(activeVariant.id)}/inspect`,
         );
         if (!response.ok) {
-          if (!cancelled) setResolvedInspect({ id: skin.id, link: null });
+          if (!cancelled) setResolvedInspect({ id: activeVariant.id, link: null });
           return;
         }
         const data = (await response.json()) as { inspectLink?: unknown };
         const link = typeof data.inspectLink === "string" ? data.inspectLink.trim() : "";
         if (!cancelled) {
           setResolvedInspect({
-            id: skin.id,
+            id: activeVariant.id,
             link: link && !/%[a-z0-9_:]+%/i.test(link) ? link : null,
           });
         }
@@ -119,191 +231,301 @@ export const SkinCardModal = ({
     return () => {
       cancelled = true;
     };
-  }, [isModalOpen, isYoupinMarketItem, skin.id]);
+  }, [isModalOpen, isYoupinMarketItem, activeVariant.id]);
 
   useEffect(() => {
-    if (isModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
+    if (!isModalOpen) {
       document.body.style.overflow = "";
+      return;
     }
+
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
       document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isModalOpen]);
+  }, [isModalOpen, setIsModalOpen]);
 
   if (!isModalOpen) return null;
 
+  const isAlreadyInCart = items.some((item) => item.skin.id === activeVariant.id);
+
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-fade-in"
       onClick={() => setIsModalOpen(false)}
     >
       <div
-        className="relative w-full max-w-4xl bg-[#0e0d15]/95 border border-white/10 rounded-2xl flex flex-col max-h-[90vh] shadow-[0_0_50px_rgba(217,70,239,0.15)] overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="skin-modal-title"
+        className="relative w-full max-w-[920px] bg-[#100d1b] border border-white/[0.08] rounded-2xl flex flex-col max-h-[90vh] md:h-[560px] shadow-[0_28px_72px_-12px_rgba(0,0,0,0.88)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Navigation Bar */}
-        <div className="flex items-center justify-between border-b border-white/5 px-4 sm:px-6 h-[60px]">
-          <span className="text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-wider sm:tracking-widest text-accent">
-            {t("skinCard.modal.itemDetails")}
-          </span>
+        {/* Top Bar: Wear Tabs (FN / MW / FT / WW / BS) + Selectable ST™ */}
+        <header className="flex flex-wrap items-center justify-between gap-3 bg-[#151124] border-b border-white/[0.06] px-5 sm:px-7 py-3.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-5 min-w-0 flex-1">
+            <span className="text-xs font-semibold tracking-wide text-[#b5b0cc] shrink-0">
+              {t("skinCard.modal.itemDetails")}
+            </span>
+
+            {hasExteriorOptions && (
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div
+                  role="tablist"
+                  aria-label={t("filters.exterior")}
+                  className="inline-flex items-center gap-1 bg-[#0b0914] p-1 rounded-xl"
+                >
+                  {MODAL_EXTERIOR_OPTIONS.map((option) => {
+                    const hasVariant = sortedVariants.some((variant) => {
+                      if (effectiveStatTrakOnly && !variant.isStatTrak) return false;
+                      return getVariantExteriorAbbr(variant) === option.abbr;
+                    });
+                    const isSelected = effectiveExterior === option.abbr;
+
+                    return (
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={isSelected}
+                        key={option.abbr}
+                        disabled={!hasVariant}
+                        title={t(option.labelKey)}
+                        onClick={() => setSelectedExterior(option.abbr)}
+                        className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
+                          isSelected
+                            ? "bg-accent text-white cursor-pointer"
+                            : hasVariant
+                              ? "bg-transparent text-[#a39ec0] hover:text-white hover:bg-white/[0.06] cursor-pointer"
+                              : "bg-transparent text-white/20 cursor-not-allowed"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                            isSelected ? "bg-white" : option.dotClass
+                          } ${hasVariant ? "opacity-95" : "opacity-25"}`}
+                        />
+                        {option.abbr}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {hasAnyStatTrak && (
+                  <button
+                    type="button"
+                    aria-pressed={effectiveStatTrakOnly}
+                    disabled={!hasAnyStandard}
+                    onClick={() => setStatTrakOnly((prev) => !prev)}
+                    title={t("filters.statTrak")}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-[#cf6a32] focus-visible:outline-offset-2 ${
+                      effectiveStatTrakOnly
+                        ? "bg-[#cf6a32]/20 text-[#f59e0b] ring-1 ring-[#cf6a32]/50"
+                        : "bg-[#0b0914] text-[#a39ec0] hover:text-white hover:bg-white/[0.06]"
+                    } ${!hasAnyStandard ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
+                  >
+                    <span
+                      className={`flex items-center justify-center h-3.5 w-3.5 rounded-[4px] border transition-colors ${
+                        effectiveStatTrakOnly
+                          ? "border-[#f59e0b] bg-[#f59e0b] text-[#0b0914]"
+                          : "border-white/25 bg-transparent"
+                      }`}
+                    >
+                      {effectiveStatTrakOnly && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </span>
+                    ST™
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
+            type="button"
+            aria-label={t("common.close")}
             onClick={() => setIsModalOpen(false)}
-            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all cursor-pointer border-none flex items-center justify-center"
+            className="p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-[#b5b0cc] hover:text-white transition-colors cursor-pointer border-none flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-accent"
           >
             <X className="w-4 h-4" />
           </button>
-        </div>
+        </header>
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
-          {/* Left Column: Image */}
-          <div className="w-full md:w-[55%] border-b md:border-b-0 md:border-r border-white/5 p-6 flex flex-col justify-center items-center bg-[#151322]/20">
-            <div className="flex-1 flex items-center justify-center min-h-[250px] md:min-h-[300px]">
+          {/* Left Showcase Stage: Image + Wear/Float Spectrum Bar Below */}
+          <div className="w-full md:w-[54%] bg-[#0c0a16] p-6 sm:p-7 flex flex-col justify-between gap-5">
+            <div className="relative h-[220px] sm:h-[260px] md:flex-1 md:min-h-0 flex items-center justify-center rounded-2xl bg-[#131021] px-6 py-6 overflow-hidden">
               <SkinImage
-                src={skin.imageUrl}
-                alt={skin.name}
-                width={350}
-                height={230}
-                className="w-full h-auto drop-shadow-[0_20px_40px_rgba(0,0,0,0.7)] animate-fade-in"
+                src={activeVariant.imageUrl}
+                alt={activeVariant.name}
+                width={380}
+                height={250}
+                className="max-h-full w-auto max-w-[340px] object-contain drop-shadow-[0_24px_32px_rgba(0,0,0,0.75)]"
               />
             </div>
+
+            {theoreticalFloat !== undefined && (
+              <div className="flex flex-col gap-2.5 bg-[#151124] rounded-xl p-4 shrink-0">
+                <div className="flex items-center justify-between gap-3 h-5">
+                  <span className="text-xs font-semibold text-[#b5b0cc] whitespace-nowrap">
+                    {t("skinCard.modal.floatValue")}
+                  </span>
+                  <span className="text-xs font-semibold text-white truncate">
+                    {translateExterior(activeVariant.exterior, "Factory New")}
+                  </span>
+                </div>
+
+                {/* 5-Zone CS2 Wear Track */}
+                <div className="relative h-2.5 w-full rounded-full bg-[#0a0812] overflow-hidden flex gap-[2px] p-[2px]">
+                  {MODAL_EXTERIOR_OPTIONS.map((zone) => {
+                    const isActiveZone = zone.abbr === exteriorAbbr;
+                    return (
+                      <div
+                        key={zone.abbr}
+                        style={{ width: `${zone.rangeWidth}%` }}
+                        className={`h-full rounded-full transition-opacity duration-200 ${zone.dotClass} ${
+                          isActiveZone ? "opacity-100" : "opacity-20"
+                        }`}
+                      />
+                    );
+                  })}
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 h-3.5 w-1.5 rounded-full bg-white ring-2 ring-[#151124] transition-all duration-300 ${getFloatColorClass(theoreticalFloat)}`}
+                    style={{ left: `calc(${Math.min(98, Math.max(2, theoreticalFloat * 100))}% - 3px)` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right Column: General Info */}
-          <div className="w-full md:w-[45%] bg-[#151322]/40 p-6 lg:p-8 flex flex-col gap-6 md:overflow-y-auto custom-scrollbar justify-between shrink-0 md:shrink">
+          {/* Right Purchase & Specs Column */}
+          <div className="w-full md:w-[46%] bg-[#131021] p-6 sm:p-8 flex flex-col justify-between gap-8 md:overflow-y-auto custom-scrollbar shrink-0 md:shrink border-t md:border-t-0 md:border-l border-white/[0.05]">
             <div className="flex flex-col gap-6">
-              <div>
-                <span className="text-[10px] font-black uppercase text-accent tracking-widest font-mono">
-                  {skin.weapon}
+              {/* Item Title */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-accent">
+                  {activeVariant.weapon}
                 </span>
-                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight leading-tight mt-0.5">
-                  {skin.name}{" "}
-                  {skin.phase && (
-                    <span className="text-accent">| {skin.phase}</span>
+                <h2
+                  id="skin-modal-title"
+                  className="text-2xl sm:text-[28px] font-black text-white tracking-tight leading-[1.1]"
+                >
+                  {activeVariant.name}{" "}
+                  {activeVariant.phase && (
+                    <span className="text-accent font-extrabold">| {activeVariant.phase}</span>
                   )}
                 </h2>
-                <span className="text-xs font-black text-white/50 uppercase tracking-wider mt-1 block">
-                  {translateExterior(skin.exterior, "Factory New")}
-                </span>
-              </div>
-
-              {/* StatTrak & Souvenir Badges */}
-              {(skin.isStatTrak || skin.isSouvenir) && (
-                <div className="flex flex-wrap gap-2">
-                  {skin.isStatTrak && (
-                    <span className="bg-[#cf6a32]/10 border border-[#cf6a32]/30 text-[#cf6a32] text-[9px] font-black uppercase px-2.5 py-0.5 rounded font-mono tracking-wider shadow-[0_0_10px_rgba(207,106,50,0.1)]">
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className={`text-xs font-semibold ${rarityDetails.color}`}>
+                    {rarityDetails.label}
+                  </span>
+                  {activeVariant.isStatTrak && (
+                    <span className="bg-[#cf6a32]/15 text-[#f59e0b] text-[11px] font-bold px-2.5 py-0.5 rounded-md">
                       StatTrak™
                     </span>
                   )}
-                  {skin.isSouvenir && (
-                    <span className="bg-[#ffd700]/10 border border-[#ffd700]/30 text-[#ffd700] text-[9px] font-black uppercase px-2.5 py-0.5 rounded font-mono tracking-wider shadow-[0_0_10px_rgba(255,215,0,0.1)]">
+                  {activeVariant.isSouvenir && (
+                    <span className="bg-[#eab308]/15 text-[#fde047] text-[11px] font-bold px-2.5 py-0.5 rounded-md">
                       Souvenir
                     </span>
                   )}
                 </div>
-              )}
-
-              {/* Technical Specifications Grid */}
-              <div className="grid grid-cols-2 gap-4 bg-[#151322]/60 rounded-xl p-4 border border-white/5 font-mono">
-                <div>
-                  <span className="text-[9px] font-black text-[#84849b] uppercase block tracking-wider">
-                    {t("skinCard.modal.category")}
-                  </span>
-                  <span className="text-xs font-bold text-white uppercase mt-1 block truncate">
-                    {skin.category || skin.weapon}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[9px] font-black text-[#84849b] uppercase block tracking-wider">
-                    {t("skinCard.modal.rarity")}
-                  </span>
-                  <span className={`text-xs font-bold uppercase mt-1 block truncate ${getRarityDetails(skin.rarity).color}`}>
-                    {getRarityDetails(skin.rarity).label}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[9px] font-black text-[#84849b] uppercase block tracking-wider">
-                    {t("skinCard.modal.condition")}
-                  </span>
-                  <span className="text-xs font-bold text-white uppercase mt-1 block truncate">
-                    {translateExterior(skin.exterior, "Factory New")}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[9px] font-black text-[#84849b] uppercase block tracking-wider">
-                    {t("skinCard.modal.stock")}
-                  </span>
-                  <span className="text-xs font-bold text-accent uppercase mt-1 block font-sans">
-                    {skinsInGroup.length} {skinsInGroup.length === 1 ? "unidad" : "unidades"}
-                  </span>
-                </div>
               </div>
 
-              {/* Float Bar (Theoretical/Approximate, not a real item float) */}
-              {theoreticalFloat !== undefined && (
-                <div className="flex flex-col gap-2 mt-2 bg-[#151322]/60 rounded-xl p-4 border border-white/5 font-mono">
-                  <div className="flex items-center justify-between text-[9px] font-black text-[#84849b] uppercase tracking-wider">
-                    <span>{t("skinCard.modal.floatValue")}</span>
-                    {exteriorAbbr && (
-                      <span className="text-white font-bold font-mono">{exteriorAbbr}</span>
-                    )}
-                  </div>
-                  <div className="h-1.5 w-full bg-[#151322]/80 rounded-full overflow-hidden relative border border-white/5 mt-1">
-                    <div className="absolute inset-y-0 left-[7%] w-px bg-white/20" />
-                    <div className="absolute inset-y-0 left-[15%] w-px bg-white/20" />
-                    <div className="absolute inset-y-0 left-[38%] w-px bg-white/20" />
-                    <div className="absolute inset-y-0 left-[45%] w-px bg-white/20" />
-                    <div
-                      className={`h-full ${getFloatColorClass(theoreticalFloat)} rounded-full`}
-                      style={{ width: `${Math.min(100, theoreticalFloat * 100)}%` }}
-                    />
-                  </div>
+              {/* Clean Technical Specifications (single tonal surface, no repeated condition) */}
+              <dl className="grid grid-cols-3 gap-3 bg-[#1a162b] rounded-xl p-4">
+                <div className="min-w-0">
+                  <dt className="text-[11px] font-medium text-[#9e99b8] truncate">
+                    {t("skinCard.modal.category")}
+                  </dt>
+                  <dd className="text-sm font-bold text-white capitalize mt-1 truncate">
+                    {activeVariant.category || activeVariant.weapon}
+                  </dd>
                 </div>
-              )}
+                <div className="min-w-0">
+                  <dt className="text-[11px] font-medium text-[#9e99b8] truncate">
+                    {t("skinCard.modal.condition")}
+                  </dt>
+                  <dd className="text-sm font-bold text-white mt-1 truncate">
+                    {exteriorAbbr || translateExterior(activeVariant.exterior, "Factory New")}
+                  </dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-[11px] font-medium text-[#9e99b8] truncate">
+                    {t("skinCard.modal.stock")}
+                  </dt>
+                  <dd className="text-sm font-bold text-accent tabular-nums mt-1 truncate">
+                    {matchingVariants.length}{" "}
+                    {matchingVariants.length === 1 ? "unidad" : "unidades"}
+                  </dd>
+                </div>
+              </dl>
             </div>
 
-            {/* Price and Helper info */}
-            <div className="flex flex-col gap-4 mt-6 pt-4 border-t border-white/5">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">
+            {/* Price & Primary Actions */}
+            <div className="flex flex-col gap-5 pt-6 border-t border-white/[0.06] shrink-0">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#9e99b8] shrink-0">
                   {t("common.price")}
                 </span>
-                <Money amountUsd={skin.price} className="text-3xl font-black text-white font-mono" />
+                <Money
+                  amountUsd={activeVariant.price}
+                  className="text-2xl sm:text-3xl font-black text-white tracking-tight tabular-nums whitespace-nowrap"
+                />
               </div>
 
-              {/* Buy and Inspect Actions */}
-              <div className="flex gap-2 mt-2">
+              <div className="flex flex-col gap-2.5">
                 <button
+                  type="button"
                   onClick={() => {
-                    const isAlreadyInCart = items.some((item) => item.skin.id === skin.id);
                     if (!isAlreadyInCart) {
-                      addToCart({ ...skin, isSpecific: false, float: undefined, pattern: undefined });
+                      addToCart({
+                        ...activeVariant,
+                        isSpecific: false,
+                        float: undefined,
+                        pattern: undefined,
+                      });
                     }
                     setIsModalOpen(false);
                   }}
-                  className="flex-1 h-12 bg-accent hover:brightness-110 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.3)] active:scale-95 flex items-center justify-center gap-2 cursor-pointer border-none"
+                  className="w-full h-12 bg-accent hover:bg-accent/90 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-[0.99] flex items-center justify-center gap-2.5 cursor-pointer border-none whitespace-nowrap focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
                 >
                   <ShoppingCart className="w-4 h-4 shrink-0" />
-                  {items.some((item) => item.skin.id === skin.id) ? t("cart.title") : t("nav.buy")}
+                  <span>{isAlreadyInCart ? t("cart.title") : t("nav.buy")}</span>
                 </button>
 
-                {resolvedInspectLink && !/%[a-z0-9_:]+%/i.test(resolvedInspectLink) && (
-                  <a
-                    href={resolvedInspectLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="h-12 px-6 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer no-underline"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    {t("skinCard.inspectInGame")}
-                  </a>
-                )}
+                <div className="h-11">
+                  {resolvedInspectLink && !/%[a-z0-9_:]+%/i.test(resolvedInspectLink) ? (
+                    <a
+                      href={resolvedInspectLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full h-11 px-4 flex items-center justify-center gap-2 bg-[#1a162b] hover:bg-[#231e38] text-[#d4d0e6] hover:text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer no-underline whitespace-nowrap focus-visible:outline-2 focus-visible:outline-accent"
+                    >
+                      <Eye className="w-4 h-4 shrink-0" />
+                      <span>{t("skinCard.inspectInGame")}</span>
+                    </a>
+                  ) : (
+                    <span
+                      aria-disabled="true"
+                      className="w-full h-11 px-4 flex items-center justify-center gap-2 bg-[#1a162b]/40 text-white/25 text-xs font-bold uppercase tracking-wider rounded-xl select-none whitespace-nowrap"
+                    >
+                      <Eye className="w-4 h-4 shrink-0" />
+                      <span>{t("skinCard.inspectInGame")}</span>
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <span className="text-[9px] text-[#84849b]/50 text-center tracking-wide">
+              <p className="text-[11px] text-[#8f8aad] text-center">
                 {t("skinCard.modal.syncRealTime")}
-              </span>
+              </p>
             </div>
           </div>
         </div>

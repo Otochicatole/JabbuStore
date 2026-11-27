@@ -3,13 +3,19 @@ import { Skin } from "../../domain/skin";
 
 interface SkinCardHeaderProps {
   skin: Skin;
+  hasMixedStatTrak?: boolean;
 }
 
-export const SkinCardHeader = ({ skin }: SkinCardHeaderProps) => {
+export const SkinCardHeader = ({ skin, hasMixedStatTrak = false }: SkinCardHeaderProps) => {
+  const showStatTrakBadge = skin.isStatTrak && !hasMixedStatTrak;
+  const displayWeapon = hasMixedStatTrak
+    ? skin.weapon.replace(/StatTrak™?\s*/gi, "").replace(/\s+/g, " ").trim()
+    : skin.weapon;
+
   return (
     <div className="mb-2 min-h-[24px]">
       <h2 className="text-[9.5px] font-black text-white leading-normal line-clamp-2 uppercase tracking-tight py-0.5">
-        {skin.isStatTrak && (
+        {showStatTrakBadge && (
           <span className="text-[#cf6a32] font-black mr-1 border border-[#cf6a32]/30 px-1.5 py-[1px] rounded-md bg-[#cf6a32]/10 text-[9px] inline-block leading-none align-middle">
             ST™
           </span>
@@ -19,7 +25,7 @@ export const SkinCardHeader = ({ skin }: SkinCardHeaderProps) => {
             SV
           </span>
         )}
-        {skin.weapon} | <span className="text-[#aaaaff]">{skin.name}</span>
+        {displayWeapon} | <span className="text-[#aaaaff]">{skin.name}</span>
         {skin.phase && (
           <span className="text-[#d946ef] font-black ml-1">
             | {skin.phase}

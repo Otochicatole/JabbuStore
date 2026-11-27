@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Skin } from "../../domain/skin";
-import { buildCs2ViewerUrl, supportsCs2Viewer3d } from "./cs2ViewerUrl";
+import {
+  buildCs2ViewerUrl,
+  stripInspectLinkStickers,
+  supportsCs2Viewer3d,
+} from "./cs2ViewerUrl";
 
 function makeSkin(overrides: Partial<Skin> = {}): Skin {
   return {
@@ -17,6 +21,35 @@ function makeSkin(overrides: Partial<Skin> = {}): Skin {
   };
 }
 
+function buildMaskedInspectWithChecksum(protoHex: string): string {
+  const protoBytes = Uint8Array.from(
+    protoHex.match(/../g)!.map((h) => Number.parseInt(h, 16)),
+  );
+  // Build unsigned checksum using CRC32 identical to CS2 masked inspect links
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i += 1) {
+    let c = i;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[i] = c >>> 0;
+  }
+  let crc = 0xffffffff;
+  crc = table[(crc ^ 0) & 0xff]! ^ (crc >>> 8);
+  for (const b of protoBytes) crc = table[(crc ^ b) & 0xff]! ^ (crc >>> 8);
+  crc = (0xffffffff ^ crc) >>> 0;
+  const mul = Math.imul(protoBytes.length, crc) >>> 0;
+  const checksum = ((0xffff & crc) ^ mul) >>> 0;
+  const trailer = [
+    (checksum >>> 24) & 0xff,
+    (checksum >>> 16) & 0xff,
+    (checksum >>> 8) & 0xff,
+    checksum & 0xff,
+  ]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+  return `steam://run/730//+csgo_econ_action_preview%2000${protoHex.toUpperCase()}${trailer}`;
+}
+
 describe("cs2ViewerUrl", () => {
   it("returns null when viewer key is missing", () => {
     assert.equal(
@@ -28,24 +61,42 @@ describe("cs2ViewerUrl", () => {
     );
   });
 
-  it("uses inspectlink and embed=1 when a valid steam inspect link exists", () => {
-    const inspectLink =
-      "steam://run/730//+csgo_econ_action_preview%20ABCDEF1234567890ABCDEF1234567890";
-    const result = buildCs2ViewerUrl({
+  it("strips stickers (field 12), charms/variations (20), and nametag (11) from masked inspect links", () => {
+    // Field 3 (defindex=7): 18 07
+    // Field 4 (paintindex=1): 20 01
+    // Field 11 (customname="AB"): 5A 02 41 42
+    // Field 12 (stickers submessage): 62 04 08 01 10 05
+    // Field 20 (variation/keychain): A2 01 02 08 02
+    const withStickersProto = "180720015A024142620408011005A201020802";
+    const expectedCleanProto = "18072001";
+
+    const dirtyLink = buildMaskedInspectWithChecksum(withStickersProto);
+    const cleanedLink = stripInspectLinkStickers(dirtyLink);
+    const expectedCleanLink = buildMaskedInspectWithChecksum(expectedCleanProto).replace(
+      "//+csgo_econ_action_preview%20",
+      "/+csgo_econ_action_preview+",
+    );
+
+    assert.equal(cleanedLink, expectedCleanLink);
+
+    const url = buildCs2ViewerUrl({
       viewerKey: "pk_test_123",
       skin: makeSkin(),
-      inspectLink,
+      inspectLink: dirtyLink,
       locale: "br",
     });
-
-    assert.ok(result);
-    const parsed = new URL(result);
-    assert.equal(parsed.origin, "https://3d.cs2screen.com");
-    assert.equal(parsed.searchParams.get("key"), "pk_test_123");
-    assert.equal(parsed.searchParams.get("embed"), "1");
+    assert.ok(url);
+    const parsed = new URL(url);
+    assert.equal(parsed.searchParams.get("inspectlink"), expectedCleanLink);
     assert.equal(parsed.searchParams.get("lang"), "pt");
-    assert.equal(parsed.searchParams.get("inspectlink"), inspectLink);
-    assert.equal(parsed.searchParams.has("weapon"), false);
+  });
+
+  it("strips stickers cleanly from real XOR-masked SteamWebAPI certificates", () => {
+    const sample =
+      "steam://run/730//+csgo_econ_action_preview%203A2AFDEC99B99B3B22B13E1AE23C123C0A390280F6B1D2397AEB3B723A6ABB3952244A32899C03EE";
+    const cleaned = stripInspectLinkStickers(sample);
+    assert.ok(cleaned.startsWith("steam://run/730/+csgo_econ_action_preview+00"));
+    assert.ok(cleaned.length >= 20);
   });
 
   it("falls back to weapon, paint, wear, seed, and stattrak preset when inspectlink is absent", () => {

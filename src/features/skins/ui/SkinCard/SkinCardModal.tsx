@@ -250,11 +250,13 @@ export const SkinCardModal = ({
     (isInspectResolving ||
       (Boolean(viewerUrl) &&
         !(viewerFrameState?.url === viewerUrl && viewerFrameState.ready)));
-  const isViewerError =
+  const isViewerUnavailable =
     viewMode === "3d" &&
-    Boolean(viewerUrl) &&
-    viewerFrameState?.url === viewerUrl &&
-    viewerFrameState.error;
+    Boolean(viewerKey) &&
+    canShow3d &&
+    !isInspectResolving &&
+    (!viewerUrl ||
+      (viewerFrameState?.url === viewerUrl && viewerFrameState.error));
 
   useEffect(() => {
     let cancelled = false;
@@ -450,7 +452,7 @@ export const SkinCardModal = ({
           {/* Left Showcase Stage: 2D/3D Viewer + Bottom Controls & Wear Bar */}
           <div className="w-full md:w-[62%] bg-[#0c0a16] p-4 sm:p-5 flex flex-col justify-between gap-4">
             <div className="relative h-[300px] sm:h-[360px] md:flex-1 md:min-h-0 flex items-center justify-center rounded-2xl bg-[#131021] overflow-hidden">
-              {viewMode === "3d" && canShow3d && viewerUrl && !isViewerError && (
+              {viewMode === "3d" && canShow3d && viewerUrl && !isViewerUnavailable && (
                 <iframe
                   ref={viewerIframeRef}
                   key={viewerUrl}
@@ -469,7 +471,7 @@ export const SkinCardModal = ({
                 />
               )}
 
-              {(viewMode === "2d" || !canShow3d || !viewerKey || isViewerLoading || isViewerError) && (
+              {(viewMode === "2d" || !canShow3d || !viewerKey || isViewerLoading || isViewerUnavailable) && (
                 <div className="absolute inset-0 flex items-center justify-center px-6 py-6 pointer-events-none">
                   <SkinImage
                     src={activeVariant.imageUrl}
@@ -477,7 +479,7 @@ export const SkinCardModal = ({
                     width={480}
                     height={320}
                     className={`max-h-full w-auto max-w-[460px] object-contain drop-shadow-[0_24px_32px_rgba(0,0,0,0.75)] transition-opacity duration-200 ${
-                      viewMode === "3d" && (!viewerKey || isViewerLoading || isViewerError)
+                      viewMode === "3d" && (!viewerKey || isViewerLoading || isViewerUnavailable)
                         ? "opacity-35"
                         : "opacity-100"
                     }`}
@@ -500,7 +502,7 @@ export const SkinCardModal = ({
                 </div>
               )}
 
-              {viewMode === "3d" && canShow3d && viewerKey && isViewerError && (
+              {viewMode === "3d" && canShow3d && viewerKey && isViewerUnavailable && (
                 <div className="relative z-10 max-w-xs mx-auto rounded-xl bg-[#0b0914]/90 px-4 py-3 text-center">
                   <p className="text-xs font-medium text-[#d4d0e6]">
                     {t("skinCard.modal.viewerUnavailable")}

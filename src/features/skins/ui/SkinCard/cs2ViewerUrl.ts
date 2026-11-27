@@ -222,56 +222,30 @@ export interface BuildCs2ViewerUrlParams {
 
 /**
  * Builds the official SteamWebAPI / cs2screen iframe URL for an item.
- * Strips applied stickers and charms from inspect certificates before embedding.
+ * Only builds the embed URL when a valid Steam inspect link exists (avoiding black-screen embeds),
+ * and strips applied stickers and charms before embedding.
  */
 export function buildCs2ViewerUrl({
   viewerKey,
   skin,
   inspectLink,
-  wearFloat,
   locale,
 }: BuildCs2ViewerUrlParams): string | null {
   const cleanKey = viewerKey?.trim();
   if (!cleanKey) return null;
 
+  const effectiveInspectLink = inspectLink ?? skin.inspectLink;
+  if (!isValidSteamInspectLink(effectiveInspectLink)) {
+    return null;
+  }
+
   const url = new URL(`${CS2_VIEWER_ORIGIN}/`);
   url.searchParams.set("key", cleanKey);
   url.searchParams.set("embed", "1");
   url.searchParams.set("lang", mapLocaleToViewerLang(locale));
-
-  const effectiveInspectLink = inspectLink ?? skin.inspectLink;
-  if (isValidSteamInspectLink(effectiveInspectLink)) {
-    url.searchParams.set(
-      "inspectlink",
-      stripInspectLinkStickers(effectiveInspectLink.trim()),
-    );
-    return url.href;
-  }
-
-  const cleanWeapon = normalizePresetWeapon(skin.weapon);
-  if (!cleanWeapon || !skin.name?.trim()) {
-    return null;
-  }
-
-  url.searchParams.set("weapon", cleanWeapon);
   url.searchParams.set(
-    "paint",
-    skin.phase ? `${skin.name.trim()} ${skin.phase.trim()}` : skin.name.trim(),
+    "inspectlink",
+    stripInspectLinkStickers(effectiveInspectLink.trim()),
   );
-
-  const floatVal = skin.float ?? wearFloat;
-  if (typeof floatVal === "number" && Number.isFinite(floatVal)) {
-    url.searchParams.set("wear", String(floatVal));
-  }
-  if (typeof skin.pattern === "number" && Number.isFinite(skin.pattern)) {
-    url.searchParams.set("seed", String(skin.pattern));
-  }
-  if (skin.isStatTrak) {
-    url.searchParams.set("stattrak", "1");
-  }
-  if (skin.isSouvenir) {
-    url.searchParams.set("souvenir", "1");
-  }
-
   return url.href;
 }

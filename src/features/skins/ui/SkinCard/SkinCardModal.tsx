@@ -361,88 +361,86 @@ export const SkinCardModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Bar: Wear Tabs (FN / MW / FT / WW / BS) + Selectable ST™ */}
-        <header className="flex flex-wrap items-center justify-between gap-3 bg-[#151124] border-b border-white/[0.06] px-5 sm:px-7 py-3.5 shrink-0">
-          <div className="flex flex-wrap items-center gap-3 sm:gap-5 min-w-0 flex-1">
-            <span className="text-xs font-semibold tracking-wide text-[#b5b0cc] shrink-0">
-              {t("skinCard.modal.itemDetails")}
-            </span>
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 sm:gap-x-5 gap-y-2.5 bg-[#151124] border-b border-white/[0.06] px-4 sm:px-7 py-3 sm:py-3.5 shrink-0">
+          <span className="text-xs font-semibold tracking-wide text-[#b5b0cc] truncate">
+            {t("skinCard.modal.itemDetails")}
+          </span>
 
-            {hasExteriorOptions && (
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div
-                  role="tablist"
-                  aria-label={t("filters.exterior")}
-                  className="inline-flex items-center gap-1 bg-[#0b0914] p-1 rounded-xl"
-                >
-                  {MODAL_EXTERIOR_OPTIONS.map((option) => {
-                    const hasVariant = sortedVariants.some((variant) => {
-                      if (effectiveStatTrakOnly && !variant.isStatTrak) return false;
-                      return getVariantExteriorAbbr(variant) === option.abbr;
-                    });
-                    const isSelected = effectiveExterior === option.abbr;
+          {hasExteriorOptions && (
+            <div className="col-span-full sm:col-span-1 sm:col-start-2 sm:row-start-1 flex flex-wrap items-center gap-2 sm:gap-2.5 min-w-0">
+              <div
+                role="tablist"
+                aria-label={t("filters.exterior")}
+                className="inline-flex max-w-full flex-wrap sm:flex-nowrap items-center gap-1 bg-[#0b0914] p-1 rounded-xl"
+              >
+                {MODAL_EXTERIOR_OPTIONS.map((option) => {
+                  const hasVariant = sortedVariants.some((variant) => {
+                    if (effectiveStatTrakOnly && !variant.isStatTrak) return false;
+                    return getVariantExteriorAbbr(variant) === option.abbr;
+                  });
+                  const isSelected = effectiveExterior === option.abbr;
 
-                    return (
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={isSelected}
-                        key={option.abbr}
-                        disabled={!hasVariant}
-                        title={t(option.labelKey)}
-                        onClick={() => setSelectedExterior(option.abbr)}
-                        className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
-                          isSelected
-                            ? "bg-accent text-white cursor-pointer"
-                            : hasVariant
-                              ? "bg-transparent text-[#a39ec0] hover:text-white hover:bg-white/[0.06] cursor-pointer"
-                              : "bg-transparent text-white/20 cursor-not-allowed"
-                        }`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                            isSelected ? "bg-white" : option.dotClass
-                          } ${hasVariant ? "opacity-95" : "opacity-25"}`}
-                        />
-                        {option.abbr}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {hasAnyStatTrak && (
-                  <button
-                    type="button"
-                    aria-pressed={effectiveStatTrakOnly}
-                    disabled={!hasAnyStandard}
-                    onClick={() => setStatTrakOnly((prev) => !prev)}
-                    title={t("filters.statTrak")}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-[#cf6a32] focus-visible:outline-offset-2 ${
-                      effectiveStatTrakOnly
-                        ? "bg-[#cf6a32]/20 text-[#f59e0b] ring-1 ring-[#cf6a32]/50"
-                        : "bg-[#0b0914] text-[#a39ec0] hover:text-white hover:bg-white/[0.06]"
-                    } ${!hasAnyStandard ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
-                  >
-                    <span
-                      className={`flex items-center justify-center h-3.5 w-3.5 rounded-[4px] border transition-colors ${
-                        effectiveStatTrakOnly
-                          ? "border-[#f59e0b] bg-[#f59e0b] text-[#0b0914]"
-                          : "border-white/25 bg-transparent"
+                  return (
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      key={option.abbr}
+                      disabled={!hasVariant}
+                      title={t(option.labelKey)}
+                      onClick={() => setSelectedExterior(option.abbr)}
+                      className={`relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
+                        isSelected
+                          ? "bg-accent text-white cursor-pointer"
+                          : hasVariant
+                            ? "bg-transparent text-[#a39ec0] hover:text-white hover:bg-white/[0.06] cursor-pointer"
+                            : "bg-transparent text-white/20 cursor-not-allowed"
                       }`}
                     >
-                      {effectiveStatTrakOnly && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                    </span>
-                    ST™
-                  </button>
-                )}
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                          isSelected ? "bg-white" : option.dotClass
+                        } ${hasVariant ? "opacity-95" : "opacity-25"}`}
+                      />
+                      {option.abbr}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </div>
+
+              {hasAnyStatTrak && (
+                <button
+                  type="button"
+                  aria-pressed={effectiveStatTrakOnly}
+                  disabled={!hasAnyStandard}
+                  onClick={() => setStatTrakOnly((prev) => !prev)}
+                  title={t("filters.statTrak")}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-[#cf6a32] focus-visible:outline-offset-2 ${
+                    effectiveStatTrakOnly
+                      ? "bg-[#cf6a32]/20 text-[#f59e0b] ring-1 ring-[#cf6a32]/50"
+                      : "bg-[#0b0914] text-[#a39ec0] hover:text-white hover:bg-white/[0.06]"
+                  } ${!hasAnyStandard ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
+                >
+                  <span
+                    className={`flex items-center justify-center h-3.5 w-3.5 rounded-[4px] border transition-colors ${
+                      effectiveStatTrakOnly
+                        ? "border-[#f59e0b] bg-[#f59e0b] text-[#0b0914]"
+                        : "border-white/25 bg-transparent"
+                    }`}
+                  >
+                    {effectiveStatTrakOnly && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                  </span>
+                  ST™
+                </button>
+              )}
+            </div>
+          )}
 
           <button
             type="button"
             aria-label={t("common.close")}
             onClick={() => setIsModalOpen(false)}
-            className="p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-[#b5b0cc] hover:text-white transition-colors cursor-pointer border-none flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-accent"
+            className="row-start-1 col-start-2 sm:col-start-3 justify-self-end p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-[#b5b0cc] hover:text-white transition-colors cursor-pointer border-none flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-accent"
           >
             <X className="w-4 h-4" />
           </button>

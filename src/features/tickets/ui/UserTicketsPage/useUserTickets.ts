@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -12,9 +12,19 @@ import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 
 export type TicketStatusFilter = "ALL" | "OPEN" | "CLOSED";
 
+function syncUserTicketParamsShallow(
+  basePath: string,
+  mutator: (params: URLSearchParams) => void,
+) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  mutator(params);
+  const query = params.toString();
+  window.history.replaceState(window.history.state, "", query ? `${basePath}?${query}` : basePath);
+}
+
 export function useUserTickets() {
   const { t, locale } = useI18n();
-  const router = useRouter();
   const localizePath = useLocalizedPath();
   const searchParams = useSearchParams();
   const requestedTicketId = searchParams.get("ticket");
@@ -24,7 +34,8 @@ export function useUserTickets() {
   const [authLoading, setAuthLoading] = useState(true);
   const [tickets, setTickets] = useState<OrderTicket[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [selected, setSelected] = useState<OrderTicket | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => requestedTicketId);
+  const [fallbackTicket, setFallbackTicket] = useState<OrderTicket | null>(null);
   const [statusFilter, setStatusFilter] = useState<TicketStatusFilter>("ALL");
   const [loading, setLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -35,6 +46,9 @@ export function useUserTickets() {
   const [message, setMessage] = useState("");
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const fetchSeqRef = useRef(0);
+  const prevExternalTicketIdRef = useRef<string | null>(requestedTicketId);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -49,8 +63,27 @@ export function useUserTickets() {
         setAuthLoading(false);
       }
     };
-    fetchProfile();
+    void fetchProfile();
   }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextTicket = new URLSearchParams(window.location.search).get("ticket");
+      prevExternalTicketIdRef.current = nextTicket;
+      setSelectedId(nextTicket);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (requestedTicketId === prevExternalTicketIdRef.current) return;
+    prevExternalTicketIdRef.current = requestedTicketId;
+    const timeoutId = window.setTimeout(() => {
+      setSelectedId(requestedTicketId);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [requestedTicketId]);
 
   const loadOrders = useCallback(async () => {
     if (!profile) return;
@@ -70,6 +103,7 @@ export function useUserTickets() {
   const loadTickets = useCallback(
     async (silent = false) => {
       if (!profile) return;
+      const seq = ++fetchSeqRef.current;
       if (!silent) setLoading(true);
       setError(null);
       try {
@@ -77,11 +111,18 @@ export function useUserTickets() {
           headers: { "X-Ticket-Actor": "USER" },
         });
         if (!response.ok) throw new Error(t("tickets.error.load"));
-        setTickets(await response.json());
+        const data: OrderTicket[] = await response.json();
+        if (seq !== fetchSeqRef.current) return;
+        setTickets(data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : t("tickets.error.load"));
+        if (seq !== fetchSeqRef.current) return;
+        if (!silent) {
+          setError(err instanceof Error ? err.message : t("tickets.error.load"));
+        }
       } finally {
-        setLoading(false);
+        if (!silent && seq === fetchSeqRef.current) {
+          setLoading(false);
+        }
       }
     },
     [profile, t],
@@ -90,26 +131,13 @@ export function useUserTickets() {
   useEffect(() => {
     if (profile) {
       const timeoutId = window.setTimeout(() => {
-        loadTickets();
-        loadOrders();
+        void loadTickets(false);
+        void loadOrders();
       }, 0);
 
       return () => window.clearTimeout(timeoutId);
     }
   }, [profile, loadTickets, loadOrders]);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      if (requestedTicketId && tickets.length > 0) {
-        const found = tickets.find((ticket) => ticket.id === requestedTicketId);
-        if (found) setSelected(found);
-      } else if (!requestedTicketId) {
-        setSelected(null);
-      }
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [requestedTicketId, tickets]);
 
   useEffect(() => {
     if (requestedOrderId) {
@@ -131,7 +159,17 @@ export function useUserTickets() {
     if (!profile) return;
     let socketRef: Awaited<ReturnType<typeof getTicketSocket>> | null = null;
     let cancelled = false;
-    const handleUpdate = () => loadTicketsRef.current(true);
+    const handleUpdate = () => void loadTicketsRef.current(true);
+    const handleReadState = (payload?: { ticketId?: string; actor?: string }) => {
+      if (!payload?.ticketId || payload.actor !== "USER") return;
+      setTickets((prev) =>
+        prev.some((item) => item.id === payload.ticketId && item.unreadCount > 0)
+          ? prev.map((item) =>
+              item.id === payload.ticketId ? { ...item, unreadCount: 0 } : item,
+            )
+          : prev,
+      );
+    };
 
     const connect = async () => {
       try {
@@ -139,32 +177,53 @@ export function useUserTickets() {
         if (cancelled) return;
         socketRef = socket;
         socket.on("ticket:updated", handleUpdate);
+        socket.on("ticket:read_state", handleReadState);
       } catch {
         console.error("Could not connect to live tickets socket");
       }
     };
 
-    connect();
+    void connect();
     return () => {
       cancelled = true;
       socketRef?.off("ticket:updated", handleUpdate);
+      socketRef?.off("ticket:read_state", handleReadState);
     };
   }, [profile]);
 
-  const handleSelectTicket = (ticket: OrderTicket) => {
-    setSelected(ticket);
-    const params = new URLSearchParams(window.location.search);
-    params.set("ticket", ticket.id);
-    params.delete("orderId");
-    router.replace(`${localizePath("/tickets")}?${params.toString()}`);
-  };
+  const selected = useMemo(() => {
+    if (!selectedId) return null;
+    return (
+      tickets.find((ticket) => ticket.id === selectedId) ??
+      (fallbackTicket?.id === selectedId ? fallbackTicket : null)
+    );
+  }, [fallbackTicket, selectedId, tickets]);
 
-  const handleCloseChat = () => {
-    setSelected(null);
-    const params = new URLSearchParams(window.location.search);
-    params.delete("ticket");
-    router.replace(`${localizePath("/tickets")}?${params.toString()}`);
-  };
+  const handleSelectTicket = useCallback(
+    (ticket: OrderTicket) => {
+      const cleanTicket = ticket.unreadCount > 0 ? { ...ticket, unreadCount: 0 } : ticket;
+      setSelectedId(ticket.id);
+      setFallbackTicket(cleanTicket);
+      if (ticket.unreadCount > 0) {
+        setTickets((prev) =>
+          prev.map((item) => (item.id === ticket.id ? { ...item, unreadCount: 0 } : item)),
+        );
+      }
+      syncUserTicketParamsShallow(localizePath("/tickets"), (params) => {
+        params.set("ticket", ticket.id);
+        params.delete("orderId");
+      });
+    },
+    [localizePath],
+  );
+
+  const handleCloseChat = useCallback(() => {
+    setSelectedId(null);
+    setFallbackTicket(null);
+    syncUserTicketParamsShallow(localizePath("/tickets"), (params) => {
+      params.delete("ticket");
+    });
+  }, [localizePath]);
 
   const handleNewTicketClick = () => {
     setShowCreateForm(true);
@@ -174,12 +233,12 @@ export function useUserTickets() {
     }
   };
 
-  const handleCloseCreateForm = () => {
+  const handleCloseCreateForm = useCallback(() => {
     setShowCreateForm(false);
-    const params = new URLSearchParams(window.location.search);
-    params.delete("orderId");
-    router.replace(`${localizePath("/tickets")}?${params.toString()}`);
-  };
+    syncUserTicketParamsShallow(localizePath("/tickets"), (params) => {
+      params.delete("orderId");
+    });
+  }, [localizePath]);
 
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();

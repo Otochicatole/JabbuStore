@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, MessageSquare, RefreshCw, X } from "lucide-react";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -20,42 +20,100 @@ import {
   AdminStatusTabs,
 } from "@/features/admin/ui/AdminShell";
 
+function syncTicketQueryParamShallow(basePath: string, ticketId: string | null) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  if (ticketId) {
+    params.set("ticket", ticketId);
+  } else {
+    params.delete("ticket");
+  }
+  const query = params.toString();
+  const nextUrl = query ? `${basePath}?${query}` : basePath;
+  window.history.replaceState(window.history.state, "", nextUrl);
+}
+
 export function AdminTicketsPage() {
   const { t } = useI18n();
-  const router = useRouter();
   const localizePath = useLocalizedPath();
   const searchParams = useSearchParams();
   const requestedTicketId = searchParams.get("ticket");
 
   const [tickets, setTickets] = useState<OrderTicket[]>([]);
-  const [selected, setSelected] = useState<OrderTicket | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => requestedTicketId);
+  const [fallbackTicket, setFallbackTicket] = useState<OrderTicket | null>(null);
   const [status, setStatus] = useState("OPEN");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.matchMedia("(min-width: 1024px)").matches : true,
+  );
 
-  const loadTickets = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (status !== "ALL") params.set("status", status);
-      if (search.trim()) params.set("search", search.trim());
-      const response = await fetchWithAuth(`${BACKEND_URL}/tickets/admin?${params}`, {
-        headers: { "X-Ticket-Actor": "ADMIN" },
-      });
-      if (!response.ok) throw new Error(t("tickets.error.load"));
-      const data: OrderTicket[] = await response.json();
-      setTickets(data);
-    } catch (err: unknown) {
-      if (!silent) {
-        setError(err instanceof Error ? err.message : t("tickets.error.load"));
+  const fetchSeqRef = useRef(0);
+  const prevExternalTicketIdRef = useRef<string | null>(requestedTicketId);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const syncViewport = () => setIsDesktop(mq.matches);
+    const timeoutId = window.setTimeout(syncViewport, 0);
+    mq.addEventListener("change", syncViewport);
+    return () => {
+      window.clearTimeout(timeoutId);
+      mq.removeEventListener("change", syncViewport);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextTicket = new URLSearchParams(window.location.search).get("ticket");
+      prevExternalTicketIdRef.current = nextTicket;
+      setSelectedId(nextTicket);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Only react when an external navigation (e.g. clicking a notification) changes ?ticket=
+  useEffect(() => {
+    if (requestedTicketId === prevExternalTicketIdRef.current) return;
+    prevExternalTicketIdRef.current = requestedTicketId;
+    const timeoutId = window.setTimeout(() => {
+      setSelectedId(requestedTicketId);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [requestedTicketId]);
+
+  const loadTickets = useCallback(
+    async (silent = false) => {
+      const seq = ++fetchSeqRef.current;
+      if (!silent) setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams();
+        if (status !== "ALL") params.set("status", status);
+        if (search.trim()) params.set("search", search.trim());
+        const response = await fetchWithAuth(`${BACKEND_URL}/tickets/admin?${params}`, {
+          headers: { "X-Ticket-Actor": "ADMIN" },
+        });
+        if (!response.ok) throw new Error(t("tickets.error.load"));
+        const data: OrderTicket[] = await response.json();
+        if (seq !== fetchSeqRef.current) return;
+        setTickets(data);
+      } catch (err: unknown) {
+        if (seq !== fetchSeqRef.current) return;
+        if (!silent) {
+          setError(err instanceof Error ? err.message : t("tickets.error.load"));
+        }
+      } finally {
+        if (!silent && seq === fetchSeqRef.current) {
+          setLoading(false);
+        }
       }
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [search, status, t]);
+    },
+    [search, status, t],
+  );
 
   const refreshTicketsSilently = useCallback(() => {
     void loadTickets(true);
@@ -79,12 +137,24 @@ export function AdminTicketsPage() {
       void loadTicketsRef.current(true);
     };
 
+    const handleReadState = (payload?: { ticketId?: string; actor?: string }) => {
+      if (!payload?.ticketId || payload.actor !== "ADMIN") return;
+      setTickets((prev) =>
+        prev.some((item) => item.id === payload.ticketId && item.unreadCount > 0)
+          ? prev.map((item) =>
+              item.id === payload.ticketId ? { ...item, unreadCount: 0 } : item,
+            )
+          : prev,
+      );
+    };
+
     const connect = async () => {
       try {
         const socket = await getTicketSocket("ADMIN");
         if (cancelled) return;
         socketRef = socket;
         socket.on("ticket:updated", handleUpdate);
+        socket.on("ticket:read_state", handleReadState);
       } catch (err) {
         console.warn("[AdminTicketsPage] Realtime socket unavailable:", err);
       }
@@ -95,9 +165,69 @@ export function AdminTicketsPage() {
       cancelled = true;
       if (socketRef) {
         socketRef.off("ticket:updated", handleUpdate);
+        socketRef.off("ticket:read_state", handleReadState);
       }
     };
   }, []);
+
+  const selectedFromList = useMemo(
+    () => (selectedId ? tickets.find((item) => item.id === selectedId) ?? null : null),
+    [selectedId, tickets],
+  );
+
+  // Deep-link fallback when ?ticket=<id> points to a ticket outside the current status/search filter
+  useEffect(() => {
+    if (!selectedId || loading || selectedFromList || fallbackTicket?.id === selectedId) {
+      return;
+    }
+
+    let cancelled = false;
+    fetchWithAuth(`${BACKEND_URL}/tickets/${selectedId}`, {
+      headers: { "X-Ticket-Actor": "ADMIN" },
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as OrderTicket;
+      })
+      .then((data) => {
+        if (!cancelled && data) {
+          setFallbackTicket(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch requested ticket:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fallbackTicket?.id, loading, selectedFromList, selectedId]);
+
+  const selected = useMemo(() => {
+    if (!selectedId) return null;
+    return selectedFromList ?? (fallbackTicket?.id === selectedId ? fallbackTicket : null);
+  }, [fallbackTicket, selectedFromList, selectedId]);
+
+  const handleSelectTicket = useCallback(
+    (ticket: OrderTicket) => {
+      const cleanTicket = ticket.unreadCount > 0 ? { ...ticket, unreadCount: 0 } : ticket;
+      setSelectedId(ticket.id);
+      setFallbackTicket(cleanTicket);
+      if (ticket.unreadCount > 0) {
+        setTickets((prev) =>
+          prev.map((item) => (item.id === ticket.id ? { ...item, unreadCount: 0 } : item)),
+        );
+      }
+      syncTicketQueryParamShallow(localizePath("/admin/panel/tickets"), ticket.id);
+    },
+    [localizePath],
+  );
+
+  const closeTicket = useCallback(() => {
+    setSelectedId(null);
+    setFallbackTicket(null);
+    syncTicketQueryParamShallow(localizePath("/admin/panel/tickets"), null);
+  }, [localizePath]);
 
   const changeStatus = async (nextStatus: TicketStatus) => {
     if (!selected) return;
@@ -109,7 +239,11 @@ export function AdminTicketsPage() {
         body: JSON.stringify({ status: nextStatus }),
       });
       if (!response.ok) throw new Error(t("tickets.error.status"));
-      setSelected({ ...selected, status: nextStatus });
+      const updatedTicket = { ...selected, status: nextStatus };
+      setFallbackTicket(updatedTicket);
+      setTickets((prev) =>
+        prev.map((item) => (item.id === selected.id ? { ...item, status: nextStatus } : item)),
+      );
       await loadTickets(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("tickets.error.status"));
@@ -119,81 +253,13 @@ export function AdminTicketsPage() {
   };
 
   useEffect(() => {
-    const syncSelectedTicket = async () => {
-      if (!requestedTicketId) {
-        setSelected(null);
-        return;
-      }
-
-      const found = tickets.find((item) => item.id === requestedTicketId);
-      if (found) {
-        setSelected((current) => {
-          if (
-            current &&
-            current.id === found.id &&
-            current.status === found.status &&
-            current.updatedAt === found.updatedAt &&
-            current.unreadCount === found.unreadCount
-          ) {
-            return current;
-          }
-          return found;
-        });
-        return;
-      }
-
-      try {
-        const response = await fetchWithAuth(`${BACKEND_URL}/tickets/${requestedTicketId}`, {
-          headers: { "X-Ticket-Actor": "ADMIN" },
-        });
-        if (response.ok) {
-          const data: OrderTicket = await response.json();
-          setSelected((current) => {
-            if (
-              current &&
-              current.id === data.id &&
-              current.status === data.status &&
-              current.updatedAt === data.updatedAt
-            ) {
-              return current;
-            }
-            return data;
-          });
-        }
-      } catch (err) {
-        console.error("Failed to fetch requested ticket:", err);
-      }
-    };
-
-    void syncSelectedTicket();
-  }, [requestedTicketId, tickets]);
-
-  const handleSelectTicket = (ticket: OrderTicket) => {
-    setSelected(ticket);
-    const params = new URLSearchParams(window.location.search);
-    params.set("ticket", ticket.id);
-    router.replace(`${localizePath("/admin/panel/tickets")}?${params.toString()}`, {
-      scroll: false,
-    });
-  };
-
-  const closeTicket = useCallback(() => {
-    setSelected(null);
-    const params = new URLSearchParams(window.location.search);
-    params.delete("ticket");
-    router.replace(`${localizePath("/admin/panel/tickets")}?${params.toString()}`, {
-      scroll: false,
-    });
-  }, [localizePath, router]);
-
-  useEffect(() => {
-    if (!selected) return;
+    if (!selectedId) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeTicket();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selected, closeTicket]);
+  }, [selectedId, closeTicket]);
 
   const statusTabs = useMemo(
     () => [
@@ -257,7 +323,7 @@ export function AdminTicketsPage() {
           ) : (
             <div className="min-h-0 flex-1 divide-y divide-white/[0.05] overflow-y-auto custom-scrollbar">
               {tickets.map((ticket) => {
-                const isSelected = selected?.id === ticket.id;
+                const isSelected = selectedId === ticket.id;
                 return (
                   <button
                     key={ticket.id}
@@ -297,9 +363,9 @@ export function AdminTicketsPage() {
           )}
         </div>
 
-        {/* Desktop Inline Conversation Pane */}
+        {/* Desktop Inline Conversation Pane (rendered exclusively on desktop so TicketChat is never double-mounted) */}
         <div className="hidden lg:h-[clamp(440px,calc(100dvh-268px),700px)] min-w-0 flex-col overflow-hidden rounded-lg border border-white/[0.07] bg-[#141124] lg:flex">
-          {selected ? (
+          {selected && isDesktop ? (
             <>
               <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] bg-[#1a1630] px-5 py-3.5">
                 <div className="min-w-0 flex-1">
@@ -365,7 +431,8 @@ export function AdminTicketsPage() {
       </div>
 
       {/* Mobile Drawer Sheet for Selected Ticket */}
-      {selected &&
+      {!isDesktop &&
+        selected &&
         typeof document !== "undefined" &&
         createPortal(
           <div className="fixed inset-0 z-[120] flex h-dvh flex-col bg-[#0b0914] lg:hidden">

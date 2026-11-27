@@ -5,16 +5,12 @@ import { rarityHexColors } from "./helpers";
 
 interface SkinCardImageProps {
   skin: Skin;
-  isMultiple: boolean;
   priority?: boolean;
-  skinsInGroupCount: number;
 }
 
 export const SkinCardImage = ({
   skin,
-  isMultiple,
   priority,
-  skinsInGroupCount,
 }: SkinCardImageProps) => {
   return (
     <div className="relative aspect-[4/3] w-full flex items-center justify-center mt-2 mb-0 bg-transparent overflow-hidden">
@@ -33,15 +29,6 @@ export const SkinCardImage = ({
         priority={priority}
         className="transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]"
       />
-
-      {/* Absolute count badge positioned next to the image (transparent design) */}
-      {isMultiple && skinsInGroupCount > 1 && (
-        <div className="absolute bottom-2 right-2 bg-transparent select-none animate-fade-in z-10">
-          <span className="text-[11px] font-black text-white/50 font-mono">
-            x{skinsInGroupCount}
-          </span>
-        </div>
-      )}
     </div>
   );
 };

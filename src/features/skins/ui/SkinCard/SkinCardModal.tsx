@@ -1,14 +1,21 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, ShoppingCart, Eye, Check } from "lucide-react";
+import { X, ShoppingCart, Eye, Check, Box, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Skin } from "../../domain/skin";
 import { CartItem } from "../../../cart/domain/cart";
 import { SkinImage } from "@/shared/components/SkinImage";
 import type { TranslationParams } from "@/shared/i18n/types";
+import { useI18n } from "@/shared/i18n/I18nProvider";
 import {
   getFloatColorClass,
   getExteriorAbbreviation as getHelperExteriorAbbr,
 } from "./helpers";
+import {
+  CS2_VIEWER_ORIGIN,
+  buildCs2ViewerUrl,
+  getCs2ViewerPublicKey,
+  supportsCs2Viewer3d,
+} from "./cs2ViewerUrl";
 import { Money } from "@/features/currency/ui/Money";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 
@@ -189,16 +196,67 @@ export const SkinCardModal = ({
   const exteriorAbbr = getVariantExteriorAbbr(activeVariant);
   const rarityDetails = getRarityDetails(activeVariant.rarity);
 
+  const { locale } = useI18n();
+  const viewerKey = getCs2ViewerPublicKey();
+  const viewerIframeRef = useRef<HTMLIFrameElement | null>(null);
+
   const isYoupinMarketItem =
     activeVariant.provider === "youpin" || activeVariant.isImmediate === false;
   const [resolvedInspect, setResolvedInspect] = useState<{
     id: string;
     link: string | null;
   } | null>(null);
+  const isInspectResolving =
+    isYoupinMarketItem && resolvedInspect?.id !== activeVariant.id;
   const resolvedInspectLink =
     resolvedInspect?.id === activeVariant.id
       ? resolvedInspect.link
       : activeVariant.inspectLink ?? null;
+
+  const canShow3d = supportsCs2Viewer3d(activeVariant, resolvedInspectLink);
+  const [viewMode, setViewMode] = useState<"2d" | "3d">(() =>
+    viewerKey && supportsCs2Viewer3d(activeVariant, activeVariant.inspectLink) ? "3d" : "2d",
+  );
+  const [viewerFrameState, setViewerFrameState] = useState<{
+    url: string;
+    ready: boolean;
+    error: boolean;
+  } | null>(null);
+
+  const viewerUrl = useMemo(() => {
+    if (viewMode !== "3d" || !viewerKey || !canShow3d || isInspectResolving) {
+      return null;
+    }
+    return buildCs2ViewerUrl({
+      viewerKey,
+      skin: activeVariant,
+      inspectLink: resolvedInspectLink,
+      wearFloat: theoreticalFloat,
+      locale,
+    });
+  }, [
+    viewMode,
+    viewerKey,
+    canShow3d,
+    isInspectResolving,
+    activeVariant,
+    resolvedInspectLink,
+    theoreticalFloat,
+    locale,
+  ]);
+
+  const isViewerLoading =
+    viewMode === "3d" &&
+    Boolean(viewerKey) &&
+    canShow3d &&
+    (isInspectResolving ||
+      (Boolean(viewerUrl) &&
+        !(viewerFrameState?.url === viewerUrl && viewerFrameState.ready)));
+  const isViewerError =
+    viewMode === "3d" &&
+    Boolean(viewerUrl) &&
+    viewerFrameState?.url === viewerUrl &&
+    viewerFrameState.error;
 
   useEffect(() => {
     let cancelled = false;
@@ -224,6 +282,7 @@ export const SkinCardModal = ({
         }
       } catch (error) {
         console.warn("[SkinCardModal] Error resolving inspect link:", error);
+        if (!cancelled) setResolvedInspect({ id: activeVariant.id, link: null });
       }
     };
 
@@ -232,6 +291,38 @@ export const SkinCardModal = ({
       cancelled = true;
     };
   }, [isModalOpen, isYoupinMarketItem, activeVariant.id]);
+
+  useEffect(() => {
+    if (!isModalOpen || !viewerUrl) return;
+
+    const handleViewerMessage = (event: MessageEvent) => {
+      if (
+        event.origin !== CS2_VIEWER_ORIGIN ||
+        event.source !== viewerIframeRef.current?.contentWindow
+      ) {
+        return;
+      }
+
+      const payload = event.data as { version?: number; type?: string } | null;
+      if (!payload || payload.version !== 1) return;
+
+      if (payload.type === "cs2viewer:loading") {
+        setViewerFrameState({ url: viewerUrl, ready: false, error: false });
+      } else if (
+        payload.type === "cs2viewer:ready" ||
+        payload.type === "cs2viewer:change"
+      ) {
+        setViewerFrameState({ url: viewerUrl, ready: true, error: false });
+      } else if (payload.type === "cs2viewer:error") {
+        setViewerFrameState({ url: viewerUrl, ready: true, error: true });
+      }
+    };
+
+    window.addEventListener("message", handleViewerMessage);
+    return () => {
+      window.removeEventListener("message", handleViewerMessage);
+    };
+  }, [isModalOpen, viewerUrl]);
 
   useEffect(() => {
     if (!isModalOpen) {
@@ -266,7 +357,7 @@ export const SkinCardModal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="skin-modal-title"
-        className="relative w-full max-w-[920px] bg-[#100d1b] border border-white/[0.08] rounded-2xl flex flex-col max-h-[90vh] md:h-[560px] shadow-[0_28px_72px_-12px_rgba(0,0,0,0.88)] overflow-hidden"
+        className="relative w-full max-w-[1160px] bg-[#100d1b] border border-white/[0.08] rounded-2xl flex flex-col max-h-[92vh] md:h-[680px] shadow-[0_28px_72px_-12px_rgba(0,0,0,0.88)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Bar: Wear Tabs (FN / MW / FT / WW / BS) + Selectable ST™ */}
@@ -358,54 +449,149 @@ export const SkinCardModal = ({
         </header>
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
-          {/* Left Showcase Stage: Image + Wear/Float Spectrum Bar Below */}
-          <div className="w-full md:w-[54%] bg-[#0c0a16] p-6 sm:p-7 flex flex-col justify-between gap-5">
-            <div className="relative h-[220px] sm:h-[260px] md:flex-1 md:min-h-0 flex items-center justify-center rounded-2xl bg-[#131021] px-6 py-6 overflow-hidden">
-              <SkinImage
-                src={activeVariant.imageUrl}
-                alt={activeVariant.name}
-                width={380}
-                height={250}
-                className="max-h-full w-auto max-w-[340px] object-contain drop-shadow-[0_24px_32px_rgba(0,0,0,0.75)]"
-              />
-            </div>
+          {/* Left Showcase Stage: 2D/3D Viewer + Bottom Controls & Wear Bar */}
+          <div className="w-full md:w-[62%] bg-[#0c0a16] p-4 sm:p-5 flex flex-col justify-between gap-4">
+            <div className="relative h-[300px] sm:h-[360px] md:flex-1 md:min-h-0 flex items-center justify-center rounded-2xl bg-[#131021] overflow-hidden">
+              {viewMode === "3d" && canShow3d && viewerUrl && !isViewerError && (
+                <iframe
+                  ref={viewerIframeRef}
+                  key={viewerUrl}
+                  src={viewerUrl}
+                  title={`${activeVariant.weapon} ${activeVariant.name} 3D`}
+                  allow="fullscreen"
+                  onLoad={() =>
+                    setViewerFrameState((prev) =>
+                      prev?.url === viewerUrl ? prev : { url: viewerUrl, ready: true, error: false },
+                    )
+                  }
+                  onError={() =>
+                    setViewerFrameState({ url: viewerUrl, ready: true, error: true })
+                  }
+                  className="w-full h-full border-0 block relative z-10"
+                />
+              )}
 
-            {theoreticalFloat !== undefined && (
-              <div className="flex flex-col gap-2.5 bg-[#151124] rounded-xl p-4 shrink-0">
-                <div className="flex items-center justify-between gap-3 h-5">
-                  <span className="text-xs font-semibold text-[#b5b0cc] whitespace-nowrap">
-                    {t("skinCard.modal.floatValue")}
-                  </span>
-                  <span className="text-xs font-semibold text-white truncate">
-                    {translateExterior(activeVariant.exterior, "Factory New")}
-                  </span>
-                </div>
-
-                {/* 5-Zone CS2 Wear Track */}
-                <div className="relative h-2.5 w-full rounded-full bg-[#0a0812] overflow-hidden flex gap-[2px] p-[2px]">
-                  {MODAL_EXTERIOR_OPTIONS.map((zone) => {
-                    const isActiveZone = zone.abbr === exteriorAbbr;
-                    return (
-                      <div
-                        key={zone.abbr}
-                        style={{ width: `${zone.rangeWidth}%` }}
-                        className={`h-full rounded-full transition-opacity duration-200 ${zone.dotClass} ${
-                          isActiveZone ? "opacity-100" : "opacity-20"
-                        }`}
-                      />
-                    );
-                  })}
-                  <div
-                    className={`absolute top-1/2 -translate-y-1/2 h-3.5 w-1.5 rounded-full bg-white ring-2 ring-[#151124] transition-all duration-300 ${getFloatColorClass(theoreticalFloat)}`}
-                    style={{ left: `calc(${Math.min(98, Math.max(2, theoreticalFloat * 100))}% - 3px)` }}
+              {(viewMode === "2d" || !canShow3d || !viewerKey || isViewerLoading || isViewerError) && (
+                <div className="absolute inset-0 flex items-center justify-center px-6 py-6 pointer-events-none">
+                  <SkinImage
+                    src={activeVariant.imageUrl}
+                    alt={activeVariant.name}
+                    width={480}
+                    height={320}
+                    className={`max-h-full w-auto max-w-[460px] object-contain drop-shadow-[0_24px_32px_rgba(0,0,0,0.75)] transition-opacity duration-200 ${
+                      viewMode === "3d" && (!viewerKey || isViewerLoading || isViewerError)
+                        ? "opacity-35"
+                        : "opacity-100"
+                    }`}
                   />
                 </div>
+              )}
+
+              {viewMode === "3d" && canShow3d && !viewerKey && (
+                <div className="relative z-10 max-w-xs mx-auto rounded-xl bg-[#0b0914]/90 px-4 py-3 text-center">
+                  <p className="text-xs font-medium text-[#d4d0e6] leading-relaxed">
+                    {t("skinCard.modal.viewerMissingKey")}
+                  </p>
+                </div>
+              )}
+
+              {viewMode === "3d" && canShow3d && viewerKey && isViewerLoading && (
+                <div className="relative z-10 inline-flex items-center gap-2 rounded-xl bg-[#0b0914]/90 px-3.5 py-2 text-xs font-semibold text-white">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
+                  <span>{t("skinCard.modal.loading3d")}</span>
+                </div>
+              )}
+
+              {viewMode === "3d" && canShow3d && viewerKey && isViewerError && (
+                <div className="relative z-10 max-w-xs mx-auto rounded-xl bg-[#0b0914]/90 px-4 py-3 text-center">
+                  <p className="text-xs font-medium text-[#d4d0e6]">
+                    {t("skinCard.modal.viewerUnavailable")}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {(theoreticalFloat !== undefined || canShow3d) && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-[#151124] rounded-xl p-3.5 sm:px-4 shrink-0">
+                {theoreticalFloat !== undefined && (
+                  <div className="flex-1 min-w-0 flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-3 h-5">
+                      <span className="text-xs font-semibold text-[#b5b0cc] whitespace-nowrap">
+                        {t("skinCard.modal.floatValue")}
+                      </span>
+                      <span className="text-xs font-semibold text-white truncate">
+                        {translateExterior(activeVariant.exterior, "Factory New")}
+                      </span>
+                    </div>
+
+                    {/* 5-Zone CS2 Wear Track */}
+                    <div className="relative h-2.5 w-full rounded-full bg-[#0a0812] overflow-hidden flex gap-[2px] p-[2px]">
+                      {MODAL_EXTERIOR_OPTIONS.map((zone) => {
+                        const isActiveZone = zone.abbr === exteriorAbbr;
+                        return (
+                          <div
+                            key={zone.abbr}
+                            style={{ width: `${zone.rangeWidth}%` }}
+                            className={`h-full rounded-full transition-opacity duration-200 ${zone.dotClass} ${
+                              isActiveZone ? "opacity-100" : "opacity-20"
+                            }`}
+                          />
+                        );
+                      })}
+                      <div
+                        className={`absolute top-1/2 -translate-y-1/2 h-3.5 w-1.5 rounded-full bg-white ring-2 ring-[#151124] transition-all duration-300 ${getFloatColorClass(theoreticalFloat)}`}
+                        style={{ left: `calc(${Math.min(98, Math.max(2, theoreticalFloat * 100))}% - 3px)` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {canShow3d && (
+                  <div
+                    role="group"
+                    aria-label={t("skinCard.modal.itemDetails")}
+                    className={`shrink-0 flex items-center justify-end ${
+                      theoreticalFloat !== undefined
+                        ? "sm:pl-4 sm:border-l sm:border-white/[0.06]"
+                        : "w-full"
+                    }`}
+                  >
+                    <div className="inline-flex items-center gap-1 rounded-xl bg-[#0b0914] p-1">
+                      <button
+                        type="button"
+                        aria-pressed={viewMode === "2d"}
+                        onClick={() => setViewMode("2d")}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer border-none ${
+                          viewMode === "2d"
+                            ? "bg-accent text-white"
+                            : "bg-transparent text-[#a39ec0] hover:text-white"
+                        }`}
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        <span>{t("skinCard.modal.view2d")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={viewMode === "3d"}
+                        onClick={() => setViewMode("3d")}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer border-none ${
+                          viewMode === "3d"
+                            ? "bg-accent text-white"
+                            : "bg-transparent text-[#a39ec0] hover:text-white"
+                        }`}
+                      >
+                        <Box className="w-3.5 h-3.5" />
+                        <span>{t("skinCard.modal.view3d")}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Right Purchase & Specs Column */}
-          <div className="w-full md:w-[46%] bg-[#131021] p-6 sm:p-8 flex flex-col justify-between gap-8 md:overflow-y-auto custom-scrollbar shrink-0 md:shrink border-t md:border-t-0 md:border-l border-white/[0.05]">
+          <div className="w-full md:w-[38%] bg-[#131021] p-6 sm:p-7 flex flex-col justify-between gap-6 md:overflow-y-auto custom-scrollbar shrink-0 md:shrink border-t md:border-t-0 md:border-l border-white/[0.05]">
             <div className="flex flex-col gap-6">
               {/* Item Title */}
               <div className="flex flex-col gap-1.5">

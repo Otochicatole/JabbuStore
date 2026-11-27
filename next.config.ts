@@ -9,6 +9,7 @@ const csp = [
   "font-src 'self' data:",
   "connect-src 'self' https: wss:",
   "media-src 'self'",
+  "frame-src 'self' https://3d.cs2screen.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -75,40 +75,39 @@ export const SkinGrid = ({ skins, pagination, loading, error, onRetry }: SkinGri
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {[...Array(20)].map((_, i) => (
           <div key={i} className="group relative flex flex-col bg-card rounded-2xl p-4 border border-white/5 animate-pulse w-full">
-            
-            {/* 1. Item Name Skeleton at the very top */}
-            <div className="mb-2.5">
-              <div className="w-32 h-3.5 bg-white/5 rounded-full" />
+            {/* 1. Item Name Skeleton */}
+            <div className="mb-2 min-h-[24px] flex items-center">
+              <div className="w-36 h-3 bg-white/5 rounded-full" />
             </div>
 
-            {/* 2. Compact Info Panel Skeleton below the name */}
-            <div className="flex flex-col gap-1.5 p-2 rounded-[8px] mb-3 bg-white/[0.01] border border-white/5">
+            {/* 2. Exterior & Float Bar Skeleton */}
+            <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 h-[42px] justify-center">
               <div className="flex items-center justify-between">
-                <div className="w-16 h-2.5 bg-white/5 rounded-full" />
-                <div className="w-10 h-2.5 bg-white/5 rounded-full" />
+                <div className="w-20 h-2 bg-white/5 rounded-full" />
+                <div className="w-16 h-2 bg-white/5 rounded-full" />
               </div>
-              <div className="h-0.5 w-full bg-white/5 rounded-full mt-0.5" />
+              <div className="flex flex-col gap-1 mt-1">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-1.5 bg-white/5 rounded-full" />
+                  <div className="w-10 h-1.5 bg-white/5 rounded-full" />
+                </div>
+                <div className="h-[3px] w-full bg-white/5 rounded-full" />
+              </div>
             </div>
 
             {/* 3. Image Container Skeleton */}
-            <div className="relative aspect-[4/3] w-full flex items-center justify-center my-2 bg-white/[0.01] rounded-xl border border-white/5">
-              <div className="w-24 h-12 bg-white/5 rounded-lg" />
+            <div className="relative aspect-[4/3] w-full flex items-center justify-center mt-2 mb-0">
+              <div className="w-28 h-14 bg-white/5 rounded-lg" />
             </div>
 
             {/* 4. Rarity Divider Skeleton */}
             <div className="h-[2px] w-full mb-3 bg-white/5 rounded-full" />
 
             {/* 5. Price Section Skeleton */}
-            <div className="flex flex-col mb-4">
-              <div className="w-16 h-5 bg-white/5 rounded" />
+            <div className="flex flex-col gap-1 mt-auto pt-3 border-t border-white/5">
+              <div className="w-10 h-2 bg-white/5 rounded" />
+              <div className="w-24 h-5 bg-white/5 rounded" />
             </div>
-
-            {/* 6. Action Buttons Skeleton */}
-            <div className="flex gap-2 h-10 mt-auto">
-              <div className="flex-1 bg-white/5 rounded-lg" />
-              <div className="w-10 bg-white/5 rounded-lg" />
-            </div>
-            
           </div>
         ))}
       </div>

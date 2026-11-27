@@ -12,7 +12,6 @@ interface SkinCardInfoPanelProps {
   distinctExteriors?: string[];
   conditionLabel: string;
   translateExterior: (exterior: string | null | undefined, fallback: string) => string;
-  setIsModalOpen: (open: boolean) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
@@ -22,7 +21,6 @@ export const SkinCardInfoPanel = ({
   distinctExteriors = [],
   conditionLabel,
   translateExterior,
-  setIsModalOpen,
   t,
 }: SkinCardInfoPanelProps) => {
   const floatRange = getFloatRangeFromExterior(skin.exterior);
@@ -30,10 +28,7 @@ export const SkinCardInfoPanel = ({
   const hasFloat = floatRange !== null || hasMultipleExteriors;
 
   return (
-    <div
-      onClick={() => setIsModalOpen(true)}
-      className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center cursor-pointer hover:bg-white/[0.02] transition-colors"
-    >
+    <div className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center">
       {!hasFloat ? null : (
         <>
           {/* Exterior + seed/seed-range */}

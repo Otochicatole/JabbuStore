@@ -8,7 +8,7 @@ interface SkinCardPriceProps {
 
 export const SkinCardPrice = ({ price, priceFromLabel }: SkinCardPriceProps) => {
   return (
-    <div className="flex flex-col gap-0.5 mb-3 mt-auto pt-3 border-t border-white/5">
+    <div className="flex flex-col gap-0.5 mt-auto pt-3 border-t border-white/5">
       {priceFromLabel && (
         <span className="text-[8px] font-black uppercase tracking-widest text-[#84849b] leading-none">
           {priceFromLabel}

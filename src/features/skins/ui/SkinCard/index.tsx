@@ -10,7 +10,6 @@ import { SkinCardHeader } from "./SkinCardHeader";
 import { SkinCardInfoPanel } from "./SkinCardInfoPanel";
 import { SkinCardImage } from "./SkinCardImage";
 import { SkinCardPrice } from "./SkinCardPrice";
-import { SkinCardActions } from "./SkinCardActions";
 import { SkinCardModal } from "./SkinCardModal";
 
 // Local helpers
@@ -34,7 +33,7 @@ const sortByLowestPrice = (a: Skin, b: Skin) => {
 };
 
 export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
-  const { addToCart, items, removeFromCart } = useCart();
+  const { addToCart, items } = useCart();
   const { t } = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -69,86 +68,59 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
     sortedSkinsInGroup.some((s) => s.isStatTrak) &&
     sortedSkinsInGroup.some((s) => !s.isStatTrak);
 
-  const cartItemsInGroup = items.filter((item) =>
-    sortedSkinsInGroup.some((s) => s.id === item.skin.id),
+  const isInCart = sortedSkinsInGroup.some((s) =>
+    items.some((item) => item.skin.id === s.id),
   );
-  const totalQuantityInCart = cartItemsInGroup.length;
-  const isInCart = totalQuantityInCart > 0;
-
-  const handleActionClick = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleIncrement = () => {
-    const nextAvailable = sortedSkinsInGroup.find(
-      (s) => !items.some((item) => item.skin.id === s.id),
-    );
-    if (nextAvailable) {
-      addToCart({ ...nextAvailable, isSpecific: false, float: undefined, pattern: undefined });
-    }
-  };
-
-  const handleDecrement = () => {
-    const lastAddedInCart = [...cartItemsInGroup].reverse()[0];
-    if (lastAddedInCart) {
-      removeFromCart(lastAddedInCart.skin.id);
-    }
-  };
 
   return (
-    <div
-      className={`
-      group relative flex w-full flex-col bg-card rounded-2xl p-4 border transition-all duration-500
-      ${
-        isInCart
-          ? "border-accent shadow-[0_0_25px_rgba(217,70,239,0.2)]"
-          : "border-white/5 hover:border-white/10"
-      }
-    `}
-    >
-      <SkinCardHeader skin={skin} hasMixedStatTrak={hasMixedStatTrak} />
-
-      <SkinCardInfoPanel
-        skin={skin}
-        isMultiple={isMultiple}
-        distinctExteriors={distinctExteriors}
-        conditionLabel={conditionLabel}
-        translateExterior={translateExterior}
-        setIsModalOpen={setIsModalOpen}
-        t={t}
-      />
-
-      <SkinCardImage
-        skin={skin}
-        isMultiple={isMultiple}
-        priority={priority}
-        skinsInGroupCount={sortedSkinsInGroup.length}
-      />
-
-      {/* Rarity Divider (stuck perfectly to the bottom of the image container) */}
+    <>
       <div
-        className={`h-[2px] w-full mb-3 rounded-full ${rarityColors[skin.rarity] || "bg-white/10"} shadow-[0_0_10px_rgba(255,255,255,0.1)]`}
-      />
+        role="button"
+        tabIndex={0}
+        onClick={() => setIsModalOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsModalOpen(true);
+          }
+        }}
+        className={`
+        group relative flex w-full flex-col bg-card rounded-2xl p-4 border transition-all duration-500 cursor-pointer
+        ${
+          isInCart
+            ? "border-accent shadow-[0_0_25px_rgba(217,70,239,0.2)]"
+            : "border-white/5 hover:border-white/15"
+        }
+      `}
+      >
+        <SkinCardHeader skin={skin} hasMixedStatTrak={hasMixedStatTrak} />
 
-      <SkinCardPrice
-        price={skin.price}
-        priceFromLabel={distinctExteriors.length > 1 ? t("skinCard.priceFrom") : undefined}
-      />
+        <SkinCardInfoPanel
+          skin={skin}
+          isMultiple={isMultiple}
+          distinctExteriors={distinctExteriors}
+          conditionLabel={conditionLabel}
+          translateExterior={translateExterior}
+          t={t}
+        />
 
-      <SkinCardActions
-        skin={skin}
-        isInCart={isInCart}
-        isMultiple={true}
-        totalQuantityInCart={totalQuantityInCart}
-        skinsInGroupLength={sortedSkinsInGroup.length}
-        handleActionClick={handleActionClick}
-        handleIncrement={handleIncrement}
-        handleDecrement={handleDecrement}
-        setIsModalOpen={setIsModalOpen}
-        addToCart={addToCart}
-        removeFromCart={removeFromCart}
-        t={t}
-      />
+        <SkinCardImage
+          skin={skin}
+          isMultiple={isMultiple}
+          priority={priority}
+          skinsInGroupCount={sortedSkinsInGroup.length}
+        />
+
+        {/* Rarity Divider (stuck perfectly to the bottom of the image container) */}
+        <div
+          className={`h-[2px] w-full mb-3 rounded-full ${rarityColors[skin.rarity] || "bg-white/10"} shadow-[0_0_10px_rgba(255,255,255,0.1)]`}
+        />
+
+        <SkinCardPrice
+          price={skin.price}
+          priceFromLabel={distinctExteriors.length > 1 ? t("skinCard.priceFrom") : undefined}
+        />
+      </div>
 
       {mounted && isModalOpen && (
         <SkinCardModal
@@ -162,6 +134,6 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
           t={t}
         />
       )}
-    </div>
+    </>
   );
 };

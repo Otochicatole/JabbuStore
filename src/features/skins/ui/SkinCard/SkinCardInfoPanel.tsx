@@ -8,24 +8,18 @@ import {
 
 interface SkinCardInfoPanelProps {
   skin: Skin;
-  skinsInGroup: Skin[];
   isMultiple: boolean;
-  showFloatsModalTrigger: boolean;
   conditionLabel: string;
   translateExterior: (exterior: string | null | undefined, fallback: string) => string;
-  setIsFloatsModalOpen: (open: boolean) => void;
   setIsModalOpen: (open: boolean) => void;
-  t: (key: string, params?: any) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export const SkinCardInfoPanel = ({
   skin,
-  skinsInGroup,
   isMultiple,
-  showFloatsModalTrigger,
   conditionLabel,
   translateExterior,
-  setIsFloatsModalOpen,
   setIsModalOpen,
   t,
 }: SkinCardInfoPanelProps) => {
@@ -34,18 +28,8 @@ export const SkinCardInfoPanel = ({
 
   return (
     <div
-      onClick={() => {
-        if (isMultiple) {
-          setIsModalOpen(true);
-        } else if (showFloatsModalTrigger) {
-          setIsFloatsModalOpen(true);
-        }
-      }}
-      className={`flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center ${
-        isMultiple || showFloatsModalTrigger
-          ? "cursor-pointer hover:bg-white/[0.02] transition-colors"
-          : ""
-      }`}
+      onClick={() => setIsModalOpen(true)}
+      className="flex flex-col gap-1 p-2 rounded-[8px] mb-3 bg-transparent font-mono text-[9px] h-[42px] justify-center cursor-pointer hover:bg-white/[0.02] transition-colors"
     >
       {!hasFloat ? null : (
         <>

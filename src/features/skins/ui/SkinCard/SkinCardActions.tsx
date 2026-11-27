@@ -7,30 +7,26 @@ interface SkinCardActionsProps {
   skin: Skin;
   isInCart: boolean;
   isMultiple: boolean;
-  showFloatsModalTrigger: boolean;
   totalQuantityInCart: number;
   skinsInGroupLength: number;
   handleActionClick: () => void;
   handleIncrement: () => void;
   handleDecrement: () => void;
-  setIsFloatsModalOpen: (open: boolean) => void;
   setIsModalOpen: (open: boolean) => void;
   addToCart: (skin: Skin) => void;
   removeFromCart: (id: string) => void;
-  t: (key: string, params?: any) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 export const SkinCardActions = ({
   skin,
   isInCart,
   isMultiple,
-  showFloatsModalTrigger,
   totalQuantityInCart,
   skinsInGroupLength,
   handleActionClick,
   handleIncrement,
   handleDecrement,
-  setIsFloatsModalOpen,
   setIsModalOpen,
   addToCart,
   removeFromCart,
@@ -57,10 +53,8 @@ export const SkinCardActions = ({
               />
             )}
             <button
-              onClick={
-                showFloatsModalTrigger
-                  ? () => setIsFloatsModalOpen(true)
-                  : () => addToCart({ ...skin, isSpecific: false, float: undefined, pattern: undefined })
+              onClick={() =>
+                addToCart({ ...skin, isSpecific: false, float: undefined, pattern: undefined })
               }
               className="w-8 sm:w-10 flex items-center justify-center bg-secondary rounded-lg text-white hover:bg-secondary/80 transition-colors border border-white/5 active:scale-95 cursor-pointer animate-fade-in shrink-0"
             >

@@ -55,8 +55,6 @@ export interface Skin {
   youpinVolume?: number | null;
   /** Enlace steam:// para inspeccionar in-game (ítems de bot) */
   inspectLink?: string | null;
-  /** Indica si el tipo de artículo tiene stock individual consultable por float. */
-  supportsFloatStock?: boolean;
   /** Clasificación canónica del artículo enviada por el backend. */
   catalogItemType?: CatalogItemType;
   /** Solo las armas y cuchillos participan del rango de precio público. */

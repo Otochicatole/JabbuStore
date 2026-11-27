@@ -4,7 +4,6 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Skin } from "../../domain/skin";
 import { useCart } from "../../../cart/context/CartContext";
 import { useI18n } from "@/shared/i18n/I18nProvider";
-import { FloatsModal } from "../components/FloatsModal";
 
 // Local microcomponents
 import { SkinCardHeader } from "./SkinCardHeader";
@@ -35,7 +34,6 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   const { addToCart, items, removeFromCart } = useCart();
   const { t } = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isFloatsModalOpen, setIsFloatsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -58,12 +56,6 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   };
   const isMultiple = sortedSkinsInGroup.length >= 2;
 
-  const isMarketItem = skin.provider === "youpin" || skin.isImmediate === false;
-  const showFloatsModalTrigger =
-    isMarketItem &&
-    skin.supportsFloatStock === true &&
-    skin.float === undefined;
-
   const cartItemsInGroup = items.filter((item) =>
     sortedSkinsInGroup.some((s) => s.id === item.skin.id),
   );
@@ -71,11 +63,7 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
   const isInCart = totalQuantityInCart > 0;
 
   const handleActionClick = () => {
-    if (showFloatsModalTrigger) {
-      setIsFloatsModalOpen(true);
-    } else {
-      setIsModalOpen(true);
-    }
+    setIsModalOpen(true);
   };
 
   const handleIncrement = () => {
@@ -109,12 +97,9 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
 
       <SkinCardInfoPanel
         skin={skin}
-        skinsInGroup={sortedSkinsInGroup}
         isMultiple={isMultiple}
-        showFloatsModalTrigger={showFloatsModalTrigger}
         conditionLabel={conditionLabel}
         translateExterior={translateExterior}
-        setIsFloatsModalOpen={setIsFloatsModalOpen}
         setIsModalOpen={setIsModalOpen}
         t={t}
       />
@@ -137,13 +122,11 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
         skin={skin}
         isInCart={isInCart}
         isMultiple={true}
-        showFloatsModalTrigger={showFloatsModalTrigger}
         totalQuantityInCart={totalQuantityInCart}
         skinsInGroupLength={sortedSkinsInGroup.length}
         handleActionClick={handleActionClick}
         handleIncrement={handleIncrement}
         handleDecrement={handleDecrement}
-        setIsFloatsModalOpen={setIsFloatsModalOpen}
         setIsModalOpen={setIsModalOpen}
         addToCart={addToCart}
         removeFromCart={removeFromCart}
@@ -157,18 +140,9 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
           isModalOpen={isModalOpen}
           setIsModalOpen={setIsModalOpen}
           addToCart={addToCart}
-          removeFromCart={removeFromCart}
           items={items}
           translateExterior={translateExterior}
           t={t}
-        />
-      )}
-
-      {mounted && (
-        <FloatsModal
-          skin={skin}
-          isOpen={isFloatsModalOpen}
-          onClose={() => setIsFloatsModalOpen(false)}
         />
       )}
     </div>

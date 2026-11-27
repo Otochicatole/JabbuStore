@@ -25,7 +25,6 @@ export interface CatalogItemResponse {
   phase: string | null;
   isImmediate: boolean;
   inspectLink: string | null;
-  supportsFloatStock?: boolean;
   catalogItemType?: CatalogItemType;
   priceFilterEligible?: boolean;
   provider: "bot" | "youpin";
@@ -74,7 +73,6 @@ function mapCatalogItemToSkin(item: CatalogItemResponse): Skin {
     phase: item.phase ?? undefined,
     isImmediate: item.isImmediate,
     inspectLink: item.inspectLink,
-    supportsFloatStock: item.supportsFloatStock === true,
     catalogItemType: item.catalogItemType,
     priceFilterEligible: item.priceFilterEligible === true,
     provider: item.provider,

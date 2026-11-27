@@ -135,4 +135,47 @@ describe("cs2ViewerUrl", () => {
       false,
     );
   });
+
+  it("preserves fields 12 and 20 for charms, sticker slabs, and stickers instead of stripping their identity", () => {
+    // Charm | Die-cast AK (defindex=1355, field 20 keychain) from SteamWebAPI
+    const charmLink =
+      "steam://run/730//+csgo_econ_action_preview%209C8C08576F09299D845796BC9CB498AC98F40A9EEC8B3E9D94949C8C8ECC4D0F9956103279";
+    assert.equal(stripInspectLinkStickers(charmLink), charmLink);
+
+    // Sticker | apEX (defindex=1209, field 12 sticker)
+    const stickerLink =
+      "steam://run/730//+csgo_econ_action_preview%20D5C5D5CD6CDCF5D5FDD6E5D1B7D0DDD5C56385BDD5A5DDBD634B80";
+    assert.equal(stripInspectLinkStickers(stickerLink), stickerLink);
+  });
+
+  it("disables 3D support for non-3D catalog types even when an inspect link exists, and for bot items without an inspect link", () => {
+    const validLink =
+      "steam://run/730//+csgo_econ_action_preview%203A2AFDEC99B99B3B22B13E1AE23C123C0A390280F6B1D2397AEB3B723A6ABB3952244A32899C03EE";
+
+    for (const catalogItemType of ["music_kit", "graffiti", "sticker", "container"] as const) {
+      assert.equal(
+        supportsCs2Viewer3d(
+          makeSkin({ catalogItemType, inspectLink: validLink }),
+          validLink,
+        ),
+        false,
+      );
+    }
+
+    assert.equal(
+      supportsCs2Viewer3d(
+        makeSkin({ provider: "bot", isImmediate: true, inspectLink: null }),
+        null,
+      ),
+      false,
+    );
+
+    assert.equal(
+      supportsCs2Viewer3d(
+        makeSkin({ catalogItemType: "charm", inspectLink: validLink }),
+        validLink,
+      ),
+      true,
+    );
+  });
 });

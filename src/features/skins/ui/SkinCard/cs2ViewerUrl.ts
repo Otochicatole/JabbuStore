@@ -19,6 +19,7 @@ const SUPPORTED_VIEWER_NON_3D_TYPES = new Set([
 
 const MASKED_HEX_RE = /csgo_econ_action_preview(?:%20|\+|\s+)([0-9A-Fa-f]{16,})/i;
 const STRIPPED_PROTO_FIELDS = new Set([11, 12, 19, 20]);
+const IDENTITY_IN_NESTED_DEFINDEXES = new Set([1209, 1355, 4609]);
 
 const CRC32_TABLE = (() => {
   const table = new Uint32Array(256);
@@ -115,6 +116,7 @@ export function stripInspectLinkStickers(inspectLink: string): string {
 
   const keptSegments: Uint8Array[] = [];
   let cursor = 0;
+  let defIndex: number | null = null;
 
   while (cursor < protoPayload.length) {
     const start = cursor;
@@ -127,9 +129,16 @@ export function stripInspectLinkStickers(inspectLink: string): string {
     const wireType = tag & 7;
 
     if (wireType === 0) {
-      const nextCursor = skipVarint(protoPayload, cursor);
-      if (nextCursor === null) return inspectLink;
-      cursor = nextCursor;
+      if (fieldNumber === 3) {
+        const valRead = readVarintNumber(protoPayload, cursor);
+        if (!valRead) return inspectLink;
+        defIndex = valRead[0];
+        cursor = valRead[1];
+      } else {
+        const nextCursor = skipVarint(protoPayload, cursor);
+        if (nextCursor === null) return inspectLink;
+        cursor = nextCursor;
+      }
     } else if (wireType === 1) {
       if (cursor + 8 > protoPayload.length) return inspectLink;
       cursor += 8;
@@ -151,6 +160,12 @@ export function stripInspectLinkStickers(inspectLink: string): string {
     if (!STRIPPED_PROTO_FIELDS.has(fieldNumber)) {
       keptSegments.push(protoPayload.subarray(start, cursor));
     }
+  }
+
+  // Stickers (1209), charms / sticker slabs (1355), and patches (4609)
+  // store their own item identity in fields 12/20 — never strip those fields from them.
+  if (defIndex !== null && IDENTITY_IN_NESTED_DEFINDEXES.has(defIndex)) {
+    return inspectLink.trim();
   }
 
   const cleanLen = keptSegments.reduce((sum, seg) => sum + seg.length, 0);
@@ -194,10 +209,14 @@ export function isValidSteamInspectLink(link: string | null | undefined): link i
 }
 
 export function supportsCs2Viewer3d(skin: Skin, inspectLink?: string | null): boolean {
-  if (isValidSteamInspectLink(inspectLink ?? skin.inspectLink)) {
+  if (skin.catalogItemType && SUPPORTED_VIEWER_NON_3D_TYPES.has(skin.catalogItemType)) {
+    return false;
+  }
+  const effectiveLink = inspectLink ?? skin.inspectLink;
+  if (isValidSteamInspectLink(effectiveLink)) {
     return true;
   }
-  if (skin.catalogItemType && SUPPORTED_VIEWER_NON_3D_TYPES.has(skin.catalogItemType)) {
+  if (skin.provider === "bot" || skin.isImmediate === true) {
     return false;
   }
   return Boolean(skin.weapon?.trim() && skin.name?.trim());

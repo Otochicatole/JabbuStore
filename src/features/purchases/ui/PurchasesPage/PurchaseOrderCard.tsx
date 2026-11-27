@@ -171,7 +171,7 @@ export function PurchaseOrderCard({
                 <div className="space-y-3">
                   <RetentionCountdown retentionStartedAt={order.metadata.retentionStartedAt} />
                   <p className="text-xs text-white/40 leading-relaxed px-1">
-                    {t("purchases.retention.desc") || "Tu artículo se encuentra en el período de retención de seguridad de 8 días. Una vez finalizado el plazo, el administrador procesará el pago correspondiente."}
+                    {t("purchases.retention.desc") || "Tu artículo se encuentra en el período de retención de seguridad de 7 días. Una vez finalizado el plazo, el administrador procesará el pago correspondiente."}
                   </p>
                 </div>
               )}

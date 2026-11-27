@@ -214,9 +214,7 @@ export const SkinCardModal = ({
       : activeVariant.inspectLink ?? null;
 
   const canShow3d = supportsCs2Viewer3d(activeVariant, resolvedInspectLink);
-  const [viewMode, setViewMode] = useState<"2d" | "3d">(() =>
-    viewerKey && supportsCs2Viewer3d(activeVariant, activeVariant.inspectLink) ? "3d" : "2d",
-  );
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
   const [viewerFrameState, setViewerFrameState] = useState<{
     url: string;
     ready: boolean;

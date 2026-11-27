@@ -261,6 +261,8 @@ export const en = {
   "inventory.connectSteamDescription": "Sign in securely with OpenID to view, value and sell your Counter-Strike 2 skins instantly.",
   "inventory.steamRateLimit": "Steam Query Limit",
   "inventory.steamConnectionError": "Steam Connection Error",
+  "inventory.privateInventory": "Your Steam Inventory Is Private",
+  "inventory.privateInventoryDescription": "To load and quote your Counter-Strike 2 skins, set your Steam inventory privacy to Public and try again.",
   "inventory.steamRateLimitDescription": "Steam servers are temporarily limiting inventory queries due to high traffic. Your session is still active. Wait a moment and try again.",
   "inventory.syncError": "We could not sync your inventory: \"{error}\". Please try again shortly.",
   "inventory.retrySync": "Retry Sync",

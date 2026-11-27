@@ -86,8 +86,12 @@ export const InventoryGrid = ({ variant = "sell" }: InventoryGridProps) => {
     const isLoginRequired =
       error === "Inicia sesión para ver tu inventario" ||
       error.toLowerCase().includes("sesión expirada");
+    const isPrivateInventory =
+      error === "STEAM_INVENTORY_PRIVATE" ||
+      error.toUpperCase().includes("PRIVATE");
     const isRateLimit =
       error.includes("429") ||
+      error.includes("STEAMWEBAPI_RATE_LIMIT") ||
       error.toLowerCase().includes("too many requests");
 
     if (isLoginRequired) {
@@ -144,14 +148,18 @@ export const InventoryGrid = ({ variant = "sell" }: InventoryGridProps) => {
 
         <div className="relative z-10 max-w-md flex flex-col items-center">
           <p className="text-lg font-black text-white uppercase tracking-wider mb-2">
-            {isRateLimit
-              ? t("inventory.steamRateLimit")
-              : t("inventory.steamConnectionError")}
+            {isPrivateInventory
+              ? t("inventory.privateInventory")
+              : isRateLimit
+                ? t("inventory.steamRateLimit")
+                : t("inventory.steamConnectionError")}
           </p>
           <p className="text-xs text-[#84849b] leading-relaxed mb-8 text-center font-medium">
-            {isRateLimit
-              ? t("inventory.steamRateLimitDescription")
-              : t("inventory.syncError", { error })}
+            {isPrivateInventory
+              ? t("inventory.privateInventoryDescription")
+              : isRateLimit
+                ? t("inventory.steamRateLimitDescription")
+                : t("inventory.syncError", { error })}
           </p>
 
           <button

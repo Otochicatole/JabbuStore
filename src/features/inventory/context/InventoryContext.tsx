@@ -187,6 +187,7 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
     }
     try {
+      setError(null);
       const url = forceSync 
         ? `${BACKEND_URL}/users/me/inventory?forceSync=true`
         : `${BACKEND_URL}/users/me/inventory`;
@@ -200,6 +201,12 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
         const data = await response.json().catch(() => ({}));
+        if (data.code === "STEAM_INVENTORY_PRIVATE" || response.status === 403) {
+          throw new Error("STEAM_INVENTORY_PRIVATE");
+        }
+        if (data.code === "STEAMWEBAPI_RATE_LIMIT" || response.status === 429) {
+          throw new Error("STEAMWEBAPI_RATE_LIMIT (429)");
+        }
         throw new Error(data.error || data.message || `Error del servidor (${response.status})`);
       }
 
@@ -211,9 +218,11 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       } else {
         throw new Error("El formato del inventario devuelto no es válido");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching inventory:", err);
-      setError(err.message || "Error al conectar con el servidor de inventario");
+      const message =
+        err instanceof Error ? err.message : "Error al conectar con el servidor de inventario";
+      setError(message || "Error al conectar con el servidor de inventario");
       setInventoryItems([]);
     } finally {
       setLoading(false);
@@ -222,7 +231,10 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    fetchInventory();
+    const timer = window.setTimeout(() => {
+      void fetchInventory();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchInventory]);
 
   const addToSellList = (skin: Skin) => {

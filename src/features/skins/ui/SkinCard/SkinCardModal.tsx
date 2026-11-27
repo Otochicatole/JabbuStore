@@ -465,7 +465,7 @@ export const SkinCardModal = ({
                   onError={() =>
                     setViewerFrameState({ url: viewerUrl, ready: true, error: true })
                   }
-                  className="w-full h-full border-0 block relative z-10"
+                  className="absolute inset-0 w-full h-full border-0 block z-10"
                 />
               )}
 
@@ -486,25 +486,31 @@ export const SkinCardModal = ({
               )}
 
               {viewMode === "3d" && canShow3d && !viewerKey && (
-                <div className="relative z-10 max-w-xs mx-auto rounded-xl bg-[#0b0914]/90 px-4 py-3 text-center">
-                  <p className="text-xs font-medium text-[#d4d0e6] leading-relaxed">
-                    {t("skinCard.modal.viewerMissingKey")}
-                  </p>
+                <div className="absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-none">
+                  <div className="max-w-xs rounded-xl bg-[#0b0914]/90 px-4 py-3 text-center">
+                    <p className="text-xs font-medium text-[#d4d0e6] leading-relaxed">
+                      {t("skinCard.modal.viewerMissingKey")}
+                    </p>
+                  </div>
                 </div>
               )}
 
               {viewMode === "3d" && canShow3d && viewerKey && isViewerLoading && (
-                <div className="relative z-10 inline-flex items-center gap-2 rounded-xl bg-[#0b0914]/90 px-3.5 py-2 text-xs font-semibold text-white">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
-                  <span>{t("skinCard.modal.loading3d")}</span>
+                <div className="absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-none">
+                  <div className="inline-flex items-center gap-2 rounded-xl bg-[#0b0914]/90 px-3.5 py-2 text-xs font-semibold text-white whitespace-nowrap">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-accent shrink-0" />
+                    <span>{t("skinCard.modal.loading3d")}</span>
+                  </div>
                 </div>
               )}
 
               {viewMode === "3d" && canShow3d && viewerKey && isViewerUnavailable && (
-                <div className="relative z-10 max-w-xs mx-auto rounded-xl bg-[#0b0914]/90 px-4 py-3 text-center">
-                  <p className="text-xs font-medium text-[#d4d0e6]">
-                    {t("skinCard.modal.viewerUnavailable")}
-                  </p>
+                <div className="absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-none">
+                  <div className="max-w-xs rounded-xl bg-[#0b0914]/90 px-4 py-3 text-center">
+                    <p className="text-xs font-medium text-[#d4d0e6]">
+                      {t("skinCard.modal.viewerUnavailable")}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

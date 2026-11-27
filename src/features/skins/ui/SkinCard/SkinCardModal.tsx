@@ -625,7 +625,7 @@ export const SkinCardModal = ({
               </div>
 
               {/* Clean Technical Specifications (single tonal surface, no repeated condition) */}
-              <dl className="grid grid-cols-3 gap-3 bg-[#1a162b] rounded-xl p-4">
+              <dl className="flex items-center justify-between gap-4 bg-[#1a162b] rounded-xl px-5 py-4">
                 <div className="min-w-0">
                   <dt className="text-[11px] font-medium text-[#9e99b8] truncate">
                     {t("skinCard.modal.category")}
@@ -634,21 +634,12 @@ export const SkinCardModal = ({
                     {activeVariant.category || activeVariant.weapon}
                   </dd>
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 text-right">
                   <dt className="text-[11px] font-medium text-[#9e99b8] truncate">
                     {t("skinCard.modal.condition")}
                   </dt>
                   <dd className="text-sm font-bold text-white mt-1 truncate">
                     {exteriorAbbr || translateExterior(activeVariant.exterior, "Factory New")}
-                  </dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-[11px] font-medium text-[#9e99b8] truncate">
-                    {t("skinCard.modal.stock")}
-                  </dt>
-                  <dd className="text-sm font-bold text-accent tabular-nums mt-1 truncate">
-                    {matchingVariants.length}{" "}
-                    {matchingVariants.length === 1 ? "unidad" : "unidades"}
                   </dd>
                 </div>
               </dl>

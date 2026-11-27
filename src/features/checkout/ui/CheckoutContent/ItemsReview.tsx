@@ -101,7 +101,14 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
                 <ItemThumbnail item={item} />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">{item.name || 'Unknown'}</h4>
+                <div className="flex items-center gap-2 min-w-0">
+                  <h4 className="text-xs font-black text-white truncate uppercase tracking-wide leading-tight">{item.name || 'Unknown'}</h4>
+                  {(item.quantity ?? 1) > 1 && (
+                    <span className="shrink-0 rounded-md bg-accent/15 border border-accent/30 px-1.5 py-0.5 text-[10px] font-black text-accent tabular-nums">
+                      ×{item.quantity}
+                    </span>
+                  )}
+                </div>
                 {isRaffleCheckoutItem(item) ? (
                   <p className="text-[9px] text-accent font-bold uppercase tracking-wider mt-1">
                     {t("checkout.raffleType")}
@@ -113,6 +120,11 @@ export function ItemsReview({ items, selectedMethod }: ItemsReviewProps) {
             </div>
             <div className="text-left sm:text-right shrink-0">
               <Money amountUsd={item.price} className="text-xs font-black text-white" />
+              {(item.quantity ?? 1) > 1 && item.unitPrice !== undefined && (
+                <p className="text-[10px] text-[#84849b] font-semibold tabular-nums">
+                  {item.quantity} × <Money amountUsd={item.unitPrice} className="inline" />
+                </p>
+              )}
               <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">{t("checkout.ready")}</p>
             </div>
           </div>

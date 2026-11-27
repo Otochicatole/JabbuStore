@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCart } from "@/features/cart/context/CartContext";
-import { toValidationId } from "@/features/cart/domain/cart";
+import { normalizeCartQuantity, toValidationId } from "@/features/cart/domain/cart";
 import { useInventory } from "@/features/inventory/context/InventoryContext";
 import { BACKEND_URL, fetchWithAuth } from "@/shared/lib/api";
 import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
@@ -325,6 +325,7 @@ export function useCheckout() {
               pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
               isSpecific: i.skin.isSpecific !== false,
               listingId: i.skin.listingId ?? null,
+              quantity: normalizeCartQuantity(i.skin, i.quantity),
             })),
           };
         } else {
@@ -453,6 +454,7 @@ export function useCheckout() {
           pattern: i.skin.pattern !== undefined ? i.skin.pattern : null,
           isSpecific: i.skin.isSpecific !== false,
           listingId: i.skin.listingId ?? null,
+          quantity: normalizeCartQuantity(i.skin, i.quantity),
         })),
         paymentMethod: selectedMethod,
         manualTransferType,
@@ -717,6 +719,7 @@ export function useCheckout() {
                   exterior: skin?.exterior || null,
                   provider: skin?.provider || "bot",
                   isSpecific: skin?.isSpecific !== false,
+                  quantity: skin ? normalizeCartQuantity(skin, cartItem.quantity) : (i.quantity ?? 1),
                 };
               });
             }
@@ -874,6 +877,7 @@ export function useCheckout() {
                     exterior: skin?.exterior || null,
                     provider: skin?.provider || "bot",
                     isSpecific: skin?.isSpecific !== false,
+                    quantity: skin ? normalizeCartQuantity(skin, cartItem.quantity) : (i.quantity ?? 1),
                   };
                 });
               }

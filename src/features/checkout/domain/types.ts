@@ -2,6 +2,8 @@ export interface CheckoutItem {
   assetId: string;
   name: string;
   price: number;
+  unitPrice?: number;
+  quantity?: number;
   iconUrl: string | null;
   provider?: string | null;
   float?: number | null;

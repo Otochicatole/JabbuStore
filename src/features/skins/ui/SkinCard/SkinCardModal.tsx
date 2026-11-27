@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, ShoppingCart, Eye, Check, Box, Image as ImageIcon, Loader2 } from "lucide-react";
+import { X, ShoppingCart, Eye, Check, Box, Image as ImageIcon, Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import { Skin } from "../../domain/skin";
-import { CartItem } from "../../../cart/domain/cart";
+import {
+  CartItem,
+  MAX_CART_ITEM_QUANTITY,
+  supportsMultipleQuantity,
+} from "../../../cart/domain/cart";
 import { SkinImage } from "@/shared/components/SkinImage";
 import type { TranslationParams } from "@/shared/i18n/types";
 import { useI18n } from "@/shared/i18n/I18nProvider";
@@ -24,7 +28,10 @@ interface SkinCardModalProps {
   skinsInGroup: Skin[];
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
-  addToCart: (skin: Skin) => void;
+  addToCart: (skin: Skin, quantity?: number) => void;
+  updateQuantity?: (skinId: string, delta: number) => void;
+  setItemQuantity?: (skinId: string, quantity: number) => void;
+  removeFromCart?: (skinId: string) => void;
   items: CartItem[];
   translateExterior: (
     exterior: string | null | undefined,
@@ -114,12 +121,18 @@ export const SkinCardModal = ({
   isModalOpen,
   setIsModalOpen,
   addToCart,
+  updateQuantity,
+  setItemQuantity,
+  removeFromCart,
   items,
   translateExterior,
   t,
 }: SkinCardModalProps) => {
   const [selectedExterior, setSelectedExterior] = useState<string | null>(null);
   const [statTrakOnly, setStatTrakOnly] = useState(false);
+  const [draftQuantities, setDraftQuantities] = useState<Record<string, number>>({});
+  const [quantityPromptId, setQuantityPromptId] = useState<string | null>(null);
+  const quantityInputRef = useRef<HTMLInputElement | null>(null);
 
   const sortedVariants = useMemo(() => {
     const source = skinsInGroup?.length ? skinsInGroup : [skin];
@@ -346,7 +359,30 @@ export const SkinCardModal = ({
 
   if (!isModalOpen) return null;
 
-  const isAlreadyInCart = items.some((item) => item.skin.id === activeVariant.id);
+  const canSelectMultiple = supportsMultipleQuantity(activeVariant);
+  const cartEntry = items.find((item) => item.skin.id === activeVariant.id);
+  const isAlreadyInCart = Boolean(cartEntry);
+  const activeQuantity = canSelectMultiple
+    ? (cartEntry ? cartEntry.quantity : (draftQuantities[activeVariant.id] ?? 1))
+    : 1;
+  const showQuantityPrompt =
+    canSelectMultiple && isAlreadyInCart && quantityPromptId === activeVariant.id;
+
+  const applyQuantity = (nextQty: number) => {
+    const clamped = Math.max(
+      1,
+      Math.min(MAX_CART_ITEM_QUANTITY, Math.trunc(nextQty)),
+    );
+    if (cartEntry) {
+      if (setItemQuantity) {
+        setItemQuantity(activeVariant.id, clamped);
+      } else if (updateQuantity) {
+        updateQuantity(activeVariant.id, clamped - cartEntry.quantity);
+      }
+      return;
+    }
+    setDraftQuantities((prev) => ({ ...prev, [activeVariant.id]: clamped }));
+  };
 
   return createPortal(
     <div
@@ -650,21 +686,131 @@ export const SkinCardModal = ({
             </div>
 
             {/* Price & Primary Actions */}
-            <div className="flex flex-col gap-5 pt-6 border-t border-white/[0.06] shrink-0">
+            <div className="flex flex-col gap-4 pt-5 border-t border-white/[0.06] shrink-0">
               <div className="flex items-baseline justify-between gap-4">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#9e99b8] shrink-0">
-                  {t("common.price")}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#9e99b8] shrink-0">
+                    {t("common.price")}
+                  </span>
+                  {canSelectMultiple && activeQuantity > 1 && (
+                    <span className="text-[11px] font-medium text-[#8f8aad] tabular-nums">
+                      {activeQuantity} × <Money amountUsd={activeVariant.price} className="inline" />
+                    </span>
+                  )}
+                </div>
                 <Money
-                  amountUsd={activeVariant.price}
+                  amountUsd={activeVariant.price * activeQuantity}
                   className="text-2xl sm:text-3xl font-black text-white tracking-tight tabular-nums whitespace-nowrap"
                 />
               </div>
+
+              {canSelectMultiple && (
+                <div
+                  className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 transition-all ${
+                    showQuantityPrompt || isAlreadyInCart
+                      ? "bg-accent/10 ring-1 ring-accent/50"
+                      : "bg-[#1a162b]"
+                  }`}
+                >
+                  <div className="min-w-0 flex flex-col">
+                    <label
+                      htmlFor="skin-modal-quantity"
+                      className="text-xs font-semibold uppercase tracking-wider text-[#d4d0e6]"
+                    >
+                      {t("common.quantity")}
+                    </label>
+                    {isAlreadyInCart && (
+                      <span
+                        role="status"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-accent"
+                      >
+                        <Check className="w-3 h-3 stroke-[3]" />
+                        {t("skinCard.modal.inCart")}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="inline-flex items-center gap-1 rounded-lg bg-[#0b0914] border border-white/10 p-0.5">
+                      <button
+                        type="button"
+                        aria-label={`${t("common.quantity")}: -1`}
+                        disabled={activeQuantity <= 1}
+                        onClick={() => applyQuantity(activeQuantity - 1)}
+                        className="h-8 w-8 rounded-md flex items-center justify-center text-[#b5b0cc] hover:text-white hover:bg-white/[0.08] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer border-none bg-transparent focus-visible:outline-2 focus-visible:outline-accent"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <input
+                        ref={quantityInputRef}
+                        id="skin-modal-quantity"
+                        name="quantity"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        aria-label={t("common.quantity")}
+                        value={activeQuantity}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, "");
+                          if (!digits) return;
+                          applyQuantity(Number(digits));
+                        }}
+                        className="w-10 bg-transparent text-center text-base sm:text-sm font-black text-white tabular-nums focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        aria-label={`${t("common.quantity")}: +1`}
+                        disabled={activeQuantity >= MAX_CART_ITEM_QUANTITY}
+                        onClick={() => applyQuantity(activeQuantity + 1)}
+                        className="h-8 w-8 rounded-md flex items-center justify-center text-[#b5b0cc] hover:text-white hover:bg-white/[0.08] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer border-none bg-transparent focus-visible:outline-2 focus-visible:outline-accent"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {isAlreadyInCart && removeFromCart && (
+                      <button
+                        type="button"
+                        aria-label={t("common.delete") || "Eliminar"}
+                        title={t("common.delete") || "Eliminar"}
+                        onClick={() => {
+                          removeFromCart(activeVariant.id);
+                          setQuantityPromptId(null);
+                        }}
+                        className="h-9 w-9 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 flex items-center justify-center transition-colors cursor-pointer border-none shrink-0 focus-visible:outline-2 focus-visible:outline-red-400"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col gap-2.5">
                 <button
                   type="button"
                   onClick={() => {
+                    if (canSelectMultiple) {
+                      if (!isAlreadyInCart) {
+                        addToCart(
+                          {
+                            ...activeVariant,
+                            isSpecific: false,
+                            float: undefined,
+                            pattern: undefined,
+                          },
+                          activeQuantity,
+                        );
+                        setQuantityPromptId(activeVariant.id);
+                        window.requestAnimationFrame(() =>
+                          quantityInputRef.current?.focus(),
+                        );
+                        return;
+                      }
+                      setIsModalOpen(false);
+                      return;
+                    }
+
                     if (!isAlreadyInCart) {
                       addToCart({
                         ...activeVariant,
@@ -677,8 +823,19 @@ export const SkinCardModal = ({
                   }}
                   className="w-full h-12 bg-accent hover:bg-accent/90 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-[0.99] flex items-center justify-center gap-2.5 cursor-pointer border-none whitespace-nowrap focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
                 >
-                  <ShoppingCart className="w-4 h-4 shrink-0" />
-                  <span>{isAlreadyInCart ? t("cart.title") : t("nav.buy")}</span>
+                  {canSelectMultiple && isAlreadyInCart ? (
+                    <>
+                      <Check className="w-4 h-4 shrink-0" />
+                      <span>
+                        {t("skinCard.modal.inCart")} ({activeQuantity})
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4 shrink-0" />
+                      <span>{isAlreadyInCart ? t("cart.title") : t("nav.buy")}</span>
+                    </>
+                  )}
                 </button>
 
                 <div className="h-11">

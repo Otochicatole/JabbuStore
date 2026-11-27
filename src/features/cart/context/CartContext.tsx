@@ -2,7 +2,13 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { Skin } from '../../skins/domain/skin';
-import { CartItem, toValidationId } from '../domain/cart';
+import {
+  CartItem,
+  MAX_CART_ITEM_QUANTITY,
+  normalizeCartQuantity,
+  supportsMultipleQuantity,
+  toValidationId,
+} from '../domain/cart';
 import { BACKEND_URL } from '@/shared/lib/api';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,9 +17,10 @@ import { AlertCircle, X } from 'lucide-react';
 interface CartContextType {
   items: CartItem[];
   isLoaded: boolean;
-  addToCart: (skin: Skin) => void;
+  addToCart: (skin: Skin, quantity?: number) => void;
   removeFromCart: (skinId: string) => void;
   updateQuantity: (skinId: string, delta: number) => void;
+  setItemQuantity: (skinId: string, quantity: number) => void;
   clearCart: () => void;
   total: number;
   validateCartItems: (currentItems: CartItem[]) => Promise<boolean>;
@@ -62,17 +69,28 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Cargar carrito de localStorage en el montaje
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('jabbu_cart');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setItems(parsed);
-        void validateCartItems(parsed);
+    const timeoutId = window.setTimeout(() => {
+      try {
+        const stored = localStorage.getItem('jabbu_cart');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const normalized: CartItem[] = Array.isArray(parsed)
+            ? parsed
+                .filter((item): item is CartItem => Boolean(item?.skin?.id))
+                .map((item) => ({
+                  skin: item.skin,
+                  quantity: normalizeCartQuantity(item.skin, Number(item.quantity ?? 1)),
+                }))
+            : [];
+          setItems(normalized);
+          void validateCartItems(normalized);
+        }
+      } catch (e) {
+        console.error('Error al cargar el carrito de localStorage:', e);
       }
-    } catch (e) {
-      console.error('Error al cargar el carrito de localStorage:', e);
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [validateCartItems]);
 
   // Guardar carrito en localStorage cuando cambie
@@ -85,15 +103,29 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [items, isLoaded]);
 
-  const addToCart = (skin: Skin) => {
+  const addToCart = (skin: Skin, quantity = 1) => {
     let wasAdded = false;
     let newItems: CartItem[] = [];
 
     setItems(prev => {
       const existing = prev.find(item => item.skin.id === skin.id);
-      if (existing) return prev; // Estrictamente capado a 1
+      if (existing) {
+        if (!supportsMultipleQuantity(existing.skin)) {
+          return prev;
+        }
+        const increment = Math.max(1, Math.trunc(Number(quantity) || 1));
+        const nextQuantity = Math.min(
+          MAX_CART_ITEM_QUANTITY,
+          existing.quantity + increment,
+        );
+        if (nextQuantity === existing.quantity) return prev;
+        newItems = prev.map(item =>
+          item.skin.id === skin.id ? { ...item, quantity: nextQuantity } : item
+        );
+        return newItems;
+      }
       wasAdded = true;
-      newItems = [...prev, { skin, quantity: 1 }];
+      newItems = [...prev, { skin, quantity: normalizeCartQuantity(skin, quantity) }];
       return newItems;
     });
 
@@ -102,10 +134,48 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const updateQuantity = (skinId: string, delta: number) => {
-    if (delta < 0) {
+  const setItemQuantity = (skinId: string, quantity: number) => {
+    if (!Number.isFinite(quantity)) return;
+    const truncated = Math.trunc(quantity);
+    if (truncated <= 0) {
       removeFromCart(skinId);
+      return;
     }
+    setItems(prev =>
+      prev.map(item => {
+        if (item.skin.id !== skinId) return item;
+        return {
+          ...item,
+          quantity: normalizeCartQuantity(item.skin, truncated),
+        };
+      }),
+    );
+  };
+
+  const updateQuantity = (skinId: string, delta: number) => {
+    const truncatedDelta = Math.trunc(delta);
+    if (truncatedDelta === 0) return;
+
+    setItems(prev => {
+      const target = prev.find(item => item.skin.id === skinId);
+      if (!target) return prev;
+
+      if (!supportsMultipleQuantity(target.skin)) {
+        return truncatedDelta < 0
+          ? prev.filter(item => item.skin.id !== skinId)
+          : prev;
+      }
+
+      const nextQuantity = target.quantity + truncatedDelta;
+      if (nextQuantity <= 0) {
+        return prev.filter(item => item.skin.id !== skinId);
+      }
+
+      const clamped = Math.min(MAX_CART_ITEM_QUANTITY, nextQuantity);
+      return prev.map(item =>
+        item.skin.id === skinId ? { ...item, quantity: clamped } : item
+      );
+    });
   };
 
   const removeFromCart = (skinId: string) => {
@@ -120,7 +190,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <CartContext.Provider value={{ items, isLoaded, addToCart, removeFromCart, updateQuantity, clearCart, total, validateCartItems }}>
+    <CartContext.Provider value={{ items, isLoaded, addToCart, removeFromCart, updateQuantity, setItemQuantity, clearCart, total, validateCartItems }}>
       {children}
 
       <AnimatePresence>

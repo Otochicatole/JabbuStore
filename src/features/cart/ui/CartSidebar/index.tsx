@@ -1,6 +1,7 @@
 "use client";
 
 import { useCart } from "../../context/CartContext";
+import { MAX_CART_ITEM_QUANTITY, supportsMultipleQuantity } from "../../domain/cart";
 import { Button } from "@/shared/components/Button";
 import Image from "next/image";
 import { X, ShoppingBag, Trash2, Minus, Plus, Loader2 } from "lucide-react";
@@ -12,7 +13,7 @@ import { useLocalizedPath } from "@/shared/i18n/useLocalizedPath";
 import { Money } from "@/features/currency/ui/Money";
 
 export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  const { items, total, removeFromCart, clearCart, validateCartItems } = useCart();
+  const { items, total, removeFromCart, updateQuantity, setItemQuantity, clearCart, validateCartItems } = useCart();
   const router = useRouter();
   const { t } = useI18n();
   const localizePath = useLocalizedPath();
@@ -96,13 +97,15 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                {items.map((item) => (
+                {items.map((item) => {
+                  const canAdjustQuantity = supportsMultipleQuantity(item.skin);
+                  return (
                   <div key={item.skin.id} className="group relative flex items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-background/50 border border-white/5 hover:border-white/10 transition-all">
                     <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center p-2">
                       <Image src={item.skin.imageUrl} alt={item.skin.name} fill className="object-contain p-2" />
                     </div>
                     <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <h4 className="text-[11px] font-black uppercase text-white leading-tight line-clamp-2 sm:line-clamp-none">
                           {item.skin.weapon} | <span className="text-[#aaaaff]">{item.skin.name}</span>
                         </h4>
@@ -110,12 +113,54 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                           {item.skin.exterior || "Factory New"}
                           {item.skin.isSpecific !== false && item.skin.float !== undefined && ` • Float: ${item.skin.float.toFixed(5)}`}
                         </p>
-                        <div className="mt-1">
+                        <div className="mt-1 flex flex-wrap items-baseline gap-2">
                           <Money amountUsd={item.skin.price * item.quantity} className="text-sm font-black text-white tracking-tighter" />
+                          {canAdjustQuantity && item.quantity > 1 && (
+                            <span className="text-[10px] font-bold text-[#84849b] tabular-nums">
+                              ({item.quantity} × <Money amountUsd={item.skin.price} className="inline" />)
+                            </span>
+                          )}
                         </div>
+                        {canAdjustQuantity && (
+                          <div className="mt-2 inline-flex items-center gap-1 rounded-lg bg-[#0b0914] border border-white/10 p-0.5">
+                            <button
+                              type="button"
+                              aria-label={`${t("common.quantity")}: -1`}
+                              disabled={item.quantity <= 1}
+                              onClick={() => updateQuantity(item.skin.id, -1)}
+                              className="h-7 w-7 rounded-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer border-none bg-transparent"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <input
+                              type="text"
+                              name="quantity"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              aria-label={t("common.quantity")}
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, "");
+                                if (!digits) return;
+                                setItemQuantity(item.skin.id, Number(digits));
+                              }}
+                              className="w-10 bg-transparent text-center text-base sm:text-xs font-black text-white tabular-nums focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              aria-label={`${t("common.quantity")}: +1`}
+                              disabled={item.quantity >= MAX_CART_ITEM_QUANTITY}
+                              onClick={() => updateQuantity(item.skin.id, 1)}
+                              className="h-7 w-7 rounded-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer border-none bg-transparent"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <div className="shrink-0 ml-4">
+                      <div className="shrink-0 ml-2">
                         <button 
+                          type="button"
                           onClick={() => removeFromCart(item.skin.id)}
                           className="p-2 rounded-[3px] bg-red-500/10 border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all cursor-pointer flex items-center justify-center"
                           title={t("common.delete") || "Eliminar"}
@@ -125,7 +170,8 @@ export const CartSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -33,7 +33,7 @@ const sortByLowestPrice = (a: Skin, b: Skin) => {
 };
 
 export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
-  const { addToCart, items } = useCart();
+  const { addToCart, updateQuantity, setItemQuantity, removeFromCart, items } = useCart();
   const { t } = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -127,6 +127,9 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
           isModalOpen={isModalOpen}
           setIsModalOpen={setIsModalOpen}
           addToCart={addToCart}
+          updateQuantity={updateQuantity}
+          setItemQuantity={setItemQuantity}
+          removeFromCart={removeFromCart}
           items={items}
           translateExterior={translateExterior}
           t={t}

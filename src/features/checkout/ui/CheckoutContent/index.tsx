@@ -139,7 +139,7 @@ export function CheckoutContent() {
         {/* Right Side: Order Summary */}
         <div className="lg:col-span-4 lg:sticky lg:top-28 min-w-0">
           <OrderSummary
-            itemsCount={items.length}
+            itemsCount={items.reduce((sum, item) => sum + (item.quantity ?? 1), 0)}
             totalPrice={totalPrice}
             selectedMethod={selectedMethod}
             isProcessingPayment={isProcessingPayment}

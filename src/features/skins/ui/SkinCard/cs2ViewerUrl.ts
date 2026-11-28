@@ -189,7 +189,7 @@ export function stripInspectLinkStickers(inspectLink: string): string {
     .join("")
     .toUpperCase();
 
-  return `steam://run/730/+csgo_econ_action_preview+${cleanHex}`;
+  return `steam://run/730//+csgo_econ_action_preview%20${cleanHex}`;
 }
 
 export function getCs2ViewerPublicKey(): string | null {

@@ -106,10 +106,15 @@ const getRarityDetails = (rarity: string) => {
   }
 };
 
-const getTheoreticalFloat = (exterior: string | null | undefined): number | undefined => {
+const getTheoreticalFloat = (
+  exterior: string | null | undefined,
+  isDopplerVariant = false,
+): number | undefined => {
   const ext = exterior?.toLowerCase() || "";
   if (ext.includes("factory new") || ext === "fn") return 0.035;
-  if (ext.includes("minimal wear") || ext === "mw") return 0.11;
+  if (ext.includes("minimal wear") || ext === "mw") {
+    return isDopplerVariant ? 0.075 : 0.11;
+  }
   if (ext.includes("field-tested") || ext === "ft") return 0.26;
   if (ext.includes("well-worn") || ext === "ww") return 0.415;
   if (ext.includes("battle-scarred") || ext === "bs") return 0.72;
@@ -206,7 +211,10 @@ export const SkinCardModal = ({
   }, [sortedVariants, hasExteriorOptions, effectiveExterior, effectiveStatTrakOnly]);
 
   const activeVariant = matchingVariants[0] ?? sortedVariants[0];
-  const theoreticalFloat = getTheoreticalFloat(activeVariant.exterior);
+  const isDopplerVariant =
+    Boolean(activeVariant.phase) || /doppler/i.test(activeVariant.name);
+  const theoreticalFloat =
+    activeVariant.float ?? getTheoreticalFloat(activeVariant.exterior, isDopplerVariant);
   const exteriorAbbr = getVariantExteriorAbbr(activeVariant);
   const rarityDetails = getRarityDetails(activeVariant.rarity);
 
@@ -326,9 +334,9 @@ export const SkinCardModal = ({
       setViewerFrameState((prev) =>
         prev?.url === viewerUrl && prev.ready
           ? prev
-          : { url: viewerUrl, ready: true, error: !prev || prev.url !== viewerUrl },
+          : { url: viewerUrl, ready: true, error: true },
       );
-    }, 12_000);
+    }, 18_000);
     return () => window.clearTimeout(watchdogId);
   }, [isModalOpen, viewMode, viewerUrl]);
 
@@ -343,14 +351,18 @@ export const SkinCardModal = ({
         return;
       }
 
-      const payload = event.data as { version?: number; type?: string } | null;
+      const payload = event.data as {
+        version?: number;
+        type?: string;
+        state?: unknown;
+      } | null;
       if (!payload || payload.version !== 1) return;
 
       if (payload.type === "cs2viewer:loading") {
         setViewerFrameState({ url: viewerUrl, ready: false, error: false });
       } else if (
-        payload.type === "cs2viewer:ready" ||
-        payload.type === "cs2viewer:change"
+        payload.type === "cs2viewer:change" ||
+        (payload.type === "cs2viewer:ready" && payload.state != null)
       ) {
         setViewerFrameState({ url: viewerUrl, ready: true, error: false });
       } else if (payload.type === "cs2viewer:error") {
@@ -519,16 +531,14 @@ export const SkinCardModal = ({
                   key={viewerUrl}
                   src={viewerUrl}
                   title={`${activeVariant.weapon} ${activeVariant.name} 3D`}
-                  allow="fullscreen"
-                  onLoad={() =>
-                    setViewerFrameState((prev) =>
-                      prev?.url === viewerUrl ? prev : { url: viewerUrl, ready: true, error: false },
-                    )
-                  }
+                  allow="fullscreen; clipboard-write"
+                  referrerPolicy="strict-origin-when-cross-origin"
                   onError={() =>
                     setViewerFrameState({ url: viewerUrl, ready: true, error: true })
                   }
-                  className="absolute inset-0 w-full h-full border-0 block z-10"
+                  className={`absolute inset-0 w-full h-full border-0 block z-10 transition-opacity duration-200 ${
+                    isViewerLoading ? "opacity-0" : "opacity-100"
+                  }`}
                 />
               )}
 

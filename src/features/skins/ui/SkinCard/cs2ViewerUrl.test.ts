@@ -72,10 +72,7 @@ describe("cs2ViewerUrl", () => {
 
     const dirtyLink = buildMaskedInspectWithChecksum(withStickersProto);
     const cleanedLink = stripInspectLinkStickers(dirtyLink);
-    const expectedCleanLink = buildMaskedInspectWithChecksum(expectedCleanProto).replace(
-      "//+csgo_econ_action_preview%20",
-      "/+csgo_econ_action_preview+",
-    );
+    const expectedCleanLink = buildMaskedInspectWithChecksum(expectedCleanProto);
 
     assert.equal(cleanedLink, expectedCleanLink);
 
@@ -91,11 +88,11 @@ describe("cs2ViewerUrl", () => {
     assert.equal(parsed.searchParams.get("lang"), "pt");
   });
 
-  it("strips stickers cleanly from real XOR-masked SteamWebAPI certificates", () => {
+  it("strips stickers cleanly from real XOR-masked SteamWebAPI certificates while preserving CS2 in-game URI format", () => {
     const sample =
       "steam://run/730//+csgo_econ_action_preview%203A2AFDEC99B99B3B22B13E1AE23C123C0A390280F6B1D2397AEB3B723A6ABB3952244A32899C03EE";
     const cleaned = stripInspectLinkStickers(sample);
-    assert.ok(cleaned.startsWith("steam://run/730/+csgo_econ_action_preview+00"));
+    assert.ok(cleaned.startsWith("steam://run/730//+csgo_econ_action_preview%2000"));
     assert.ok(cleaned.length >= 20);
   });
 

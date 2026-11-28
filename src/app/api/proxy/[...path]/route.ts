@@ -95,7 +95,7 @@ function isAllowedMutationOrigin(req: NextRequest, requestUrl: URL) {
 
 async function handleProxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const resolvedParams = await params;
-  const path = resolvedParams.path.join('/');
+  const path = resolvedParams.path.map((segment) => encodeURIComponent(segment)).join('/');
 
   if (path === 'debug') {
     // Avoid synchronous filesystem writes in the request path. They can stall

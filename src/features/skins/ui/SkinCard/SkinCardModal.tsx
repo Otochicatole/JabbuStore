@@ -18,6 +18,7 @@ import {
   CS2_VIEWER_ORIGIN,
   buildCs2ViewerUrl,
   getCs2ViewerPublicKey,
+  isValidSteamInspectLink,
   supportsCs2Viewer3d,
 } from "./cs2ViewerUrl";
 import { Money } from "@/features/currency/ui/Money";
@@ -215,14 +216,18 @@ export const SkinCardModal = ({
 
   const isYoupinMarketItem =
     activeVariant.provider === "youpin" || activeVariant.isImmediate === false;
+  const hasEmbeddedInspectLink = isValidSteamInspectLink(activeVariant.inspectLink);
   const [resolvedInspect, setResolvedInspect] = useState<{
     id: string;
     link: string | null;
   } | null>(null);
   const isInspectResolving =
-    isYoupinMarketItem && resolvedInspect?.id !== activeVariant.id;
-  const resolvedInspectLink =
-    resolvedInspect?.id === activeVariant.id
+    isYoupinMarketItem &&
+    !hasEmbeddedInspectLink &&
+    resolvedInspect?.id !== activeVariant.id;
+  const resolvedInspectLink = hasEmbeddedInspectLink
+    ? activeVariant.inspectLink!
+    : resolvedInspect?.id === activeVariant.id
       ? resolvedInspect.link
       : activeVariant.inspectLink ?? null;
 
@@ -273,13 +278,19 @@ export const SkinCardModal = ({
 
   useEffect(() => {
     let cancelled = false;
+    const abortController = new AbortController();
+    const timeoutId = window.setTimeout(() => abortController.abort(), 8_000);
 
-    if (!isModalOpen || !isYoupinMarketItem) return;
+    if (!isModalOpen || !isYoupinMarketItem || hasEmbeddedInspectLink) {
+      window.clearTimeout(timeoutId);
+      return;
+    }
 
     const resolveInspectLink = async () => {
       try {
         const response = await fetchWithAuth(
-          `${BACKEND_URL}/market/listings/${encodeURIComponent(activeVariant.id)}/inspect`,
+          `${BACKEND_URL}/market/listings/inspect?name=${encodeURIComponent(activeVariant.id)}`,
+          { signal: abortController.signal },
         );
         if (!response.ok) {
           if (!cancelled) setResolvedInspect({ id: activeVariant.id, link: null });
@@ -296,14 +307,30 @@ export const SkinCardModal = ({
       } catch (error) {
         console.warn("[SkinCardModal] Error resolving inspect link:", error);
         if (!cancelled) setResolvedInspect({ id: activeVariant.id, link: null });
+      } finally {
+        window.clearTimeout(timeoutId);
       }
     };
 
     void resolveInspectLink();
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
+      abortController.abort();
     };
-  }, [isModalOpen, isYoupinMarketItem, activeVariant.id]);
+  }, [isModalOpen, isYoupinMarketItem, hasEmbeddedInspectLink, activeVariant.id]);
+
+  useEffect(() => {
+    if (!isModalOpen || viewMode !== "3d" || !viewerUrl) return;
+    const watchdogId = window.setTimeout(() => {
+      setViewerFrameState((prev) =>
+        prev?.url === viewerUrl && prev.ready
+          ? prev
+          : { url: viewerUrl, ready: true, error: !prev || prev.url !== viewerUrl },
+      );
+    }, 12_000);
+    return () => window.clearTimeout(watchdogId);
+  }, [isModalOpen, viewMode, viewerUrl]);
 
   useEffect(() => {
     if (!isModalOpen || !viewerUrl) return;

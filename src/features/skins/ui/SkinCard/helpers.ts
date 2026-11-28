@@ -1,3 +1,5 @@
+import type { Skin } from "../../domain/skin";
+
 export const rarityColors: Record<string, string> = {
   common: "bg-[#b0c3d9]",
   uncommon: "bg-[#5e98d9]",
@@ -92,4 +94,16 @@ export const getExteriorAbbreviation = (exterior: string | null | undefined): st
   if (ext.includes("well") || ext.includes("ww") || ext.includes("bastante")) return "WW";
   if (ext.includes("battle") || ext.includes("bs") || ext.includes("deplorable")) return "BS";
   return "";
+};
+
+/**
+ * Determines whether a card price represents a starting ("from") price rather than a single fixed unit price.
+ */
+export const shouldShowPriceFrom = (
+  skin: Pick<Skin, "isImmediate" | "provider">,
+  variantsCount: number,
+  distinctExteriorsCount: number,
+): boolean => {
+  if (variantsCount >= 2 || distinctExteriorsCount > 1) return true;
+  return skin.provider === "youpin" || !skin.isImmediate;
 };

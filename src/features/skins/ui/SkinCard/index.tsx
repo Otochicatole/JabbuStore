@@ -18,6 +18,7 @@ import {
   getConditionLabelKey,
   getExteriorLabelKey,
   getExteriorAbbreviation,
+  shouldShowPriceFrom,
 } from "./helpers";
 
 const EXTERIOR_ORDER = ["FN", "MW", "FT", "WW", "BS"];
@@ -116,7 +117,11 @@ export const SkinCard = ({ skinsInGroup, priority }: SkinCardProps) => {
 
         <SkinCardPrice
           price={skin.price}
-          priceFromLabel={distinctExteriors.length > 1 ? t("skinCard.priceFrom") : undefined}
+          priceFromLabel={
+            shouldShowPriceFrom(skin, sortedSkinsInGroup.length, distinctExteriors.length)
+              ? t("skinCard.priceFrom")
+              : undefined
+          }
         />
       </div>
 
